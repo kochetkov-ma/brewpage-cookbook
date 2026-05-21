@@ -1,0 +1,21 @@
+{
+  "name": "brewpage-cookbook",
+  "version": "0.0.0",
+  "private": true,
+  "description": "BrewPage Cookbook -- interactive recipes for AI artifact workflows, published live on brewpage.app.",
+  "license": "Apache-2.0",
+  "author": "Maksim Kochetkov <apmatypa88@gmail.com>",
+  "homepage": "https://brewpage.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kochetkov-ma/brewpage-cookbook.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kochetkov-ma/brewpage-cookbook/issues"
+  },
+  "scripts": {
+    "dev": "echo 'Astro scaffold pending -- see .claude/teams/brewpage-cookbook/team.md (astro-cookbook-platform agent)' && exit 1",
+    "build": "echo 'Astro scaffold pending' && exit 1",
+    "preview": "echo 'Astro scaffold pending' && exit 1"
+  }
+}
