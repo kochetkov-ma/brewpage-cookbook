@@ -84,7 +84,7 @@ brewpage-cookbook/
   .claude/
     agents/              -- six domain agents
     features/            -- task board (canonical work list) + tracking procedure
-    rules/               -- auto-loaded version/content/docs/task rules
+    rules/               -- auto-loaded version/content/docs/task/privacy rules
     teams/brewpage-cookbook/
       team.md            -- agent team definition
 ```

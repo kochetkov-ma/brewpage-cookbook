@@ -95,6 +95,9 @@ Auto-loaded from `.claude/rules/`:
 | `content.md` | recipe content essentials (pointer-level; full guide in `docs/recipe-authoring.md`) |
 | `docs.md` | one-doc-per-topic, LLM-dense style, run-artifact + screenshot paths, board-via-`TT` |
 | `tasks.md` | condensed task-board rules (board = canonical, folder==status, bookend R1/R2, unprefixed tags) |
+| `privacy.md` | public repo -- no platform abuse-defence/anti-spam/moderation internals; UF-level only; `public/` NS shareable only |
+
+**Disclosure protocol (public repo, hard rule):** Never reveal the algorithms or internal logic of the platform's content analysis / abuse defence at ANY level (every scan, check, or moderation layer -- no exception). Describe such behaviour only in general, user-facing terms: no algorithms, no heuristics, no scoring, no thresholds, no numbers, no internal structure (not even how many layers exist). When unsure, omit. Enforced by `.claude/rules/privacy.md`.
 
 ## 9. Voice
 

@@ -7,6 +7,13 @@
 
 Last updated: 2026-06-04
 
+> **Source of truth = the LIVE platform.** Re-verify against these before relying on any value:
+> - `https://brewpage.app/api/openapi.yaml` (REST contract)
+> - `https://brewpage.app/llms.txt`
+> - `https://brewpage.app/llms-full.txt`
+>
+> This file is a convenience SNAPSHOT (as of 2026-06-04). Re-verify against the live source before relying on any value; do NOT hardcode versions or counts that drift. Stable contractual limits (size / TTL / rate limits in the tables below) are the platform's documented limits and are safe to cite; counts and versions that move upstream (crawler-UA count, trusted-embed host count, `info.version`) must be read live, not copied from here.
+
 ---
 
 ## 1. What BrewPage is + positioning
@@ -131,7 +138,7 @@ BrewPage exposes machine-readable entry points designed for agents:
 | OpenAPI (JSON) | `https://brewpage.app/api/openapi.json` | For programmatic clients / MCP / codegen. Alias: `/v3/api-docs`. [S6 seo.md line 37; S4 line 713] |
 | robots.txt | `https://brewpage.app/robots.txt` | Crawl policy (see below). [S7 entire file] |
 
-**robots.txt posture.** `Allow: /` for everyone, then explicit per-path `Disallow` of API/internal/admin routes (`/api/admin/`, `/api/files/`, `/api/html/`, `/api/json/`, `/api/kv/`, `/api/sites/`, `/api/gallery`, `/api/stats`, `/v3/api-docs`, `/actuator/`, etc.). The same allow-public/disallow-API stanza is repeated for ~29 named search and AI crawler user-agents (Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, GoogleOther, Applebot, CCBot, ...) -- i.e. AI search bots are explicitly welcomed onto public content. Sitemaps advertised at the bottom (`/sitemap-index.xml`, `/sitemap.xml`, `/sitemap-images.xml`). [S7 lines 1-18, 20-523, 528-531]
+**robots.txt posture.** `Allow: /` for everyone, then explicit per-path `Disallow` of API/internal/admin routes (`/api/admin/`, `/api/files/`, `/api/html/`, `/api/json/`, `/api/kv/`, `/api/sites/`, `/api/gallery`, `/api/stats`, `/v3/api-docs`, `/actuator/`, etc.). The same allow-public/disallow-API stanza is repeated for a list of named search and AI crawler user-agents (Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, GoogleOther, Applebot, CCBot, ...) -- i.e. AI search bots are explicitly welcomed onto public content. The exact set drifts; read the live `robots.txt` rather than relying on a count here. Sitemaps advertised at the bottom (`/sitemap-index.xml`, `/sitemap.xml`, `/sitemap-images.xml`). [S7 lines 1-18, 20-523, 528-531]
 
 For an authoring agent: the OpenAPI YAML at `/api/openapi.yaml` is the canonical, lowest-token contract to load before publishing. The source-of-truth copy lives in the sibling repo (`brewpage-openapi/openapi/openapi.yaml`) -- see `ecosystem.md`.
 
@@ -159,7 +166,7 @@ A recipe appears on the public homepage gallery and in the XML sitemap **only wh
 Cookbook recipes are interactive and often embed third-party widgets (videos, code sandboxes, charts, design embeds). BrewPage allows this through a **trusted-embed-domain allowlist**, but with security constraints.
 
 - User HTML is loaded inside a **sandboxed iframe**, and the platform maintains an **allowlist of trusted embed hosts** (YouTube, Figma, CodePen, CodeSandbox, Observable, etc.) (`hasTrustedDomain()` / TSD in `frontend/src/js/publish.js`). [S1security §"Trusted Sandbox Domains"; S3 line 240]
-- The allowlist relevant to recipe interactivity includes (non-exhaustive): **youtube / youtu.be, vimeo, codepen, jsfiddle, codesandbox, stackblitz, replit, github / gist, figma / embed.figma.com, observablehq, flourish, datawrapper, miro, canva, open.spotify / soundcloud, calendly, typeform, docs.google / forms.gle**. [S1security §TSD domain list; S3 line 240]
+- The allowlist relevant to recipe interactivity includes (non-exhaustive): **youtube / youtu.be, vimeo, codepen, jsfiddle, codesandbox, stackblitz, replit, github / gist, figma / embed.figma.com, observablehq, flourish, datawrapper, miro, canva, open.spotify / soundcloud, calendly, typeform, docs.google / forms.gle**. The exact host set drifts; treat this as illustrative and check the live publish list rather than relying on a fixed count. [S1security §TSD domain list; S3 line 240]
 - **Content-Security-Policy.** The platform applies CSP/sandbox controls; embeds outside the allowlist are constrained. Wildcard third-party domains are not used (explicit subdomains only). Treat CSP behavior as platform-owned. [S1security §"Security Headers" + §"CSP Third-Party Domain Guidelines"; S6 architecture.md line 71]
 - **Adding a new trusted embed domain** is a platform change requiring an update in **both** the TSD list in `frontend/src/js/publish.js` **and** the `frame-src` directive in `deploy/brewpage.caddy`. An authoring agent should not assume a non-listed host will embed -- pick a widget from the allowlist, or request a platform change. [S1security §TSD "New trusted embed domain"; S3 line 240]
 
