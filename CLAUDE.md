@@ -70,6 +70,8 @@ Each recipe = a **self-contained folder of static files** published directly to 
 2. `brewpage` CLI -- `npx brewpage publish-site ./recipes/<slug>`, while action is pre-release.
 3. Direct REST against `https://brewpage.app` -- last resort.
 
+> **Reality (as of 2026-06-04):** `brewpage-action` and the `brewpage` CLI are planned, not yet released -- so today the only working publish path is **direct REST**. Re-check `docs/ecosystem.md` for release status before relying on the Action/CLI.
+
 **Owner tokens:** each recipe has its own BP owner token, stored as GitHub repo secret `BREWPAGE_OWNER_TOKEN_<RECIPE>`, injected at CI time, masked in logs. **Never commit owner tokens** (never in source, logs, or recipe content); not recoverable.
 
 **Release flow:** content-only PRs ship straight to live URL on merge (no tag); a tag marks a curated milestone (e.g. a complete recipe ships). Tags are **unprefixed `vX.Y.Z`** (`v0.1.0`, `v1.0.0`), matching the BP ecosystem. Do **not** hand-edit `package.json` `version` -- CI (once installed) overwrites it from the tag.
@@ -80,8 +82,8 @@ The cookbook is **one module** in the BP ecosystem with **two external surfaces*
 
 | Surface | Local path | GitHub URL |
 |---------|-----------|------------|
-| This repo (`brewpage-cookbook`) | `/Users/maximus/IdeaProjects/brewpage-cookbook` | https://github.com/kochetkov-ma/brewpage-cookbook |
-| Coordination / contract (`brewpage-openapi`) | `/Users/maximus/IdeaProjects/brewpage-openapi` | https://github.com/kochetkov-ma/brewpage-openapi |
+| This repo (`brewpage-cookbook`) | `~/IdeaProjects/brewpage-cookbook` | https://github.com/kochetkov-ma/brewpage-cookbook |
+| Coordination / contract (`brewpage-openapi`) | `~/IdeaProjects/brewpage-openapi` | https://github.com/kochetkov-ma/brewpage-openapi |
 | Live platform | -- | https://brewpage.app |
 | This module's reference stub | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook |
 
