@@ -4,7 +4,7 @@ Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and ga
 
 ## First recipe
 
-[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation, with inline-SVG drill-down diagrams, mini-games and client-side search. It doubles as the production dogfood for the publish pipeline. _Draft._
+[RAG Guide](./recipes/rag-guide.md) -- a long-form interactive walkthrough of retrieval-augmented generation, with inline-SVG drill-down diagrams, mini-games and client-side search. It doubles as the production dogfood for the publish pipeline. _Draft._
 
 The editorial plan for it lives in [`features/01-rag-guide.md`](./features/01-rag-guide.md).
 
@@ -79,8 +79,7 @@ brewpage-cookbook/
   features/              -- per-recipe editorial plans
     01-rag-guide.md
   recipes/               -- one self-contained static folder per recipe (HTML/CSS/JS/assets)
-    rag-guide/
-      index.html
+    rag-guide.md               -- first recipe (prose draft; becomes rag-guide/ once built)
   .claude/
     agents/              -- six domain agents
     features/            -- task board (canonical work list) + tracking procedure

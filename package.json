@@ -4,7 +4,7 @@
   "private": true,
   "description": "BrewPage Cookbook -- interactive recipes for AI artifact workflows, published live on brewpage.app.",
   "license": "Apache-2.0",
-  "author": "Maksim Kochetkov <apmatypa88@gmail.com>",
+  "author": "Maksim Kochetkov <info@brewpage.app>",
   "homepage": "https://brewpage.app",
   "repository": {
     "type": "git",

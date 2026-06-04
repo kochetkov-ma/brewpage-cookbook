@@ -84,7 +84,7 @@ Do not write top-to-bottom on the first pass. Work in this order:
 2. **Write the sign-off blocks early** -- a `Sources` section, a `Try it yourself` section, a `Next steps` section, and the **About this recipe** cross-link footer. Writing the ending first keeps the body pointed at a destination.
 3. **Expand chapters last.** Fill each section with prose, working code, and the interactive briefs (section 4). Lead each chapter with its problem, same as the recipe as a whole.
 
-A chapter still skeleton stays marked with a visible `Draft skeleton.` note and a one-line description of what it must cover. The current `recipes/rag-guide/` is a worked example -- TL;DR, chapter table with status, skeleton chapters with inline interactive targets, and sign-off blocks in place.
+A chapter still skeleton stays marked with a visible `Draft skeleton.` note and a one-line description of what it must cover. The current `recipes/rag-guide.md` draft is the worked example (it moves into a `recipes/rag-guide/` folder once built) -- TL;DR, chapter table with status, skeleton chapters with inline interactive targets, and sign-off blocks in place.
 
 ---
 
