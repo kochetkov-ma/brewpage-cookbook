@@ -1,185 +1,110 @@
 # CLAUDE.md
 
-This file gives Claude Code the full picture of what this repository is, where it sits and how to work in it. Read it before doing anything else.
+[DICT: BP=BrewPage, CA=cookbook-author, IE=interactive-engineer, RE=release-engineer, SB=site-builder, TT=task-tracker]
 
-## Identity
+LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load docs below only when task touches their topic. English only. ASCII punctuation only (straight quotes, hyphens, three-dot `...`); no smart quotes / em-dashes / Unicode.
 
-**BrewPage Cookbook** -- a standalone product brand under the BrewPage ecosystem.
+## 1. Identity
 
-- Repository: `kochetkov-ma/brewpage-cookbook`
-- Bootstrapped: 2026-05-21
-- Status: SCAFFOLD
+**BP Cookbook** -- standalone editorial brand under the BP ecosystem (precedent: `anthropic-cookbook`, Stripe Press). Open-source collection of **interactive recipes** (guides, demos, mini-apps, games) for AI artifact workflows. Each recipe = self-contained folder of plain static HTML + a little vanilla JS, published **live on `brewpage.app`** as a multi-file site -- no build step. Own release cadence, independent of the BP REST contract. Target **~40 recipes** over time; first = long-form **RAG Guide** (dogfood for the publish pipeline). Status: **SCAFFOLD** (pre-release, no prod tag yet). Repo: `kochetkov-ma/brewpage-cookbook`. Bootstrapped 2026-05-21.
 
-What we are:
+## 2. Doc Index (lazy-load)
 
-- An open-source collection of **interactive recipes** -- guides, demos, mini-apps, games -- for AI artifact workflows.
-- Every recipe is a self-contained interactive artifact published live on **BrewPage hosting**.
-- Editorial product. Standalone brand. Own release cadence, independent of the OpenAPI contract.
+| Doc | Load when | Path |
+|-----|-----------|------|
+| Platform reference (limits, endpoints, namespaces, publishing, owner-token/TTL, embeds/CSP) | any question about what/how BP hosts or how to publish | `docs/brewpage-platform.md` |
+| Ecosystem map (full local-path + GitHub-URL repo map, contract source of truth) | locating sibling repos, action/CLI/MCP routing, cross-link sourcing | `docs/ecosystem.md` |
+| Cookbook architecture (stack, repo layout, recipe lifecycle, publish pipeline, release flow) | scaffold/build/stack, pipeline, release decisions | `docs/cookbook-architecture.md` |
+| Recipe authoring (voice, structure template, citation, handoff brief, Definition of Done) | writing/editing any recipe content | `docs/recipe-authoring.md` |
 
-Precedent: [`anthropic-cookbook`](https://github.com/anthropics/anthropic-cookbook) (interactive AI guides), Stripe Press (standalone editorial brand under a developer platform).
+Per-recipe editorial plans live in repo-root `features/NN-<slug>.md` (e.g. `features/01-rag-guide.md`).
 
-## First recipe
+## 3. Task tracking flow
 
-`recipes/rag-guide.md` -- long-form interactive RAG walkthrough (about 15 pages, Astro+React, C4 drill-down, mini-games, client-side search). Target ~40 recipes total over time.
+`.claude/features/board.md` = **canonical task list + status**. Folder == status: `backlog/` → `todo/` → `progress/` (task file MANDATORY) → `closed/`; `specs/` holds per-task design specs. No root `TODO.md` -- never create one. Ship-state prose = `.claude/features/STATUS.md` (board links it, no duplication). IDs: UPPER-KEBAB `<PREFIX>-<DOMAIN>-<SLUG>` (`T-`/`BUG-`/`M-`/`EPIC-`; domain in `{RECIPE, PLATFORM, CONTENT, INTERACTIVE, CI, DOCS, SEO}`).
 
-Plan: `features/01-rag-guide.md`.
+**Bookend rule (`.claude/rules/tasks.md` R1/R2):**
+- **R1 / FIRST sub-task -> claim:** move file `todo/ -> progress/`, set `status: progress` + `owner`, bump `updated`, move board row Todo->Progress, fix counts + current focus.
+- **R2 / LAST sub-task -> reconcile + close:** move file `progress/ -> closed/`, set `status: closed`, reconcile `board.md` + `STATUS.md`, record **unprefixed `vX.Y.Z` tag + commit SHA** in `## Notes`, fix counts/focus.
 
-## Where this lives in the BrewPage ecosystem
+**Never hand-edit `.claude/features/**`** -- delegate every board transition to `TT` agent. Full procedure: `.claude/features/TRACKER.md`.
 
-This repository is **one module** in the BrewPage ecosystem. By design, it knows about only two external surfaces:
+## 4. Agent index
 
-### 1. BrewPage platform -- the live hosting service we publish to
+Six agents under `.claude/agents/`. All model `opus`. `TT` owns the board; `brewpage-platform-expert` is read-only (no Edit/Write); the other four own writes in their domain and delegate every board move to `TT`.
 
-| Surface | Where |
-|---|---|
-| Live platform | https://brewpage.app |
-| llms.txt | https://brewpage.app/llms.txt |
-| llms-full.txt | https://brewpage.app/llms-full.txt |
-| Public OpenAPI | https://brewpage.app/api/openapi.yaml |
-| Public homepage gallery | https://brewpage.app (`public` namespace) |
+| Agent | Role | When to use |
+|-------|------|-------------|
+| `CA` | Recipe content -- plans, drafts, edits, ships `recipes/**` + `features/**`; voice + citations | recipe content, draft, outline, edit, voice, source, citation, editorial pass |
+| `SB` | Site scaffold + shared static structure; shared layout HTML, the one CSS file, search wiring, CDN deps | scaffold, layout, shared html, css, client-side search, dependency, cdn, css-variables decision |
+| `IE` | Builds every interactive element (C4 drill-down, mini-games, sandboxes, visualisers); reusable vanilla-JS snippets | interactive, component, c4, svg, drill-down, mini-game, sandbox, visualiser, slider, playground |
+| `brewpage-platform-expert` | **Read-only adviser** on BP REST/CLI/MCP/action, namespaces, owner-tokens, TTL, SEO/growth; routes edits to write agents | publish-site, namespace, owner-token, password, ttl, brewpage-action, brewpage cli, mcp, anchor cluster, seo |
+| `RE` | CI/CD -- `.github/workflows/*.yml`, tag flow, brewpage-action integration, secret masking, version sync | github actions, workflow, ci, cd, tag, release, brewpage-action, secret, publish step, semver |
+| `TT` | **Owns `.claude/features/**` board** (scoped writer: writes only inside `features/`) -- claim/move/close, groom backlog, keep `board.md` in sync | add/move/close task, claim, ship recipe, groom backlog, board status, tracker |
 
-This is where every recipe ends up. The publishing target.
+Team definition (source of truth for roles, build order, expansion): `.claude/teams/brewpage-cookbook/team.md`. Cross-team / cross-repo agent calls are forbidden.
 
-### 2. brewpage-openapi -- the sister coordination repository
+## 5. Stack (simplest plain-HTML; no build step)
 
-| Surface | Where |
-|---|---|
-| GitHub repo | https://github.com/kochetkov-ma/brewpage-openapi |
-| Local path (this machine) | `~/IdeaProjects/brewpage-openapi` |
-| Reference folder for this module (remote) | https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook |
-| Reference folder for this module (local) | `~/IdeaProjects/brewpage-openapi/modules/cookbook` |
-| OpenAPI contract (source of truth) | `~/IdeaProjects/brewpage-openapi/openapi/openapi.yaml` |
-| MCP server (read-only reference) | `~/IdeaProjects/brewpage-openapi/mcp-server/` |
-| Master ecosystem plan | `~/IdeaProjects/brewpage-openapi/ECOSYSTEM-PLAN.md` |
+Deliberately the simplest stack: **plain static HTML + minimal vanilla JavaScript (ES modules) + ONE small hand-written CSS file.** No framework, no bundler, no build step, no MDX, no TypeScript-strict requirement. About **90% of a recipe is plain HTML**; vanilla JS is added only where real interactivity is needed.
 
-What `brewpage-openapi` is:
+| Layer | Choice |
+|-------|--------|
+| Markup | Plain static HTML (one file per page) |
+| Interactivity | Minimal vanilla JavaScript, ES modules (`<script type="module">`) |
+| Styling | ONE small hand-written CSS file using CSS variables |
+| Diagrams | Inline SVG or static images |
+| Client-side search (if any) | Tiny vanilla JS over a small JSON index |
+| Build | None -- files ship exactly as authored |
 
-- The **source of truth for the BrewPage REST API contract** (`openapi/openapi.yaml`).
-- The **coordination layer** where reference stubs for every ecosystem module are indexed.
+Each recipe = a **self-contained folder of static files** published directly to BP as a multi-file site (limits 20 MB total / 100 files / 5 MB per file). No `dist/`, no compile.
 
-What we do with it from here:
+**Third-party JS/CSS:** load from a CDN pinned to an **exact `X.Y.Z`**. Forbidden anywhere: `@latest`, `:latest`, `:stable`, `:edge`, `@main`, caret `^x.y`, tilde `~x.y`, any floating tag. No version numbers pinned here yet -- resolve each from its registry before use (procedure: `.claude/rules/versions.md`). Do **not** guess a version. (Precedent: a Scalar `@latest` CDN pin broke a sibling docs site.)
 
-- Pull contract changes (read the YAML, follow whatever the latest contract says).
-- Treat its `modules/cookbook/` stub as the canonical entry-point for this module in ecosystem indexes.
+## 6. Publishing pipeline + release flow
 
-What we do **not** do:
+**Pipeline:** every push to `main` -> publish the recipe's **static folder directly** to BP **as a multi-file site** (no build, no `dist/`). Site limits the folder must fit: 20 MB total / 100 files / 5 MB per file.
 
-- Push code into `brewpage-openapi`. The reference stub there is maintained as part of `brewpage-openapi`'s own workflow.
-- Cross-call agents living in `brewpage-openapi`'s `.claude/`. Their teams are out of scope.
-
-## What this repository does **not** know about
-
-The BrewPage ecosystem has other modules -- CLIs, browser extensions, IDE extensions, language clients, a GitHub Action, a HuggingFace Space. **They are intentionally invisible from this repository.**
-
-If a recipe needs to demonstrate a sibling module (e.g. `brewpage` CLI or VS Code extension), link to its public package documentation -- do not wire cross-repo agent calls and do not assume any local sibling clone exists.
-
-Coordination across modules happens in `brewpage-openapi`, never here.
-
-## Where this repository itself lives
-
-| Surface | Where |
-|---|---|
-| GitHub repo | https://github.com/kochetkov-ma/brewpage-cookbook |
-| Local path (this machine) | `~/IdeaProjects/brewpage-cookbook` |
-| Published recipes | https://brewpage.app (one URL per recipe; subdomain decision TBD) |
-| Issue tracker | https://github.com/kochetkov-ma/brewpage-cookbook/issues |
-| Releases | GitHub Releases + tags `vX.Y.Z` (unprefixed) on this repo |
-
-## Stack
-
-Planned (will land as the platform scaffold is built by the `astro-cookbook-platform` agent):
-
-- Astro 5 -- static site generator, content-focused.
-- React -- interactive islands.
-- Tailwind CSS + daisyUI -- styling.
-- Mermaid -- C4 diagrams with drill-down.
-- Pagefind or Fuse.js -- client-side search.
-- TypeScript -- strict mode.
-
-Until then, `package.json` is a placeholder and recipes live as `.md` (not `.mdx`).
-
-## Publishing pipeline
-
-Every push to `main` -> `npm run build` -> publish `dist/` to BrewPage as a multi-file site.
-
-Publish mechanism, in order of preference (fall back as needed):
-
-1. [`kochetkov-ma/brewpage-action@v1`](https://github.com/kochetkov-ma/brewpage-action) -- preferred once released. This repository is the action's **first production consumer** (dogfood).
-2. `brewpage` CLI -- `npx brewpage publish-site ./dist`. Used while the action is pre-release.
+**Publish mechanism (preference order, fall back as needed):**
+1. `brewpage-action` -- preferred (dogfood; this repo is its first production consumer); `kochetkov-ma/brewpage-action@v1`, used once released.
+2. `brewpage` CLI -- `npx brewpage publish-site ./recipes/<slug>`, while action is pre-release.
 3. Direct REST against `https://brewpage.app` -- last resort.
 
-Owner tokens for each recipe are stored as repo secrets (`BREWPAGE_OWNER_TOKEN_<RECIPE>`). **Never commit owner tokens.**
+**Owner tokens:** each recipe has its own BP owner token, stored as GitHub repo secret `BREWPAGE_OWNER_TOKEN_<RECIPE>`, injected at CI time, masked in logs. **Never commit owner tokens** (never in source, logs, or recipe content); not recoverable.
 
-## Release flow
+**Release flow:** content-only PRs ship straight to live URL on merge (no tag); a tag marks a curated milestone (e.g. a complete recipe ships). Tags are **unprefixed `vX.Y.Z`** (`v0.1.0`, `v1.0.0`), matching the BP ecosystem. Do **not** hand-edit `package.json` `version` -- CI (once installed) overwrites it from the tag.
 
-- Content-only PRs to `main` ship straight to the live URL on merge.
-- Tag bumps (`vX.Y.Z`) mark curated milestones (e.g. a complete recipe ships).
-- Tags are unprefixed -- `v0.1.0`, `v1.0.0` -- matching the rest of the BrewPage ecosystem.
-- Do **not** edit `package.json` version manually; CI (once installed) overwrites it from the tag.
+## 7. Ecosystem & links
 
-## Cross-link requirement (mandatory)
+The cookbook is **one module** in the BP ecosystem with **two external surfaces**: the **live platform** (`https://brewpage.app`) and the **coordination repo** `brewpage-openapi` (REST contract source of truth at `openapi/openapi.yaml`). Never wire cross-repo agent calls, never assume a sibling local clone exists. **Full repo map** (every module's local path + GitHub URL, build order, inference flags): `docs/ecosystem.md`.
 
-Every `README`, every published recipe page, every package listing must back-link to:
+| Surface | Local path | GitHub URL |
+|---------|-----------|------------|
+| This repo (`brewpage-cookbook`) | `/Users/maximus/IdeaProjects/brewpage-cookbook` | https://github.com/kochetkov-ma/brewpage-cookbook |
+| Coordination / contract (`brewpage-openapi`) | `/Users/maximus/IdeaProjects/brewpage-openapi` | https://github.com/kochetkov-ma/brewpage-openapi |
+| Live platform | -- | https://brewpage.app |
+| This module's reference stub | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook |
+
+## 8. Rules pointer
+
+Auto-loaded from `.claude/rules/`:
+
+| Rule | Covers |
+|------|--------|
+| `versions.md` | pin-exact discipline (npm/CDN/Docker/GHA); registry-verify procedure |
+| `content.md` | recipe content essentials (pointer-level; full guide in `docs/recipe-authoring.md`) |
+| `docs.md` | one-doc-per-topic, LLM-dense style, run-artifact + screenshot paths, board-via-`TT` |
+| `tasks.md` | condensed task-board rules (board = canonical, folder==status, bookend R1/R2, unprefixed tags) |
+
+## 9. Voice
+
+Recipes are **interactive teaching artifacts**, not blog posts: open with a concrete problem then the runnable solution path, use real working code (no unlabelled pseudocode), include >=1 interactive element, cite every claim to a primary source, close with "try it yourself" / "next steps", ASCII punctuation only, English default. Full voice + structure template + Definition of Done: `docs/recipe-authoring.md`. (`CA` describes interactivity in prose + a handoff brief; `IE` implements it -- do not blur the boundary.)
+
+## 10. Mandatory cross-link rule
+
+Hard rule from `ECOSYSTEM-PLAN.md` (coordination repo): **every `README`, every published recipe page, every package/marketplace listing must back-link to both**:
 
 - https://brewpage.app
-- https://github.com/kochetkov-ma/brewpage-openapi (contract source of truth)
+- https://github.com/kochetkov-ma/brewpage-openapi
 
-This is a hard rule from `ECOSYSTEM-PLAN.md` in the coordination repo.
-
-## File layout
-
-```
-brewpage-cookbook/
-  README.md
-  CLAUDE.md                              -- this file
-  LICENSE                                -- Apache-2.0
-  .gitignore
-  package.json                           -- minimal placeholder
-  features/                              -- short per-recipe plans, written before drafting
-    01-rag-guide.md
-  recipes/                               -- recipe drafts; will migrate to .mdx with Astro
-    rag-guide.md
-  .claude/
-    teams/brewpage-cookbook/
-      team.md                            -- planned agent team
-    agents/                              -- created by /brewcode:teams or /brewcode:agents
-```
-
-## Voice and content style
-
-Recipes are interactive teaching artifacts, not blog posts. Each recipe must:
-
-- Open with a concrete problem and the runnable solution path.
-- Use real, working code -- no pseudocode unless explicitly labelled.
-- Include at least one interactive element (diagram drill-down, mini-game, calculator, sandbox).
-- Cite sources for facts and decisions.
-- End with a "try it yourself" / "next steps" pointer.
-
-## Files that drift if you forget
-
-When a recipe ships:
-
-- `recipes/<name>.md` (or `.mdx`) -- content.
-- `recipes/<name>/` -- assets if any.
-- `README.md` recipe index entry.
-- CI publish step if the recipe gets its own URL or secret.
-- The corresponding `features/<NN>-<name>.md` plan should be marked `SHIPPED`.
-
-When the BrewPage REST API changes upstream:
-
-- Re-read `~/IdeaProjects/brewpage-openapi/openapi/openapi.yaml`.
-- Update any code that calls REST directly.
-- Bump the recipe metadata if any visible behaviour changed.
-
-## Teams and agents
-
-Team `brewpage-cookbook` is planned in `.claude/teams/brewpage-cookbook/team.md` (five planned agents). Individual agent files under `.claude/agents/` are scaffolded later via `/brewcode:teams` or `/brewcode:agents`.
-
-Sibling teams (`brewpage-openapi`, `brewpage-ecosystem`) live in the coordination repo and are out of scope here.
-
-## Notes for the model
-
-- This is the **only** CLAUDE.md you need in this repository. Other modules in the ecosystem have their own CLAUDE.md in their own repos; ignore them.
-- Default to recipe-quality writing: short paragraphs, concrete examples, runnable code, clear structure.
-- Default response language is English (matches the OSS audience). Reply in the maintainer's language when chatting.
-- When in doubt about API behaviour, the authoritative answer is in `~/IdeaProjects/brewpage-openapi/openapi/openapi.yaml`. Read it before guessing.
+A page missing either link is not done.

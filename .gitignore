@@ -1,9 +1,8 @@
 # dependencies
 node_modules/
 
-# build output
+# build output (no build step in this repo; kept for ad-hoc tooling only)
 dist/
-.astro/
 .cache/
 
 # environment / secrets
@@ -17,6 +16,7 @@ dist/
 .DS_Store
 *.swp
 *.swo
+*.bak
 
 # logs
 *.log
@@ -38,3 +38,11 @@ yarn-error.log*
 !.claude/teams/**
 !.claude/agents/
 !.claude/agents/**
+!.claude/features/
+!.claude/features/**
+!.claude/rules/
+!.claude/rules/**
+
+# Backups + generated agent traces stay ignored even inside re-included .claude/ paths
+.claude/**/*.bak
+.claude/**/trace.jsonl

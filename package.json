@@ -12,10 +12,5 @@
   },
   "bugs": {
     "url": "https://github.com/kochetkov-ma/brewpage-cookbook/issues"
-  },
-  "scripts": {
-    "dev": "echo 'Astro scaffold pending -- see .claude/teams/brewpage-cookbook/team.md (astro-cookbook-platform agent)' && exit 1",
-    "build": "echo 'Astro scaffold pending' && exit 1",
-    "preview": "echo 'Astro scaffold pending' && exit 1"
   }
 }

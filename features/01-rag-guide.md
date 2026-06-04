@@ -42,17 +42,17 @@ Developers and AI engineers who have shipped at least one LLM feature and want a
 
 ## Interactivity targets
 
-- **C4 drill-down diagram** of a reference RAG architecture (system -> container -> component).
-- **Mini-game**: "spot the retrieval bug" -- short snippets, choose what's wrong.
-- **Mini-game**: "tune the chunker" -- live chunking slider with quality score.
-- **Embedding visualiser**: 2D projection of a small corpus, hover to read documents.
-- **Client-side full-text search** across the whole guide.
+- **C4 drill-down diagram** of a reference RAG architecture (system -> container -> component), as inline SVG driven by vanilla JS.
+- **Mini-game**: "spot the retrieval bug" -- short snippets, choose what's wrong (vanilla JS).
+- **Mini-game**: "tune the chunker" -- live chunking slider with quality score (vanilla JS).
+- **Embedding visualiser**: 2D projection of a small corpus, hover to read documents (inline SVG + vanilla JS).
+- **Client-side full-text search** across the whole guide (vanilla JS, no external indexer).
 
 ## Stack (for this recipe)
 
-Astro 5 + React (interactive islands) + Tailwind + daisyUI. Mermaid for C4. Pagefind for search.
+Plain static HTML + minimal vanilla JavaScript (ES modules) + one small hand-written CSS file. No framework, no bundler, no build step. C4 diagram and the embedding visualiser are inline SVG; search and mini-games are hand-written vanilla JS. Any third-party JS/CSS comes from a CDN pinned to an exact `X.Y.Z` version.
 
-The platform scaffold is installed by the `astro-cookbook-platform` agent; this recipe is one of the first MDX consumers of that scaffold.
+The recipe is a static folder published directly to BrewPage as a multi-file site, with no build output directory.
 
 ## Output
 
@@ -63,7 +63,7 @@ One live URL on `brewpage.app`. Subdomain strategy decision **before publish** (
 | # | Milestone | Target |
 |---|---|---|
 | 1 | Outline locked, sources gathered, voice sample approved | Week 1 |
-| 2 | Astro scaffold + first 3 pages of static content | Week 2 |
+| 2 | Static scaffold + first 3 pages of static content | Week 2 |
 | 3 | Reference architecture C4 + one mini-game working | Week 3 |
 | 4 | All 15 pages drafted (rough) | Week 4 |
 | 5 | All interactivity wired; client-side search live | Week 5 |
