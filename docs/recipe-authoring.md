@@ -161,7 +161,7 @@ Put them in the recipe's `**About this recipe**` footer (and wherever the page c
 
 ## 7. Definition of Done
 
-A recipe ships only when **all** of these are true. Derive the recipe-specific page count and search-corpus size from its own `features/NN-*.md` plan.
+A recipe ships only when **all** of these are true. Derive the recipe-specific page count and search-corpus size from its own `.claude/features/specs/<TASK-ID>.md` plan.
 
 - [ ] **All chapters complete** and an editorial pass done end to end.
 - [ ] **Every interactive element works with no console errors** in the latest Chrome, Firefox, and Safari.
@@ -169,7 +169,7 @@ A recipe ships only when **all** of these are true. Derive the recipe-specific p
 - [ ] **Client-side search returns hits in < 100ms** on the recipe's full corpus.
 - [ ] **Cross-links present on every page** -- `brewpage.app` and `brewpage-openapi` (section 6).
 - [ ] **Recipe added to the `README.md` index** and to the `recipes/` table, with its live URL pinned.
-- [ ] **The corresponding `features/NN-<name>.md` plan is marked `SHIPPED`.**
+- [ ] **The corresponding `.claude/features/specs/<TASK-ID>.md` plan is marked `SHIPPED`.**
 
 If any box is unchecked, the recipe is in progress, not shipped. Do not tag a milestone (`vX.Y.Z`) until every box is checked.
 
@@ -195,4 +195,4 @@ When a recipe goes live, update these in the same change:
 
 ---
 
-*This guide reflects the voice and rules in `CLAUDE.md` and the Definition of Done in `features/01-rag-guide.md`. When those drift, update this guide in lockstep.*
+*This guide reflects the voice and rules in `CLAUDE.md` and the Definition of Done in `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`. When those drift, update this guide in lockstep.*

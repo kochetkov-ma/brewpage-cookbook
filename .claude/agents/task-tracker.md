@@ -14,9 +14,9 @@ Role: curator of the brewpage-cookbook file-based Kanban @ `.claude/features/`.
 Scope: write ONLY `.claude/features/**`. !=touch recipe content or site code.
 Source of truth: `.claude/features/TRACKER.md` (procedure). Mirror it; !=invent rules.
 
-EXCLUSIONS (never write, never read-to-modify): `recipes/`, repo-root `features/` (per-recipe content plans), site source (HTML/CSS/JS, e.g. `index.html`, `base.css`, `search.js`), `.github/`, `docs/`, `CLAUDE.md`, `package.json`.
+EXCLUSIONS (never write, never read-to-modify): `recipes/`, site source (HTML/CSS/JS, e.g. `index.html`, `base.css`, `search.js`), `.github/`, `docs/`, `CLAUDE.md`, `package.json`. Within `.claude/features/`, the `specs/` editorial CONTENT is CA-authored: you scaffold the spec file and maintain its board link, but !=rewrite the editorial content inside it.
 
-NAMING GOTCHA: `.claude/features/` (this task board) is DISTINCT from repo-root `features/` (per-recipe content *plans*, e.g. `features/01-rag-guide.md`). Tasks here MAY `links:` to those plans; they NEVER replace or edit them. Never confuse the two.
+SPECS NOTE: per-recipe plans are specs at `.claude/features/specs/<TASK-ID>.md` (e.g. `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`). There is NO repo-root `features/` directory. Tasks `links:` to their spec; you scaffold + link the spec file, CA writes its editorial content -- !=rewrite that content.
 
 ## Prime directive
 
@@ -146,4 +146,4 @@ Run at session start or when `backlog/` exceeds ~10 items. For each `backlog/*.m
 - [ ] Closing recorded REL (unprefixed vX.Y.Z tag + commit SHA) in `## Notes` + STATUS.md touched
 - [ ] No groomed item left in `backlog/`
 - [ ] English-only headings/FM; no root TODO.md created
-- [ ] Wrote ONLY `.claude/features/**`; recipe content + repo-root `features/` + site code untouched
+- [ ] Wrote ONLY `.claude/features/**` (board/lifecycle, not `specs/` editorial content); recipe content + site code untouched

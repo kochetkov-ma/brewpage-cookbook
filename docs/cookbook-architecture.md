@@ -12,7 +12,7 @@ It has its own release cadence, independent of the BrewPage REST API contract.
 
 **Precedent:** [`anthropic-cookbook`](https://github.com/anthropics/anthropic-cookbook) (interactive AI guides) and Stripe Press (a standalone editorial brand under a developer platform). The cookbook plays the same role for BrewPage: a curated, branded body of work that demonstrates the platform without being the platform.
 
-**Target:** roughly **40 recipes** over time, covering AI artifact patterns, agent workflows, content hosting, and MCP integrations. The first recipe is the long-form interactive **RAG Guide** (plan: [`features/01-rag-guide.md`](../features/01-rag-guide.md)), which doubles as the production dogfood for the publish pipeline.
+**Target:** roughly **40 recipes** over time, covering AI artifact patterns, agent workflows, content hosting, and MCP integrations. The first recipe is the long-form interactive **RAG Guide** (plan: [`.claude/features/specs/T-RECIPE-RAG-GUIDE.md`](../.claude/features/specs/T-RECIPE-RAG-GUIDE.md)), which doubles as the production dogfood for the publish pipeline.
 
 This repository is **one module** in the BrewPage ecosystem. It knows about only two external surfaces: the [brewpage.app](https://brewpage.app) platform (the publish target) and the [`brewpage-openapi`](https://github.com/kochetkov-ma/brewpage-openapi) coordination repo (the REST contract source of truth). All other ecosystem modules are intentionally invisible from here -- link to their public package docs; never wire cross-repo agent calls.
 
@@ -72,8 +72,8 @@ brewpage-cookbook/
 
 Two parallel "plan" surfaces, with distinct scopes:
 
-- **`features/NN-<slug>.md`** -- editorial plans, one per recipe (goal, scope, milestones, open questions, Definition of Done). Written before drafting.
-- **`.claude/features/`** -- the operational **task board** (canonical work list across the whole repo). See §8.
+- **`.claude/features/specs/<TASK-ID>.md`** -- per-task editorial design specs, one per recipe (goal, scope, milestones, open questions, Definition of Done). Authored by `cookbook-author`, linked from the matching task card. Written before drafting.
+- **`.claude/features/`** -- the operational **task board** (canonical work list across the whole repo); `specs/` holds the per-task design specs above. See §8.
 
 ---
 
@@ -82,18 +82,18 @@ Two parallel "plan" surfaces, with distinct scopes:
 Each recipe moves through a fixed sequence -- there is no migration or build stage:
 
 ```
-PLAN            AUTHOR                       PUBLISH
-features/   ->  recipes/<slug>/          ->  live on
-NN-<slug>.md    index.html + css/js/svg      brewpage.app
-                (static HTML/CSS/JS)         (multi-file site, no build)
+PLAN                          AUTHOR                       PUBLISH
+.claude/features/specs/   ->  recipes/<slug>/          ->  live on
+<TASK-ID>.md                  index.html + css/js/svg      brewpage.app
+                              (static HTML/CSS/JS)         (multi-file site, no build)
 ```
 
-1. **Plan** -- write `features/NN-<slug>.md`: goal, audience, scope, interactivity targets, milestones, open questions, Definition of Done.
+1. **Plan** -- write `.claude/features/specs/<TASK-ID>.md`: goal, audience, scope, interactivity targets, milestones, open questions, Definition of Done.
 2. **Author** -- build the recipe directly as static files in `recipes/<slug>/`: `index.html` (and any further `.html` pages), the shared CSS file, vanilla-JS modules for any interactivity, and inline-SVG / image assets. There is no intermediate format and nothing to compile; what you write is what ships.
 3. **Publish** -- the static folder is published to BrewPage as a multi-file site (see section 5).
-4. **Mark SHIPPED** -- when the recipe is live, mark its `features/NN-<slug>.md` plan `SHIPPED`, add/refresh its entry in the `README.md` recipe index and the `recipes/` table, and pin the live URL.
+4. **Mark SHIPPED** -- when the recipe is live, mark its `.claude/features/specs/<TASK-ID>.md` plan `SHIPPED`, add/refresh its entry in the `README.md` recipe index and the `recipes/` table, and pin the live URL.
 
-**Drift checklist on ship** (files that fall out of sync if you forget): `recipes/<slug>/` (the static folder -- HTML, CSS, JS, assets), the `README.md` recipe index entry, the CI publish step (if the recipe gets its own URL or secret), and the `features/NN-<slug>.md` status flipped to `SHIPPED`.
+**Drift checklist on ship** (files that fall out of sync if you forget): `recipes/<slug>/` (the static folder -- HTML, CSS, JS, assets), the `README.md` recipe index entry, the CI publish step (if the recipe gets its own URL or secret), and the `.claude/features/specs/<TASK-ID>.md` status flipped to `SHIPPED`.
 
 ---
 
@@ -151,5 +151,5 @@ Every recipe must include at least one interactive element. Each element is a sm
 
 ## 8. Canonical work list & authoring reference
 
-- **Task board (canonical work list):** [`.claude/features/board.md`](../.claude/features/board.md). Single source of truth for what work is in flight across the repo; folder/status conventions and the tracking procedure live alongside it under `.claude/features/`. Per-recipe editorial plans live separately in `features/NN-<slug>.md` (see §3).
+- **Task board (canonical work list):** [`.claude/features/board.md`](../.claude/features/board.md). Single source of truth for what work is in flight across the repo; folder/status conventions and the tracking procedure live alongside it under `.claude/features/`. Per-recipe editorial plans live as per-task design specs under `.claude/features/specs/` (`.claude/features/specs/<TASK-ID>.md`; see §3).
 - **Recipe authoring (voice + Definition of Done):** [`docs/recipe-authoring.md`](./recipe-authoring.md) -- the editorial standard every recipe must meet (concrete-problem opening, real working code, at least one interactive element, cited sources, a "try it yourself" / "next steps" close, and the per-recipe DoD).

@@ -6,7 +6,7 @@ Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and ga
 
 [RAG Guide](./recipes/rag-guide.md) -- a long-form interactive walkthrough of retrieval-augmented generation, with inline-SVG drill-down diagrams, mini-games and client-side search. It doubles as the production dogfood for the publish pipeline. _Draft._
 
-The editorial plan for it lives in [`features/01-rag-guide.md`](./features/01-rag-guide.md).
+The editorial plan for it lives as a per-task design spec in the board: [`.claude/features/specs/T-RECIPE-RAG-GUIDE.md`](./.claude/features/specs/T-RECIPE-RAG-GUIDE.md).
 
 ## What this is
 
@@ -23,7 +23,7 @@ The deeper references live in [`docs/`](./docs/) -- read the one whose topic you
 
 ## How work is tracked
 
-The canonical work list is the task board at [`.claude/features/board.md`](./.claude/features/board.md). Folder name equals task status -- a task file moves through `backlog/`, `todo/`, `progress/` and `closed/` as it advances, and the board row moves with it. There is no root `TODO.md`. Board transitions (claiming, moving, closing, recording the release tag and commit) go through the `task-tracker` agent so the board, the task frontmatter and the folder always stay in lockstep; they are not hand-edited. The full procedure is in [`.claude/features/TRACKER.md`](./.claude/features/TRACKER.md). Per-recipe editorial plans are a separate surface and live in [`features/`](./features/).
+The canonical work list is the task board at [`.claude/features/board.md`](./.claude/features/board.md). Folder name equals task status -- a task file moves through `backlog/`, `todo/`, `progress/` and `closed/` as it advances, and the board row moves with it. There is no root `TODO.md`. Board transitions (claiming, moving, closing, recording the release tag and commit) go through the `task-tracker` agent so the board, the task frontmatter and the folder always stay in lockstep; they are not hand-edited. The full procedure is in [`.claude/features/TRACKER.md`](./.claude/features/TRACKER.md). Per-recipe editorial plans live as per-task design specs in [`.claude/features/specs/`](./.claude/features/specs/) (`.claude/features/specs/<TASK-ID>.md`), authored by the `cookbook-author` agent and linked from the matching task card.
 
 ## Agents
 

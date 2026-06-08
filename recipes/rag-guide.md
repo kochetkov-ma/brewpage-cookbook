@@ -1,7 +1,7 @@
 # RAG Guide
 
 > First recipe of the **BrewPage Cookbook**. Status: DRAFT. Started 2026-05-21.
-> Plan: [`features/01-rag-guide.md`](../features/01-rag-guide.md).
+> Plan: [`.claude/features/specs/T-RECIPE-RAG-GUIDE.md`](../.claude/features/specs/T-RECIPE-RAG-GUIDE.md).
 
 ## TL;DR
 

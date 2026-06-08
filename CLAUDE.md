@@ -17,7 +17,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 | Cookbook architecture (stack, repo layout, recipe lifecycle, publish pipeline, release flow) | scaffold/build/stack, pipeline, release decisions | `docs/cookbook-architecture.md` |
 | Recipe authoring (voice, structure template, citation, handoff brief, Definition of Done) | writing/editing any recipe content | `docs/recipe-authoring.md` |
 
-Per-recipe editorial plans live in repo-root `features/NN-<slug>.md` (e.g. `features/01-rag-guide.md`).
+Per-recipe editorial plans live as per-task design specs in `.claude/features/specs/<TASK-ID>.md` (e.g. `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`), authored by `CA` and linked from the matching task card.
 
 ## 3. Task tracking flow
 
@@ -35,7 +35,7 @@ Six agents under `.claude/agents/`. All model `opus`. `TT` owns the board; `brew
 
 | Agent | Role | When to use |
 |-------|------|-------------|
-| `CA` | Recipe content -- plans, drafts, edits, ships `recipes/**` + `features/**`; voice + citations | recipe content, draft, outline, edit, voice, source, citation, editorial pass |
+| `CA` | Recipe content -- plans, drafts, edits, ships `recipes/**` + `.claude/features/specs/**`; voice + citations | recipe content, draft, outline, edit, voice, source, citation, editorial pass |
 | `SB` | Site scaffold + shared static structure; shared layout HTML, the one CSS file, search wiring, CDN deps | scaffold, layout, shared html, css, client-side search, dependency, cdn, css-variables decision |
 | `IE` | Builds every interactive element (C4 drill-down, mini-games, sandboxes, visualisers); reusable vanilla-JS snippets | interactive, component, c4, svg, drill-down, mini-game, sandbox, visualiser, slider, playground |
 | `brewpage-platform-expert` | **Read-only adviser** on BP REST/CLI/MCP/action, namespaces, owner-tokens, TTL, SEO/growth; routes edits to write agents | publish-site, namespace, owner-token, password, ttl, brewpage-action, brewpage cli, mcp, anchor cluster, seo |
