@@ -1,0 +1,37 @@
+<!--
+  drilldown-host.html -- semantic-zoom drill host (AtlasMD 3.6, copy-in source of truth).
+  Slots: [data-slot="toolbar"] (breadcrumb + zoom-out, .js-only),
+         [data-slot="stage"]   (the diagram that collapses/scales on zoom),
+         [data-slot="panel"]   (inline-grow detail panel mount, .js-only).
+  drilldown-zoom.js mounts on [data-component="drilldown-host"] and finds the
+  slots by selector. NO-JS DEGRADATION (hard requirement): the host ships a
+  static meaningful fallback + full prose inside .no-js-only; the live camera
+  is .js-only. JS only ENHANCES.
+  data-diagram-src points at the per-page node/detail data.
+-->
+<section class="plate diagram-host" data-component="drilldown-host" data-diagram-src="" aria-labelledby="dhTitle">
+  <div class="plate-head">
+    <div class="title-block">
+      <h3 id="dhTitle" data-i18n="dhTitle" data-ru="Заголовок" data-en="Title">Заголовок</h3>
+      <p data-i18n="dhSub" data-ru="Подзаголовок" data-en="Subtitle">Подзаголовок</p>
+    </div>
+    <!-- compass.html inlined here (title row only) -->
+  </div>
+
+  <div class="diagram-host__toolbar js-only" data-slot="toolbar">
+    <!-- breadcrumb.html + zoom-controls.html (zoom-out) inlined here -->
+  </div>
+
+  <div class="diagram-host__stage js-only" data-slot="stage">
+    <!-- live diagram (pipeline / vector-map / comparison) -->
+  </div>
+
+  <div class="detail-wrap js-only" data-slot="panel" aria-live="polite">
+    <!-- inline-grow detail panel injected by drilldown-zoom.js -->
+  </div>
+
+  <div class="no-js-only">
+    <!-- STATIC fallback + full prose: a flat schematic + the same content the
+         drill would reveal, so the page teaches with JS off. CA ports this. -->
+  </div>
+</section>

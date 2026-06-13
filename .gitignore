@@ -46,3 +46,16 @@ yarn-error.log*
 # Backups + generated agent traces stay ignored even inside re-included .claude/ paths
 .claude/**/*.bak
 .claude/**/trace.jsonl
+
+# Transient run artefacts (per docs.md reports live here but are not version-tracked
+# -- screenshots/QA output bloat history) and machine-local plan symlinks.
+.claude/reports/
+.claude/plans/
+
+# Stray Playwright MCP output (console logs / page snapshots) dropped by ad-hoc runs
+.playwright-mcp/
+**/.playwright-mcp/
+
+# Per-machine brewcode runtime state that leaks into a recipe folder (the recipe
+# folder publishes to BrewPage verbatim -- keep tooling state out of it)
+recipes/**/.claude/

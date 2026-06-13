@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Зачем нужен RAG - с RAG / без RAG - RAG С НУЛЯ</title>
+<meta name="description" content="Зачем нужен RAG: один вопрос, два тракта - из памяти модели и по найденному источнику. Интерактивное сравнение BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
+     + this section's own CSS. Swapping the theme <link> is the only reskin. -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/why-rag.css">
+</head>
+<body>
+<a class="skip-link" href="#whyTitle" data-i18n="skip" data-ru="К сравнению" data-en="Skip to the comparison">К сравнению</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <div class="site-header__brand">
+      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+          <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+          <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+          <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+        </svg>
+      </a>
+      <div>
+        <h1 data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</h1>
+        <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">Путеводитель для начинающих</div>
+      </div>
+    </div>
+    <div class="site-header__nav">
+      <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+  <!-- ===================== comparison plate (Зачем нужен RAG) ===================== -->
+  <section class="plate" data-component="comparison" aria-labelledby="whyTitle">
+    <div class="plate-head">
+      <div class="title-block">
+        <nav class="back-to-map" aria-label="Хлебные крошки">
+          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Маршрут</a>
+          <span class="sep" aria-hidden="true">&rsaquo;</span>
+          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Зачем он нужен" data-en="Why you need it">Зачем он нужен</span>
+        </nav>
+        <h3 id="whyTitle" data-i18n="whyTitle" data-ru="Зачем нужен RAG" data-en="Why you need RAG">Зачем нужен RAG</h3>
+        <p data-i18n="whySub" data-ru="Один вопрос, два тракта: слева модель отвечает из памяти, справа - по источнику. Сравнение и есть урок." data-en="One question, two tracks: on the left the model answers from memory, on the right from a source. The comparison is the lesson.">Один вопрос, два тракта: слева модель отвечает из памяти, справа - по источнику. Сравнение и есть урок.</p>
+      </div>
+      <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- the shared question both tracks answer -->
+    <p class="cmp-question">
+      <span data-i18n="cmpQ" data-ru='Вопрос: "Какой лимит загрузки файлов на тарифе Pro?"' data-en='Question: "What is the file-upload limit on the Pro plan?"'>Вопрос: "Какой лимит загрузки файлов на тарифе Pro?"</span>
+      <span class="note" data-i18n="cmpNote" data-ru="ответ недавно изменился - память модели устарела" data-en="the answer changed recently - the model memory is stale">ответ недавно изменился - память модели устарела</span>
+    </p>
+
+    <!-- earned-progress strip: MAIN PATH = the с-RAG track sequence (Запрос ->
+         Эмбеддинг -> Векторный индекс -> Сборка контекста -> Ответ). The без-RAG
+         track + all level-2 deeps are SIDE (optional, never gate). -->
+    <div class="progress-strip js-only" data-component="progress" aria-hidden="true">
+      <span class="pcount"></span>
+      <div class="ptrack" aria-hidden="true"><span class="pfill"></span></div>
+      <span class="pdone"></span>
+    </div>
+
+    <!-- live two-track comparison (built by comparison.js) -->
+    <div class="js-only" data-slot="tracks"></div>
+
+    <!-- why B is better (built by comparison.js) -->
+    <section class="cmp-takeaways js-only" aria-labelledby="tkTitle">
+      <h3 id="tkTitle" data-i18n="tkTitle" data-ru="Почему ответ справа лучше" data-en="Why the right-hand answer is better">Почему ответ справа лучше</h3>
+      <div data-slot="takeaways"></div>
+    </section>
+
+    <!-- ===== modal drill camera (AtlasMD 3.6 strategy 2) =====
+         drilldown-zoom.js mounts on [data-component="drilldown-host"] and finds
+         its [data-slot="crumbs"]/[data-slot="zoomout"]/[data-slot="panel"]; the
+         .drill-layer / .drill-stage shell + show/scale-in is comparison.js's. -->
+    <div class="drill-layer" data-slot="drill-layer" role="dialog" aria-modal="true" aria-label="Зум в этап">
+      <div class="drill-stage" data-slot="drill-stage">
+        <div class="drill-card" data-component="drilldown-host">
+          <div class="drill-toolbar">
+            <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+            <!-- zoom-out (lens-minus) is built by drilldown-zoom.js if absent;
+                 we ship it so it sits in this toolbar row. -->
+            <button class="zoomout" type="button" data-slot="zoomout" aria-label="Выйти на уровень выше" disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <!-- modal drill has no diagram stage; drilldown-zoom.js toggles the
+               zoom-out button independently of [data-slot="stage"]. -->
+          <div data-slot="panel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NO-JS fallback: full static end-state of both tracks ===== -->
+    <div class="no-js-only">
+      <div class="tracks">
+        <section class="track track--A" aria-label="Без RAG">
+          <span class="track__tag">Без RAG</span>
+          <p class="track__sub">Модель отвечает из памяти - извлечения нет</p>
+          <div class="flow">
+            <div class="node cmp-node shown">
+              <span class="cmp-node__k">Запрос</span>
+              <span class="cmp-node__t">Вопрос пользователя</span>
+              <span class="cmp-node__d">"Какой лимит загрузки файлов на тарифе Pro?"</span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#a55a35" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node cmp-node--llmA shown">
+              <span class="cmp-node__k">LLM - только веса</span>
+              <span class="cmp-node__t">Ответ из замороженных знаний</span>
+              <span class="cmp-node__d">training cutoff: <span class="mono">обучение до 2024-06</span>. Свежего источника нет - ответ собран из весов.</span>
+              <span class="freezetag shown">веса заморожены - извлечения нет</span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#a55a35" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node cmp-node--out-bad shown">
+              <span class="cmp-node__k">Ответ</span>
+              <span class="cmp-node__t">"Лимит - 100 файлов."</span>
+              <span class="cmp-node__d"><span class="stale">источник не указан - данные могли устареть</span></span>
+              <span class="cmp-flag">возможна галлюцинация</span>
+            </div>
+          </div>
+        </section>
+        <section class="track track--B" aria-label="С RAG">
+          <span class="track__tag">С RAG</span>
+          <p class="track__sub">Модель отвечает по найденному источнику</p>
+          <div class="flow">
+            <div class="node cmp-node shown">
+              <span class="cmp-node__k">Запрос</span>
+              <span class="cmp-node__t">Вопрос пользователя</span>
+              <span class="cmp-node__d">"Какой лимит загрузки файлов на тарифе Pro?"</span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node shown">
+              <span class="cmp-node__k">Эмбеддинг</span>
+              <span class="cmp-node__t">Вопрос -&gt; вектор</span>
+              <span class="cmp-node__d">текст кодируется в вектор размерности <span class="mono">1536</span> для поиска по смыслу</span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node shown">
+              <span class="cmp-node__k">Векторный индекс - топ-k</span>
+              <span class="cmp-node__t">Поиск свежих фрагментов</span>
+              <span class="cmp-node__d">найден чанк <span class="mono">limits.md</span> (обновлён сегодня), cosine <span class="mono">0.94</span></span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node cmp-node--grounding shown">
+              <span class="cmp-node__k">Сборка контекста</span>
+              <span class="cmp-node__t">Фрагмент -&gt; промпт LLM</span>
+              <span class="cmp-node__d">найденный текст подкладывается в запрос как опора - <span class="mono">grounding</span></span>
+            </div>
+            <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
+            <div class="node cmp-node cmp-node--out-good shown">
+              <span class="cmp-node__k">Ответ со ссылкой</span>
+              <span class="cmp-node__t">"На Pro - до 500 файлов, суммарно 20 МБ [1]."</span>
+              <span class="cmp-node__d"><span class="cite">[1] limits.md, разд. 2</span> - <span class="fresh">источник обновлён сегодня</span></span>
+              <span class="cmp-flag good">опора на источник - есть цитата</span>
+            </div>
+          </div>
+        </section>
+      </div>
+      <section class="cmp-takeaways" aria-label="Что даёт RAG">
+        <h3>Почему ответ справа лучше</h3>
+        <div class="tk-grid">
+          <div class="tk"><span class="tk__mk" aria-hidden="true">1</span><span class="tk__body"><b>Свежие и приватные данные без переобучения.</b> RAG подкладывает источник в момент ответа.</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">2</span><span class="tk__body"><b>Меньше выдуманных фактов.</b> Ответ опирается на найденный текст (grounding).</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">3</span><span class="tk__body"><b>Ссылки на источники.</b> Цитата <span class="cite">[1]</span> ведёт к документу и разделу.</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">4</span><span class="tk__body"><b>Дешевле дообучения.</b> Обновить документ в индексе - минуты.</span></div>
+        </div>
+      </section>
+      <p class="legend-hint">Включите JavaScript, чтобы увеличить этапы тракта.</p>
+    </div>
+  </section>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/why-rag.js"></script>
+</body>
+</html>

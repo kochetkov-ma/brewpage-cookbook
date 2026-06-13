@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide // 0 -> 100%</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --bg-bar:#161b22;
+    --bg-row:#11161d;
+    --bg-row-open:#0a0e13;
+    --gutter:#161b22;
+    --gutter-fg:#3d444d;
+    --fg:#c9d1d9;
+    --dim:#8b949e;
+    --line:#21262d;
+    --accent:#3fb950;      /* one restrained green accent */
+    --accent-dim:#2ea043;
+    --amber:#d29922;
+    --comment:#6e7681;
+    --dot-r:#ff5f56;
+    --dot-y:#ffbd2e;
+    --dot-g:#27c93f;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:24px 20px 60px;
+  }
+
+  /* ---- window chrome ---- */
+  .win{
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    background:var(--bg);
+    box-shadow:0 8px 40px rgba(0,0,0,.4);
+  }
+  .titlebar{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--bg-bar);
+    border-bottom:1px solid var(--line);
+    padding:10px 14px;
+  }
+  .dots{display:flex;gap:8px;flex:0 0 auto}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.r{background:var(--dot-r)}
+  .dot.y{background:var(--dot-y)}
+  .dot.g{background:var(--dot-g)}
+  .tab{
+    color:var(--dim);
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tab b{color:var(--fg);font-weight:600}
+  .titlebar .spacer{flex:1 1 auto}
+
+  /* ---- lang toggle as a command flag ---- */
+  .flag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    flex:0 0 auto;
+    background:#0d1117;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--dim);
+    font:inherit;
+    font-size:13px;
+    padding:6px 10px;
+    cursor:pointer;
+    min-height:36px;
+  }
+  .flag:hover{border-color:var(--accent-dim);color:var(--fg)}
+  .flag .k{color:var(--accent)}
+  .flag .v{color:var(--amber);font-weight:600}
+
+  /* ---- body padding inside window ---- */
+  .pad{padding:22px 22px 8px}
+
+  /* ---- hero ---- */
+  .hero{margin-bottom:26px}
+  .prompt{color:var(--accent);margin-right:8px}
+  .hero .cmd{color:var(--fg)}
+  .hero h1{
+    font-size:24px;
+    line-height:1.35;
+    margin:14px 0 6px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .hero p{
+    margin:6px 0 0;
+    color:var(--dim);
+    max-width:62ch;
+    font-size:14px;
+  }
+  .caret{
+    display:inline-block;
+    width:9px;
+    height:1.05em;
+    background:var(--accent);
+    margin-left:2px;
+    transform:translateY(2px);
+    animation:blink 1.1s step-end infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  /* ---- track header line ---- */
+  .track-head{
+    color:var(--comment);
+    font-size:13px;
+    padding:4px 0 10px;
+    border-top:1px dashed var(--line);
+    margin-top:18px;
+  }
+
+  /* ---- file tree rows ---- */
+  .tree{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .row{
+    display:grid;
+    grid-template-columns:64px 1fr;
+    border-bottom:1px solid var(--line);
+    background:var(--bg-row);
+  }
+  .row:last-child{border-bottom:0}
+  .row.open{background:var(--bg-row-open)}
+
+  .gutter{
+    background:var(--gutter);
+    color:var(--gutter-fg);
+    border-right:1px solid var(--line);
+    font-size:11px;
+    text-align:right;
+    padding:11px 8px 11px 0;
+    user-select:none;
+    line-height:1.4;
+  }
+  .gutter .pct{color:var(--accent);font-weight:600;display:block}
+  .gutter .meter{
+    display:block;
+    color:var(--gutter-fg);
+    letter-spacing:-1px;
+    margin-top:2px;
+    font-size:10px;
+  }
+  .gutter .meter i{color:var(--accent-dim);font-style:normal}
+
+  .head{
+    width:100%;
+    text-align:left;
+    background:transparent;
+    border:0;
+    color:var(--fg);
+    font:inherit;
+    cursor:pointer;
+    padding:11px 14px;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    min-height:44px;
+  }
+  .head:hover{background:rgba(63,185,80,.06)}
+  .head .tw{color:var(--accent);flex:0 0 auto;width:14px;display:inline-block;transition:transform .15s ease}
+  .row.open .head .tw{transform:rotate(90deg)}
+  .head .path{color:var(--fg)}
+  .head .path .dir{color:var(--accent)}
+  .head .ext{color:var(--comment)}
+
+  .body{
+    display:none;
+    padding:2px 14px 14px 38px;
+    font-size:13.5px;
+    border-top:1px dashed var(--line);
+    margin-top:0;
+  }
+  .row.open .body{display:block}
+  .body .comment{color:var(--comment);margin:8px 0 6px}
+  .body ul{list-style:none;margin:0;padding:0}
+  .body li{
+    color:var(--dim);
+    padding:3px 0;
+    display:flex;
+    gap:8px;
+  }
+  .body li::before{
+    content:"|--";
+    color:var(--gutter-fg);
+    flex:0 0 auto;
+  }
+  .body li b{color:var(--fg);font-weight:600}
+
+  /* ---- footer ---- */
+  footer{
+    margin-top:26px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    color:var(--comment);
+    font-size:12.5px;
+  }
+  footer .ln{margin:3px 0}
+  footer a{color:var(--dim);text-decoration:none;border-bottom:1px dotted var(--line)}
+  footer a:hover{color:var(--accent)}
+  footer .hash{color:var(--gutter-fg)}
+
+  /* ---- mobile ---- */
+  @media (max-width:480px){
+    body{font-size:14px}
+    .wrap{padding:14px 10px 40px}
+    .tab{display:none}
+    .pad{padding:16px 14px 6px}
+    .hero h1{font-size:19px}
+    .row{grid-template-columns:1fr}
+    .gutter{
+      grid-row:auto;
+      border-right:0;
+      border-bottom:1px solid var(--line);
+      text-align:left;
+      padding:7px 14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .gutter .pct{display:inline}
+    .gutter .meter{display:inline;margin-top:0}
+    .body{padding-left:22px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .caret{animation:none}
+    .head .tw{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="win">
+
+    <div class="titlebar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <span class="tab" data-i="tab">~/cookbook/<b>rag-guide</b> -- learn.sh</span>
+      <span class="spacer"></span>
+      <button class="flag" id="flag" aria-label="toggle language">
+        <span class="k">--lang</span>=<span class="v" id="flagVal">ru</span>
+      </button>
+    </div>
+
+    <div class="pad">
+
+      <!-- HERO -->
+      <section class="hero">
+        <div><span class="prompt">$</span><span class="cmd" data-i="cmd">./start --level=beginner --prereq=none</span></div>
+        <h1 data-i="heroTitle"></h1>
+        <p data-i="heroSub"></p>
+        <div><span class="prompt">$</span><span class="caret"></span></div>
+        <div class="track-head" data-i="trackHead"></div>
+      </section>
+
+      <!-- TRACK -->
+      <div class="tree" id="tree"></div>
+
+      <footer>
+        <div class="ln"><span class="hash"># </span><span data-i="footLine"></span></div>
+        <div class="ln"><span class="hash">&gt;&gt; </span><a href="https://brewpage.app" target="_blank" rel="noopener">https://brewpage.app</a></div>
+        <div class="ln"><span class="hash">&gt;&gt; </span><a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">https://github.com/kochetkov-ma/brewpage-openapi</a></div>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STR = {
+    ru:{
+      tab:"~/cookbook/<b>rag-guide</b> -- learn.sh",
+      cmd:"./start --uroven=novichok --trebovaniya=net",
+      heroTitle:"RAG с нуля: от 0 до 100% на одной странице.",
+      heroSub:"Без предварительных знаний и без установки. Ты никуда не уходишь с этой страницы: открывай главы прямо здесь и иди по треку до продакшена.",
+      trackHead:"# трек обучения -- 11 глав -- кликни строку, чтобы развернуть",
+      footLine:"собрано для BrewPage Cookbook -- открытый исходный код"
+    },
+    en:{
+      tab:"~/cookbook/<b>rag-guide</b> -- learn.sh",
+      cmd:"./start --level=beginner --prereq=none",
+      heroTitle:"RAG from zero: 0 to 100% on a single page.",
+      heroSub:"No prior knowledge, nothing to install. You never leave this page: open each chapter right here and walk the track all the way to production.",
+      trackHead:"# learning track -- 11 chapters -- click a row to expand",
+      footLine:"built for BrewPage Cookbook -- open source"
+    }
+  };
+
+  // pct shown in gutter, path stem, blurb, sub-points
+  var TRACK = [
+    { pct:"0%",  dir:"00_start",
+      ru:{title:"s-chego-nachat", blurb:"Короткая карта пути: что впереди и как читать этот трек.",
+          subs:["Ничего не нужно ставить заранее","Все примеры -- просто текст и немного кода","Иди сверху вниз, глава за главой"]},
+      en:{title:"where-to-start", blurb:"A short map of the road: what is ahead and how to read this track.",
+          subs:["Nothing to install up front","Every example is just text and a little code","Go top to bottom, chapter by chapter"]} },
+
+    { pct:"01", dir:"01_what_is_rag",
+      ru:{title:"chto-takoe-rag", blurb:"RAG -- это когда модель сначала находит нужные документы, а потом отвечает по ним.",
+          subs:["Retrieval = поиск фактов","Generation = ответ словами модели","Вместе: ответ, подкрепленный источниками"]},
+      en:{title:"what-rag-is", blurb:"RAG is when the model first finds relevant documents, then answers from them.",
+          subs:["Retrieval = fetch the facts","Generation = phrase the answer","Together: an answer backed by sources"]} },
+
+    { pct:"02", dir:"02_why_you_need_it",
+      ru:{title:"zachem-on-nuzhen", blurb:"Чистая модель не знает твоих данных и выдумывает -- RAG дает ей твой контекст.",
+          subs:["Меньше выдуманных фактов","Свежие и приватные данные","Ответы можно проверить по источнику"]},
+      en:{title:"why-you-need-it", blurb:"A bare model does not know your data and makes things up -- RAG gives it your context.",
+          subs:["Fewer made-up facts","Fresh and private data","Answers you can trace to a source"]} },
+
+    { pct:"03", dir:"03_retrieval",
+      ru:{title:"poisk-po-dokumentam", blurb:"По вопросу система достает самые похожие куски твоих документов.",
+          subs:["Вопрос превращается в запрос","Ищем по смыслу, а не по словам","Берем top-N самых близких"]},
+      en:{title:"document-retrieval", blurb:"For a question the system pulls the most similar pieces of your documents.",
+          subs:["The question becomes a query","Match by meaning, not exact words","Take the top-N closest pieces"]} },
+
+    { pct:"04", dir:"04_chunking",
+      ru:{title:"razbivka-na-chunki", blurb:"Длинный текст режем на небольшие куски (чанки), с которыми удобно работать.",
+          subs:["Размер чанка влияет на точность","Перекрытие сохраняет контекст","Один чанк -- одна мысль"]},
+      en:{title:"splitting-into-chunks", blurb:"Long text is cut into small pieces (chunks) that are easy to work with.",
+          subs:["Chunk size affects accuracy","Overlap keeps context intact","One chunk, one idea"]} },
+
+    { pct:"05", dir:"05_embeddings",
+      ru:{title:"embeddings-v-vektory", blurb:"Каждый чанк превращается в вектор чисел, отражающий его смысл.",
+          subs:["Похожий текст -> близкие векторы","Модель эмбеддингов делает это за нас","Вектор -- это координаты смысла"]},
+      en:{title:"embeddings-to-vectors", blurb:"Each chunk turns into a vector of numbers that captures its meaning.",
+          subs:["Similar text -> nearby vectors","An embedding model does this for us","A vector is a coordinate of meaning"]} },
+
+    { pct:"06", dir:"06_vector_store",
+      ru:{title:"vektornaya-baza", blurb:"Векторы храним в векторной базе и быстро ищем ближайшие к вопросу.",
+          subs:["Хранение тысяч и миллионов векторов","Поиск ближайших соседей","Фильтры по метаданным"]},
+      en:{title:"vector-store-and-search", blurb:"Vectors live in a vector store; we quickly find the ones nearest the question.",
+          subs:["Stores thousands to millions of vectors","Nearest-neighbour search","Filter by metadata"]} },
+
+    { pct:"07", dir:"07_context",
+      ru:{title:"sobiraem-kontekst", blurb:"Найденные чанки склеиваем в контекст и кладем рядом с вопросом в промпт.",
+          subs:["Только нужные куски","Укладываемся в окно модели","Добавляем ссылки на источники"]},
+      en:{title:"assembling-context", blurb:"The retrieved chunks are joined into context and placed beside the question in the prompt.",
+          subs:["Only the relevant pieces","Fit inside the model window","Attach source references"]} },
+
+    { pct:"08", dir:"08_generation",
+      ru:{title:"generaciya-otveta", blurb:"Модель читает вопрос и контекст и пишет ответ, опираясь на факты.",
+          subs:["Просим отвечать по контексту","Просим указывать источники","Стрим ответа пользователю"]},
+      en:{title:"generating-the-answer", blurb:"The model reads the question and context, then writes an answer grounded in the facts.",
+          subs:["Tell it to answer from context","Tell it to cite sources","Stream the answer to the user"]} },
+
+    { pct:"09", dir:"09_evaluation",
+      ru:{title:"ocenka-kachestva", blurb:"Проверяем, насколько ответы точны и действительно опираются на источники.",
+          subs:["Точность и полнота поиска","Ответ соответствует контексту","Тест-набор вопросов и ответов"]},
+      en:{title:"measuring-quality", blurb:"We check how accurate the answers are and whether they truly rely on the sources.",
+          subs:["Retrieval precision and recall","Answer matches the context","A test set of question/answer pairs"]} },
+
+    { pct:"100%", dir:"10_production",
+      ru:{title:"vyvod-v-produkciyu", blurb:"Собираем все в рабочий сервис: обновление данных, мониторинг, стоимость.",
+          subs:["Автообновление индекса","Логи, метрики, контроль затрат","Безопасность данных и доступа"]},
+      en:{title:"going-to-production", blurb:"Wire it all into a real service: data refresh, monitoring, cost.",
+          subs:["Automatic index refresh","Logs, metrics, cost control","Data and access security"]} }
+  ];
+
+  var lang = "ru";
+
+  // tiny ascii meter from a pct label
+  function meter(pct){
+    var n = pct === "0%" ? 0 : (pct === "100%" ? 100 : parseInt(pct,10)*10);
+    var filled = Math.round(n/10); // 0..10
+    var on = "", off = "";
+    for(var i=0;i<filled;i++){ on += "="; }
+    for(var j=filled;j<10;j++){ off += "-"; }
+    return '<i>['+on+'</i>'+off+']';
+  }
+
+  function buildTree(){
+    var tree = document.getElementById("tree");
+    tree.innerHTML = "";
+    TRACK.forEach(function(item, idx){
+      var L = item[lang];
+      var row = document.createElement("div");
+      row.className = "row";
+
+      var gut = document.createElement("div");
+      gut.className = "gutter";
+      gut.innerHTML = '<span class="pct">'+item.pct+'</span><span class="meter">'+meter(item.pct)+'</span>';
+
+      var btn = document.createElement("button");
+      btn.className = "head";
+      btn.setAttribute("aria-expanded","false");
+      btn.innerHTML =
+        '<span class="tw">[&gt;]</span>'+
+        '<span class="path"><span class="dir">'+item.dir+'/</span>'+L.title+'<span class="ext">.md</span></span>';
+
+      var body = document.createElement("div");
+      body.className = "body";
+      var subs = L.subs.map(function(s){ return '<li><b>'+s+'</b></li>'; }).join("");
+      body.innerHTML = '<div class="comment"># '+L.blurb+'</div><ul>'+subs+'</ul>';
+
+      btn.addEventListener("click", function(){
+        var open = row.classList.toggle("open");
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+
+      row.appendChild(gut);
+      row.appendChild(btn);
+      row.appendChild(body);
+      tree.appendChild(row);
+    });
+  }
+
+  function applyStrings(){
+    var s = STR[lang];
+    document.querySelectorAll("[data-i]").forEach(function(el){
+      var key = el.getAttribute("data-i");
+      if(s[key] !== undefined) el.innerHTML = s[key];
+    });
+    document.documentElement.lang = lang;
+    document.getElementById("flagVal").textContent = lang;
+  }
+
+  function render(){ applyStrings(); buildTree(); }
+
+  document.getElementById("flag").addEventListener("click", function(){
+    lang = (lang === "ru") ? "en" : "ru";
+    render();
+  });
+
+  render();
+})();
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="02-brutalist.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">03 / 10</span><span class="mn-name">Terminal</span></span>
+  <a href="04-swiss.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="02-brutalist.html", NEXT="04-swiss.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

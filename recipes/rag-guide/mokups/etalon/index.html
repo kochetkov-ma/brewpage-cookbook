@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Эталоны RAG Guide - серьёзные концепты</title>
+<style>
+  :root {
+    --ink: #3a2f23;
+    --ink-soft: #6b5b47;
+    --line: #b89f7d;
+    --parchment: #efe3cb;
+    --parchment2: #f6ecd6;
+    --sepia: #8a5a2b;
+    --gold: #b8860b;
+    --gold-soft: #d9b04a;
+    --focus: #6b4a1f;
+    --serif: Georgia, "Times New Roman", serif;
+    --sans: "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background-color: var(--parchment);
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.35), transparent 45%),
+      radial-gradient(circle at 85% 80%, rgba(120,90,50,0.10), transparent 50%);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 32px 18px 56px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  header.masthead {
+    text-align: center;
+    border-bottom: 2px solid var(--line);
+    padding-bottom: 22px;
+    margin-bottom: 30px;
+  }
+  .compass { width: 64px; height: 64px; margin: 0 auto 12px; display: block; }
+  .compass .ring { fill: none; stroke: var(--sepia); stroke-width: 2; }
+  .compass .rose { fill: var(--sepia); }
+  .compass .rose-light { fill: var(--gold-soft); }
+  .compass .pin { stroke: var(--ink); stroke-width: 1; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.85rem;
+    letter-spacing: 0.01em;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .subtitle {
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--parchment2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px 20px 20px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 1px 2px rgba(60,45,25,0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .card:hover,
+  .card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 18px rgba(60,45,25,0.22);
+    border-color: var(--sepia);
+  }
+  .card:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
+  }
+  .card.top { border-color: var(--gold); }
+  .card-num {
+    font-family: var(--serif);
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    margin-bottom: 6px;
+  }
+  .card h2 {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .card p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+    flex: 1;
+  }
+  .badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-family: var(--sans);
+    font-size: 0.74rem;
+    letter-spacing: 0.04em;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.4);
+    color: var(--ink);
+  }
+  .badge.score {
+    border-color: var(--sepia);
+    color: var(--sepia);
+    font-weight: 700;
+  }
+  .badge.top {
+    border-color: var(--gold);
+    background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+    color: #2a2008;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(120,90,10,0.35);
+  }
+  .open-hint {
+    margin-left: auto;
+    font-size: 0.74rem;
+    color: var(--sepia);
+    font-family: var(--serif);
+  }
+  footer.note {
+    margin-top: 38px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-family: var(--serif);
+  }
+  @media (max-width: 430px) {
+    body { padding: 24px 12px 44px; }
+    h1 { font-size: 1.5rem; }
+    .grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+    .card:hover, .card:focus-visible { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <svg class="compass" viewBox="0 0 64 64" role="img" aria-label="Компас">
+      <circle class="ring" cx="32" cy="32" r="29"/>
+      <circle class="ring" cx="32" cy="32" r="23"/>
+      <polygon class="rose" points="32,6 37,32 32,32"/>
+      <polygon class="rose-light" points="32,6 27,32 32,32"/>
+      <polygon class="rose" points="32,58 27,32 32,32"/>
+      <polygon class="rose-light" points="32,58 37,32 32,32"/>
+      <polygon class="rose" points="6,32 32,27 32,32"/>
+      <polygon class="rose-light" points="6,32 32,37 32,32"/>
+      <polygon class="rose" points="58,32 32,37 32,32"/>
+      <polygon class="rose-light" points="58,32 32,27 32,32"/>
+      <circle class="pin" cx="32" cy="32" r="2.4" fill="var(--ink)"/>
+    </svg>
+    <h1>Эталоны RAG Guide - серьёзные концепты</h1>
+    <p class="subtitle">3 главы, по одному строгому инженерному концепту. Реальные данные, зум-проваливание, скин Атлас. Без метафор.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="what-rag.html">
+      <span class="card-num">Глава 01</span>
+      <h2>Что такое RAG</h2>
+      <p>Схема пайплайна: запрос проходит Эмбеддинг -&gt; Векторный индекс -&gt; Топ-k -&gt; Контекст -&gt; LLM -&gt; Ответ; зум в узел открывает реальные данные (вектор 1536, cosine, промпт, токен-бюджет, цитаты).</p>
+      <div class="badges">
+        <span class="badge score">9 / 10</span>
+        <span class="open-hint">Открыть -&gt;</span>
+      </div>
+    </a>
+
+    <a class="card top" href="why-rag.html">
+      <span class="card-num">Глава 02</span>
+      <h2>Зачем он нужен</h2>
+      <p>Две трассы одного вопроса: без RAG (training cutoff, галлюцинация, без ссылок) против с RAG (свежий чанк cosine 0.94, grounding, цитата). Контраст и есть урок.</p>
+      <div class="badges">
+        <span class="badge top">Лучший</span>
+        <span class="badge score">9.5 / 10</span>
+        <span class="open-hint">Открыть -&gt;</span>
+      </div>
+    </a>
+
+    <a class="card" href="search.html">
+      <span class="card-num">Глава 03</span>
+      <h2>Как работает поиск</h2>
+      <p>Карта векторного пространства: запрос и чанки как точки, косинусные кольца, kNN top-k; "отпуск" находит "ежегодный отдых" без общих слов.</p>
+      <div class="badges">
+        <span class="badge score">9 / 10</span>
+        <span class="open-hint">Открыть -&gt;</span>
+      </div>
+    </a>
+  </div>
+
+  <footer class="note">
+    Концепт-артефакты для выбора языка подачи; не для публикации.
+  </footer>
+</div>
+</body>
+</html>

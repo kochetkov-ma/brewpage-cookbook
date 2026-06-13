@@ -1,0 +1,28 @@
+<!--
+  header.html -- shared site header partial (AtlasMD 3.1 + 3.12, copy-in source of truth).
+  Semantic landmark, class hooks only, NO inline styles, NO literal colors.
+  Carries the brand seal + the lang-toggle. The compass does NOT live here:
+  AtlasMD 3.1 HARD RULE -- the compass sits in a page TITLE header row only
+  (the plate/atlas head), never beside the lang-toggle.
+  data-i18n elements carry data-ru / data-en so text is meaningful with JS off
+  and switches in place under i18n.
+-->
+<header class="site-header" data-component="header">
+  <div class="site-header__brand">
+    <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+      <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+      <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+      <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+      <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+    </svg>
+    <div>
+      <h1 data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</h1>
+      <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">Путеводитель для начинающих</div>
+    </div>
+  </div>
+  <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+    <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  </div>
+</header>

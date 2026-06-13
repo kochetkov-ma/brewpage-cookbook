@@ -1,0 +1,66 @@
+<!--
+  trail.html -- landing expedition map (AtlasMD 3.12, copy-in source of truth).
+  The .atlas plate hosts: the title head + compass (title row only), the mobile
+  pan hint, the trail SVG (terrain backdrop + route + #pins host), the desktop
+  legend index, the mobile vertical route (primary mobile nav), the field-note
+  panel, and the earned-progress strip.
+  map-route.js mounts on [data-component="trail"] and finds:
+    [data-slot="svg"] (with #route/#routeShadow/#routeDraw + g#pins),
+    [data-slot="legend"], [data-slot="mobile"], [data-slot="panel"],
+    [data-slot="hint"], [data-slot="maphint"].
+  The terrain <g id="terrain"> is decorative inline SVG (aria-hidden); to swap
+  for a background image later, replace its children with one <image>.
+  Inline-SVG color is the frozen cartography palette (allowed in SVG content;
+  base.css carries no literal color). The full terrain markup is in index.html;
+  this partial documents the host contract + the live-region/route/pin layer.
+-->
+<section class="atlas" data-component="trail" aria-labelledby="mapTitle">
+  <div class="atlas-head">
+    <div class="title-block">
+      <h3 id="mapTitle" data-i18n="mapTitle" data-ru="Маршрут экспедиции" data-en="Expedition route">Маршрут экспедиции</h3>
+      <p data-i18n="mapSub" data-ru="Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку" data-en="Tap a flag or a list item to open its field note">Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку</p>
+    </div>
+    <!-- compass.html inlined here (title row only -- AtlasMD 3.1 HARD RULE) -->
+  </div>
+
+  <p class="map-hint" data-slot="maphint" aria-hidden="true">
+    <svg class="map-hint-arrow" viewBox="0 0 30 9" aria-hidden="true" focusable="false">
+      <line x1="5" y1="4.5" x2="25" y2="4.5" stroke="#7a6446" stroke-width="1.2"/>
+      <polyline points="8,1.5 4,4.5 8,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="22,1.5 26,4.5 22,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span data-i18n="mapHint" data-ru="Проведите по карте" data-en="Swipe to pan the map">Проведите по карте</span>
+  </p>
+
+  <div class="trail-shell desktop-trail">
+    <svg class="trail-svg" data-slot="svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Expedition trail">
+      <g id="terrain" class="terrain" aria-hidden="true">
+        <!-- terrain backdrop -- see index.html for the full hand-drawn scene -->
+      </g>
+      <path id="routeShadow" class="route-shadow"></path>
+      <path id="route" class="route-line"></path>
+      <path id="routeDraw" class="route-draw"></path>
+      <g id="pins"></g>
+    </svg>
+  </div>
+
+  <div class="legend-list-wrap">
+    <h4 class="legend-list-head" data-i18n="legendListHead" data-ru="Главы маршрута" data-en="Route chapters">Главы маршрута</h4>
+    <ul class="legend-list" data-slot="legend"></ul>
+  </div>
+
+  <div class="mobile-route">
+    <ol data-slot="mobile"></ol>
+  </div>
+
+  <div class="legend-wrap">
+    <div class="legend-hint" data-slot="hint" data-i18n="legendHint" data-ru="Выберите пункт маршрута выше." data-en="Pick a stop on the route above.">Выберите пункт маршрута выше.</div>
+    <div data-slot="panel" aria-live="polite"></div>
+  </div>
+
+  <div class="progress-strip" data-component="progress" aria-hidden="true">
+    <span class="pcount"></span>
+    <div class="ptrack" aria-hidden="true"><span class="pfill"></span></div>
+    <span class="pdone"></span>
+  </div>
+</section>

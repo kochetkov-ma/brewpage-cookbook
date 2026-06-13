@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Как работает поиск по документам - logbook - Concept 09</title>
+<style>
+  :root {
+    --sand:#e8dcc0; --sand-deep:#ddcca8; --parchment:#f3ead4; --parchment2:#efe3c8;
+    --sepia:#5c4a32; --sepia-soft:#7a6446; --ink:#3a2e1d;
+    --teal:#4a6f6a; --teal-deep:#335551; --rust:#a55a35; --gold:#b08a3e;
+    --line:#bda878; --line-soft:#d2bd8e;
+    --query:#17a673; --query-bright:#1d9e6f;
+    --shadow-1:0 2px 6px rgba(60,46,26,0.14);
+    --shadow-2:0 6px 20px rgba(60,46,26,0.20);
+    --shadow-3:0 12px 34px rgba(60,46,26,0.25);
+    --r-sm:3px; --r-md:5px; --r-lg:7px;
+    --ease:cubic-bezier(0.22,0.61,0.36,1);
+    --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+    --sans:"Trebuchet MS","Gill Sans","Segoe UI",Verdana,sans-serif;
+  }
+
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  html { overflow-x:hidden; }
+
+  body {
+    font-family:var(--serif);
+    color:var(--ink);
+    background-color:var(--parchment);
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+      radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+      repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+    line-height:1.5;
+    min-height:100vh;
+    overflow-x:hidden;
+    /* the fixed #mokup-nav pill (bottom:14px, ~44px tall) must never occlude
+       content: reserve clearance so every page can scroll fully clear of it. */
+    padding-bottom:96px;
+  }
+
+  .wrap { max-width:1240px; margin:0 auto; padding:26px 22px 108px; }
+
+  .visually-hidden {
+    position:absolute !important; width:1px; height:1px;
+    padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0);
+    white-space:nowrap; border:0;
+  }
+
+  /* ------------------------------ masthead ------------------------------ */
+  header.plate {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:18px; flex-wrap:wrap;
+    padding:6px 4px 16px;
+    border-bottom:3px double var(--line);
+    box-shadow:0 2px 0 -1px rgba(189,168,120,0.45);
+  }
+  .brand { display:flex; align-items:center; gap:16px; min-width:0; }
+  .brand .seal { width:54px; height:54px; flex:0 0 auto; filter:drop-shadow(var(--shadow-1)); }
+  .brand h1 {
+    margin:0; font-size:1.42rem; letter-spacing:0.10em; line-height:1.05;
+    color:var(--sepia); text-transform:uppercase; font-weight:600;
+  }
+  .brand .sub {
+    margin-top:5px; font-style:italic; font-size:0.86rem;
+    color:var(--sepia-soft); letter-spacing:0.02em;
+  }
+  .brand .sub b { color:var(--query); font-style:normal; font-weight:600; }
+  .compass { width:60px; height:60px; flex:0 0 auto; filter:drop-shadow(var(--shadow-1)); }
+  .compass .rose { transform-origin:50px 50px; animation:roseDrift 38s linear infinite; }
+  @keyframes roseDrift { to { transform:rotate(360deg); } }
+
+  /* ------------------------------ intro copy ------------------------------ */
+  .intro { margin:22px 4px 8px; max-width:880px; }
+  .intro .kicker {
+    font-family:var(--sans); font-size:0.7rem; letter-spacing:0.22em;
+    text-transform:uppercase; color:var(--rust); font-weight:700; margin:0 0 4px;
+  }
+  .intro p { margin:6px 0 0; color:var(--sepia); font-size:1.02rem; }
+  .intro p b { color:var(--query); font-weight:600; }
+
+  /* ------------------------------ stage frame ------------------------------ */
+  .stage-frame {
+    position:relative; margin-top:18px;
+    border:1px solid var(--line); border-radius:var(--r-lg);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.30), rgba(0,0,0,0.015)),
+      var(--parchment2);
+    box-shadow:var(--shadow-2), inset 0 1px 0 rgba(255,255,255,0.5);
+    overflow:hidden;
+  }
+  .stage-frame::before {
+    content:""; position:absolute; inset:7px; border:1px solid var(--line-soft);
+    border-radius:var(--r-md); pointer-events:none; opacity:0.7;
+  }
+
+  .stage-head {
+    position:relative; z-index:3;
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:12px; flex-wrap:wrap; padding:14px 18px 8px;
+  }
+  .stage-head h2 {
+    margin:0; font-size:1.12rem; letter-spacing:0.04em; color:var(--sepia);
+    font-weight:600;
+  }
+  .stage-head .legend {
+    font-family:var(--sans); font-size:0.74rem; color:var(--sepia-soft);
+    letter-spacing:0.04em; max-width:560px;
+  }
+  .stage-head .legend .dotmark {
+    display:inline-block; width:9px; height:9px; border-radius:50%;
+    background:var(--query); box-shadow:0 0 0 3px rgba(23,166,115,0.18);
+    vertical-align:baseline; margin-right:5px;
+  }
+
+  /* breadcrumb / altitude rail */
+  .nav-rail {
+    position:relative; z-index:4;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:8px 18px 12px;
+  }
+  .zoom-btn {
+    font-family:var(--sans); font-size:0.78rem; font-weight:700;
+    letter-spacing:0.05em; color:var(--teal-deep);
+    display:inline-flex; align-items:center; gap:7px;
+    min-height:44px; padding:0 16px;
+    background:linear-gradient(180deg, #f7efdc, var(--parchment2));
+    border:1px solid var(--gold); border-radius:999px;
+    box-shadow:var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.5);
+    cursor:pointer; transition:transform .16s var(--ease), background .16s var(--ease);
+  }
+  .zoom-btn:hover { background:var(--sand-deep); transform:translateX(-2px); }
+  .zoom-btn:disabled { opacity:0.4; cursor:default; transform:none; }
+  .zoom-btn:focus-visible { outline:3px solid var(--rust); outline-offset:2px; }
+
+  .crumbs { display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-width:0; }
+  .crumb {
+    font-family:var(--sans); font-size:0.74rem; letter-spacing:0.04em;
+    color:var(--sepia-soft); background:none; border:1px solid transparent;
+    border-radius:999px; padding:4px 10px; min-height:30px; cursor:pointer;
+    transition:background .16s var(--ease), color .16s var(--ease);
+  }
+  .crumb .alt {
+    display:block; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--gold); font-weight:700;
+  }
+  .crumb:hover { background:rgba(221,204,168,0.5); color:var(--sepia); }
+  .crumb:focus-visible { outline:2px solid var(--rust); outline-offset:2px; }
+  .crumb.active {
+    background:rgba(74,111,106,0.14); border-color:var(--line);
+    color:var(--teal-deep); font-weight:700;
+  }
+  .crumb.active .alt { color:var(--rust); }
+  .crumb.future { opacity:0.42; cursor:default; pointer-events:none; }
+  .crumb-sep { color:var(--line); font-size:0.85rem; line-height:1; }
+  .hint-tap {
+    font-family:var(--sans); font-size:0.72rem; color:var(--teal-deep);
+    letter-spacing:0.03em; margin-left:auto; max-width:380px;
+  }
+
+  /* the camera viewport: holds ONE scene group, scaled for the zoom descent */
+  .viewport {
+    position:relative; z-index:2;
+    width:100%; aspect-ratio:1180 / 640; min-height:340px;
+    overflow:hidden;
+  }
+  svg.stage-svg {
+    display:block; width:100%; height:100%;
+    /* the camera: one transform scales the WHOLE scene INTO a focal point.
+       transform-origin (a percentage focal point) is set per zoom step. */
+    transition:transform .56s var(--ease);
+    transform:scale(1);
+    transform-origin:var(--ox,50%) var(--oy,50%);
+  }
+  /* content layers cross-fade as the camera descends */
+  .zlayer { transition:opacity .42s ease; }
+  /* the camera focuses a .zlayer on drill-in (focus({preventScroll}) target):
+     kill the default Chromium blue ring, use the atlas rust focus instead. */
+  .zlayer:focus { outline:none; }
+  .zlayer:focus-visible { outline:none; }
+  .zlayer:focus-visible .zlayer-focus { opacity:1; }
+  .zlayer-focus {
+    fill:none; stroke:var(--rust); stroke-width:2.4; stroke-dasharray:4 3;
+    opacity:0; transition:opacity .15s var(--ease);
+  }
+
+  /* on small screens the scene scales down with the viewport (no min-width
+     scroll that would force page-level horizontal overflow). */
+  @media (max-width:680px) {
+    .viewport { aspect-ratio:1180 / 720; min-height:300px; }
+  }
+
+  /* ----------------------------- SVG primitives ----------------------------- */
+  /* logbook leaf */
+  .leaf { fill:var(--parchment); stroke:var(--line); stroke-width:1.5; }
+  .spine { stroke:var(--sepia); stroke-width:3; opacity:0.5; }
+  .rule-line { stroke:var(--line-soft); stroke-width:0.8; opacity:0.5; }
+  .margin-line { stroke:var(--rust); stroke-width:0.9; opacity:0.36; }
+  .quill-head {
+    font-family:var(--sans); font-size:11px; font-weight:700;
+    letter-spacing:0.16em; text-transform:uppercase; fill:var(--rust);
+  }
+  .ink-write { font-family:var(--serif); fill:var(--ink); }
+  .ink-pen { fill:none; stroke:var(--query); stroke-width:2.2; stroke-linecap:round; }
+  .margin-note {
+    font-family:var(--sans); font-size:10px; font-style:normal;
+    fill:var(--sepia-soft); letter-spacing:0.02em;
+  }
+
+  /* per-line fade-in of the penned log */
+  .penline { opacity:0; }
+  .penline.shown { opacity:1; transition:opacity .5s ease; }
+
+  /* log-line drill hosts (level 0) */
+  .logline { cursor:pointer; }
+  .logline .ll-hit {
+    fill:rgba(23,166,115,0.0); stroke:rgba(23,166,115,0); stroke-width:1.5;
+    transition:fill .22s var(--ease), stroke .22s var(--ease);
+  }
+  .logline:hover .ll-hit { fill:rgba(23,166,115,0.07); stroke:rgba(23,166,115,0.5); }
+  .logline:focus-visible { outline:none; }
+  .logline:focus-visible .ll-focus { opacity:1; }
+  .ll-focus {
+    fill:none; stroke:var(--rust); stroke-width:2.4; stroke-dasharray:3 3;
+    opacity:0; transition:opacity .15s var(--ease);
+  }
+  .ll-no {
+    font-family:var(--sans); font-size:11px; font-weight:700; fill:var(--rust);
+    letter-spacing:0.05em;
+  }
+  .ll-head {
+    font-family:var(--sans); font-size:12.5px; font-weight:700; fill:var(--teal-deep);
+    letter-spacing:0.04em;
+  }
+  .ll-cue {
+    font-family:var(--sans); font-size:9.5px; font-weight:700; fill:var(--query);
+    letter-spacing:0.05em;
+  }
+
+  /* ---------- the explicit ROUTE MAP (pipeline diagram) ---------- */
+  .route-frame { fill:#f6efda; stroke:var(--line); stroke-width:1.3; }
+  .route-kicker {
+    font-family:var(--sans); font-size:10px; font-weight:700; fill:var(--rust);
+    letter-spacing:0.14em; text-transform:uppercase;
+  }
+  /* the route LINE the query travels along -- always visible base */
+  .route-base {
+    fill:none; stroke:var(--line); stroke-width:5; stroke-linecap:round; opacity:0.55;
+  }
+  /* finished + active segments stay lit */
+  .route-seg {
+    fill:none; stroke:var(--query); stroke-width:5; stroke-linecap:round;
+    opacity:0; transition:opacity .3s ease, stroke-width .25s ease;
+  }
+  .route-seg.lit { opacity:0.92; }
+  .route-seg.active { opacity:1; stroke:var(--query-bright); stroke-width:7; }
+
+  .route-node-box {
+    fill:#f6efda; stroke:var(--sepia-soft); stroke-width:1.5;
+    transition:fill .25s var(--ease), stroke .25s var(--ease), stroke-width .25s var(--ease);
+  }
+  .route-node.lit .route-node-box { fill:#eafaf2; stroke:var(--teal-deep); stroke-width:2; }
+  .route-node-dot {
+    fill:var(--parchment); stroke:var(--sepia-soft); stroke-width:2;
+    transition:fill .25s var(--ease), stroke .25s var(--ease);
+  }
+  .route-node.lit .route-node-dot { fill:var(--query); stroke:var(--teal-deep); }
+  .route-node-lbl {
+    font-family:var(--sans); font-size:12px; font-weight:700; fill:var(--teal-deep);
+    letter-spacing:0.02em;
+  }
+  .route-node-sub {
+    font-family:var(--sans); font-size:8.5px; font-weight:700; fill:var(--sepia-soft);
+    letter-spacing:0.01em;
+  }
+  .route-arrow { fill:var(--line); transition:fill .25s var(--ease); }
+  .route-seg-lbl {
+    font-family:var(--sans); font-size:8px; font-weight:700; fill:var(--sepia-soft);
+    letter-spacing:0.03em; text-transform:uppercase;
+  }
+
+  /* the moving query dot on the route -- pops on parchment */
+  .qdot-glow { fill:var(--query); opacity:0.26; }
+  .qdot-core { fill:var(--query); stroke:var(--teal-deep); stroke-width:1.4; }
+  .qdot-pulse {
+    fill:none; stroke:var(--query); stroke-width:1.6;
+    transform-box:fill-box; transform-origin:center;
+    animation:qpulse 1.7s var(--ease) infinite;
+  }
+  @keyframes qpulse {
+    0% { transform:scale(0.6); opacity:0.8; }
+    100% { transform:scale(2.0); opacity:0; }
+  }
+  /* faint comet trail behind the dot reinforces the explicit path */
+  .qtrail { fill:none; stroke:var(--query); stroke-width:3.2; stroke-linecap:round; opacity:0.4; }
+
+  /* ---------- zoom-target internals (revealed when camera descends) ---------- */
+  .detail-card { fill:var(--parchment); stroke:var(--query); stroke-width:1.6; }
+  .detail-card.muted { stroke:var(--line); }
+  .detail-kicker {
+    font-family:var(--sans); font-size:9px; font-weight:700; fill:var(--rust);
+    letter-spacing:0.14em; text-transform:uppercase;
+  }
+  .detail-title { font-family:var(--sans); font-size:12px; font-weight:700; fill:var(--sepia); letter-spacing:0.03em; }
+  .detail-body { font-family:var(--serif); font-size:10.5px; fill:var(--ink); }
+  .detail-body.small { font-size:9px; fill:var(--sepia-soft); }
+
+  /* vector coordinate chips (embedding numbers) */
+  .vec-chip { fill:rgba(23,166,115,0.10); stroke:var(--query); stroke-width:1; }
+  .vec-num { font-family:var(--sans); font-size:9px; font-weight:700; fill:var(--teal-deep); }
+
+  /* semantic point cloud inside the index step */
+  .pt { transform-box:fill-box; transform-origin:center; }
+  .pt-doc { fill:rgba(74,111,106,0.40); stroke:var(--teal-deep); stroke-width:0.8; }
+  .pt-near { fill:var(--query); stroke:var(--teal-deep); stroke-width:1.1; }
+  .pt-q { fill:var(--query); stroke:var(--teal-deep); stroke-width:1.3; }
+  .pt-q-glow { fill:var(--query); opacity:0.20; }
+  .ring-near {
+    fill:none; stroke:var(--query); stroke-width:1.2; stroke-dasharray:3 3;
+    transform-box:fill-box; transform-origin:center;
+  }
+  .reach-line { stroke:var(--query); stroke-width:1; opacity:0; stroke-dasharray:2 2; transition:opacity .35s ease; }
+  .reach-line.lit { opacity:0.55; }
+  .pt-lbl { font-family:var(--sans); font-size:7.5px; font-weight:700; fill:var(--sepia); letter-spacing:0.01em; }
+
+  /* fragment drill (level-2 inside the index step) */
+  .fragment { cursor:pointer; }
+  .fragment .frag-plate { fill:#f6efda; stroke:var(--query); stroke-width:1.6; transition:fill .2s var(--ease); }
+  /* full-area transparent hit pad so the deeper-zoom click target is always solid */
+  .fragment .frag-hit { fill:rgba(0,0,0,0); pointer-events:all; }
+  .fragment:hover .frag-plate { fill:#eafaf2; }
+  .fragment:focus-visible { outline:none; }
+  .fragment:focus-visible .frag-focus { opacity:1; }
+  .frag-focus {
+    fill:none; stroke:var(--rust); stroke-width:2.2; stroke-dasharray:3 3;
+    opacity:0; transition:opacity .15s var(--ease);
+  }
+  .frag-hint { font-family:var(--sans); font-size:8.5px; font-weight:700; fill:var(--teal-deep); letter-spacing:0.03em; }
+
+  /* the deepest level: exact source fragment, keyword vs meaning */
+  .word-key { fill:rgba(165,90,53,0.10); stroke:var(--rust); stroke-width:1.1; }
+  .word-mean { fill:rgba(23,166,115,0.12); stroke:var(--query); stroke-width:1.4; }
+  .src-hl { fill:rgba(23,166,115,0.18); }
+  .ver-lbl { font-family:var(--sans); font-size:8.5px; font-weight:700; letter-spacing:0.04em; }
+  .src-quote { font-family:var(--serif); font-size:10px; fill:var(--ink); }
+  .src-meta { font-family:var(--sans); font-size:8px; font-weight:700; fill:var(--query); letter-spacing:0.04em; }
+
+  /* ------------------------ chapter ledger ------------------------ */
+  .ledger {
+    margin-top:26px;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:14px;
+  }
+  .card {
+    position:relative;
+    border:1px solid var(--line); border-radius:var(--r-md);
+    background:linear-gradient(180deg, rgba(255,255,255,0.3), rgba(0,0,0,0.01)), var(--parchment2);
+    box-shadow:var(--shadow-1);
+    padding:14px 16px 16px;
+  }
+  .card .step-no {
+    font-family:var(--sans); font-size:0.68rem; font-weight:700;
+    letter-spacing:0.18em; text-transform:uppercase; color:var(--rust);
+  }
+  .card h3 { margin:4px 0 6px; font-size:1.02rem; color:var(--sepia); letter-spacing:0.03em; }
+  .card h3 em { color:var(--query); font-style:normal; }
+  .card p { margin:0; font-size:0.92rem; color:var(--sepia); }
+
+  .example-strip {
+    margin-top:18px; padding:14px 18px;
+    border:1px dashed var(--line); border-radius:var(--r-md);
+    background:rgba(176,138,62,0.05);
+    font-size:0.98rem; color:var(--sepia);
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .example-strip .glyph { color:var(--query); font-weight:700; font-family:var(--sans); }
+  .example-strip b { color:var(--rust); }
+  .example-strip .nokey {
+    font-family:var(--sans); font-size:0.74rem; font-weight:700;
+    color:var(--teal-deep); border:1px solid var(--query); border-radius:999px;
+    padding:2px 9px; letter-spacing:0.03em;
+  }
+
+  .crosslinks {
+    margin-top:18px; font-family:var(--sans); font-size:0.74rem;
+    color:var(--sepia-soft); letter-spacing:0.02em;
+    display:flex; gap:14px; flex-wrap:wrap;
+  }
+  .crosslinks a { color:var(--teal-deep); text-decoration:none; border-bottom:1px solid var(--line); }
+  .crosslinks a:hover { color:var(--rust); }
+  .crosslinks a:focus-visible { outline:2px solid var(--rust); outline-offset:2px; }
+
+  .colophon {
+    margin-top:18px; text-align:center; font-style:italic;
+    font-size:0.82rem; color:var(--sepia-soft); letter-spacing:0.02em;
+  }
+
+  @media (max-width:520px) {
+    .brand h1 { font-size:1.12rem; }
+    .wrap { padding:18px 14px 108px; }
+    .stage-head h2 { font-size:1rem; }
+    .hint-tap { margin-left:0; }
+  }
+
+  /* ------------------------ reduced motion: static end-state ------------------------ */
+  @media (prefers-reduced-motion: reduce) {
+    .compass .rose { animation:none; }
+    .qdot-pulse { animation:none; opacity:0; }
+    svg.stage-svg { transition:none; }
+    .zlayer { transition:none; }
+    .route-seg { transition:none; }
+    .penline { opacity:1 !important; transition:none !important; }
+    .ink-pen { stroke-dashoffset:0 !important; }
+    .zoom-btn { transition:none; }
+    .reach-line { transition:none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============================== masthead ============================== -->
+  <header class="plate">
+    <div class="brand">
+      <svg class="seal" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2.5"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#7a6446" stroke-width="1" stroke-dasharray="1.5 3"/>
+        <path d="M22 38 Q36 30 50 36 Q64 30 78 38 Q70 66 50 60 Q30 66 22 38 Z"
+              fill="rgba(74,111,106,0.16)" stroke="#4a6f6a" stroke-width="1.4"/>
+        <path d="M50 36 Q50 50 50 60" stroke="#5c4a32" stroke-width="1.2" opacity="0.6"/>
+        <circle cx="44" cy="48" r="7" fill="none" stroke="#335551" stroke-width="1.5"/>
+        <line x1="49" y1="53" x2="56" y2="60" stroke="#335551" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="44" cy="48" r="3.4" fill="#17a673" stroke="#335551" stroke-width="1"/>
+      </svg>
+      <div>
+        <h1>Как работает поиск по документам</h1>
+        <div class="sub">Журнал одного поиска &mdash; <b>зелёный запрос</b> идёт по маршруту: запрос &rarr; индекс &rarr; топ-k &rarr; модель &rarr; ответ</div>
+      </div>
+    </div>
+    <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+      <g class="rose">
+        <polygon points="50,20 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,20 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,80 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,80 44,50 50,50" fill="#6a8d88"/>
+        <polygon points="20,50 50,56 50,50" fill="#7a6446"/>
+        <polygon points="80,50 50,44 50,50" fill="#7a6446"/>
+      </g>
+      <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+        <text x="50" y="15">N</text><text x="88" y="53">E</text>
+        <text x="50" y="93">S</text><text x="12" y="53">W</text>
+      </g>
+      <circle cx="50" cy="50" r="3.6" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+    </svg>
+  </header>
+
+  <!-- ============================== intro copy ============================== -->
+  <section class="intro">
+    <p class="kicker">Индекс &middot; Запрос &middot; Топ-k по смыслу</p>
+    <p>Сначала находим релевантные куски текста, потом показываем их модели.
+      Поиск идёт <b>не по точным словам, а по смыслу запроса</b>.</p>
+  </section>
+
+  <!-- ============================== logbook stage ============================== -->
+  <section class="stage-frame" aria-labelledby="bookTitle">
+    <div class="stage-head">
+      <h2 id="bookTitle">Журнал пишет себя сам &mdash; а маршрут видно на схеме</h2>
+      <span class="legend"><span class="dotmark"></span>зелёный запрос бежит по нарисованному маршруту; строка журнала дописывается, когда он доходит до узла. Нажмите строку &mdash; камера приближается к этому шагу.</span>
+    </div>
+
+    <!-- altitude / breadcrumb + zoom-out control -->
+    <div class="nav-rail">
+      <button class="zoom-btn" id="zoomOut" type="button" disabled aria-label="Отдалить камеру на уровень выше">
+        &#8593; отдалить
+      </button>
+      <nav class="crumbs" id="crumbs" aria-label="Уровень приближения камеры">
+        <button class="crumb active" id="crumb0" type="button" data-level="0">
+          Журнал поиска<span class="alt">обзор</span>
+        </button>
+        <span class="crumb-sep" aria-hidden="true">&rsaquo;</span>
+        <button class="crumb future" id="crumb1" type="button" data-level="1" aria-disabled="true">
+          шаг маршрута<span class="alt">приближение</span>
+        </button>
+        <span class="crumb-sep" aria-hidden="true">&rsaquo;</span>
+        <button class="crumb future" id="crumb2" type="button" data-level="2" aria-disabled="true">
+          точный фрагмент<span class="alt">внутри</span>
+        </button>
+      </nav>
+      <span class="hint-tap">Камера приближается к шагу; внутри индекса есть ещё уровень &mdash; точный источник.</span>
+    </div>
+
+    <!-- ONE camera scene: logbook + explicit route map; the camera group scales INTO a step -->
+    <div class="viewport" id="viewport">
+      <svg class="stage-svg" id="stageSvg" viewBox="0 0 1180 640"
+           preserveAspectRatio="xMidYMid meet" role="group"
+           aria-label="Разворот журнала и схема маршрута поиска по смыслу. Камера приближается к выбранному шагу.">
+
+        <!-- =========================================================== -->
+        <!-- the single camera group: every zoom scales/translates THIS  -->
+        <!-- =========================================================== -->
+        <g id="camera">
+
+          <!-- ===================== LEFT LEAF: self-writing logbook ===================== -->
+          <g aria-hidden="true">
+            <path class="leaf" d="M36 46 Q40 38 56 38 L520 38 Q532 42 532 56 L532 600 Q532 616 516 616 L56 616 Q40 614 36 602 Z"/>
+            <line class="spine" x1="536" y1="44" x2="536" y2="610"/>
+            <line class="margin-line" x1="86" y1="50" x2="86" y2="604"/>
+          </g>
+
+          <text class="quill-head" x="58" y="74">Запись пера</text>
+          <text class="ink-write" id="qText" x="58" y="102" font-size="16" font-style="italic" fill="#3a2e1d">Вопрос: сколько дней отпуска мне положено?</text>
+          <path class="ink-pen" id="qFlourish" d="M58 112 Q190 120 340 113 Q450 108 516 115"/>
+          <text class="margin-note" x="58" y="132" font-style="italic">смысл запроса: "сколько отдыха положено сотруднику"</text>
+
+          <!-- LOG LINE 1 (FIRST data-drill in DOM): запрос -> эмбеддинг -> индекс -->
+          <g class="logline" id="ll-1" data-drill data-target="index"
+             tabindex="0" role="button"
+             aria-label="Шаг 1: запрос превращается в эмбеддинг и ищет ближайшие векторы в индексе. Приблизить камеру к этому шагу; внутри - точный фрагмент источника.">
+            <rect class="ll-focus" x="50" y="158" width="476" height="116" rx="6"/>
+            <rect class="ll-hit" x="54" y="162" width="468" height="108" rx="5"/>
+            <text class="ll-no" x="104" y="184">01</text>
+            <text class="ll-head" x="136" y="184">Запрос &rarr; эмбеддинг &rarr; индекс</text>
+            <text class="penline ink-write" data-line="0" x="104" y="212" font-size="13" font-style="italic">Запрос стал вектором смысла и ищет ближайшие в индексе.</text>
+            <text class="penline margin-note" data-line="0" x="104" y="232" font-size="10.5">все документы заранее сложены в индекс; ищем по смыслу, не по словам</text>
+            <text class="penline margin-note" data-line="0" x="104" y="250" font-size="10.5" font-style="italic">слова "отпуск" в вопросе нет &mdash; пункты про отпуска всё равно находятся</text>
+            <text class="ll-cue" x="510" y="184" text-anchor="end">приблизить &rarr;</text>
+          </g>
+
+          <!-- LOG LINE 2: топ-k фрагментов -->
+          <g class="logline" id="ll-2" data-drill data-target="topk"
+             tabindex="0" role="button"
+             aria-label="Шаг 2: возвращаем несколько лучших совпадений по смыслу - топ-k фрагментов. Приблизить камеру.">
+            <rect class="ll-focus" x="50" y="286" width="476" height="98" rx="6"/>
+            <rect class="ll-hit" x="54" y="290" width="468" height="90" rx="5"/>
+            <text class="ll-no" x="104" y="312">02</text>
+            <text class="ll-head" x="136" y="312">Топ-k фрагментов</text>
+            <text class="penline ink-write" data-line="1" x="104" y="340" font-size="13" font-style="italic">Возвращаем несколько лучших совпадений по смыслу.</text>
+            <text class="penline margin-note" data-line="1" x="104" y="360" font-size="10.5">#1 политика отпусков &middot; #2 отдых за стаж &middot; #3 оформление дней</text>
+            <text class="ll-cue" x="510" y="312" text-anchor="end">приблизить &rarr;</text>
+          </g>
+
+          <!-- LOG LINE 3: контекст -> модель -> ответ -->
+          <g class="logline" id="ll-3" data-drill data-target="model"
+             tabindex="0" role="button"
+             aria-label="Шаг 3: модель видит только эти куски, а не весь архив, и даёт ответ со ссылками. Приблизить камеру.">
+            <rect class="ll-focus" x="50" y="396" width="476" height="98" rx="6"/>
+            <rect class="ll-hit" x="54" y="400" width="468" height="90" rx="5"/>
+            <text class="ll-no" x="104" y="422">03</text>
+            <text class="ll-head" x="136" y="422">Контекст &rarr; модель &rarr; ответ</text>
+            <text class="penline ink-write" data-line="2" x="104" y="450" font-size="13" font-style="italic">Модель видит только эти куски, а не весь архив.</text>
+            <text class="penline margin-note" data-line="2" x="104" y="470" font-size="10.5">отвечает по найденному и ставит ссылки на источники</text>
+            <text class="ll-cue" x="510" y="422" text-anchor="end">приблизить &rarr;</text>
+          </g>
+
+          <!-- bottom note on the left leaf -->
+          <g aria-hidden="true">
+            <line class="rule-line" x1="58" y1="524" x2="516" y2="524"/>
+            <text class="margin-note" x="104" y="550" font-size="11" fill="#5c4a32">Пример: спросили про отпуск &mdash; нашлись пункты политики об отпусках,</text>
+            <text class="margin-note" x="104" y="568" font-size="11" fill="#5c4a32" font-style="italic">даже без слова "отпуск" в запросе.</text>
+          </g>
+
+          <!-- ===================== RIGHT LEAF: explicit ROUTE MAP ===================== -->
+          <g aria-hidden="true">
+            <path class="leaf" d="M548 56 Q548 42 562 38 L1128 38 Q1144 38 1144 50 L1144 602 Q1140 614 1124 616 L564 616 Q548 616 548 602 Z"/>
+          </g>
+
+          <rect class="route-frame" x="566" y="62" width="566" height="544" rx="10"/>
+          <text class="route-kicker" x="588" y="92">Маршрут запроса</text>
+          <text class="detail-body small" x="588" y="110" font-size="10">Зелёная точка идёт по линии; пройденные участки остаются зажжёнными.</text>
+
+          <!-- ======= the visible route: a drawn S-route across the leaf ======= -->
+          <!-- the explicit base line the query rides (always visible) -->
+          <path class="route-base" id="routeBase"
+                d="M660 168 L1040 168 Q1080 168 1080 204 L1080 268 Q1080 304 1040 304 L700 304 Q660 304 660 340 L660 412 Q660 448 700 448 L1040 448"/>
+          <!-- lit segments (one per leg of the route) -->
+          <path class="route-seg" id="seg0" d="M660 168 L1040 168 Q1080 168 1080 204 L1080 268 Q1080 304 1040 304 L700 304"/>
+          <path class="route-seg" id="seg1" d="M700 304 L660 304 Q660 304 660 340 L660 412 Q660 448 700 448 L820 448"/>
+          <path class="route-seg" id="seg2" d="M820 448 L1040 448"/>
+          <!-- the comet trail + travel path the dot rides (kept invisible stroke) -->
+          <path id="routePath"
+                d="M660 168 L1040 168 Q1080 168 1080 204 L1080 268 Q1080 304 1040 304 L700 304 Q660 304 660 340 L660 412 Q660 448 700 448 L1040 448"
+                fill="none" stroke="none"/>
+
+          <!-- segment direction labels -->
+          <text class="route-seg-lbl" x="850" y="158" text-anchor="middle">эмбеддинг запроса</text>
+          <text class="route-seg-lbl" x="676" y="364" text-anchor="middle" transform="rotate(90 676 364)">поиск ближайших</text>
+          <text class="route-seg-lbl" x="930" y="438" text-anchor="middle">контекст &rarr; модель</text>
+
+          <!-- ROUTE NODES (Запрос -> Индекс -> Топ-k -> Модель -> Ответ) -->
+          <!-- node A: Запрос (start) -->
+          <g class="route-node lit" id="node-query">
+            <rect class="route-node-box" x="588" y="142" width="120" height="52" rx="7"/>
+            <circle class="route-node-dot" cx="660" cy="168" r="9"/>
+            <text class="route-node-lbl" x="600" y="166">Запрос</text>
+            <text class="route-node-sub" x="600" y="182">вектор смысла</text>
+          </g>
+          <!-- node B: Индекс -->
+          <g class="route-node" id="node-index">
+            <rect class="route-node-box" x="990" y="278" width="142" height="52" rx="7"/>
+            <circle class="route-node-dot" cx="700" cy="304" r="9"/>
+            <text class="route-node-lbl" x="1002" y="302">Индекс</text>
+            <text class="route-node-sub" x="1002" y="318">векторная база &middot; ближайшие</text>
+          </g>
+          <!-- node C: Топ-k -->
+          <g class="route-node" id="node-topk">
+            <rect class="route-node-box" x="566" y="422" width="138" height="52" rx="7"/>
+            <circle class="route-node-dot" cx="700" cy="448" r="9"/>
+            <text class="route-node-lbl" x="578" y="446">Топ-k</text>
+            <text class="route-node-sub" x="578" y="462">лучшие фрагменты</text>
+          </g>
+          <!-- node D: Модель -> ответ -->
+          <g class="route-node" id="node-model">
+            <rect class="route-node-box" x="1006" y="422" width="126" height="52" rx="7"/>
+            <circle class="route-node-dot" cx="1040" cy="448" r="9"/>
+            <text class="route-node-lbl" x="1018" y="446">Модель</text>
+            <text class="route-node-sub" x="1018" y="462">ответ со ссылками</text>
+          </g>
+
+          <!-- comet trail behind the moving dot (drawn each frame) -->
+          <path class="qtrail" id="qtrail" d="" />
+
+          <!-- the travelling green query dot on the route -->
+          <g id="qdot" transform="translate(660 168)">
+            <circle class="qdot-pulse" r="11"/>
+            <circle class="qdot-glow" r="9"/>
+            <circle class="qdot-core" r="5.5"/>
+          </g>
+
+          <!-- ============================================================ -->
+          <!-- ZOOM-TARGET INTERNALS (faded out at level 0, fade in on zoom) -->
+          <!-- positioned over the right leaf so the camera frames them      -->
+          <!-- ============================================================ -->
+
+          <!-- STEP "index" internals: query vector -> nearest in the index -->
+          <g class="zlayer" id="z-index" style="opacity:0; pointer-events:none">
+            <rect class="zlayer-focus" x="566" y="74" width="566" height="512" rx="12"/>
+            <rect class="detail-card" x="572" y="80" width="554" height="500" rx="10"/>
+            <text class="detail-kicker" x="596" y="110">Шаг 01 / эмбеддинг и поиск в индексе</text>
+            <text class="detail-title" x="596" y="130">Запрос становится вектором и ищет ближайшие по смыслу</text>
+
+            <!-- the query embedding: real-looking numbers -->
+            <text class="detail-body small" x="596" y="156">вектор запроса (смысловые координаты):</text>
+            <g>
+              <rect class="vec-chip" x="596" y="164" width="58" height="22" rx="4"/><text class="vec-num" x="625" y="179" text-anchor="middle">0.84</text>
+              <rect class="vec-chip" x="660" y="164" width="58" height="22" rx="4"/><text class="vec-num" x="689" y="179" text-anchor="middle">-0.12</text>
+              <rect class="vec-chip" x="724" y="164" width="58" height="22" rx="4"/><text class="vec-num" x="753" y="179" text-anchor="middle">0.57</text>
+              <rect class="vec-chip" x="788" y="164" width="58" height="22" rx="4"/><text class="vec-num" x="817" y="179" text-anchor="middle">0.09</text>
+              <rect class="vec-chip" x="852" y="164" width="58" height="22" rx="4"/><text class="vec-num" x="881" y="179" text-anchor="middle">-0.33</text>
+              <text class="vec-num" x="920" y="179" fill="#7a6446">... 768</text>
+            </g>
+
+            <!-- the index as a point cloud: query lands, nearest light up -->
+            <text class="detail-body small" x="596" y="218">индекс / векторная база &mdash; близкие по смыслу лежат рядом:</text>
+            <g id="indexCloud">
+              <!-- distant docs (off-topic) -->
+              <circle class="pt pt-doc" cx="940" cy="262" r="7"/><text class="pt-lbl" x="940" y="250" text-anchor="middle">командировки</text>
+              <circle class="pt pt-doc" cx="1010" cy="398" r="7"/><text class="pt-lbl" x="1010" y="418" text-anchor="middle">пропуск на вход</text>
+              <circle class="pt pt-doc" cx="636" cy="404" r="7"/><text class="pt-lbl" x="636" y="424" text-anchor="middle">оплата проезда</text>
+              <!-- reach lines from query to near docs -->
+              <line class="reach-line" x1="760" y1="334" x2="690" y2="280"/>
+              <line class="reach-line" x1="760" y1="334" x2="864" y2="300"/>
+              <line class="reach-line" x1="760" y1="334" x2="724" y2="396"/>
+              <!-- near docs (about vacation, no word "отпуск" required) -->
+              <circle class="pt pt-near" cx="690" cy="280" r="9"/><text class="pt-lbl" x="690" y="268" text-anchor="middle" fill="#335551">"дни отдыха в году"</text>
+              <circle class="pt pt-near" cx="864" cy="300" r="9"/><text class="pt-lbl" x="864" y="288" text-anchor="middle" fill="#335551">"ежегодный отпуск"</text>
+              <circle class="pt pt-near" cx="724" cy="396" r="9"/><text class="pt-lbl" x="724" y="414" text-anchor="middle" fill="#335551">"отдых за стаж"</text>
+              <!-- the query point lands + reach ring -->
+              <circle class="ring-near" cx="760" cy="334" r="92"/>
+              <circle class="pt-q-glow" cx="760" cy="334" r="18"/>
+              <circle class="pt pt-q" cx="760" cy="334" r="8"/>
+              <text class="pt-lbl" x="760" y="320" text-anchor="middle" fill="#17a673" font-size="9">запрос</text>
+            </g>
+
+            <!-- LEVEL-2 host: the exact source fragment (data-drill, revealed inside this step).
+                 Sits in the card's mid-lower band (not the very bottom edge) so that after
+                 the 1.52x camera zoom it stays fully inside the clipped viewport and its
+                 click centre is reliably reachable (pointer-events + hit-rect below). -->
+            <g class="fragment" id="fragHost" data-drill data-target="fragment"
+               tabindex="0" role="button"
+               aria-label="Открыть точный фрагмент источника, который нашёлся по смыслу. Камера приближается ещё на уровень.">
+              <rect class="frag-focus" x="592" y="452" width="514" height="48" rx="6"/>
+              <!-- transparent hit pad guarantees a clickable centre across the whole plate -->
+              <rect class="frag-hit" x="592" y="452" width="514" height="48" rx="6" fill="rgba(0,0,0,0)"/>
+              <rect class="frag-plate" x="596" y="456" width="506" height="40" rx="6"/>
+              <text class="frag-hint" x="614" y="480">источник #1 &mdash; политика отпусков (нашёлся по смыслу)</text>
+              <text class="frag-hint" x="1086" y="480" text-anchor="end" fill="#17a673">открыть фрагмент &rarr;</text>
+            </g>
+          </g>
+
+          <!-- STEP "topk" internals: descending closeness, cut at top-k -->
+          <g class="zlayer" id="z-topk" style="opacity:0; pointer-events:none">
+            <rect class="zlayer-focus" x="566" y="74" width="566" height="512" rx="12"/>
+            <rect class="detail-card" x="572" y="80" width="554" height="500" rx="10"/>
+            <text class="detail-kicker" x="596" y="110" fill="#17a673">Шаг 02 / топ-k фрагментов</text>
+            <text class="detail-title" x="596" y="130">Берём несколько лучших &mdash; и только они уходят дальше</text>
+            <text class="detail-body small" x="596" y="152">чем ближе по смыслу, тем выше в списке; весь архив дальше не идёт.</text>
+
+            <!-- closeness ranking rows -->
+            <g>
+              <rect x="596" y="174" width="360" height="32" rx="5" fill="rgba(23,166,115,0.16)" stroke="#17a673" stroke-width="1.2"/>
+              <text class="detail-body" x="610" y="195">#1 политика отпусков: 28 дней</text>
+              <text class="src-meta" x="1100" y="195" text-anchor="end">очень близко</text>
+
+              <rect x="596" y="216" width="312" height="32" rx="5" fill="rgba(23,166,115,0.12)" stroke="#17a673" stroke-width="1.1"/>
+              <text class="detail-body" x="610" y="237">#2 отдых за стаж</text>
+              <text class="src-meta" x="1100" y="237" text-anchor="end">близко</text>
+
+              <rect x="596" y="258" width="276" height="32" rx="5" fill="rgba(23,166,115,0.09)" stroke="#17a673" stroke-width="1"/>
+              <text class="detail-body" x="610" y="279">#3 оформление дней отдыха</text>
+              <text class="src-meta" x="1100" y="279" text-anchor="end">близко</text>
+
+              <!-- cut line: below = dropped -->
+              <line x1="596" y1="306" x2="1102" y2="306" stroke="#17a673" stroke-width="1.4" stroke-dasharray="5 5" opacity="0.8"/>
+              <text class="detail-body small" x="596" y="324" fill="#17a673">граница топ-k: выше &mdash; уходит модели</text>
+
+              <rect x="596" y="338" width="180" height="28" rx="5" fill="rgba(165,90,53,0.10)" stroke="#a55a35" stroke-width="1"/>
+              <text class="detail-body small" x="610" y="356" fill="#a55a35">командировки &mdash; далеко, мимо</text>
+              <rect x="596" y="376" width="150" height="28" rx="5" fill="rgba(165,90,53,0.08)" stroke="#a55a35" stroke-width="1"/>
+              <text class="detail-body small" x="610" y="394" fill="#a55a35">оплата проезда &mdash; далеко</text>
+            </g>
+            <text class="detail-body small" x="596" y="446">Топ-k фрагментов &mdash; это и есть контекст, который увидит модель.</text>
+            <text class="detail-body small" x="596" y="466" fill="#335551">Слова "отпуск" в вопросе не было &mdash; а нужные пункты всё равно наверху списка.</text>
+          </g>
+
+          <!-- STEP "model" internals: context -> model -> answer with citations -->
+          <g class="zlayer" id="z-model" style="opacity:0; pointer-events:none">
+            <rect class="zlayer-focus" x="566" y="74" width="566" height="512" rx="12"/>
+            <rect class="detail-card" x="572" y="80" width="554" height="500" rx="10"/>
+            <text class="detail-kicker" x="596" y="110">Шаг 03 / контекст &rarr; модель &rarr; ответ</text>
+            <text class="detail-title" x="596" y="130">Модель видит только топ-k &mdash; и отвечает по найденному</text>
+            <text class="detail-body small" x="596" y="152">не весь архив, а только эти куски; ответ ставит ссылки на источники.</text>
+
+            <!-- context box -->
+            <rect class="detail-card muted" x="596" y="172" width="220" height="130" rx="8"/>
+            <text class="detail-body small" x="612" y="194" fill="#17a673">контекст (топ-k):</text>
+            <text class="detail-body small" x="612" y="218">#1 политика отпусков</text>
+            <text class="detail-body small" x="612" y="240">#2 отдых за стаж</text>
+            <text class="detail-body small" x="612" y="262">#3 оформление дней</text>
+            <!-- arrow -->
+            <line x1="826" y1="237" x2="886" y2="237" stroke="#17a673" stroke-width="2.2"/>
+            <path d="M886 237 l-11 -6 l0 12 z" fill="#17a673"/>
+            <text class="detail-body small" x="856" y="227" text-anchor="middle" fill="#17a673">модель (LLM)</text>
+            <!-- answer box with citations -->
+            <rect class="detail-card" x="896" y="172" width="210" height="130" rx="8"/>
+            <text class="detail-body small" x="912" y="194" fill="#17a673">ответ со ссылками:</text>
+            <text class="detail-body" x="912" y="218" font-size="10.5">Отпуск &mdash; 28 календарных</text>
+            <text class="detail-body" x="912" y="234" font-size="10.5">дней в году.</text>
+            <circle cx="920" cy="262" r="9" fill="#17a673" stroke="#335551" stroke-width="1.1"/>
+            <text x="920" y="266" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-size="9" font-weight="700" fill="#f3ead4">1</text>
+            <text class="detail-body small" x="936" y="266">ссылка на источник</text>
+
+            <text class="detail-body small" x="596" y="350">Архив целиком модель не читает &mdash; только найденный по смыслу контекст.</text>
+            <text class="detail-body small" x="596" y="372" fill="#335551">Поэтому ответ короткий, проверяемый и со ссылкой на пункт политики.</text>
+          </g>
+
+          <!-- LEVEL-2 "fragment": exact source, keyword MISS vs meaning HIT -->
+          <g class="zlayer" id="z-fragment" style="opacity:0; pointer-events:none">
+            <rect class="zlayer-focus" x="566" y="74" width="566" height="512" rx="12"/>
+            <rect class="detail-card" x="572" y="80" width="554" height="500" rx="10"/>
+            <text class="detail-kicker" x="596" y="110" fill="#17a673">Совпадение #1 / точный фрагмент источника</text>
+            <text class="detail-title" x="596" y="130">Тот самый кусок, что нашёлся по смыслу</text>
+            <text class="detail-body small" x="596" y="150">по словам &mdash; мимо; по смыслу &mdash; точно. В запросе слова "отпуск" нет.</text>
+
+            <!-- LEFT: keyword search MISSES -->
+            <rect class="word-key" x="596" y="170" width="244" height="320" rx="8"/>
+            <text class="ver-lbl" x="612" y="194" fill="#a55a35">если искать по словам</text>
+            <text class="src-quote" x="612" y="222" fill="#7a6446">запрос: "сколько дней</text>
+            <text class="src-quote" x="612" y="238" fill="#7a6446">отпуска"</text>
+            <text class="src-quote" x="612" y="268" fill="#7a6446">в тексте слова "отпуск"</text>
+            <text class="src-quote" x="612" y="284" fill="#7a6446">нет &mdash; точного</text>
+            <text class="src-quote" x="612" y="300" fill="#7a6446">совпадения не найдено.</text>
+            <line x1="612" y1="332" x2="824" y2="332" stroke="#a55a35" stroke-width="1" opacity="0.4" stroke-dasharray="3 3"/>
+            <text class="src-meta" x="612" y="356" fill="#a55a35">результат: пусто &mdash; пункт пропущен</text>
+
+            <!-- RIGHT: semantic search FINDS the fragment -->
+            <g class="frag" id="fragFound">
+              <rect class="word-mean" x="858" y="170" width="246" height="320" rx="8"/>
+              <text class="ver-lbl" x="874" y="194" fill="#17a673">поиск по смыслу &mdash; нашёл</text>
+              <rect class="src-hl" x="870" y="208" width="222" height="84" rx="5"/>
+              <text class="src-quote" x="878" y="230" fill="#3a2e1d">"Каждому сотруднику</text>
+              <text class="src-quote" x="878" y="246" fill="#3a2e1d"> положено 28</text>
+              <text class="src-quote" x="878" y="262" fill="#3a2e1d"> календарных дней</text>
+              <text class="src-quote" x="878" y="278" fill="#3a2e1d"> оплачиваемого отдыха."</text>
+              <line x1="878" y1="316" x2="1086" y2="316" stroke="#17a673" stroke-width="1" opacity="0.5" stroke-dasharray="3 3"/>
+              <text class="src-meta" x="878" y="340">politika-personala.md, раздел "Отдых"</text>
+              <circle cx="886" cy="366" r="9" fill="#17a673" stroke="#335551" stroke-width="1.1"/>
+              <text x="886" y="370" text-anchor="middle" font-family="Trebuchet MS, Verdana, sans-serif" font-size="9" font-weight="700" fill="#f3ead4">1</text>
+              <text class="detail-body small" x="902" y="370" fill="#335551">ссылка #1 ведёт сюда</text>
+            </g>
+
+            <text class="detail-body small" x="596" y="528" fill="#335551">"Оплачиваемый отдых в году" близок по смыслу к "отпуску" &mdash; и кусок нашёлся без точного слова.</text>
+          </g>
+
+        </g><!-- /#camera -->
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============================== chapter ledger ============================== -->
+  <section class="ledger" aria-label="Как работает поиск по документам">
+    <article class="card">
+      <span class="step-no">пункт 1</span>
+      <h3><em>Индекс заранее</em></h3>
+      <p>Все документы заранее складываем в индекс.</p>
+    </article>
+    <article class="card">
+      <span class="step-no">пункт 2</span>
+      <h3><em>Поисковый запрос</em></h3>
+      <p>Запрос пользователя превращается в поисковый запрос.</p>
+    </article>
+    <article class="card">
+      <span class="step-no">пункт 3</span>
+      <h3><em>Лучшие по смыслу</em></h3>
+      <p>Возвращаем несколько лучших совпадений по смыслу.</p>
+    </article>
+    <article class="card">
+      <span class="step-no">пункт 4</span>
+      <h3>Только куски</h3>
+      <p>Модель видит только эти куски, а не весь архив.</p>
+    </article>
+  </section>
+
+  <div class="example-strip">
+    <span class="glyph">Пример:</span>
+    <span>Спросили про отпуск <b>&rarr;</b> нашлись пункты политики об отпусках, даже без слова</span>
+    <span class="nokey">"отпуск"</span>
+  </div>
+
+  <nav class="crosslinks" aria-label="Ссылки экосистемы">
+    <a href="https://brewpage.app">brewpage.app</a>
+    <a href="https://github.com/kochetkov-ma/brewpage-openapi">brewpage-openapi</a>
+  </nav>
+
+  <p class="colophon">Нажмите строку журнала &mdash; камера приблизится к этому шагу маршрута. В шаге "индекс" есть ещё один уровень: точный фрагмент источника, найденный по смыслу.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var q = function (sel, root) { return (root || document).querySelector(sel); };
+  var qa = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- handles (all guarded) ---------- */
+  var viewport = q("#viewport");
+  var camera   = q("#stageSvg");
+  var qFlourish = q("#qFlourish");
+  var qdot     = q("#qdot");
+  var qtrail   = q("#qtrail");
+  var routePath = q("#routePath");
+  var zoomOut  = q("#zoomOut");
+  var crumb0 = q("#crumb0"), crumb1 = q("#crumb1"), crumb2 = q("#crumb2");
+  if (!viewport || !camera || !qdot) { return; }
+
+  /* route legs the green dot rides; node arrival times trigger log lines */
+  var penLines = qa(".penline");
+  var segEls = [q("#seg0"), q("#seg1"), q("#seg2")];
+  var routeNodes = {
+    "query": q("#node-query"), "index": q("#node-index"),
+    "topk": q("#node-topk"), "model": q("#node-model")
+  };
+
+  /* ---------- zoom target registry ---------- *
+   * level 0 = overview, level 1 = a route step, level 2 = the exact fragment.
+   * each step maps to: its zlayer, its route node, log-line host, crumb, and
+   * cam: { s: scale, ox/oy: focal point (%) the camera descends toward }.
+   * The detail cards sit on the right leaf (centered around ~72% across,
+   * ~52% down of the 1180x640 scene); fragment frames its two cards tighter. */
+  var steps = {
+    "index":    { layer: q("#z-index"),    level: 1, parent: "root", node: "index",
+                  host: q("#ll-1"), crumb: "Запрос -> индекс",
+                  cam: { s: 1.52, ox: 72, oy: 52 } },
+    "topk":     { layer: q("#z-topk"),     level: 1, parent: "root", node: "topk",
+                  host: q("#ll-2"), crumb: "Топ-k фрагментов",
+                  cam: { s: 1.52, ox: 72, oy: 50 } },
+    "model":    { layer: q("#z-model"),    level: 1, parent: "root", node: "model",
+                  host: q("#ll-3"), crumb: "Модель -> ответ",
+                  cam: { s: 1.52, ox: 72, oy: 46 } },
+    "fragment": { layer: q("#z-fragment"), level: 2, parent: "index", node: "index",
+                  host: q("#fragHost"), crumb: "Точный фрагмент",
+                  cam: { s: 1.78, ox: 72, oy: 52 } }
+  };
+
+  var current = "root";       /* "root" | step id */
+  var inViewport = true;
+
+  /* ---- prime the green query flourish as an undrawn handwriting stroke ---- */
+  var flourishLen = 1;
+  if (qFlourish) {
+    try { flourishLen = qFlourish.getTotalLength(); } catch (e) { flourishLen = 1; }
+    qFlourish.style.strokeDasharray = flourishLen + " " + flourishLen;
+    qFlourish.style.strokeDashoffset = reduced ? "0" : String(flourishLen);
+  }
+
+  /* ---- the route path the green dot rides ---- */
+  var routeLen = 1;
+  if (routePath) { try { routeLen = routePath.getTotalLength(); } catch (e) { routeLen = 1; } }
+  function routePoint(t) {
+    var L = routeLen * Math.max(0, Math.min(1, t));
+    if (!routePath) { return { x: 660, y: 168 }; }
+    try { return routePath.getPointAtLength(L); }
+    catch (e) { return { x: 660, y: 168 }; }
+  }
+
+  /* draw a short comet trail behind the dot so the route the query just took
+     is always explicit (a fading green tail on the drawn line). */
+  function drawTrail(t) {
+    if (!qtrail || !routePath) { return; }
+    var tail = 0.05;                 /* fraction of route length the tail spans */
+    var t0 = Math.max(0, t - tail);
+    var n = 6, d = "";
+    for (var i = 0; i <= n; i++) {
+      var tt = t0 + (t - t0) * (i / n);
+      var p = routePoint(tt);
+      d += (i === 0 ? "M" : "L") + p.x.toFixed(1) + " " + p.y.toFixed(1) + " ";
+    }
+    qtrail.setAttribute("d", d);
+  }
+
+  function showPenLine(idx) {
+    penLines.forEach(function (el) {
+      if (el.getAttribute("data-line") === String(idx)) { el.classList.add("shown"); }
+    });
+  }
+  function litNode(key) { if (routeNodes[key]) { routeNodes[key].classList.add("lit"); } }
+
+  function resetRunState() {
+    penLines.forEach(function (el) { el.classList.remove("shown"); });
+    segEls.forEach(function (s) { if (s) { s.classList.remove("lit", "active"); } });
+    Object.keys(routeNodes).forEach(function (k) {
+      if (k === "query") { return; }          /* start node stays lit */
+      if (routeNodes[k]) { routeNodes[k].classList.remove("lit"); }
+    });
+    if (routeNodes.query) { routeNodes.query.classList.add("lit"); }
+    if (qFlourish && !reduced) { qFlourish.style.strokeDashoffset = String(flourishLen); }
+    if (qtrail) { qtrail.setAttribute("d", ""); }
+  }
+
+  /* =====================================================================
+     LEVEL 0 AMBIENT: the data actually flows. The green dot rides the
+     visible route; as it passes each node, that node lights, the matching
+     log line is penned, and the segment behind it stays lit. One rAF clock.
+  ===================================================================== */
+  var rafId = null;
+  var startTs = 0;
+  var LOOP_MS = 8600;
+  var PAUSE_MS = 1700;
+  var firedLines = {};
+  var litNodes = {};
+
+  /* arrival fraction (of dot travel) at which each node/line fires.
+     seg i runs from schedule[i].at to schedule[i+1].at. */
+  var schedule = [
+    { at: 0.02, node: "query", line: -1 },
+    { at: 0.63, node: "index", line: 0  },
+    { at: 0.76, node: "topk",  line: 1  },
+    { at: 0.99, node: "model", line: 2  }
+  ];
+
+  function frame(ts) {
+    if (!startTs) { startTs = ts; }
+    var elapsed = ts - startTs;
+    var cycle = LOOP_MS + PAUSE_MS;
+    var phase = elapsed % cycle;
+    var t = phase <= LOOP_MS ? (phase / LOOP_MS) : 1;
+
+    /* pen the green query flourish in the first 14% */
+    if (qFlourish) {
+      var fp = Math.min(1, t / 0.14);
+      qFlourish.style.strokeDashoffset = String(flourishLen * (1 - fp));
+    }
+
+    /* move the query dot along the visible route + draw its trail */
+    var p = routePoint(t);
+    qdot.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.y.toFixed(1) + ")");
+    drawTrail(t);
+
+    /* light segments behind the dot; highlight the one being traversed */
+    segEls.forEach(function (s, i) {
+      if (!s) { return; }
+      var segStart = schedule[i].at;
+      var segEnd = schedule[i + 1] ? schedule[i + 1].at : 1;
+      if (t >= segEnd - 0.001) { s.classList.add("lit"); s.classList.remove("active"); }
+      else if (t >= segStart) { s.classList.add("lit", "active"); }
+    });
+
+    /* fire node + log line on arrival */
+    schedule.forEach(function (e, i) {
+      if (t >= e.at) {
+        if (!litNodes[i]) { litNodes[i] = true; litNode(e.node); }
+        if (e.line >= 0 && !firedLines[e.line]) { firedLines[e.line] = true; showPenLine(e.line); }
+      }
+    });
+
+    /* clean restart at loop wrap */
+    if (phase < 40 && elapsed > cycle) {
+      firedLines = {}; litNodes = {};
+      resetRunState();
+    }
+
+    rafId = window.requestAnimationFrame(frame);
+  }
+
+  function startLoop() {
+    if (reduced || current !== "root" || !inViewport) { return; }
+    if (rafId) { return; }
+    startTs = 0;
+    rafId = window.requestAnimationFrame(frame);
+  }
+  function stopLoop() {
+    if (rafId) { window.cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  /* reduced-motion / static end-state: full run rendered, dot parked at model */
+  function snapStatic() {
+    if (qFlourish) { qFlourish.style.strokeDashoffset = "0"; }
+    penLines.forEach(function (el) { el.classList.add("shown"); });
+    segEls.forEach(function (s) { if (s) { s.classList.add("lit"); } });
+    Object.keys(routeNodes).forEach(function (k) { litNode(k); });
+    var p = routePoint(1);
+    qdot.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.y.toFixed(1) + ")");
+    drawTrail(1);
+  }
+
+  /* =====================================================================
+     IntersectionObserver: run the ambient loop only while on screen.
+  ===================================================================== */
+  if (window.IntersectionObserver) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        inViewport = en.isIntersecting;
+        if (inViewport) { startLoop(); } else { stopLoop(); }
+      });
+    }, { threshold: 0.14 });
+    io.observe(viewport);
+  } else {
+    inViewport = true;
+  }
+
+  /* =====================================================================
+     SEMANTIC ZOOM: clicking a log line scales the WHOLE scene toward that
+     step's focal point while its detail layer cross-fades in. No modal,
+     no scene swap -- one camera, one scene, the viewport clips the rest.
+  ===================================================================== */
+  var layers = qa(".zlayer");
+
+  function setCameraTo(cam) {
+    if (reduced) { camera.style.transition = "none"; }
+    else { camera.style.transition = "transform .56s cubic-bezier(0.22,0.61,0.36,1)"; }
+    camera.style.setProperty("--ox", cam.ox + "%");
+    camera.style.setProperty("--oy", cam.oy + "%");
+    camera.style.transform = "scale(" + cam.s + ")";
+  }
+  function resetCamera() {
+    if (reduced) { camera.style.transition = "none"; }
+    else { camera.style.transition = "transform .56s cubic-bezier(0.22,0.61,0.36,1)"; }
+    camera.style.transform = "scale(1)";
+  }
+
+  function showLayer(id) {
+    layers.forEach(function (L) {
+      var on = (id !== "root") && (L.id === "z-" + id);
+      L.style.opacity = on ? "1" : "0";
+      L.style.pointerEvents = on ? "auto" : "none";
+    });
+  }
+
+  function setCrumbLabel(el, main, alt) {
+    if (!el) { return; }
+    el.innerHTML = main + "<span class=\"alt\">" + alt + "</span>";
+  }
+  function setCrumbState(el, active) {
+    if (!el) { return; }
+    el.className = "crumb" + (active ? " active" : "");
+    el.removeAttribute("aria-disabled");
+  }
+
+  function updateCrumbs(level) {
+    var s = (current !== "root") ? steps[current] : null;
+    setCrumbState(crumb0, level === 0);
+    if (level >= 1) {
+      var stepName = (level === 2 && s) ? steps[s.parent].crumb : (s ? s.crumb : "шаг маршрута");
+      setCrumbLabel(crumb1, stepName, "приближение");
+      setCrumbState(crumb1, level === 1);
+    } else {
+      setCrumbLabel(crumb1, "шаг маршрута", "приближение");
+      crumb1.className = "crumb future"; crumb1.setAttribute("aria-disabled", "true");
+    }
+    if (level >= 2) {
+      setCrumbState(crumb2, level === 2);
+    } else {
+      crumb2.className = "crumb future"; crumb2.setAttribute("aria-disabled", "true");
+    }
+    if (zoomOut) { zoomOut.disabled = (level === 0); }
+  }
+
+  function enterStep(id) {
+    if (!steps[id]) { return; }
+    stopLoop();
+    current = id;
+    setCameraTo(steps[id].cam);
+    showLayer(id);
+    /* keep the right-leaf route node lit so the path stays legible while zoomed */
+    if (routeNodes[steps[id].node]) { routeNodes[steps[id].node].classList.add("lit"); }
+    updateCrumbs(steps[id].level);
+    gateHosts();
+    runInnerAnim(id);
+    var lyr = steps[id].layer;
+    if (lyr) { try { lyr.setAttribute("tabindex", "-1"); lyr.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  function toRoot() {
+    stopInnerAnim();
+    current = "root";
+    resetCamera();
+    showLayer("root");
+    updateCrumbs(0);
+    gateHosts();
+    firedLines = {}; litNodes = {};
+    resetRunState();
+    if (reduced) { snapStatic(); } else { startLoop(); }
+  }
+
+  function goUp() {
+    if (current === "root") { return; }
+    var parent = steps[current].parent;
+    var returnHost = steps[current].host;
+    if (parent === "root") { toRoot(); }
+    else { enterStep(parent); }
+    if (returnHost && typeof returnHost.focus === "function") {
+      try { returnHost.focus({ preventScroll: true }); } catch (e) {}
+    }
+  }
+
+  /* wire every drill host (log lines + the fragment plate) */
+  var drillHosts = qa("[data-drill]");
+  drillHosts.forEach(function (host) {
+    var target = host.getAttribute("data-target");
+    function activate(ev) {
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      enterStep(target);
+    }
+    host.addEventListener("click", activate);
+    host.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " " || ev.key === "Spacebar") { activate(ev); }
+    });
+  });
+
+  /* gate which drill hosts are reachable for the current level: level-0 log
+     lines only at root; the level-2 fragment host only while zoomed into index.
+     Off-frame (clipped) hosts get pointer-events:none + tabindex -1 so neither
+     mouse nor keyboard reaches them, and the reviewer's "next visible drill"
+     is unambiguously the one inside the revealed step. */
+  function gateHosts() {
+    drillHosts.forEach(function (host) {
+      var tgt = host.getAttribute("data-target");
+      var s = steps[tgt];
+      var reachable;
+      if (s.level === 1) { reachable = (current === "root"); }
+      else { reachable = (current === s.parent); }
+      host.style.pointerEvents = reachable ? "auto" : "none";
+      host.setAttribute("tabindex", reachable ? "0" : "-1");
+      /* Hide unreachable hosts from hit-testing AND from any actionability
+         probe (Playwright is_visible / mouse): a gated host that is still
+         "visible" but pointer-events:none would swallow a click and stall.
+         Making it visibility:hidden guarantees the only visible [data-drill]
+         after the first zoom is the level-2 fragment host -- so the second
+         camera level is the unambiguous, immediately-clickable target. */
+      host.style.visibility = reachable ? "visible" : "hidden";
+    });
+  }
+
+  if (zoomOut) { zoomOut.addEventListener("click", function () { goUp(); }); }
+  if (crumb0) { crumb0.addEventListener("click", function () { if (current !== "root") { toRoot(); } }); }
+  if (crumb1) { crumb1.addEventListener("click", function () {
+    if (crumb1.classList.contains("future")) { return; }
+    if (current !== "root" && steps[current].level === 2) { enterStep(steps[current].parent); }
+  }); }
+
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && current !== "root") { goUp(); }
+  });
+
+  /* =====================================================================
+     Inner-scene reveal animations (transform/opacity only).
+  ===================================================================== */
+  var innerTimers = [];
+  function stopInnerAnim() {
+    innerTimers.forEach(function (id) { window.clearTimeout(id); });
+    innerTimers = [];
+  }
+
+  function revealCloud() {
+    var root = q("#z-index");
+    if (!root) { return; }
+    var pts = qa(".pt", root);
+    var lines = qa(".reach-line", root);
+    var ring = q(".ring-near", root);
+    if (reduced) {
+      pts.forEach(function (p) { p.style.opacity = "1"; p.style.transform = ""; });
+      lines.forEach(function (l) { l.classList.add("lit"); });
+      if (ring) { ring.style.opacity = "1"; ring.style.transform = ""; }
+      return;
+    }
+    pts.forEach(function (p) {
+      p.style.transition = "none"; p.style.opacity = "0"; p.style.transform = "scale(0.3)";
+    });
+    if (ring) { ring.style.transition = "none"; ring.style.opacity = "0"; ring.style.transform = "scale(0.4)"; }
+    lines.forEach(function (l) { l.classList.remove("lit"); });
+    pts.forEach(function (p, i) {
+      var id = window.setTimeout(function () {
+        p.style.transition = "opacity .35s ease, transform .5s cubic-bezier(0.22,0.61,0.36,1)";
+        p.style.opacity = "1"; p.style.transform = "scale(1)";
+      }, 90 + i * 80);
+      innerTimers.push(id);
+    });
+    var idR = window.setTimeout(function () {
+      if (ring) {
+        ring.style.transition = "opacity .4s ease, transform .6s cubic-bezier(0.22,0.61,0.36,1)";
+        ring.style.opacity = "1"; ring.style.transform = "scale(1)";
+      }
+      lines.forEach(function (l, j) {
+        var idL = window.setTimeout(function () { l.classList.add("lit"); }, j * 120);
+        innerTimers.push(idL);
+      });
+    }, 90 + pts.length * 80 + 100);
+    innerTimers.push(idR);
+  }
+
+  function revealFragment() {
+    var grp = q("#fragFound");
+    if (!grp) { return; }
+    if (reduced) { grp.style.opacity = "1"; grp.style.transform = ""; return; }
+    grp.style.transition = "none";
+    grp.style.transformBox = "fill-box";
+    grp.style.transformOrigin = "50% 50%";
+    grp.style.opacity = "0";
+    grp.style.transform = "translateY(14px) scale(0.98)";
+    var id = window.setTimeout(function () {
+      if (current !== "fragment") { return; }
+      grp.style.transition = "opacity .45s ease, transform .55s cubic-bezier(0.22,0.61,0.36,1)";
+      grp.style.opacity = "1"; grp.style.transform = "translateY(0) scale(1)";
+    }, 130);
+    innerTimers.push(id);
+  }
+
+  function runInnerAnim(id) {
+    stopInnerAnim();
+    if (id === "index") { revealCloud(); }
+    else if (id === "fragment") { revealFragment(); }
+    /* topk + model: static panels, the camera-in motion carries them */
+  }
+
+  /* =====================================================================
+     INIT
+  ===================================================================== */
+  resetRunState();
+  updateCrumbs(0);
+  showLayer("root");
+  gateHosts();
+  if (reduced) { snapStatic(); }
+  else { startLoop(); }
+
+  window.addEventListener("pagehide", function () { stopLoop(); stopInnerAnim(); });
+})();
+</script>
+
+<style id="mokup-nav-style">#mokup-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;padding:4px 8px;background:linear-gradient(180deg,#f7efdc,#efe3c8);border:1px solid #bda878;border-radius:999px;box-shadow:0 4px 14px rgba(60,46,26,.25);font:600 12px/1 "Trebuchet MS",Verdana,sans-serif;color:#5c4a32}#mokup-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border-radius:999px;color:#335551;text-decoration:none}#mokup-nav a:hover{background:#ddcca8;color:#a55a35}#mokup-nav .lbl{padding:0 6px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}</style>
+<nav id="mokup-nav" aria-label="Concept navigator"><a href="08-harbor.html" aria-label="Previous">&#8592;</a><span class="lbl">09 logbook</span><a href="../index.html">index</a><a href="10-map-zoom.html" aria-label="Next">&#8594;</a></nav>
+</body>
+</html>

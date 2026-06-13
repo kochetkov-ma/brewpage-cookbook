@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide -- Blueprint</title>
+<style>
+  :root{
+    --paper:#0b2540;
+    --paper-2:#0a1f36;
+    --grid:rgba(120,200,255,0.10);
+    --grid-strong:rgba(120,200,255,0.18);
+    --ink:#e8f4ff;
+    --cyan:#5ad1ff;
+    --cyan-dim:#2f8fc0;
+    --white:#ffffff;
+    --line:rgba(190,225,255,0.55);
+    --line-soft:rgba(190,225,255,0.28);
+    --mono:"Courier New",Consolas,"Lucida Console",monospace;
+    --sans:"Helvetica Neue",Arial,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+      linear-gradient(var(--grid-strong) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-strong) 1px,transparent 1px),
+      radial-gradient(circle at 50% 0%, #103257 0%, var(--paper) 60%, var(--paper-2) 100%);
+    background-size:
+      24px 24px,
+      24px 24px,
+      120px 120px,
+      120px 120px,
+      100% 100%;
+    background-position:0 0,0 0,0 0,0 0,0 0;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1320px;
+    margin:0 auto;
+    padding:0 28px 64px;
+    position:relative;
+  }
+
+  /* drafting frame */
+  .frame{
+    position:relative;
+    margin-top:20px;
+    border:1px solid var(--line);
+    padding:0;
+  }
+  .frame::before,.frame::after{
+    content:"";position:absolute;width:18px;height:18px;border:1px solid var(--cyan);
+  }
+  .frame::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+  .frame::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+  .crop{position:absolute;width:18px;height:18px;border:1px solid var(--cyan);pointer-events:none}
+  .crop.tr{top:-1px;right:-1px;border-left:none;border-bottom:none}
+  .crop.bl{bottom:-1px;left:-1px;border-right:none;border-top:none}
+
+  /* dimension ticks across top of frame */
+  .ticks{
+    height:18px;border-bottom:1px solid var(--line-soft);
+    background-image:repeating-linear-gradient(90deg,var(--line-soft) 0,var(--line-soft) 1px,transparent 1px,transparent 48px);
+    position:relative;
+  }
+  .ticks .dim{
+    position:absolute;left:50%;top:2px;transform:translateX(-50%);
+    font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--cyan-dim);
+  }
+
+  /* header */
+  header.bar{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+    padding:18px 22px 16px;border-bottom:1px solid var(--line-soft);
+    flex-wrap:wrap;
+  }
+  .titleblock{display:flex;flex-direction:column;gap:6px}
+  .stamp{
+    font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan-dim);
+    text-transform:uppercase;
+  }
+  h1{
+    margin:0;font-size:26px;font-weight:700;letter-spacing:1px;
+    color:var(--white);
+  }
+  h1 .accent{color:var(--cyan)}
+  .subtitle{font-family:var(--mono);font-size:11px;color:var(--line);letter-spacing:1px}
+
+  .toggle{
+    display:inline-flex;border:1px solid var(--line);font-family:var(--mono);
+    font-size:12px;letter-spacing:2px;overflow:hidden;align-self:flex-start;
+  }
+  .toggle button{
+    background:transparent;color:var(--line);border:none;cursor:pointer;
+    padding:8px 14px;min-height:36px;min-width:48px;letter-spacing:2px;
+    font-family:var(--mono);font-size:12px;
+  }
+  .toggle button+button{border-left:1px solid var(--line)}
+  .toggle button.active{background:var(--cyan);color:#05203a;font-weight:700}
+  .toggle button:focus-visible{outline:2px solid var(--white);outline-offset:-2px}
+
+  /* hero */
+  .hero{
+    padding:30px 24px 14px;position:relative;
+  }
+  .hero .label{
+    font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan-dim);
+    text-transform:uppercase;margin-bottom:10px;
+  }
+  .hero p.promise{
+    margin:0;font-size:22px;line-height:1.45;max-width:760px;color:var(--ink);font-weight:400;
+  }
+  .hero p.promise b{color:var(--cyan);font-weight:700}
+  .hero .meta{
+    margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--line);letter-spacing:1px;
+  }
+
+  /* section label */
+  .sec-label{
+    padding:18px 24px 0;font-family:var(--mono);font-size:10px;letter-spacing:3px;
+    color:var(--cyan-dim);text-transform:uppercase;display:flex;gap:14px;align-items:center;
+  }
+  .sec-label .rule{flex:1;height:1px;background:var(--line-soft)}
+
+  /* schematic */
+  .schematic{padding:8px 18px 24px}
+  .svg-scroll{width:100%;overflow-x:auto}
+  svg.track{display:block;width:100%;min-width:980px;height:auto}
+
+  .node-box{cursor:pointer}
+  .node-box rect{
+    fill:rgba(10,40,66,0.85);stroke:var(--line);stroke-width:1;
+    transition:stroke .15s,fill .15s;
+  }
+  .node-box:hover rect,.node-box:focus rect{stroke:var(--cyan);fill:rgba(20,60,95,0.92)}
+  .node-box.open rect{stroke:var(--cyan);fill:rgba(24,72,110,0.95);stroke-width:1.6}
+  .node-box:focus{outline:none}
+  .node-box:focus rect{stroke:var(--white)}
+  .node-num{font-family:var(--mono);font-size:11px;fill:var(--cyan);font-weight:700}
+  .node-title{font-family:var(--sans);font-size:12px;fill:var(--ink)}
+  .connector{stroke:var(--cyan-dim);stroke-width:1.2;fill:none}
+  .connector.dash{stroke-dasharray:4 4}
+  .milestone rect{fill:rgba(90,209,255,0.14);stroke:var(--cyan);stroke-width:1.4}
+  .milestone .node-title{fill:var(--cyan);font-weight:700}
+  .pct-tick{font-family:var(--mono);font-size:10px;fill:var(--cyan-dim)}
+  .axis{stroke:var(--line-soft);stroke-width:1}
+
+  /* drill-in callout panel */
+  .callout-wrap{padding:0 24px}
+  .callout{
+    display:none;border:1px dashed var(--cyan);background:rgba(8,30,52,0.92);
+    margin:6px 0 18px;padding:18px 20px;position:relative;
+  }
+  .callout.show{display:block;animation:fade .18s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .callout::before{
+    content:"";position:absolute;top:-9px;left:28px;width:16px;height:16px;
+    background:rgba(8,30,52,0.92);border-left:1px dashed var(--cyan);border-top:1px dashed var(--cyan);
+    transform:rotate(45deg);
+  }
+  .callout .co-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line-soft);padding-bottom:8px;margin-bottom:10px;
+  }
+  .callout .co-id{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--cyan)}
+  .callout h3{margin:0;font-size:17px;color:var(--white);font-weight:700}
+  .callout .co-close{
+    background:transparent;border:1px solid var(--line);color:var(--line);
+    font-family:var(--mono);font-size:11px;cursor:pointer;padding:5px 10px;min-height:36px;
+    letter-spacing:1px;
+  }
+  .callout .co-close:hover{border-color:var(--cyan);color:var(--cyan)}
+  .callout p.blurb{margin:0 0 12px;font-size:14px;line-height:1.55;color:var(--ink)}
+  .callout ul{margin:0;padding:0;list-style:none}
+  .callout li{
+    font-family:var(--mono);font-size:12.5px;color:var(--line);padding:5px 0 5px 22px;
+    position:relative;line-height:1.4;
+  }
+  .callout li::before{
+    content:"+";position:absolute;left:2px;top:5px;color:var(--cyan);font-weight:700;
+  }
+
+  /* footer */
+  footer.foot{
+    border-top:1px solid var(--line-soft);margin:10px 24px 18px;padding:16px 0 6px;
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center;
+    font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--cyan-dim);
+  }
+  footer.foot a{color:var(--line);text-decoration:none;border-bottom:1px dashed var(--line-soft)}
+  footer.foot a:hover{color:var(--cyan);border-color:var(--cyan)}
+  footer.foot .links{display:flex;gap:20px;flex-wrap:wrap}
+
+  @media (max-width:480px){
+    .wrap{padding:0 12px 48px}
+    h1{font-size:21px}
+    .hero p.promise{font-size:18px}
+    svg.track{min-width:0}
+    .svg-scroll{overflow-x:visible}
+    .toggle{align-self:stretch}
+    .ticks .dim{font-size:9px}
+    footer.foot{justify-content:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <span class="crop tr"></span><span class="crop bl"></span>
+    <div class="ticks"><span class="dim" data-i18n="dim">SHEET 01 / 11  --  SCALE 0% : 100%</span></div>
+
+    <header class="bar">
+      <div class="titleblock">
+        <span class="stamp" data-i18n="stamp">DRAWING NO. RAG-001  /  REV A</span>
+        <h1><span class="accent">RAG</span> <span data-i18n="title">с нуля</span></h1>
+        <span class="subtitle" data-i18n="subtitle">чертеж маршрута обучения</span>
+      </div>
+      <div class="toggle" role="group" aria-label="language">
+        <button id="ru" class="active" onclick="setLang('ru')">RU</button>
+        <button id="en" onclick="setLang('en')">EN</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="label" data-i18n="heroLabel">// SPECIFICATION</div>
+      <p class="promise" data-i18n="promise"></p>
+      <div class="meta" data-i18n="heroMeta"></div>
+    </section>
+
+    <div class="sec-label">
+      <span data-i18n="trackLabel">// LEARNING TRACK -- SCHEMATIC</span>
+      <span class="rule"></span>
+      <span data-i18n="trackHint">[ tap a node ]</span>
+    </div>
+
+    <section class="schematic">
+      <div class="svg-scroll">
+        <svg class="track" viewBox="0 0 1000 360" role="img" aria-label="learning track schematic">
+          <!-- baseline axis -->
+          <line class="axis" x1="40" y1="40" x2="40" y2="320"/>
+          <line class="axis" x1="40" y1="320" x2="970" y2="320"/>
+          <text class="pct-tick" x="40" y="338" text-anchor="middle">0%</text>
+          <text class="pct-tick" x="505" y="338" text-anchor="middle">50%</text>
+          <text class="pct-tick" x="965" y="338" text-anchor="end">100%</text>
+          <g id="nodes"></g>
+        </svg>
+      </div>
+    </section>
+
+    <div class="callout-wrap">
+      <div class="callout" id="callout" role="region" aria-live="polite">
+        <div class="co-head">
+          <div>
+            <div class="co-id" id="coId"></div>
+            <h3 id="coTitle"></h3>
+          </div>
+          <button class="co-close" onclick="closeCallout()" data-i18n="close">CLOSE [x]</button>
+        </div>
+        <p class="blurb" id="coBlurb"></p>
+        <ul id="coList"></ul>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <span data-i18n="footStamp">(c) BrewPage Cookbook -- blueprint mockup</span>
+      <span class="links">
+        <a href="https://brewpage.app">brewpage.app</a>
+        <a href="https://github.com/kochetkov-ma/brewpage-openapi">github.com/kochetkov-ma/brewpage-openapi</a>
+      </span>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ---------- i18n static strings ---------- */
+var STR = {
+  ru:{
+    dim:"ЛИСТ 01 / 11  --  МАСШТАБ 0% : 100%",
+    stamp:"ЧЕРТЕЖ No. RAG-001  /  РЕВ A",
+    title:"с нуля",
+    subtitle:"чертеж маршрута обучения",
+    heroLabel:"// СПЕЦИФИКАЦИЯ",
+    promise:"С нуля до уверенного RAG за один маршрут. <b>Без предварительных знаний</b> -- все нужное прямо здесь, на этой странице. От 0% до 100%, шаг за шагом.",
+    heroMeta:"ТРЕБОВАНИЯ: нет  /  ФОРМАТ: одна страница  /  РЕЗУЛЬТАТ: рабочий RAG",
+    trackLabel:"// МАРШРУТ ОБУЧЕНИЯ -- СХЕМА",
+    trackHint:"[ нажми на узел ]",
+    close:"ЗАКРЫТЬ [x]",
+    footStamp:"(c) BrewPage Cookbook -- макет-чертеж"
+  },
+  en:{
+    dim:"SHEET 01 / 11  --  SCALE 0% : 100%",
+    stamp:"DRAWING NO. RAG-001  /  REV A",
+    title:"Guide",
+    subtitle:"blueprint of the learning path",
+    heroLabel:"// SPECIFICATION",
+    promise:"From zero to confident RAG in one route. <b>No prerequisites</b> -- everything you need is right here on this page. From 0% to 100%, step by step.",
+    heroMeta:"PREREQUISITES: none  /  FORMAT: single page  /  OUTPUT: a working RAG",
+    trackLabel:"// LEARNING TRACK -- SCHEMATIC",
+    trackHint:"[ tap a node ]",
+    close:"CLOSE [x]",
+    footStamp:"(c) BrewPage Cookbook -- blueprint mockup"
+  }
+};
+
+/* ---------- track data ---------- */
+var NODES = [
+  {pct:"0%",  ru:{t:"С чего начать", b:"Точка старта. Коротко о том, что впереди и почему это реально освоить за один заход.", s:["что такое этот гид","как читать маршрут","ничего устанавливать не надо"]},
+              en:{t:"Where to start", b:"The starting point. A short look at what is ahead and why it is doable in one pass.", s:["what this guide is","how to read the track","nothing to install yet"]}},
+  {pct:"1",   ru:{t:"Что такое RAG", b:"Retrieval-Augmented Generation простыми словами: модель отвечает, опираясь на ваши документы.", s:["поиск + генерация","откуда берутся факты","границы подхода"]},
+              en:{t:"What RAG is", b:"Retrieval-Augmented Generation in plain words: the model answers grounded in your documents.", s:["retrieval + generation","where facts come from","limits of the approach"]}},
+  {pct:"2",   ru:{t:"Зачем он нужен", b:"Почему RAG лучше, чем просто спросить модель: актуальность, источники, меньше выдумок.", s:["свежие данные","ссылки на источник","контроль над ответом"]},
+              en:{t:"Why you need it", b:"Why RAG beats asking a model directly: freshness, sources, fewer made-up answers.", s:["fresh data","cite the source","control over output"]}},
+  {pct:"3",   ru:{t:"Как работает поиск по документам", b:"Общая схема: вопрос -> находим релевантные куски -> передаем модели.", s:["запрос пользователя","релевантность","конвейер целиком"]},
+              en:{t:"How document retrieval works", b:"The overall flow: question -> find relevant pieces -> hand them to the model.", s:["the user query","relevance","the full pipeline"]}},
+  {pct:"4",   ru:{t:"Разбиваем текст на чанки", b:"Большие документы режем на небольшие куски, чтобы их удобно искать и передавать.", s:["размер чанка","перекрытие","границы по смыслу"]},
+              en:{t:"Splitting text into chunks", b:"Large documents are cut into small pieces so they are easy to search and pass along.", s:["chunk size","overlap","semantic boundaries"]}},
+  {pct:"5",   ru:{t:"Эмбеддинги: текст в векторы", b:"Каждый чанк превращаем в вектор чисел, отражающий смысл текста.", s:["что такое вектор","близость по смыслу","модель эмбеддингов"]},
+              en:{t:"Embeddings: text to vectors", b:"Each chunk becomes a vector of numbers that captures the meaning of the text.", s:["what a vector is","semantic closeness","the embedding model"]}},
+  {pct:"6",   ru:{t:"Векторная база и поиск", b:"Храним векторы в векторной базе и ищем ближайшие к вопросу.", s:["векторное хранилище","поиск соседей","скорость и точность"]},
+              en:{t:"Vector store and search", b:"Store the vectors in a vector store and search for those nearest to the question.", s:["the vector store","nearest-neighbor search","speed vs accuracy"]}},
+  {pct:"7",   ru:{t:"Собираем контекст для модели", b:"Найденные куски собираем в контекст и аккуратно вставляем в промпт.", s:["отбор лучших кусков","сборка промпта","лимит токенов"]},
+              en:{t:"Assembling context for the model", b:"Gather the retrieved pieces into a context and place them carefully into the prompt.", s:["picking the best pieces","building the prompt","token budget"]}},
+  {pct:"8",   ru:{t:"Генерация ответа", b:"Модель читает контекст и дает ответ, опираясь на ваши данные.", s:["инструкция модели","ответ со ссылками","стиль и формат"]},
+              en:{t:"Generating the answer", b:"The model reads the context and produces an answer grounded in your data.", s:["instructing the model","answer with citations","style and format"]}},
+  {pct:"9",   ru:{t:"Оценка качества", b:"Проверяем, насколько ответы точны и полезны, и где теряется качество.", s:["что измерять","простые метрики","где ломается"]},
+              en:{t:"Measuring quality", b:"Check how accurate and useful the answers are, and where quality is lost.", s:["what to measure","simple metrics","where it breaks"]}},
+  {pct:"100%",ru:{t:"Вывод в продакшн", b:"Финиш. Собираем все в рабочий сервис и готовим к реальной нагрузке.", s:["сборка воедино","мониторинг","следующие шаги"]},
+              en:{t:"Going to production", b:"The finish line. Assemble everything into a working service ready for real load.", s:["putting it together","monitoring","next steps"]}}
+];
+
+var lang = "ru";
+var openIdx = -1;
+
+/* ---------- build SVG nodes ---------- */
+function layout(){
+  var g = document.getElementById("nodes");
+  g.innerHTML = "";
+  var n = NODES.length;
+  var x0 = 90, x1 = 930;          // node center range
+  var bw = 132, bh = 40;
+  var topRow = 90, botRow = 200;  // two routed rows
+  var pts = [];
+  for(var i=0;i<n;i++){
+    var cx = x0 + (x1-x0)*(i/(n-1));
+    var cy = (i%2===0)? topRow : botRow;
+    pts.push({cx:cx,cy:cy});
+  }
+  // connectors first (routed elbow lines)
+  var svgns="http://www.w3.org/2000/svg";
+  for(var j=0;j<n-1;j++){
+    var a=pts[j],b=pts[j+1];
+    var midY=(a.cy+b.cy)/2;
+    var path=document.createElementNS(svgns,"path");
+    var d="M "+a.cx+" "+(a.cy+bh/2)+
+           " V "+midY+
+           " H "+b.cx+
+           " V "+(b.cy-bh/2);
+    path.setAttribute("d",d);
+    path.setAttribute("class","connector dash");
+    g.appendChild(path);
+    // drop line to axis (dimension tick) for each node
+  }
+  for(var k=0;k<n;k++){
+    var p=pts[k];
+    // tick down to baseline
+    var tick=document.createElementNS(svgns,"line");
+    tick.setAttribute("x1",p.cx);tick.setAttribute("y1",p.cy+bh/2);
+    tick.setAttribute("x2",p.cx);tick.setAttribute("y2",320);
+    tick.setAttribute("class","connector");
+    tick.setAttribute("stroke-dasharray","2 5");
+    g.appendChild(tick);
+
+    var gi=document.createElementNS(svgns,"g");
+    gi.setAttribute("class","node-box"+(k===n-1||k===0?" milestone":""));
+    gi.setAttribute("tabindex","0");
+    gi.setAttribute("role","button");
+    gi.setAttribute("data-idx",k);
+    gi.setAttribute("aria-label",NODES[k].pct+" "+NODES[k][lang].t);
+
+    var rect=document.createElementNS(svgns,"rect");
+    rect.setAttribute("x",p.cx-bw/2);rect.setAttribute("y",p.cy-bh/2);
+    rect.setAttribute("width",bw);rect.setAttribute("height",bh);
+    gi.appendChild(rect);
+
+    var num=document.createElementNS(svgns,"text");
+    num.setAttribute("class","node-num");
+    num.setAttribute("x",p.cx-bw/2+10);num.setAttribute("y",p.cy-2);
+    num.textContent=NODES[k].pct;
+    gi.appendChild(num);
+
+    var ttl=document.createElementNS(svgns,"text");
+    ttl.setAttribute("class","node-title");
+    ttl.setAttribute("x",p.cx-bw/2+10);ttl.setAttribute("y",p.cy+13);
+    ttl.textContent=fit(NODES[k][lang].t,20);
+    gi.appendChild(ttl);
+
+    gi.addEventListener("click",function(e){toggle(parseInt(this.getAttribute("data-idx"),10));});
+    gi.addEventListener("keydown",function(e){
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle(parseInt(this.getAttribute("data-idx"),10));}
+    });
+    g.appendChild(gi);
+  }
+  markOpen();
+}
+function fit(s,max){return s.length>max? s.slice(0,max-1)+".":s;}
+
+/* ---------- callout ---------- */
+function toggle(i){ if(openIdx===i){closeCallout();} else {openCallout(i);} }
+function openCallout(i){
+  openIdx=i;
+  var d=NODES[i][lang];
+  document.getElementById("coId").textContent="DETAIL "+(i+1)+" / "+NODES.length+"  --  "+NODES[i].pct;
+  document.getElementById("coTitle").textContent=d.t;
+  document.getElementById("coBlurb").textContent=d.b;
+  var ul=document.getElementById("coList");ul.innerHTML="";
+  for(var s=0;s<d.s.length;s++){var li=document.createElement("li");li.textContent=d.s[s];ul.appendChild(li);}
+  var co=document.getElementById("callout");co.classList.add("show");
+  markOpen();
+  co.scrollIntoView({behavior:(window.matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"),block:"nearest"});
+}
+function closeCallout(){
+  openIdx=-1;
+  document.getElementById("callout").classList.remove("show");
+  markOpen();
+}
+function markOpen(){
+  var boxes=document.querySelectorAll(".node-box");
+  for(var i=0;i<boxes.length;i++){
+    var idx=parseInt(boxes[i].getAttribute("data-idx"),10);
+    if(idx===openIdx){boxes[i].classList.add("open");}else{boxes[i].classList.remove("open");}
+  }
+}
+
+/* ---------- language ---------- */
+function setLang(l){
+  lang=l;
+  document.documentElement.lang=l;
+  document.getElementById("ru").classList.toggle("active",l==="ru");
+  document.getElementById("en").classList.toggle("active",l==="en");
+  var s=STR[l];
+  var els=document.querySelectorAll("[data-i18n]");
+  for(var i=0;i<els.length;i++){
+    var key=els[i].getAttribute("data-i18n");
+    if(s[key]!==undefined){
+      if(key==="promise"){els[i].innerHTML=s[key];}
+      else{els[i].textContent=s[key];}
+    }
+  }
+  layout();
+  if(openIdx>=0){openCallout(openIdx);}
+}
+
+/* init */
+setLang("ru");
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="05-glass.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">06 / 10</span><span class="mn-name">Blueprint</span></span>
+  <a href="07-board.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="05-glass.html", NEXT="07-board.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

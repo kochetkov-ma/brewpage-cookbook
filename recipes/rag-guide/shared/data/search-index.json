@@ -1,0 +1,32 @@
+{
+  "_schema": {
+    "purpose": "DATA CONTRACT for search.js -- a small static search index over the RAG Guide core sections. Stub-level fixture for the prototype.",
+    "shape": "Top-level { items: [{ title, href, section, body }] }. search.js also accepts a bare top-level array. Each item: title (display + heading-weighted match), href (in-page anchor or relative page path), section (section-id label shown after a result), body (short plain-text excerpt scored on substring match).",
+    "rules": [
+      "one item per indexable core section; keep body to ~1-2 sentences",
+      "href is an in-page anchor (#slug) on the landing page or a relative path",
+      "ASCII punctuation only; RU body text mirrors the ported prose",
+      "underscore-prefixed keys (like _schema) are metadata and MUST be skipped by consumers"
+    ]
+  },
+  "items": [
+    {
+      "title": "Obzor: RAG za 4 shaga",
+      "href": "#pipeline",
+      "section": "pipeline",
+      "body": "RAG na verhnem urovne -- konvejer iz chetyreh shagov: ingest plus chunking, embedding, store plus retrieve, generate. Karta vsego recepta; ostalnoe -- drill-down vnutr ee uzlov."
+    },
+    {
+      "title": "Chunking: rezhem dokument na chunki",
+      "href": "#chunking",
+      "section": "chunking",
+      "body": "Dokument rezhut na chunki retrieval-razmera. Splitter reshaet gde rezat, overlap sohranyaet smysl na granice, metadata krepit istochnik i poziciyu. Razmer chunka i overlap -- kompromiss, ne konstanta."
+    },
+    {
+      "title": "Embedding: chunk prevrashchaem v vektor",
+      "href": "#embedding",
+      "section": "embedding",
+      "body": "Kazhdyj chunk prevrashchaem v vektor fiksirovannoj dliny dim, gde blizost vektorov otrazhaet blizost smysla. Pohozhest izmeryayut geometricheski, chashche cosine similarity."
+    }
+  ]
+}

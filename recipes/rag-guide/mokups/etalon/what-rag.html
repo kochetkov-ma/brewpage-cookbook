@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Что такое RAG - пайплайн - Эталон</title>
+<style>
+/* ===== Atlas / cartographic engineering-plate skin ===== */
+:root{
+  --sepia:#5c4a32; --sepia-soft:#7a6446; --ink:#3a2e1d;
+  --parchment2:#efe3c8; --sand:#e8dcc0; --line:#bda878;
+  --teal:#4a6f6a; --rust:#a55a35; --gold:#b08a3e;
+  --green:#17a673;
+  --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Trebuchet MS","Gill Sans","Segoe UI",Verdana,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sh-soft:0 2px 8px rgba(60,46,26,.14);
+  --sh-mid:0 6px 18px rgba(60,46,26,.22);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--serif); color:var(--ink);
+  background-color:#f3ead4;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+    radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+    repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0 1px, transparent 1px 26px);
+  min-height:100vh;
+  padding:18px 14px 96px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:880px;margin:0 auto}
+
+/* ----- masthead cartouche ----- */
+.masthead{text-align:center;margin:4px 0 16px;position:relative;padding-right:60px;padding-left:60px}
+@media(max-width:680px){
+  .masthead{padding-right:46px;padding-left:46px}
+}
+.masthead .kicker{
+  font-family:var(--sans);font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--sepia-soft);margin:0 0 6px;
+}
+.masthead h1{
+  font-family:var(--serif);font-weight:600;font-size:26px;line-height:1.15;
+  margin:0;color:var(--ink);letter-spacing:.01em;
+}
+.masthead .rule{
+  width:170px;height:0;margin:10px auto 0;
+  border-top:2px solid var(--sepia);
+  position:relative;
+}
+.masthead .rule::after{
+  content:"\2756";position:absolute;left:50%;top:-10px;transform:translateX(-50%);
+  background:#f3ead4;padding:0 8px;color:var(--gold);font-size:12px;
+}
+.masthead .sub{
+  font-family:var(--sans);font-size:12.5px;color:var(--sepia-soft);
+  margin:8px auto 0;max-width:560px;line-height:1.5;
+}
+
+/* ----- the framed atlas plate ----- */
+.plate{
+  position:relative;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(247,239,220,0.5) 0, rgba(232,220,192,0) 70%),
+    linear-gradient(180deg,#f7efdc,#efe3c8);
+  border:2px solid var(--sepia);
+  border-radius:7px;
+  padding:14px 12px 12px;
+  box-shadow:var(--sh-mid), inset 0 0 0 1px rgba(189,168,120,.5);
+}
+.plate::before{ /* inset hairline ring */
+  content:"";position:absolute;inset:7px;border:1px solid var(--line);border-radius:5px;pointer-events:none;
+}
+.plate::after{ /* soft vignette */
+  content:"";position:absolute;inset:0;border-radius:7px;pointer-events:none;
+  box-shadow:inset 0 0 60px rgba(60,46,26,.10), inset 0 0 14px rgba(60,46,26,.08);
+}
+/* corner L-ticks */
+.corner{position:absolute;width:16px;height:16px;pointer-events:none;z-index:2;opacity:.7}
+.corner svg{display:block}
+.corner.tl{top:11px;left:11px}
+.corner.tr{top:11px;right:11px;transform:scaleX(-1)}
+.corner.bl{bottom:11px;left:11px;transform:scaleY(-1)}
+.corner.br{bottom:11px;right:11px;transform:scale(-1,-1)}
+
+/* compass rose -- pure decoration in the title header, away from every control */
+.compass{position:absolute;top:50%;right:0;transform:translateY(-50%);width:48px;height:48px;z-index:3;opacity:.85}
+@media(max-width:680px){
+  .compass{width:40px;height:40px;top:6px;right:0;transform:none}
+}
+/* cartouche inside plate */
+.scalebar{
+  /* decorative cartouche; hidden on the level-1 overview to avoid colliding with node 01 subtitle */
+  display:none;
+}
+.scalebar .bar{display:flex;height:6px;border:1px solid var(--sepia);}
+.scalebar .bar span{width:26px;height:100%}
+.scalebar .bar span:nth-child(odd){background:var(--sepia)}
+.scalebar .cap{text-transform:uppercase}
+
+/* ----- breadcrumb + zoom-out control ----- */
+.controls{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:0 4px 10px;margin-bottom:2px;
+  border-bottom:1px solid var(--line);
+}
+.breadcrumb{
+  font-family:var(--sans);font-size:12px;color:var(--sepia-soft);
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1 1 auto;min-width:0;
+}
+.breadcrumb .sep{color:var(--line)}
+/* clickable ancestor crumb: a real button styled as a quiet text link */
+.breadcrumb .crumb-link{
+  font-family:var(--sans);font-size:12px;font-weight:700;color:var(--teal);
+  background:none;border:0;padding:6px 4px;margin:-6px 0;cursor:pointer;
+  line-height:1.3;border-radius:4px;
+  text-decoration:underline;text-decoration-color:rgba(74,111,106,.45);
+  text-underline-offset:2px;transition:color .15s,text-decoration-color .15s,background .15s;
+}
+.breadcrumb .crumb-link:hover{color:var(--rust);text-decoration-color:var(--rust);background:#f1e6cb}
+.breadcrumb .crumb-link:focus-visible{
+  outline:2px solid var(--rust);outline-offset:2px;text-decoration:none;
+}
+/* current location: inert, marked as the active spot */
+.breadcrumb .crumb-current{
+  color:var(--rust);font-weight:700;padding:6px 4px;margin:-6px 0;line-height:1.3;
+}
+@media(max-width:680px){
+  /* keep tap targets >=44px without breaking the toolbar layout */
+  .breadcrumb .crumb-link,.breadcrumb .crumb-current{padding:11px 6px;margin:-11px 0}
+}
+.zoomout{
+  color:var(--teal);background:#f7efdc;border:1px solid var(--line);
+  border-radius:999px;min-width:44px;min-height:44px;padding:0;cursor:pointer;flex:0 0 auto;
+  display:inline-flex;align-items:center;justify-content:center;transition:background .15s,color .15s,opacity .2s;
+}
+.zoomout:hover{background:#e8dcc0;color:var(--rust)}
+.zoomout[disabled]{opacity:.4;cursor:default}
+.lens{display:inline-block;width:18px;height:18px;flex:0 0 auto}
+.zoomout:focus-visible,.node:focus-visible,.drill:focus-visible{
+  outline:2px solid var(--rust);outline-offset:3px;border-radius:5px;
+}
+
+/* ----- the camera stage ----- */
+.stage{
+  position:relative;border-radius:5px;
+  background:transparent;
+}
+.camera{
+  position:relative;
+  transition:transform 520ms cubic-bezier(.4,.05,.2,1);
+  transform-origin:0 0;
+  will-change:transform;
+}
+.reduced .camera{transition:none}
+/* when a detail pane is open, collapse the level-0 pipeline out of flow so the
+   stage grows to fit the ACTIVE detail pane (no frozen short height, no clip) */
+.stage.zoomed .camera{
+  position:absolute;inset:0;height:0;overflow:hidden;
+  visibility:hidden;pointer-events:none;
+}
+
+/* graticule behind diagram */
+.graticule{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.5}
+
+/* ----- pipeline diagram (level 0) ----- */
+.pipeline{position:relative;padding:6px 2px 2px}
+.svg-flow{display:block;width:100%;height:auto}
+.edge-base{stroke:var(--line);stroke-width:2;fill:none}
+/* one-time quiet draw-in of the pipeline spine; no traveling marker, no loop */
+.edge-draw{stroke:var(--sepia-soft);stroke-width:2.4;fill:none;stroke-linecap:round;opacity:.55;
+  transition:stroke-dashoffset 1100ms cubic-bezier(.4,.05,.2,1)}
+.reduced .edge-draw{transition:none}
+.edge-draw.drawn{stroke-dashoffset:0}
+
+.nodes-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+  margin-top:-4px;position:relative;z-index:2;
+}
+@media(max-width:680px){
+  .nodes-grid{grid-template-columns:repeat(2,1fr);}
+  .scalebar{display:none}
+}
+.node{
+  position:relative;cursor:pointer;text-align:center;
+  background:linear-gradient(180deg,#f7efdc,#ece0c4);
+  border:1.5px solid var(--sepia);border-radius:5px;
+  padding:9px 6px 8px;min-height:64px;
+  box-shadow:var(--sh-soft);
+  transition:transform .18s,box-shadow .18s,border-color .25s,background .25s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+}
+.node:hover{transform:translateY(-2px);box-shadow:var(--sh-mid);border-color:var(--rust)}
+.node .idx{
+  font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:.1em;
+  color:var(--gold);text-transform:uppercase;
+}
+.node .name{
+  font-family:var(--serif);font-size:12.5px;line-height:1.22;color:var(--ink);font-weight:600;
+}
+.node .hint{
+  font-family:var(--sans);font-size:9.5px;color:var(--sepia-soft);
+  letter-spacing:.02em;
+}
+/* visited = earned green; stays green once the user has drilled into it */
+.node.lit{
+  border-color:var(--green);
+  background:linear-gradient(180deg,#eef7ea,#e3efd9);
+  box-shadow:0 0 0 1px rgba(23,166,115,.4), var(--sh-soft);
+}
+.node.lit .idx{color:var(--teal)}
+/* visited check mark in the corner */
+.node.lit::after{
+  content:"\2713";position:absolute;top:4px;right:6px;
+  font-family:var(--sans);font-size:11px;font-weight:700;line-height:1;color:var(--green);
+}
+/* current / next un-visited node: a faint "вы здесь" marker, NOT green-complete */
+.node.current{
+  border-color:var(--rust);
+  box-shadow:0 0 0 1px rgba(165,90,53,.32), var(--sh-soft);
+}
+.node.current .idx{color:var(--rust)}
+.node .here{
+  display:none;position:absolute;top:3px;left:6px;
+  font-family:var(--sans);font-size:8px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--rust);
+}
+.node.current .here{display:block}
+/* finalized: whole route done */
+.nodes-grid.done .node{
+  border-color:var(--green);
+  background:linear-gradient(180deg,#eef7ea,#e3efd9);
+}
+
+/* ----- progress: counter + proportional spine fill ----- */
+.progress{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-family:var(--sans);font-size:11.5px;color:var(--sepia-soft);
+  padding:0 4px 8px;margin-bottom:2px;letter-spacing:.02em;
+}
+.progress .ptrack{
+  flex:1 1 120px;min-width:90px;max-width:260px;height:7px;
+  background:#e0d2ad;border:1px solid var(--line);border-radius:4px;overflow:hidden;
+}
+.progress .pfill{
+  display:block;height:100%;width:0;background:var(--green);border-radius:4px;
+  transition:width 420ms cubic-bezier(.4,.05,.2,1);
+}
+.reduced .progress .pfill{transition:none}
+.progress .pcount b{color:var(--teal);font-family:var(--mono);font-weight:700}
+.progress .pdone{
+  color:var(--green);font-weight:700;opacity:0;
+  transition:opacity .3s ease;
+}
+.reduced .progress .pdone{transition:none}
+.progress.complete .pdone{opacity:1}
+/* the spine itself fills proportionally over the base edge */
+.edge-prog{stroke:var(--green);stroke-width:2.6;fill:none;stroke-linecap:round;
+  transition:stroke-dashoffset 480ms cubic-bezier(.4,.05,.2,1)}
+.reduced .edge-prog{transition:none}
+
+/* ----- detail panes (zoom levels) ----- */
+/* Hidden panes are pulled out of flow; the ACTIVE pane flows normally so the
+   stage grows to its natural height. No inner scroll-jail, no clipping. */
+.detail{
+  display:none;position:relative;z-index:5;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(247,239,220,0.6) 0, rgba(232,220,192,0) 75%),
+    linear-gradient(180deg,#f7efdc,#efe3c8);
+  border:1.5px solid var(--sepia);border-radius:5px;
+  padding:16px 16px 14px;
+  opacity:0;transform:scale(1.02);
+  transition:opacity 380ms ease, transform 380ms ease;
+}
+.reduced .detail{transition:none}
+.detail.show{display:block;opacity:1;transform:scale(1)}
+.detail h2{
+  font-family:var(--serif);font-weight:600;font-size:18px;margin:0 0 2px;color:var(--ink);
+}
+/* heading is a programmatic focus target (a11y label, tabindex=-1); suppress UA blue ring, keep SR focus */
+.detail h2:focus,.detail h2:focus-visible{outline:none}
+.detail .tag{
+  font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--rust);margin:0 0 10px;
+}
+.detail p{font-family:var(--sans);font-size:13px;line-height:1.55;color:var(--sepia);margin:8px 0}
+.detail .note{
+  font-family:var(--sans);font-size:11.5px;color:var(--sepia-soft);font-style:italic;
+  border-left:2px solid var(--line);padding-left:9px;margin-top:12px;
+}
+
+/* readouts */
+.readout{
+  font-family:var(--mono);font-size:12.5px;line-height:1.7;
+  background:#f1e6cb;border:1px solid var(--line);border-radius:5px;
+  padding:9px 11px;color:var(--ink);word-break:break-word;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+}
+.readout .lbl{
+  display:block;font-family:var(--sans);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sepia-soft);margin-bottom:4px;
+}
+.readout .num{color:var(--teal)}
+.readout .ell{color:var(--sepia-soft)}
+
+/* ranked candidate list */
+.ranklist{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.ranklist li{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--sans);font-size:12.5px;color:var(--ink);
+  background:#f1e6cb;border:1px solid var(--line);border-radius:5px;padding:6px 10px;
+}
+.ranklist .chunk{font-family:var(--mono);font-size:12px;color:var(--sepia)}
+.ranklist .cos{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--teal);font-weight:600}
+.ranklist .barwrap{flex:1 1 60px;height:6px;background:#e0d2ad;border-radius:3px;overflow:hidden;min-width:40px}
+.ranklist .barfill{height:100%;background:var(--green);border-radius:3px}
+
+/* chunk cards (top-k) */
+.cards{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.ccard{
+  background:#f1e6cb;border:1px solid var(--line);border-left:3px solid var(--teal);
+  border-radius:5px;padding:8px 11px;
+}
+.ccard .src{font-family:var(--mono);font-size:11px;color:var(--rust);margin-bottom:3px}
+.ccard .txt{font-family:var(--serif);font-size:13px;line-height:1.45;color:var(--ink)}
+
+/* prompt block */
+.prompt{
+  font-family:var(--mono);font-size:11.5px;line-height:1.6;white-space:pre-wrap;
+  word-break:break-word;overflow-wrap:anywhere;
+  background:#2f2718;color:#e8dcc0;border:1px solid var(--sepia);border-radius:5px;
+  padding:11px 12px;overflow:auto;
+}
+.prompt .sys{color:var(--gold)}
+.prompt .ctx{color:#9fc4be}
+.prompt .q{color:#e9b27f}
+.budget{
+  font-family:var(--sans);font-size:11.5px;color:var(--sepia-soft);margin-top:8px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.budget .meter{flex:1 1 100px;min-width:80px;max-width:160px;height:7px;background:#e0d2ad;border-radius:4px;overflow:hidden}
+.budget .meter i{display:block;height:100%;background:var(--teal);border-radius:4px}
+.budget b{color:var(--teal);font-family:var(--mono);font-weight:600}
+
+/* answer block */
+.answer{
+  font-family:var(--serif);font-size:14px;line-height:1.55;color:var(--ink);
+  background:#eef7ea;border:1px solid #bcd9c5;border-left:3px solid var(--green);
+  border-radius:5px;padding:11px 13px;
+}
+.answer cite{
+  font-style:normal;font-family:var(--sans);font-size:11px;font-weight:700;
+  color:#fff;background:var(--teal);border-radius:3px;padding:0 4px;margin:0 1px;vertical-align:1px;
+}
+
+/* ===== didactic drill animations (transform/opacity only) ===== */
+
+/* -- Эмбеддинг: текст -> токены -> вектор -- */
+.embed-anim{margin:10px 0 4px}
+.embed-stage{
+  font-family:var(--sans);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--sepia-soft);margin:0 0 6px;
+}
+/* phase 1: the raw query text */
+.embed-text{
+  font-family:var(--serif);font-size:14px;color:var(--ink);
+  background:#f1e6cb;border:1px solid var(--line);border-radius:5px;padding:8px 11px;
+  opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s ease;
+}
+.embed-anim.run .embed-text{opacity:1;transform:none}
+/* phase 2: tokens split out */
+.embed-tokens{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.tok{
+  font-family:var(--mono);font-size:12px;color:var(--ink);
+  background:#efe3c8;border:1px solid var(--line);border-radius:4px;padding:3px 7px;
+  opacity:0;transform:translateY(-7px) scale(.85);
+  transition:opacity .34s ease,transform .34s cubic-bezier(.34,1.4,.5,1);
+}
+.embed-anim.run .tok{opacity:1;transform:none}
+/* phase 3: vector coordinates compute + settle in, filling left-to-right */
+.embed-vec{
+  font-family:var(--mono);font-size:13px;line-height:1.7;margin-top:10px;
+  background:#f1e6cb;border:1px solid var(--line);border-radius:5px;padding:9px 11px;color:var(--ink);
+  display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;
+}
+.embed-vec .vlbl{
+  flex:1 0 100%;font-family:var(--sans);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--sepia-soft);margin-bottom:2px;
+}
+.vnum{
+  color:var(--teal);font-weight:600;min-width:46px;text-align:right;
+  opacity:0;transform:translateY(4px);
+  transition:opacity .3s ease,transform .3s ease;
+}
+.embed-anim.run .vnum.in{opacity:1;transform:none}
+.vellip{color:var(--sepia-soft);opacity:0;transition:opacity .3s ease}
+.embed-anim.run .vellip.in{opacity:.8}
+
+/* -- Индекс / Топ-k: cosine score bars fill + top-k mark -- */
+.ranklist .barfill{width:0;transition:width 760ms cubic-bezier(.4,.05,.2,1)}
+.reduced .ranklist .barfill{transition:none}
+.ranklist li{
+  opacity:0;transform:translateY(6px);
+  transition:opacity .34s ease,transform .34s ease,border-color .3s ease,background .3s ease;
+}
+.ranklist.run li{opacity:1;transform:none}
+.ranklist li.topk{border-color:var(--green);background:#eef7ea}
+.ranklist li.topk .cos{color:var(--green)}
+
+/* -- Сборка контекста: chunks drop into the prompt, budget meter fills -- */
+.detail .prompt{position:relative}
+.prompt .ctx-line{
+  display:block;opacity:0;transform:translateY(-8px);
+  transition:opacity .4s ease,transform .4s cubic-bezier(.34,1.3,.5,1);
+}
+.assemble.run .prompt .ctx-line{opacity:1;transform:none}
+.budget .meter i{width:0;transition:width 900ms cubic-bezier(.4,.05,.2,1)}
+.reduced .budget .meter i{transition:none}
+
+/* nested drill button (zoom level 2 entry) */
+.drill{
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.03em;
+  color:var(--teal);background:#f7efdc;border:1px dashed var(--teal);
+  border-radius:5px;min-height:44px;padding:8px 12px;margin-top:12px;max-width:100%;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.drill:hover{background:#e8f1ec;color:var(--rust);border-color:var(--rust)}
+
+/* reduced-motion static stepper hint */
+.rm-only{display:none}
+.reduced .rm-only{display:block;font-family:var(--sans);font-size:11px;color:var(--sepia-soft);margin-top:10px}
+
+.visually-hidden{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Atlas of Retrieval-Augmented Generation &middot; Plate I</p>
+    <h1>Что такое RAG</h1>
+    <div class="rule"></div>
+    <p class="sub">Конвейер: запрос проходит слева направо через поиск по векторному индексу и сборку контекста, прежде чем модель формирует ответ со ссылками. Нажмите узел, чтобы заглянуть внутрь.</p>
+
+    <!-- compass rose: pure decoration, lives in the title header where no control sits -->
+    <svg class="compass" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="21" fill="none" stroke="#bda878" stroke-width="1"/>
+      <circle cx="24" cy="24" r="15" fill="none" stroke="#bda878" stroke-width=".6"/>
+      <polygon points="24,4 27,24 24,28 21,24" fill="#a55a35"/>
+      <polygon points="24,44 21,24 24,20 27,24" fill="#5c4a32"/>
+      <polygon points="4,24 24,21 28,24 24,27" fill="#7a6446"/>
+      <polygon points="44,24 24,27 20,24 24,21" fill="#7a6446"/>
+      <circle cx="24" cy="24" r="2" fill="#b08a3e"/>
+      <text x="24" y="11" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-size="6" fill="#5c4a32">N</text>
+    </svg>
+  </header>
+
+  <section class="plate" aria-label="Engineering plate: RAG pipeline">
+    <!-- corner L-ticks -->
+    <span class="corner tl"><svg width="16" height="16"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner tr"><svg width="16" height="16"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner bl"><svg width="16" height="16"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner br"><svg width="16" height="16"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+
+    <!-- controls: breadcrumb + zoom-out -->
+    <div class="controls">
+      <nav class="breadcrumb" id="crumb" aria-label="Уровень приближения">
+        <b>Пайплайн</b>
+      </nav>
+      <button class="zoomout" id="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+        <svg class="lens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="10" cy="10" r="6.5"/><line x1="14.8" y1="14.8" x2="21" y2="21"/><line x1="7" y1="10" x2="13" y2="10"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- progress: earned green, grows as nodes are visited -->
+    <div class="progress" id="progress" aria-hidden="true">
+      <span class="pcount">Пройдено <b id="pCount">0</b> / 7</span>
+      <span class="ptrack"><span class="pfill" id="pFill"></span></span>
+      <span class="pdone">&#10003; Маршрут пройден</span>
+    </div>
+
+    <div class="stage" id="stage">
+      <!-- faint graticule -->
+      <svg class="graticule" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+        <g stroke="#bda878" stroke-width=".15" opacity=".6">
+          <line x1="0" y1="10" x2="100" y2="10"/><line x1="0" y1="20" x2="100" y2="20"/><line x1="0" y1="30" x2="100" y2="30"/>
+          <line x1="14" y1="0" x2="14" y2="40"/><line x1="28" y1="0" x2="28" y2="40"/><line x1="42" y1="0" x2="42" y2="40"/>
+          <line x1="57" y1="0" x2="57" y2="40"/><line x1="71" y1="0" x2="71" y2="40"/><line x1="85" y1="0" x2="85" y2="40"/>
+        </g>
+      </svg>
+
+      <div class="camera" id="camera">
+        <div class="pipeline" id="pipeline">
+          <!-- flow edge: a single quiet one-time draw-in, no traveling marker -->
+          <svg class="svg-flow" viewBox="0 0 700 56" preserveAspectRatio="none" aria-hidden="true">
+            <path id="flowPath" class="edge-base" d="M10 28 H690"/>
+            <path id="flowDraw" class="edge-draw" d="M10 28 H690" stroke-dasharray="680 680" stroke-dashoffset="680"/>
+            <path id="flowProg" class="edge-prog" d="M10 28 H690" stroke-dasharray="680 680" stroke-dashoffset="680"/>
+          </svg>
+
+          <div class="nodes-grid" id="nodes" role="list">
+            <div class="node" data-drill role="button" tabindex="0" data-node="n0" data-anchor="0" role="listitem">
+              <span class="here">вы здесь</span>
+              <span class="idx">01</span><span class="name">Запрос</span><span class="hint">вопрос пользователя</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n1" data-anchor="14">
+              <span class="idx">02</span><span class="name">Эмбеддинг запроса</span><span class="hint">текст &rarr; вектор</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n2" data-anchor="28">
+              <span class="idx">03</span><span class="name">Векторный индекс (ANN)</span><span class="hint">ближайшие соседи</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n3" data-anchor="42">
+              <span class="idx">04</span><span class="name">Топ-k фрагментов</span><span class="hint">k = 3</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n4" data-anchor="57">
+              <span class="idx">05</span><span class="name">Сборка контекста</span><span class="hint">промпт + бюджет</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n5" data-anchor="71">
+              <span class="idx">06</span><span class="name">LLM</span><span class="hint">генерация</span>
+            </div>
+            <div class="node" data-drill role="button" tabindex="0" data-node="n6" data-anchor="85">
+              <span class="idx">07</span><span class="name">Ответ со ссылками</span><span class="hint">с цитатами</span>
+            </div>
+          </div>
+        </div>
+      </div><!-- /camera -->
+
+      <!-- ===== detail panes (zoom level 1) ===== -->
+      <!-- 01 Запрос -->
+      <div class="detail" id="d-n0" role="dialog" aria-modal="false" aria-label="Запрос">
+        <h2>01 &middot; Запрос</h2>
+        <p class="tag">вход пользователя</p>
+        <div class="readout"><span class="lbl">текст запроса</span>"Сколько дней отпуска в году?"</div>
+        <p>Это исходный вопрос. RAG не отвечает на него по памяти модели - сначала он ищет ответ в ваших документах.</p>
+        <button class="drill" data-drill data-deep="deep-n0" type="button" aria-label="Открыть разбор запроса">
+          <svg class="lens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="10" r="6.5"/><line x1="14.8" y1="14.8" x2="21" y2="21"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="10" y1="7" x2="10" y2="13"/>
+          </svg> запрос &rarr; разбор
+        </button>
+        <p class="note">Дальше запрос превращается в вектор, чтобы стать сравнимым с фрагментами архива.</p>
+      </div>
+
+      <!-- 01 deep (zoom level 2) -->
+      <div class="detail" id="d-deep-n0" role="dialog" aria-modal="false" aria-label="Запрос - разбор">
+        <h2>01.1 &middot; Разбор запроса</h2>
+        <p class="tag">нормализация перед эмбеддингом</p>
+        <div class="readout">
+          <span class="lbl">токены запроса</span>
+          ["сколько", "дней", "отпуска", "в", "году", "?"] &middot; <span class="num">6</span> токенов
+        </div>
+        <div class="readout" style="margin-top:8px">
+          <span class="lbl">язык / тип</span>
+          lang=ru &middot; intent=factual-lookup &middot; len=29 симв.
+        </div>
+        <p class="note">Запрос очищается и токенизируется, затем целиком кодируется в один вектор смысла.</p>
+      </div>
+
+      <!-- 02 Эмбеддинг -->
+      <div class="detail" id="d-n1" role="dialog" aria-modal="false" aria-label="Эмбеддинг запроса">
+        <h2>02 &middot; Эмбеддинг запроса</h2>
+        <p class="tag">текст &rarr; вектор</p>
+        <p>Смотрите, как текст превращается в 1536 чисел - координаты смысла в векторном пространстве.</p>
+
+        <div class="embed-anim" id="embedAnim" aria-hidden="true">
+          <p class="embed-stage">1 &middot; исходный текст</p>
+          <div class="embed-text">"Сколько дней отпуска в году?"</div>
+
+          <p class="embed-stage" style="margin-top:12px">2 &middot; разбиение на токены</p>
+          <div class="embed-tokens">
+            <span class="tok">сколько</span><span class="tok">дней</span><span class="tok">отпуска</span><span class="tok">в</span><span class="tok">году</span><span class="tok">?</span>
+          </div>
+
+          <p class="embed-stage" style="margin-top:12px">3 &middot; вычисление вектора &middot; dim 1536</p>
+          <div class="embed-vec">
+            <span class="vlbl">координаты смысла</span>
+            <span class="vnum">0.81</span><span class="vnum">-0.12</span><span class="vnum">0.47</span><span class="vnum">0.05</span><span class="vnum">-0.63</span><span class="vnum">0.21</span><span class="vellip">... 1536</span>
+          </div>
+        </div>
+
+        <button class="drill" data-drill data-deep="deep-n1" type="button" aria-label="Открыть полные координаты вектора">
+          <svg class="lens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="10" r="6.5"/><line x1="14.8" y1="14.8" x2="21" y2="21"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="10" y1="7" x2="10" y2="13"/>
+          </svg> вектор &rarr; полные координаты
+        </button>
+        <div class="rm-only">Текст разбивается на токены, затем кодируется в вектор из 1536 чисел: [0.81, -0.12, 0.47, 0.05, -0.63, 0.21, ...].</div>
+      </div>
+
+      <!-- 02 deep (zoom level 2) -->
+      <div class="detail" id="d-deep-n1" role="dialog" aria-modal="false" aria-label="Эмбеддинг - координаты вектора">
+        <h2>02.1 &middot; Координаты вектора</h2>
+        <p class="tag">первые 8 из 1536 измерений</p>
+        <div class="readout">
+          <span class="lbl">q-vector [0..7]</span>
+          <span class="num">0.812</span>  <span class="num">-0.124</span>  <span class="num">0.470</span>  <span class="num">0.051</span><br>
+          <span class="num">-0.633</span>  <span class="num">0.209</span>  <span class="num">0.018</span>  <span class="num">-0.347</span>
+        </div>
+        <div class="readout" style="margin-top:8px">
+          <span class="lbl">норма ||q||</span><span class="num">1.000</span> &middot; вектор нормирован &rarr; сравнение по косинусу
+        </div>
+        <p class="note">Близость двух нормированных векторов = косинус угла между ними. Так индекс измеряет смысловое сходство запроса и фрагмента.</p>
+      </div>
+
+      <!-- 03 Векторный индекс -->
+      <div class="detail" id="d-n2" role="dialog" aria-modal="false" aria-label="Векторный индекс ANN">
+        <h2>03 &middot; Векторный индекс (ANN)</h2>
+        <p class="tag">поиск ближайших соседей</p>
+        <p>Индекс ищет фрагменты, чьи векторы ближе всего к вектору запроса по косинусу. Полосы заполняются по величине косинуса, верхние k=3 подсвечиваются:</p>
+        <ul class="ranklist" id="rankList" data-topk="3">
+          <li data-w="92"><span class="chunk">chunk #128</span><span class="barwrap"><i class="barfill"></i></span><span class="cos">cos 0.92</span></li>
+          <li data-w="86"><span class="chunk">chunk #054</span><span class="barwrap"><i class="barfill"></i></span><span class="cos">cos 0.86</span></li>
+          <li data-w="74"><span class="chunk">chunk #211</span><span class="barwrap"><i class="barfill"></i></span><span class="cos">cos 0.74</span></li>
+          <li data-w="61"><span class="chunk">chunk #009</span><span class="barwrap"><i class="barfill"></i></span><span class="cos">cos 0.61</span></li>
+        </ul>
+        <button class="drill" data-drill data-deep="deep-n2" type="button" aria-label="Открыть полный текст chunk #128">
+          <svg class="lens" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="10" r="6.5"/><line x1="14.8" y1="14.8" x2="21" y2="21"/><line x1="7" y1="10" x2="13" y2="10"/><line x1="10" y1="7" x2="10" y2="13"/>
+          </svg> chunk #128 &rarr; полный текст
+        </button>
+        <p class="note">Это приближённый поиск соседей (ANN), не перебор всего архива - поэтому он быстрый даже на миллионах фрагментов.</p>
+      </div>
+
+      <!-- 03 deep (zoom level 2) -->
+      <div class="detail" id="d-deep-n2" role="dialog" aria-modal="false" aria-label="Ближайший фрагмент - полный текст">
+        <h2>03.1 &middot; Ближайший фрагмент</h2>
+        <p class="tag">chunk #128 &middot; cos 0.92</p>
+        <div class="ccard">
+          <div class="src">policy.md, разд. 4</div>
+          <div class="txt">"Сотруднику предоставляется ежегодный оплачиваемый отдых - 28 календарных дней."</div>
+        </div>
+        <div class="readout" style="margin-top:10px">
+          <span class="lbl">метаданные</span>
+          doc=policy.md &middot; section=4 &middot; tokens=<span class="num">19</span> &middot; cos=<span class="num">0.92</span>
+        </div>
+        <p class="note">Самый близкий по смыслу фрагмент - именно он несёт прямой ответ на вопрос об отпуске.</p>
+      </div>
+
+      <!-- 04 Топ-k -->
+      <div class="detail" id="d-n3" role="dialog" aria-modal="false" aria-label="Топ-k фрагментов">
+        <h2>04 &middot; Топ-k фрагментов</h2>
+        <p class="tag">k = 3 &middot; источник + текст</p>
+        <div class="cards">
+          <div class="ccard">
+            <div class="src">[1] policy.md, разд. 4</div>
+            <div class="txt">"Сотруднику предоставляется ежегодный оплачиваемый отдых - 28 календарных дней."</div>
+          </div>
+          <div class="ccard">
+            <div class="src">[2] policy.md, разд. 4</div>
+            <div class="txt">"Неиспользованные дни можно перенести на следующий год по согласованию с руководителем."</div>
+          </div>
+          <div class="ccard">
+            <div class="src">[3] hr-faq.md</div>
+            <div class="txt">"Отпуск оформляется заявлением за 2 недели до начала."</div>
+          </div>
+        </div>
+        <p class="note">Берём только k=3 лучших фрагмента - этого хватает для ответа и экономит бюджет токенов.</p>
+      </div>
+
+      <!-- 05 Сборка контекста -->
+      <div class="detail" id="d-n4" role="dialog" aria-modal="false" aria-label="Сборка контекста промпт">
+        <h2>05 &middot; Сборка контекста (промпт)</h2>
+        <p class="tag">фрагменты падают в шаблон промпта</p>
+        <div class="assemble" id="assemble">
+        <div class="prompt"><span class="sys">Системная инструкция: отвечай только по контексту, ставь ссылки.</span>
+<span class="ctx ctx-line">Контекст:</span><span class="ctx ctx-line">[1] policy.md: "...ежегодный оплачиваемый отдых - 28 календарных дней."</span><span class="ctx ctx-line">[2] policy.md: "Неиспользованные дни можно перенести..."</span><span class="ctx ctx-line">[3] hr-faq.md: "Отпуск оформляется заявлением за 2 недели."</span><span class="q ctx-line">Вопрос: Сколько дней отпуска в году?</span></div>
+        <div class="budget">
+          бюджет токенов
+          <span class="meter"><i data-w="15"></i></span>
+          <b>1 240 / 8 192</b> токенов
+        </div>
+        </div>
+        <p class="note">Инструкция + найденные фрагменты + вопрос собираются в один промпт. Модель отвечает строго по этому контексту.</p>
+      </div>
+
+      <!-- 06 LLM -->
+      <div class="detail" id="d-n5" role="dialog" aria-modal="false" aria-label="LLM генерация">
+        <h2>06 &middot; LLM</h2>
+        <p class="tag">генерация ответа</p>
+        <p>Модель получает собранный промпт и генерирует ответ, опираясь на переданный контекст, а не на свою память.</p>
+        <div class="readout">
+          <span class="lbl">вход / выход</span>
+          вход: <span class="num">1 240</span> токенов контекста &middot; выход: ответ + маркеры цитат [1] [2]
+        </div>
+        <p class="note">Контекст ограничивает модель найденными фрагментами - это и снижает выдумки (галлюцинации).</p>
+      </div>
+
+      <!-- 07 Ответ -->
+      <div class="detail" id="d-n6" role="dialog" aria-modal="false" aria-label="Ответ со ссылками">
+        <h2>07 &middot; Ответ со ссылками</h2>
+        <p class="tag">с цитатами на источники</p>
+        <div class="answer">
+          По политике компании - 28 календарных дней оплачиваемого отпуска в год <cite>1</cite>. Неиспользованные дни можно перенести <cite>2</cite>.
+        </div>
+        <div class="readout" style="margin-top:10px">
+          <span class="lbl">ссылки</span>
+          [1] policy.md, разд. 4 &middot; [2] policy.md, разд. 4
+        </div>
+        <p class="note">Ответ опирается на найденные фрагменты, а не на память модели - и каждое утверждение прослеживается до источника.</p>
+      </div>
+
+      <!-- scale bar / cartouche -->
+      <div class="scalebar" aria-hidden="true">
+        <div class="bar"><span></span><span></span><span></span><span></span></div>
+        <div class="cap">retrieval &middot; context &middot; generation</div>
+      </div>
+    </div><!-- /stage -->
+  </section>
+
+</div>
+
+<style id="mokup-nav-style">#mokup-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;padding:4px 8px;background:linear-gradient(180deg,#f7efdc,#efe3c8);border:1px solid #bda878;border-radius:999px;box-shadow:0 4px 14px rgba(60,46,26,.25);font:600 12px/1 "Trebuchet MS",Verdana,sans-serif;color:#5c4a32}#mokup-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border-radius:999px;color:#335551;text-decoration:none}#mokup-nav a:hover{background:#ddcca8;color:#a55a35}#mokup-nav .lbl{padding:0 6px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}</style>
+<nav id="mokup-nav" aria-label="Etalon navigator"><a href="search.html" aria-label="Previous">&#8592;</a><span class="lbl">Что такое RAG</span><a href="index.html">index</a><a href="why-rag.html" aria-label="Next">&#8594;</a></nav>
+
+<script>
+(function(){
+  "use strict";
+
+  var reduced = false;
+  try {
+    reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (e) { reduced = false; }
+  if (reduced) { document.body.classList.add("reduced"); }
+
+  var stage = document.getElementById("stage");
+  var camera = document.getElementById("camera");
+  var crumb = document.getElementById("crumb");
+  var zoomout = document.getElementById("zoomout");
+  var nodes = document.querySelectorAll(".node[data-node]");
+
+  // node metadata for breadcrumb labels
+  var LABELS = {
+    n0:"Запрос", n1:"Эмбеддинг", n2:"Индекс", n3:"Топ-k",
+    n4:"Контекст", n5:"LLM", n6:"Ответ"
+  };
+  var DEEP_LABELS = { "deep-n0":"разбор", "deep-n1":"вектор", "deep-n2":"фрагмент" };
+
+  // stack of zoom levels: each {kind:'node'|'deep', id:..., crumb:...}
+  var zstack = [];
+
+  // ===== earned-progress state (session-only, no storage) =====
+  var ORDER = ["n0","n1","n2","n3","n4","n5","n6"];
+  var TOTAL = ORDER.length;
+  var visited = {};           // nodeId -> true once drilled into
+  var visitedCount = 0;
+  var nodesGrid = document.getElementById("nodes");
+  var progressBar = document.getElementById("progress");
+  var pCount = document.getElementById("pCount");
+  var pFill = document.getElementById("pFill");
+  var flowProg = document.getElementById("flowProg");
+  var SPINE_LEN = 680;        // matches stroke-dasharray on the spine paths
+
+  function nodeEl(id){ return document.querySelector('.node[data-node="' + id + '"]'); }
+
+  // the next un-visited node in pipeline order (null when all visited)
+  function nextUnvisited(){
+    var i;
+    for (i = 0; i < ORDER.length; i++){
+      if (!visited[ORDER[i]]){ return ORDER[i]; }
+    }
+    return null;
+  }
+
+  // refresh the "current / next" marker so the user always knows where to go
+  function markCurrent(){
+    var i;
+    for (i = 0; i < ORDER.length; i++){
+      var el = nodeEl(ORDER[i]);
+      if (el){ el.classList.remove("current"); }
+    }
+    var next = nextUnvisited();
+    if (next){
+      var nel = nodeEl(next);
+      if (nel){ nel.classList.add("current"); }
+    }
+  }
+
+  // grow the counter + proportional spine to match visitedCount
+  function renderProgress(){
+    var frac = visitedCount / TOTAL;
+    if (pCount){ pCount.textContent = String(visitedCount); }
+    if (pFill){ pFill.style.width = (frac * 100) + "%"; }
+    if (flowProg){ flowProg.setAttribute("stroke-dashoffset", String(SPINE_LEN * (1 - frac))); }
+    var complete = visitedCount >= TOTAL;
+    if (progressBar){
+      if (complete){ progressBar.classList.add("complete"); }
+      else { progressBar.classList.remove("complete"); }
+    }
+    if (nodesGrid){
+      if (complete){ nodesGrid.classList.add("done"); }
+      else { nodesGrid.classList.remove("done"); }
+    }
+  }
+
+  // mark a node as visited (earned green); stays green, idempotent
+  function markVisited(nodeId){
+    var el = nodeEl(nodeId);
+    if (el){ el.classList.add("lit"); }
+    if (!visited[nodeId]){
+      visited[nodeId] = true;
+      visitedCount++;
+    }
+    renderProgress();
+    markCurrent();
+  }
+
+  function detailEl(prefix, id){ return document.getElementById(prefix + id); }
+
+  function hideAllDetails(){
+    var ds = document.querySelectorAll(".detail.show");
+    var i;
+    for (i = 0; i < ds.length; i++){ ds[i].classList.remove("show"); }
+  }
+
+  // reveal a pane: flip to display:block, then force a reflow so the
+  // opacity/transform transition actually plays from the start state
+  function revealDetail(d){
+    if (!d){ return; }
+    d.style.display = "block";
+    void d.offsetWidth;
+    d.classList.add("show");
+    d.style.display = "";
+  }
+
+  // escape text destined for innerHTML (labels are static + trusted, but stay safe)
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // Render the breadcrumb. Each ancestor crumb is a real <button> that jumps
+  // straight to its zoom level (data-depth = target zstack length). The last
+  // crumb is the current location: inert, non-clickable, marked as current.
+  function renderCrumb(){
+    if (!crumb) { return; }
+    var total = zstack.length;          // 0 = pipeline overview
+    var parts = [];
+    // crumb 0 = the pipeline (level 0). depth target = 0.
+    if (total === 0){
+      parts.push('<span class="crumb-current" aria-current="true">Пайплайн</span>');
+    } else {
+      parts.push('<button type="button" class="crumb-link" data-depth="0"' +
+                 ' aria-label="Вернуться к пайплайну">Пайплайн</button>');
+    }
+    var i;
+    for (i = 0; i < total; i++){
+      var label = esc(zstack[i].crumb || "");
+      parts.push('<span class="sep">&gt;</span>');
+      if (i === total - 1){
+        // current location -- inert
+        parts.push('<span class="crumb-current" aria-current="true">' + label + '</span>');
+      } else {
+        // ancestor -- jump straight to this level (depth = i+1 entries kept)
+        parts.push('<button type="button" class="crumb-link" data-depth="' + (i + 1) + '"' +
+                   ' aria-label="Вернуться к уровню: ' + label + '">' + label + '</button>');
+      }
+    }
+    crumb.innerHTML = parts.join(" ");
+  }
+
+  // Collapse all levels deeper than `depth`, jumping straight to that level.
+  // depth 0 = pipeline overview; depth N = keep the first N stack entries.
+  // Reuses the same close/reveal path as zoomOut -- visited stays visited.
+  function zoomToLevel(depth){
+    if (depth < 0){ depth = 0; }
+    if (depth >= zstack.length){ return; } // already at/above this level
+    zstack = zstack.slice(0, depth);
+    hideAllDetails();
+    if (zstack.length === 0){
+      applyCamera();
+      renderCrumb();
+      if (zoomout){ zoomout.disabled = true; }
+      return;
+    }
+    var top = zstack[zstack.length - 1];
+    var d = detailEl("d-", top.id);
+    revealDetail(d);
+    applyCamera();
+    renderCrumb();
+    if (zoomout){ zoomout.disabled = false; }
+    if (d){
+      var h = d.querySelector("h2");
+      if (h){ try { h.setAttribute("tabindex","-1"); h.focus(); } catch(e){} }
+    }
+  }
+
+  function applyCamera(){
+    if (stage){
+      if (zstack.length >= 1){ stage.classList.add("zoomed"); }
+      else { stage.classList.remove("zoomed"); }
+    }
+    if (!camera) { return; }
+    // zoom the pipeline camera when any node is open (level >=1)
+    if (zstack.length >= 1){
+      var anchor = zstack[0].anchor || 0;
+      // scale the camera and translate toward the chosen node anchor (percentage of width)
+      var tx = -(anchor * 0.46); // percentage translate, kept modest to avoid clipping
+      camera.style.transform = "translateX(" + tx + "%) scale(1.18)";
+    } else {
+      camera.style.transform = "translateX(0) scale(1)";
+    }
+  }
+
+  function openNode(nodeId, anchor){
+    hideAllDetails();
+    markVisited(nodeId); // earned green: opening (drilling into) a node marks it visited
+    zstack = [{ kind:"node", id:nodeId, crumb: LABELS[nodeId] || nodeId, anchor: anchor }];
+    var d = detailEl("d-", nodeId);
+    revealDetail(d);
+    applyCamera();
+    renderCrumb();
+    if (zoomout){ zoomout.disabled = false; }
+    if (d){
+      var h = d.querySelector("h2");
+      if (h){ try { h.setAttribute("tabindex","-1"); h.focus(); } catch(e){} }
+    }
+    playDidactic(nodeId);
+  }
+
+  // ===== didactic per-node mechanism animations (transform/opacity only) =====
+  var teachTimers = [];
+  function clearTeachTimers(){
+    var i;
+    for (i = 0; i < teachTimers.length; i++){ clearTimeout(teachTimers[i]); }
+    teachTimers = [];
+  }
+  function after(ms, fn){
+    if (reduced){ fn(); return; }
+    teachTimers.push(setTimeout(fn, ms));
+  }
+
+  // reset a node's animation to its start state so a re-open replays it
+  function resetDidactic(){
+    clearTeachTimers();
+    var ea = document.getElementById("embedAnim");
+    if (ea){
+      ea.classList.remove("run");
+      var ins = ea.querySelectorAll(".vnum, .vellip");
+      var i;
+      for (i = 0; i < ins.length; i++){ ins[i].classList.remove("in"); }
+    }
+    var rl = document.getElementById("rankList");
+    if (rl){
+      rl.classList.remove("run");
+      var lis = rl.querySelectorAll("li");
+      var j;
+      for (j = 0; j < lis.length; j++){
+        lis[j].classList.remove("topk");
+        var bf = lis[j].querySelector(".barfill");
+        if (bf){ bf.style.width = "0"; }
+      }
+    }
+    var as = document.getElementById("assemble");
+    if (as){
+      as.classList.remove("run");
+      var m = as.querySelector(".budget .meter i");
+      if (m){ m.style.width = "0"; }
+    }
+  }
+
+  function playEmbedding(){
+    var ea = document.getElementById("embedAnim");
+    if (!ea){ return; }
+    // force start state, reflow, then drive phases
+    void ea.offsetWidth;
+    after(60, function(){ ea.classList.add("run"); });
+    // stagger tokens
+    var toks = ea.querySelectorAll(".tok");
+    var i;
+    for (i = 0; i < toks.length; i++){
+      (function(el, idx){
+        after(520 + idx * 110, function(){ el.style.transitionDelay = "0ms"; });
+      })(toks[i], i);
+    }
+    // numbers settle in left-to-right after tokens
+    var nums = ea.querySelectorAll(".vnum");
+    for (i = 0; i < nums.length; i++){
+      (function(el, idx){
+        after(1250 + idx * 150, function(){ el.classList.add("in"); });
+      })(nums[i], i);
+    }
+    var ell = ea.querySelector(".vellip");
+    if (ell){ after(1250 + nums.length * 150, function(){ ell.classList.add("in"); }); }
+  }
+
+  function playRank(){
+    var rl = document.getElementById("rankList");
+    if (!rl){ return; }
+    var topk = parseInt(rl.getAttribute("data-topk"), 10) || 3;
+    var lis = rl.querySelectorAll("li");
+    void rl.offsetWidth;
+    after(60, function(){ rl.classList.add("run"); });
+    var i;
+    for (i = 0; i < lis.length; i++){
+      (function(li, idx){
+        var w = li.getAttribute("data-w") || "0";
+        var bf = li.querySelector(".barfill");
+        after(260 + idx * 180, function(){ if (bf){ bf.style.width = w + "%"; } });
+        if (idx < topk){
+          after(260 + idx * 180 + 760, function(){ li.classList.add("topk"); });
+        }
+      })(lis[i], i);
+    }
+  }
+
+  function playAssemble(){
+    var as = document.getElementById("assemble");
+    if (!as){ return; }
+    void as.offsetWidth;
+    after(60, function(){ as.classList.add("run"); });
+    var lines = as.querySelectorAll(".prompt .ctx-line");
+    var i;
+    for (i = 0; i < lines.length; i++){
+      (function(el, idx){
+        // stagger handled purely by transition; nudge via inline delay
+        el.style.transitionDelay = (idx * 130) + "ms";
+      })(lines[i], i);
+    }
+    var meter = as.querySelector(".budget .meter i");
+    if (meter){ after(700, function(){ meter.style.width = "15%"; }); }
+  }
+
+  function playDidactic(nodeId){
+    resetDidactic();
+    if (nodeId === "n1"){ playEmbedding(); }
+    else if (nodeId === "n2"){ playRank(); }
+    else if (nodeId === "n4"){ playAssemble(); }
+  }
+
+  function openDeep(deepKey){
+    // hide the level-1 detail, show the deep one
+    hideAllDetails();
+    zstack.push({ kind:"deep", id:deepKey, crumb: DEEP_LABELS[deepKey] || deepKey });
+    var d = detailEl("d-", deepKey);
+    revealDetail(d);
+    applyCamera();
+    renderCrumb();
+    if (d){
+      var h = d.querySelector("h2");
+      if (h){ try { h.setAttribute("tabindex","-1"); h.focus(); } catch(e){} }
+    }
+  }
+
+  function zoomOut(){
+    if (zstack.length === 0){ return; }
+    zstack.pop();
+    hideAllDetails();
+    if (zstack.length === 0){
+      applyCamera();
+      renderCrumb();
+      if (zoomout){ zoomout.disabled = true; }
+      return;
+    }
+    var top = zstack[zstack.length - 1];
+    var d = detailEl("d-", top.id);
+    revealDetail(d);
+    applyCamera();
+    renderCrumb();
+  }
+
+  // wire node clicks (level 1)
+  (function(){
+    var i;
+    for (i = 0; i < nodes.length; i++){
+      (function(node){
+        var nid = node.getAttribute("data-node");
+        var anchor = parseFloat(node.getAttribute("data-anchor")) || 0;
+        function act(){ openNode(nid, anchor); }
+        node.addEventListener("click", act);
+        node.addEventListener("keydown", function(ev){
+          if (ev.key === "Enter" || ev.key === " " || ev.key === "Spacebar"){
+            ev.preventDefault();
+            act();
+          }
+        });
+      })(nodes[i]);
+    }
+  })();
+
+  // wire nested deep drills (level 2)
+  (function(){
+    var deeps = document.querySelectorAll(".drill[data-deep]");
+    var i;
+    for (i = 0; i < deeps.length; i++){
+      (function(btn){
+        var key = btn.getAttribute("data-deep");
+        btn.addEventListener("click", function(ev){
+          ev.preventDefault();
+          openDeep(key);
+        });
+      })(deeps[i]);
+    }
+  })();
+
+  if (zoomout){ zoomout.addEventListener("click", zoomOut); }
+
+  // breadcrumb: clicking an ancestor crumb jumps straight to its level.
+  // Buttons are real <button>s, so Enter/Space fire a native click -- no extra
+  // keydown handler needed. Event delegation keeps it live across re-renders.
+  if (crumb){
+    crumb.addEventListener("click", function(ev){
+      var t = ev.target;
+      while (t && t !== crumb && !(t.classList && t.classList.contains("crumb-link"))){
+        t = t.parentNode;
+      }
+      if (t && t.classList && t.classList.contains("crumb-link")){
+        ev.preventDefault();
+        var depth = parseInt(t.getAttribute("data-depth"), 10);
+        if (!isNaN(depth)){ zoomToLevel(depth); }
+      }
+    });
+  }
+
+  // Escape zooms out one level
+  document.addEventListener("keydown", function(ev){
+    if (ev.key === "Escape" && zstack.length > 0){ zoomOut(); }
+  });
+
+  // ===== level-0 spine: a single quiet one-time draw-in (flow direction only) =====
+  // The spine draw-in is purely didactic (shows left-to-right flow). It does NOT
+  // light any node. Nodes start NEUTRAL and only turn green when the user visits them.
+  var edgeDraw = document.getElementById("flowDraw");
+
+  function setStatic(){
+    // reduced-motion: snap the didactic spine to its drawn state. Nodes stay
+    // neutral; progress is conveyed by state (counter + green spine), not motion.
+    if (edgeDraw){ edgeDraw.setAttribute("stroke-dashoffset", "0"); }
+  }
+
+  function startAnim(){
+    // one-time CSS-transition draw-in of the spine; fires once, never loops.
+    if (edgeDraw){
+      void edgeDraw.getBoundingClientRect();
+      edgeDraw.classList.add("drawn");
+    }
+  }
+
+  function stopAnim(){
+    clearTeachTimers();
+  }
+
+  // initial neutral state: 0 / 7 visited, node 01 flagged as the start ("вы здесь")
+  renderProgress();
+  markCurrent();
+
+  if (reduced){
+    setStatic();
+  } else {
+    // IntersectionObserver gate: draw the spine in once when first on-screen
+    var started = false;
+    if (window.IntersectionObserver && stage){
+      var io = new IntersectionObserver(function(entries){
+        var i;
+        for (i = 0; i < entries.length; i++){
+          if (entries[i].isIntersecting && !started){
+            started = true;
+            startAnim();
+            io.disconnect();
+          }
+        }
+      }, { threshold: 0.15 });
+      io.observe(stage);
+    } else {
+      started = true;
+      startAnim();
+    }
+  }
+
+  window.addEventListener("pagehide", stopAnim);
+})();
+</script>
+</body>
+</html>

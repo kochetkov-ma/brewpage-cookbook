@@ -1,0 +1,45 @@
+{
+  "_schema": {
+    "purpose": "DATA CONTRACT for the PDF -> chunks -> embeddings worked-example animation (timeline.js sequences, process-anim.js renders).",
+    "shape": {
+      "doc": "Source document payload: { id, title, text } -- the PDF text being processed.",
+      "chunks": "Ordered chunk list produced by the split step: [{ id, fromChar, toChar, text }]. fromChar/toChar index into doc.text.",
+      "vectors": "Vector stubs produced by the embed step: [{ id, chunkId, dim, values[] }]. values[] is a SHORT placeholder (e.g. first few dims) -- not a real embedding.",
+      "steps": "Ordered animation steps. Each: { id, kind, caption, targets, duration }."
+    },
+    "step": {
+      "id": "string -- unique step id, defines play order by array position",
+      "kind": "one of: split | embed | store",
+      "caption": "string shown in .timeline__caption while the step is active",
+      "targets": "string[] -- ids this step acts on (chunk ids for split/embed, vector ids for store)",
+      "duration": "number -- milliseconds the step animation runs (timeline.js may scale by speed; reduced-motion snaps to end)"
+    },
+    "rules": [
+      "steps are played in array order; targets must reference existing chunk/vector ids",
+      "kind split targets chunks; embed targets chunks producing vectors; store targets vectors",
+      "animate transform/opacity only; reduced-motion jumps to end state",
+      "values[] are stubs for layout only -- cookbook-author/interactive-engineer may replace with real but small samples",
+      "underscore-prefixed keys (like _schema) are metadata and MUST be skipped by consumers"
+    ]
+  },
+  "doc": {
+    "id": "doc-rag-ru",
+    "title": "Kak rabotaet RAG (ishodnyj dokument)",
+    "text": "Retrieval-augmented generation (RAG) podmeshivaet vneshnie dokumenty v zapros k LLM. Korpus razrezayut na chunki; kazhdyj chunk prevrashchayut v vektor (embedding). Vektory hranyat v indekse i ishchut blizhajshie k zaprosu pered generaciej otveta."
+  },
+  "chunks": [
+    { "id": "c1", "fromChar": 0, "toChar": 85, "text": "Retrieval-augmented generation (RAG) podmeshivaet vneshnie dokumenty v zapros k LLM. " },
+    { "id": "c2", "fromChar": 85, "toChar": 165, "text": "Korpus razrezayut na chunki; kazhdyj chunk prevrashchayut v vektor (embedding). " },
+    { "id": "c3", "fromChar": 165, "toChar": 247, "text": "Vektory hranyat v indekse i ishchut blizhajshie k zaprosu pered generaciej otveta." }
+  ],
+  "vectors": [
+    { "id": "v1", "chunkId": "c1", "dim": 1536, "values": [0.021, -0.058, 0.097] },
+    { "id": "v2", "chunkId": "c2", "dim": 1536, "values": [-0.034, 0.072, 0.011] },
+    { "id": "v3", "chunkId": "c3", "dim": 1536, "values": [0.083, 0.014, -0.061] }
+  ],
+  "steps": [
+    { "id": "s1", "kind": "split", "caption": "Shag 1: rezhem dokument na chunki po granicam predlozhenij.", "targets": ["c1", "c2", "c3"], "duration": 900 },
+    { "id": "s2", "kind": "embed", "caption": "Shag 2: kazhdyj chunk prevrashchaem v vektor (embedding) fiksirovannoj dliny dim=1536.", "targets": ["c1", "c2", "c3"], "duration": 1100 },
+    { "id": "s3", "kind": "store", "caption": "Shag 3: kladem vektory v indeks dlya poiska blizhajshih k zaprosu.", "targets": ["v1", "v2", "v3"], "duration": 800 }
+  ]
+}

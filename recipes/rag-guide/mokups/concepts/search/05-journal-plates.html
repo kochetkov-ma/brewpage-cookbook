@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как работает поиск по документам - journal-plates - Concept 05</title>
+<style>
+:root{
+  --sand:#e8dcc0; --sand-deep:#ddcca8; --parchment:#f3ead4; --parchment2:#efe3c8;
+  --sepia:#5c4a32; --sepia-soft:#7a6446; --ink:#3a2e1d;
+  --teal:#4a6f6a; --teal-deep:#335551; --rust:#a55a35; --gold:#b08a3e;
+  --line:#bda878; --line-soft:#d2bd8e;
+  --green:#17a673; --green-deep:#0f7a55; --green-bright:#1fb37e; --green-soft:rgba(23,166,115,0.12);
+  --pill-clear:120px;
+  --r3:3px; --r5:5px; --r7:7px;
+  --ease:cubic-bezier(0.22,0.61,0.36,1);
+  --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Trebuchet MS","Gill Sans","Segoe UI",Verdana,sans-serif;
+  --mono:"Consolas","SFMono-Regular",Menlo,monospace;
+  --shadow-1:0 1px 3px rgba(60,46,26,0.14);
+  --shadow-2:0 6px 18px rgba(60,46,26,0.20);
+  --shadow-3:0 14px 40px rgba(60,46,26,0.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{overflow-x:hidden}
+body{
+  /* reserve space below ALL content so the fixed #mokup-nav pill (bottom:14px, ~52px tall)
+     never occludes captions/bullets/headings at rest (>=80px required; we use 112px +
+     the mobile safe-area inset so nothing ever sits under the pill at scroll end) */
+  padding-bottom:calc(112px + env(safe-area-inset-bottom,0px));
+  font-family:var(--serif);
+  color:var(--ink);
+  background-color:#f3ead4;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+    radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+    repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---------- Page frame ---------- */
+/* body padding-bottom owns pill-clearance now; frame keeps only a modest tail gap */
+.atlas-frame{ max-width:1080px; margin:0 auto; padding:24px 18px 20px; }
+@media (max-width:560px){ .atlas-frame{ padding:18px 12px 16px; } }
+
+.masthead{
+  position:relative;
+  border:1px double var(--line); border-radius:var(--r7);
+  padding:20px 92px 18px 22px;
+  background:linear-gradient(180deg, rgba(243,234,212,0.7), rgba(239,227,200,0.55));
+  box-shadow:var(--shadow-1);
+}
+.masthead .eyebrow{
+  font-family:var(--sans); font-size:11px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--teal-deep); margin:0 0 6px;
+}
+.masthead h1{
+  font-family:var(--serif); font-weight:600; font-size:clamp(23px,4.6vw,40px);
+  margin:0 0 8px; color:var(--ink); letter-spacing:.01em;
+}
+.masthead .blurb{
+  font-size:clamp(14px,2.4vw,17px); line-height:1.5;
+  max-width:64ch; color:var(--sepia); margin:0;
+}
+.masthead .blurb b{ color:var(--green-deep); font-weight:600; font-style:normal; }
+
+.compass{ position:absolute; top:16px; right:20px; width:66px; height:66px; }
+.compass .needle{ transform-origin:50% 50%; }
+@keyframes compass-sweep{ 0%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} 100%{transform:rotate(-6deg)} }
+.live .compass .needle{ animation:compass-sweep 11s var(--ease) infinite; }
+
+/* ---------- Points list (chapter copy) ---------- */
+.points{
+  margin:16px 0 0; padding:14px 18px;
+  border:1px solid var(--line-soft); border-radius:var(--r5);
+  background:rgba(247,239,220,.55);
+  display:grid; grid-template-columns:repeat(2,1fr); gap:6px 22px;
+}
+@media (max-width:620px){ .points{ grid-template-columns:1fr; } }
+.points li{ list-style:none; font-size:13.5px; line-height:1.5; color:var(--sepia); position:relative; padding-left:22px; }
+.points li b{ color:var(--ink); font-weight:600; }
+.points li .n{
+  position:absolute; left:0; top:1px; width:16px; height:16px; border-radius:50%;
+  border:1px solid var(--rust); color:var(--rust);
+  font-family:var(--sans); font-size:9px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+ul.points{ padding-left:18px; }
+
+/* ---------- Journal / atlas stage ---------- */
+.journal{
+  position:relative; margin-top:20px;
+  border:1px solid var(--line); border-radius:var(--r7);
+  background:linear-gradient(180deg, var(--parchment), var(--parchment2));
+  box-shadow:var(--shadow-2);
+  padding:14px 14px 16px;
+}
+.journal-cap{
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:space-between;
+  padding:2px 6px 12px; border-bottom:1px solid var(--line-soft); margin-bottom:10px;
+}
+.journal-cap .title{
+  font-family:var(--sans); font-size:12px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--sepia-soft);
+}
+
+/* breadcrumb + zoom-out control */
+.lab-bar{ display:flex; align-items:center; gap:8px; }
+.crumb{
+  font-family:var(--sans); font-size:11px; letter-spacing:.08em;
+  color:var(--sepia-soft); display:inline-flex; align-items:center; gap:5px;
+  max-width:58vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.crumb b{ color:var(--teal-deep); font-weight:700; }
+.crumb .sep{ color:var(--line); }
+.btn-up{
+  min-width:44px; min-height:44px;
+  display:inline-flex; align-items:center; gap:6px; padding:0 14px; cursor:pointer;
+  font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--teal-deep); background:#f7efdc;
+  border:1px solid var(--line); border-radius:999px;
+  transition:background .2s var(--ease), color .2s var(--ease), opacity .2s var(--ease);
+}
+.btn-up:hover{ background:var(--sand-deep); color:var(--rust); }
+.btn-up:focus-visible{ outline:2px solid var(--rust); outline-offset:2px; }
+.btn-up[disabled]{ opacity:.4; cursor:default; pointer-events:none; }
+
+/* ---------- Plate ledger: which stage plate is on top ---------- */
+.ledger{
+  display:flex; align-items:stretch; gap:6px; flex-wrap:wrap;
+  margin:0 2px 10px;
+}
+.ledger .tab{
+  flex:1 1 0; min-width:88px; min-height:44px;
+  display:flex; flex-direction:column; justify-content:center; gap:2px;
+  padding:5px 9px; cursor:pointer; text-align:left;
+  font-family:var(--sans); color:var(--sepia-soft);
+  background:rgba(247,239,220,.5);
+  border:1px solid var(--line-soft); border-radius:var(--r5);
+  transition:background .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease), transform .3s var(--ease);
+}
+.ledger .tab .pn{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+.ledger .tab .pt{ font-size:12px; font-weight:700; letter-spacing:.02em; line-height:1.15; }
+.ledger .tab:hover{ background:var(--sand-deep); color:var(--rust); }
+.ledger .tab:focus-visible{ outline:2px solid var(--rust); outline-offset:2px; }
+.ledger .tab[aria-current="true"]{
+  background:linear-gradient(180deg,#f7efdc,#efe3c8);
+  border-color:var(--teal); color:var(--teal-deep);
+  transform:translateY(-1px);
+  box-shadow:var(--shadow-1);
+}
+.ledger .tab[aria-current="true"] .pt{ color:var(--teal-deep); }
+.ledger .tab[aria-current="true"] .pn{ color:var(--rust); }
+@media (max-width:560px){ .ledger .tab .pt{ font-size:11px; } .ledger .tab{ min-width:64px; } }
+
+/* the camera viewport */
+.viewport{
+  position:relative;
+  border:1px solid var(--line-soft); border-radius:var(--r5);
+  background:
+    repeating-linear-gradient(0deg, rgba(120,96,60,0.04) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(120,96,60,0.04) 0 1px, transparent 1px 24px),
+    linear-gradient(180deg,#f7efdc,var(--parchment2));
+  overflow:hidden;
+}
+.viewport svg{ width:100%; height:auto; display:block; }
+
+/* MOBILE LEGIBILITY: below ~560px the 600-unit-wide stage shrinks so far that
+   9-10px SVG type renders at ~4px. Instead of scaling the whole stage down, hold
+   the SVG at a legible minimum width and let the viewport scroll horizontally, so
+   inner labels (ЭМБЕДДИНГ/ВЕКТОР, the [0.81,...] numbers, "нажмите, чтобы приблизить")
+   stay readable. A hint tells the user the stage pans sideways. */
+@media (max-width:560px){
+  .viewport{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+  .viewport svg{ min-width:520px; }
+  .viewport::after{
+    content:"проведите по сцене вбок \2194";
+    position:sticky; left:0; display:block;
+    font-family:var(--sans); font-size:10px; letter-spacing:.04em;
+    color:var(--sepia-soft); padding:4px 8px 2px; text-align:center;
+    background:linear-gradient(180deg, rgba(247,239,220,0), rgba(247,239,220,.85));
+    pointer-events:none;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .viewport{ scroll-behavior:auto; }
+}
+
+/* the camera group does the SEMANTIC ZOOM: scale + translate INTO a host */
+#camera{ transform-box:view-box; transition:transform .52s var(--ease); }
+.reduced #camera{ transition:none; }
+
+/* ---------- Plate stack: auto-advancing stage scenes (the journal-plates idea) ---------- */
+/* Each plate cross-fades + lifts (restrained page-turn, transform/opacity only). */
+/* Hidden plates are visibility:hidden so their hosts are never picked as click targets. */
+.plate{ opacity:0; pointer-events:none; transform:translateY(8px); visibility:hidden; }
+.plate.live{
+  opacity:1; pointer-events:auto; transform:translateY(0); visibility:visible;
+  transition:opacity .5s var(--ease), transform .5s var(--ease);
+}
+.plate.leaving{
+  opacity:0; transform:translateY(-7px); visibility:visible;
+  transition:opacity .42s var(--ease), transform .42s var(--ease);
+}
+.reduced .plate{ transition:none !important; }
+
+/* drillable hosts: themed focus + hover */
+.host{ cursor:pointer; outline:none; }
+.host .host-hit{ fill:transparent; }
+.host:hover .ring{ stroke:var(--rust); }
+.host:focus-visible .ring{ stroke:var(--rust); stroke-width:2.6; }
+.host:focus-visible .host-hit{ stroke:var(--rust); stroke-width:2; stroke-dasharray:5 4; }
+
+/* zoom level cross-fade: only the active level's group is interactive.
+   Inactive levels are visibility:hidden (not just opacity:0) so their [data-drill]
+   hosts are never pickable as a click/focus target while another level is on -
+   this guarantees the NEXT visible drill after a zoom is the DEEPER one. */
+.level{ opacity:0; visibility:hidden; transition:opacity .42s var(--ease), visibility 0s linear .42s; pointer-events:none; }
+.level.on{ opacity:1; visibility:visible; pointer-events:auto; transition:opacity .42s var(--ease), visibility 0s linear 0s; }
+.reduced .level{ transition:none; }
+
+/* stroke-dash route draw (the explicit query path) */
+/* route + signal are decorative: never let them intercept a drill click */
+.route,.signal,.signal-runner{ pointer-events:none; }
+.route{ stroke-dasharray:var(--len,900); stroke-dashoffset:var(--len,900); }
+@keyframes route-draw{ to{ stroke-dashoffset:0 } }
+.live .level.on .route{ animation:route-draw 2.4s var(--ease) forwards; }
+.reduced .route{ stroke-dashoffset:0 !important; }
+
+/* travelling green signal (the query) running ALONG the drawn route */
+.signal{ fill:var(--green); }
+.signal-runner{ offset-distance:0%; offset-rotate:0deg; }
+.live .level.on .signal-runner{ animation:sig-run var(--rundur,7s) linear infinite; }
+@keyframes sig-run{ 0%{ offset-distance:0% } 100%{ offset-distance:100% } }
+.reduced .signal-runner{ offset-distance:100% !important; }
+
+/* stage "lights up" as the signal arrives (staggered ambient pulse) */
+.lamp{ opacity:.4; }
+.live .level.on .lamp{ animation:lamp var(--rundur,7s) ease-in-out infinite; transform-origin:center; }
+@keyframes lamp{ 0%,16%,100%{ opacity:.4 } 28%,40%{ opacity:1 } }
+.reduced .lamp{ opacity:1 !important; }
+
+/* ambient micro-motion (transform/opacity only) */
+.live .level.on .breathe{ animation:breathe 3.6s ease-in-out infinite; transform-origin:center; }
+@keyframes breathe{ 0%,100%{ transform:scale(1) } 50%{ transform:scale(1.06) } }
+.live .level.on .halo{ animation:halo 2.8s ease-in-out infinite; transform-origin:center; }
+@keyframes halo{ 0%,100%{ opacity:.35; transform:scale(1) } 50%{ opacity:.8; transform:scale(1.12) } }
+.live .level.on .drift{ animation:drift 6s ease-in-out infinite; }
+@keyframes drift{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-3px) } }
+.reduced .breathe,.reduced .halo,.reduced .drift{ animation:none !important; }
+
+/* SVG type */
+svg text{ font-family:var(--serif); }
+svg text[data-ui]{ font-family:var(--sans); }
+.num{ font-family:var(--mono); }
+
+/* caption strip under the viewport */
+.caption{
+  margin-top:10px; padding:11px 14px;
+  border:1px solid var(--line-soft); border-radius:var(--r5);
+  background:rgba(247,239,220,.6);
+  font-size:14px; color:var(--sepia); line-height:1.55; min-height:64px;
+  /* if anything ever scrolls the caption to the fold, keep it clear of the fixed pill */
+  scroll-margin-bottom:calc(120px + env(safe-area-inset-bottom,0px));
+}
+.caption b{ color:var(--ink); font-weight:600; }
+.caption .g{ color:var(--green-deep); font-weight:600; }
+.caption .x{ color:var(--rust); font-weight:600; }
+.caption .hint{
+  display:block; margin-top:5px; font-family:var(--sans); font-size:11px;
+  letter-spacing:.06em; color:var(--sepia-soft);
+}
+.caption .hint .dot{ display:inline-block; width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:5px;vertical-align:middle; }
+
+/* example strip */
+.example-strip{
+  margin-top:14px; padding:12px 14px;
+  border:1px solid var(--line-soft); border-radius:var(--r5);
+  background:rgba(247,239,220,.5);
+  font-size:14px; color:var(--sepia); line-height:1.55;
+}
+.example-strip b{ color:var(--ink); font-weight:600; }
+.example-strip .g{ color:var(--green-deep); font-weight:600; }
+.example-strip .x{ color:var(--rust); font-weight:600; text-decoration:line-through; }
+
+/* footer back-links */
+.colophon{
+  margin-top:16px; font-family:var(--sans); font-size:11px; letter-spacing:.04em;
+  color:var(--sepia-soft); text-align:center;
+}
+.colophon a{ color:var(--teal-deep); text-decoration:none; border-bottom:1px solid var(--line); }
+.colophon a:hover{ color:var(--rust); }
+
+.sr-only{ position:absolute; width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; }
+  #camera,.level,.plate{ transition:none !important; }
+}
+</style>
+</head>
+<body>
+<div class="atlas-frame">
+
+  <header class="masthead">
+    <p class="eyebrow">Концепт-лаборатория &middot; Семантический поиск</p>
+    <h1>Как работает поиск по документам</h1>
+    <p class="blurb">Сначала находим релевантные куски текста, потом показываем их модели. Поиск идёт <b>не по точным словам, а по смыслу</b> запроса.</p>
+    <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#bda878" stroke-width="1.4"/>
+      <circle cx="50" cy="50" r="36" fill="none" stroke="#d2bd8e" stroke-width="1"/>
+      <g data-ui="1" font-size="9" fill="#7a6446" text-anchor="middle">
+        <text x="50" y="16">N</text><text x="86" y="53">E</text>
+        <text x="50" y="92">S</text><text x="14" y="53">W</text>
+      </g>
+      <g class="needle">
+        <path d="M50 14 L57 50 L50 60 L43 50 Z" fill="#a55a35"/>
+        <path d="M50 86 L43 50 L50 40 L57 50 Z" fill="#335551"/>
+      </g>
+      <circle cx="50" cy="50" r="3.4" fill="#b08a3e"/>
+    </svg>
+  </header>
+
+  <ul class="points">
+    <li><span class="n">1</span>Все документы заранее складываем в <b>индекс</b></li>
+    <li><span class="n">2</span>Запрос пользователя превращается в <b>поисковый запрос</b></li>
+    <li><span class="n">3</span>Возвращаем несколько <b>лучших совпадений</b> по смыслу</li>
+    <li><span class="n">4</span>Модель видит только эти куски, <b>а не весь архив</b></li>
+  </ul>
+
+  <section class="journal" aria-label="Атлас семантического поиска: лист с авто-листающимися пластинами стадий">
+    <div class="journal-cap">
+      <span class="title">Tabula &middot; Конвейер поиска</span>
+      <div class="lab-bar">
+        <button class="btn-up" id="btn-up" type="button" aria-label="Уменьшить масштаб, вернуться на уровень выше" disabled>&#8593; Отдалить</button>
+        <span class="crumb" id="crumb" aria-live="polite"><b>Конвейер</b></span>
+      </div>
+    </div>
+
+    <!-- Plate ledger: tabs for the auto-advancing stage plates -->
+    <div class="ledger" id="ledger" role="tablist" aria-label="Стадии конвейера поиска">
+      <button class="tab" type="button" role="tab" data-plate="0"><span class="pn">Пластина I</span><span class="pt">Запрос</span></button>
+      <button class="tab" type="button" role="tab" data-plate="1" aria-current="true"><span class="pn">Пластина II</span><span class="pt">Эмбеддинг</span></button>
+      <button class="tab" type="button" role="tab" data-plate="2"><span class="pn">Пластина III</span><span class="pt">Индекс</span></button>
+      <button class="tab" type="button" role="tab" data-plate="3"><span class="pn">Пластина IV</span><span class="pt">Топ-k &#8594; Модель</span></button>
+    </div>
+
+    <div class="viewport" id="viewport">
+      <!-- One scene per camera. The #camera group is scaled/translated to ZOOM INTO an object.
+           Inside, four stage PLATES auto-advance (cross-fade) as the query flows. -->
+      <svg viewBox="0 0 600 320" role="img"
+           aria-label="Сцена семантического поиска. Запрос идёт по нарисованному маршруту: эмбеддинг, поиск ближайших векторов в индексе, топ-k фрагментов к модели.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#7a6446"/>
+          </marker>
+          <marker id="arrowg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="#17a673"/>
+          </marker>
+        </defs>
+
+        <g id="camera">
+
+          <!-- ========================= LEVEL 0: full pipeline + auto-advancing plates ========================= -->
+          <g class="level on" id="lvl-0" data-level="0">
+
+            <!-- explicit drawn query route across all stages (always-visible spine).
+                 RENDERED FIRST so it sits BEHIND every plate (z-order). It hugs the very
+                 bottom clear band (y~272..286) BELOW all plate blocks + their inner captions,
+                 so the green line + travelling signal dot never cross any text. It ends at a
+                 visible station marker at the lower-right (the "next stage" peg), so no
+                 green arrowhead ever floats free in empty space. -->
+            <path class="route" style="--len:560"
+                  id="route0"
+                  d="M70 282 C160 282 200 274 300 274 C400 274 452 274 528 274"
+                  fill="none" stroke="#17a673" stroke-width="2.2" stroke-linecap="round"
+                  marker-end="url(#arrowg)" opacity=".42"/>
+            <!-- route endpoints anchored to visible pegs so the line always connects, never floats -->
+            <circle cx="70" cy="282" r="4" fill="#17a673" opacity=".5"/>
+            <g class="drift">
+              <rect x="498" y="262" width="64" height="24" rx="5" fill="rgba(23,166,115,0.12)" stroke="#17a673" stroke-width="1.4"/>
+              <text x="530" y="277" text-anchor="middle" data-ui="1" font-size="8.5" letter-spacing=".4" fill="#0f7a55">след. стадия</text>
+            </g>
+            <text x="300" y="266" text-anchor="middle" data-ui="1" font-size="8.5" fill="#7a6446">маршрут запроса &#8594; (зелёный сигнал движется по линии)</text>
+
+            <!-- the travelling signal on route0 (the query, always moving along the visible spine),
+                 also rendered BEHIND the plates so it never overlays any label text. -->
+            <circle class="signal signal-runner" r="5.2" style="offset-path:path('M70 282 C160 282 200 274 300 274 C400 274 452 274 528 274');"></circle>
+            <circle class="signal signal-runner halo" r="9" fill="none" stroke="#17a673" stroke-width="1.4" style="offset-path:path('M70 282 C160 282 200 274 300 274 C400 274 452 274 528 274');"></circle>
+
+            <!-- ----- PLATE I: Запрос -> (route) -> Эмбеддинг (next station, visible destination) ----- -->
+            <g class="plate" data-plate="0">
+              <!-- source: the user's query card -->
+              <rect class="lamp" x="30" y="86" width="150" height="74" rx="7" fill="#eef6f0" stroke="#17a673" stroke-width="1.6"/>
+              <text x="105" y="110" text-anchor="middle" data-ui="1" font-size="11" letter-spacing="1" fill="#0f7a55">ЗАПРОС</text>
+              <text x="105" y="130" text-anchor="middle" font-size="12" fill="#3a2e1d">"когда мне</text>
+              <text x="105" y="147" text-anchor="middle" font-size="12" fill="#3a2e1d">отдыхать?"</text>
+
+              <!-- arrow connecting query card to the explainer (own short segment, well above route band) -->
+              <path d="M186 122 L236 122" fill="none" stroke="#7a6446" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+              <!-- explainer sits on its own opaque plate, above the route band -->
+              <rect x="248" y="84" width="318" height="92" rx="7" fill="rgba(247,239,220,0.96)" stroke="#bda878"/>
+              <text x="407" y="108" text-anchor="middle" data-ui="1" font-size="11" fill="#5c4a32">Пользователь задаёт вопрос обычными словами.</text>
+              <text x="407" y="132" text-anchor="middle" font-size="12.5" fill="#3a2e1d">Вопрос превращается в поисковый запрос -</text>
+              <text x="407" y="152" text-anchor="middle" font-size="12.5" fill="#3a2e1d">не по буквам, а по <tspan fill="#0f7a55" font-weight="bold">смыслу</tspan>.</text>
+            </g>
+
+            <!-- ----- PLATE II: Эмбеддинг / вектор (carries FIRST drill host in DOM order; LIVE on load so the drill target is clickable immediately) ----- -->
+            <g class="plate live" data-plate="1">
+              <!-- source chip on the left, connected to the embed box by its own short arrow -->
+              <text x="92" y="104" text-anchor="middle" data-ui="1" font-size="10" letter-spacing=".6" fill="#7a6446">запрос</text>
+              <rect x="44" y="114" width="96" height="30" rx="4" fill="#f3ead4" stroke="#bda878"/>
+              <text x="92" y="133" text-anchor="middle" font-size="10" fill="#3a2e1d">текст вопроса</text>
+              <path d="M142 129 L182 138" fill="none" stroke="#7a6446" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+              <!-- halo is a SIBLING overlay (NOT inside [data-drill]) so the host bounding box stays stable for scroll/click -->
+              <circle class="halo" cx="288" cy="150" r="56" fill="none" stroke="#17a673" stroke-width="1" opacity=".4" pointer-events="none"/>
+              <g class="host" id="host-embed" data-drill data-target="embed" tabindex="0" role="button"
+                 aria-label="Эмбеддинг запроса. Приблизить камеру внутрь: числовые координаты смысла.">
+                <rect class="host-hit" x="198" y="98" width="186" height="118" rx="8"/>
+                <!-- OPAQUE plate so neither the route line nor the signal dot can ever show through the text -->
+                <rect class="ring lamp" x="200" y="104" width="176" height="92" rx="7" fill="#eef6f0" stroke="#17a673" stroke-width="1.8"/>
+                <text x="288" y="126" text-anchor="middle" data-ui="1" font-size="10" letter-spacing=".8" fill="#0f7a55">ЭМБЕДДИНГ / ВЕКТОР</text>
+                <text x="288" y="144" text-anchor="middle" font-size="10.5" fill="#5c4a32">координаты смысла</text>
+                <text class="num" x="288" y="164" text-anchor="middle" font-size="9.5" fill="#7a6446">[0.81, -0.12, 0.47, ...]</text>
+                <text x="288" y="186" text-anchor="middle" data-ui="1" font-size="11" fill="#a55a35">нажмите, чтобы приблизить &#9660;</text>
+              </g>
+              <!-- caption on its own opaque strip, well above the route band (y272+) -->
+              <rect x="60" y="226" width="480" height="30" rx="5" fill="rgba(247,239,220,0.94)" stroke="#d2bd8e"/>
+              <text x="300" y="245" text-anchor="middle" data-ui="1" font-size="10.5" fill="#5c4a32">Слова вопроса становятся вектором - набором чисел, которые кодируют смысл.</text>
+            </g>
+
+            <!-- ----- PLATE III: Индекс / поиск ближайших ----- -->
+            <g class="plate" data-plate="2">
+              <!-- halo is a SIBLING overlay (NOT inside [data-drill]) so the host bounding box stays stable for scroll/click -->
+              <circle cx="372" cy="176" r="9" fill="none" stroke="#17a673" stroke-width="1.4" class="halo" pointer-events="none"/>
+              <g class="host" id="host-nearest" data-drill data-target="nearest" tabindex="0" role="button"
+                 aria-label="Поиск ближайших векторов в индексе. Приблизить глубже: совпадение по смыслу без общего слова.">
+                <rect class="host-hit" x="300" y="100" width="150" height="120" rx="8"/>
+                <rect class="ring lamp" x="312" y="112" width="126" height="96" rx="7" fill="rgba(74,111,106,0.10)" stroke="#4a6f6a" stroke-width="1.8"/>
+                <text x="375" y="132" text-anchor="middle" data-ui="1" font-size="9.5" letter-spacing=".6" fill="#335551">ИНДЕКС &middot; ВЕКТОРНАЯ БАЗА</text>
+                <text x="375" y="146" text-anchor="middle" font-size="9" fill="#5c4a32">поиск ближайших по смыслу</text>
+                <!-- meaning-space dots; the green one is the query, the teal-ringed ones are nearest -->
+                <circle cx="340" cy="168" r="3.4" fill="#4a6f6a"/>
+                <circle cx="356" cy="184" r="3.4" fill="#4a6f6a"/>
+                <circle cx="408" cy="170" r="3.4" fill="#4a6f6a"/>
+                <circle cx="420" cy="190" r="3.4" fill="#4a6f6a"/>
+                <circle cx="372" cy="176" r="4.6" fill="#17a673"/>
+                <circle cx="390" cy="166" r="4.4" fill="#1fb37e"/>
+                <text x="375" y="204" text-anchor="middle" data-ui="1" font-size="11" fill="#a55a35">нажмите, чтобы приблизить &#9660;</text>
+              </g>
+              <text x="120" y="150" text-anchor="middle" data-ui="1" font-size="10.5" fill="#5c4a32">вектор запроса</text>
+              <text x="120" y="168" text-anchor="middle" font-size="11" fill="#3a2e1d">сравнивается со всеми</text>
+              <text x="120" y="184" text-anchor="middle" font-size="11" fill="#3a2e1d">векторами в индексе</text>
+              <rect x="60" y="228" width="480" height="30" rx="5" fill="rgba(247,239,220,0.94)" stroke="#d2bd8e"/>
+              <text x="300" y="247" text-anchor="middle" data-ui="1" font-size="10.5" fill="#5c4a32">Документы заранее уложены в индекс. Ищем ближайшие к запросу - по смыслу, а не по словам.</text>
+            </g>
+
+            <!-- ----- PLATE IV: Топ-k фрагментов -> Контекст -> Модель -> Ответ ----- -->
+            <g class="plate" data-plate="3">
+              <text x="120" y="60" text-anchor="middle" data-ui="1" font-size="10" letter-spacing=".6" fill="#0f7a55">ТОП-k ФРАГМЕНТОВ</text>
+              <g class="drift">
+                <rect x="60" y="74" width="120" height="22" rx="3" fill="rgba(23,166,115,0.16)" stroke="#17a673" stroke-width="1.2"/>
+                <text x="120" y="89" text-anchor="middle" font-size="9.5" fill="#3a2e1d">Отпуск - 28 дней</text>
+                <rect x="60" y="100" width="120" height="22" rx="3" fill="rgba(23,166,115,0.12)" stroke="#17a673" stroke-width="1.1"/>
+                <text x="120" y="115" text-anchor="middle" font-size="9.5" fill="#3a2e1d">Перенос отпуска</text>
+                <rect x="60" y="126" width="120" height="22" rx="3" fill="rgba(23,166,115,0.09)" stroke="#17a673" stroke-width="1"/>
+                <text x="120" y="141" text-anchor="middle" font-size="9.5" fill="#3a2e1d">Выходные дни</text>
+              </g>
+              <path class="route" style="--len:120" d="M186 110 C220 110 232 150 270 150" fill="none" stroke="#17a673" stroke-width="2" marker-end="url(#arrowg)"/>
+              <text x="232" y="138" text-anchor="middle" data-ui="1" font-size="8.5" fill="#7a6446">контекст</text>
+
+              <rect class="lamp" x="290" y="112" width="116" height="76" rx="7" fill="rgba(176,138,62,0.12)" stroke="#b08a3e" stroke-width="1.6"/>
+              <path class="breathe" d="M348 128 L364 148 L348 166 L332 148 Z" fill="#b08a3e" opacity=".9"/>
+              <text x="348" y="182" text-anchor="middle" data-ui="1" font-size="10" fill="#5c4a32">МОДЕЛЬ (LLM)</text>
+
+              <path class="route" style="--len:60" d="M408 150 L452 150" fill="none" stroke="#17a673" stroke-width="2" marker-end="url(#arrowg)"/>
+              <rect x="456" y="120" width="118" height="60" rx="6" fill="rgba(23,166,115,0.10)" stroke="#17a673" stroke-width="1.6"/>
+              <text x="515" y="140" text-anchor="middle" data-ui="1" font-size="9.5" letter-spacing=".4" fill="#0f7a55">ОТВЕТ СО ССЫЛКАМИ</text>
+              <text x="515" y="156" text-anchor="middle" font-size="9" fill="#3a2e1d">"Отпуск - 28 дней</text>
+              <text x="515" y="169" text-anchor="middle" font-size="9" fill="#3a2e1d">[политика, п.4]"</text>
+
+              <rect x="60" y="228" width="480" height="30" rx="5" fill="rgba(247,239,220,0.94)" stroke="#d2bd8e"/>
+              <text x="300" y="247" text-anchor="middle" data-ui="1" font-size="10.5" fill="#5c4a32">Модель видит только эти куски, а не весь архив, и отвечает со ссылками на источники.</text>
+            </g>
+
+          </g>
+
+          <!-- ========================= LEVEL 1: zoom INTO эмбеддинг ========================= -->
+          <!-- Authored CENTRED on the embed host (240,160) within x 90..390 / y 80..240 so it
+               never clips the frame at scale 1.6 (zoomInto(240,160,1.6)). -->
+          <g class="level" id="lvl-1" data-level="1">
+            <rect x="90" y="80" width="300" height="160" rx="9" fill="rgba(247,239,220,0.97)" stroke="#bda878"/>
+            <text x="240" y="98" text-anchor="middle" data-ui="1" font-size="10" letter-spacing="1.2" fill="#0f7a55">ЭМБЕДДИНГ ЗАПРОСА &#8226; ВЕКТОР</text>
+            <text x="240" y="112" text-anchor="middle" font-size="9" fill="#5c4a32">запрос -> числовые координаты смысла</text>
+
+            <!-- query text -> vector numbers -->
+            <rect x="104" y="122" width="134" height="24" rx="4" fill="#f3ead4" stroke="#bda878"/>
+            <text x="171" y="138" text-anchor="middle" font-size="9.5" fill="#3a2e1d">"когда мне отдыхать?"</text>
+            <path class="route" style="--len:36" d="M240 134 L268 134" fill="none" stroke="#17a673" stroke-width="2.2" marker-end="url(#arrowg)"/>
+            <text x="320" y="138" text-anchor="middle" data-ui="1" font-size="9" fill="#7a6446">вектор</text>
+
+            <!-- the actual vector with numbers (kept inside x 96..384) -->
+            <rect class="lamp" x="96" y="152" width="288" height="40" rx="6" fill="rgba(23,166,115,0.10)" stroke="#17a673" stroke-width="1.6"/>
+            <text x="106" y="168" data-ui="1" font-size="8" fill="#0f7a55">вектор (768 чисел, показаны первые):</text>
+            <text class="num" x="106" y="184" font-size="9" fill="#3a2e1d">[ 0.81, -0.12, 0.47, -0.63, 0.09, ... ]</text>
+
+            <!-- a tiny 2D projection of "meaning space" -->
+            <g stroke="#d2bd8e" stroke-dasharray="2 4">
+              <line x1="118" y1="204" x2="118" y2="232"/><line x1="170" y1="204" x2="170" y2="232"/>
+              <line x1="222" y1="204" x2="222" y2="232"/>
+              <line x1="104" y1="212" x2="236" y2="212"/><line x1="104" y1="226" x2="236" y2="226"/>
+            </g>
+            <text x="104" y="202" data-ui="1" font-size="8" fill="#7a6446">проекция карты смысла</text>
+            <circle cx="158" cy="220" r="3.4" fill="#4a6f6a"/>
+            <text x="138" y="234" text-anchor="middle" data-ui="1" font-size="8" fill="#7a6446">точка запроса</text>
+
+            <!-- the query as a point + drill host for level 2 (revealed inside this zoom) -->
+            <!-- halo overlay sits OUTSIDE [data-drill] so the host box stays stable -->
+            <circle class="halo" cx="318" cy="208" r="26" fill="rgba(23,166,115,0.06)" stroke="#17a673" stroke-width="1.6" pointer-events="none"/>
+            <g class="host" id="host-meaning" data-drill data-target="meaning" tabindex="0" role="button"
+               aria-label="Совпадение по смыслу. Приблизить глубже: нашли пункт про отпуск без слова отпуск.">
+              <rect class="host-hit" x="270" y="196" width="96" height="44" rx="8"/>
+              <circle class="breathe" cx="318" cy="208" r="8" fill="#17a673"/>
+              <text x="318" y="234" text-anchor="middle" data-ui="1" font-size="10.5" fill="#a55a35">смысл рядом &#8594;</text>
+            </g>
+          </g>
+
+          <!-- ========================= LEVEL 2: zoom INTO совпадение по смыслу ========================= -->
+          <!-- Authored CENTRED on (300,160) within x 120..480 / y 90..230 so it never clips at scale 1.5. -->
+          <g class="level" id="lvl-2" data-level="2">
+            <rect x="120" y="90" width="360" height="140" rx="9" fill="rgba(247,239,220,0.98)" stroke="#bda878"/>
+            <text x="300" y="108" text-anchor="middle" data-ui="1" font-size="10" letter-spacing="1.1" fill="#0f7a55">СОВПАДЕНИЕ ПО СМЫСЛУ &#8226; НЕ ПО СЛОВАМ</text>
+
+            <!-- query line, no word "отпуск" -->
+            <rect x="132" y="120" width="336" height="32" rx="5" fill="#f3ead4" stroke="#bda878"/>
+            <text x="142" y="134" data-ui="1" font-size="9" fill="#5c4a32">запрос:</text>
+            <text x="142" y="148" font-size="10" fill="#3a2e1d">"когда мне отдыхать?" <tspan class="num" fill="#a55a35" font-size="8.5">(нет слова "отпуск")</tspan></text>
+
+            <path class="route" style="--len:24" d="M300 152 L300 168" fill="none" stroke="#17a673" stroke-width="2.2" marker-end="url(#arrowg)"/>
+
+            <!-- nearest match found -->
+            <rect class="lamp" x="132" y="172" width="336" height="36" rx="6" fill="rgba(23,166,115,0.12)" stroke="#17a673" stroke-width="1.8"/>
+            <text x="142" y="187" data-ui="1" font-size="9" fill="#0f7a55">ближайший фрагмент политики:</text>
+            <text x="142" y="202" font-size="10" fill="#3a2e1d">"Ежегодный оплачиваемый отпуск - 28 дней"</text>
+
+            <!-- the rejected literal-but-wrong-meaning fragment -->
+            <circle cx="136" cy="222" r="3.6" fill="#a55a35"/>
+            <text x="146" y="226" data-ui="1" font-size="8.5" fill="#a55a35">"отпуск товара" - слово есть, но по смыслу далеко: не берём</text>
+          </g>
+
+        </g><!-- /#camera -->
+      </svg>
+    </div>
+
+    <p class="caption" id="caption" aria-live="polite">
+      <b>Пластина I &middot; Запрос.</b> Зелёный сигнал - ваш запрос. Он идёт по нарисованному маршруту через все стадии. Пластины листаются сами; каждая - реальная стадия конвейера.
+      <span class="hint"><span class="dot"></span>Дождитесь пластины <b>"Эмбеддинг"</b> и нажмите на её блок (Enter / Space), чтобы приблизить камеру внутрь.</span>
+    </p>
+
+    <div class="example-strip">
+      <b>Пример:</b> спросили про <span class="g">отпуск</span> - нашлись пункты политики об отпусках,
+      даже <b>без слова</b> <span class="x">"отпуск"</span> в запросе. Совпадение по смыслу, а не по буквам.
+    </div>
+
+    <p class="colophon">
+      Концепт-лаборатория RAG Guide &middot;
+      <a href="https://brewpage.app">brewpage.app</a> &middot;
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi">brewpage-openapi</a>
+    </p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var camera   = document.getElementById('camera');
+  var viewport = document.getElementById('viewport');
+  var journal  = document.querySelector('.journal');
+  var btnUp    = document.getElementById('btn-up');
+  var crumb    = document.getElementById('crumb');
+  var caption  = document.getElementById('caption');
+  var ledger   = document.getElementById('ledger');
+
+  if(!camera) return;
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ document.documentElement.classList.add('reduced'); }
+
+  /* ---------- semantic zoom levels ---------- */
+  // viewBox is 600x320. To zoom into point (cx,cy) at scale s, translate so the
+  // point lands at the viewBox centre (300,160): t = centre - s*point.
+  function zoomInto(cx, cy, s){
+    var tx = 300 - s * cx;
+    var ty = 160 - s * cy;
+    return 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + s + ')';
+  }
+
+  var LEVELS = [
+    {
+      id:'lvl-0',
+      transform:'translate(0px,0px) scale(1)',
+      crumb:'<b>Конвейер</b>',
+      caption:null /* level 0 caption is driven by the active plate */
+    },
+    {
+      id:'lvl-1',
+      // scale 1.6 centred on the embed host (240,160); content authored within x 90..390 / y 80..240 so it never clips
+      transform:zoomInto(240, 160, 1.6),
+      crumb:'<b>Конвейер</b> <span class="sep">/</span> Эмбеддинг (вектор)',
+      caption:'<b>Эмбеддинг запроса.</b> Текст превращается в <span class="g">вектор</span> - числовые координаты смысла (показаны первые из 768). Поиск идёт по этим координатам, а не по словам.<span class="hint"><span class="dot"></span>Нажмите на узел <b>"смысл рядом"</b>, чтобы приблизиться к совпадению по смыслу.</span>'
+    },
+    {
+      id:'lvl-2',
+      // scale 1.5 centred on (300,160); content authored within x 120..480 / y 90..230 so it never clips
+      transform:zoomInto(300, 160, 1.5),
+      crumb:'<b>Конвейер</b> <span class="sep">/</span> Эмбеддинг <span class="sep">/</span> Совпадение по смыслу',
+      caption:'<b>Совпадение по смыслу.</b> В запросе нет слова <span class="x">"отпуск"</span>, но ближайший вектор - пункт политики про отпуск: совпадение по смыслу. Фрагмент <span class="x">"отпуск товара"</span> содержит слово, но по смыслу далеко - его не берём.'
+    }
+  ];
+
+  var lvlEls = LEVELS.map(function(l){ return document.getElementById(l.id); });
+  var depth  = 0;
+
+  /* ---------- auto-advancing stage plates (level 0 only) ---------- */
+  var plates = Array.prototype.slice.call(document.querySelectorAll('#lvl-0 .plate'));
+  var tabs   = Array.prototype.slice.call(document.querySelectorAll('#ledger .tab'));
+  var PLATE_CAPTIONS = [
+    '<b>Пластина I &middot; Запрос.</b> Зелёный сигнал - ваш запрос. Он идёт по нарисованному маршруту через все стадии. Пластины листаются сами; каждая - реальная стадия конвейера.<span class="hint"><span class="dot"></span>Дождитесь пластины <b>"Эмбеддинг"</b> и нажмите на её блок (Enter / Space), чтобы приблизить камеру внутрь.</span>',
+    '<b>Пластина II &middot; Эмбеддинг.</b> Слова вопроса становятся <span class="g">вектором</span> - набором чисел, кодирующих смысл. Это и есть поисковый запрос.<span class="hint"><span class="dot"></span>Нажмите на блок <b>"Эмбеддинг / вектор"</b> (Enter / Space), чтобы приблизить камеру внутрь.</span>',
+    '<b>Пластина III &middot; Индекс.</b> Все документы заранее уложены в индекс. Вектор запроса ищет <span class="g">ближайшие</span> векторы - по смыслу, а не по словам.<span class="hint"><span class="dot"></span>Нажмите на блок <b>"Индекс"</b>, чтобы приблизить камеру к поиску ближайших.</span>',
+    '<b>Пластина IV &middot; Топ-k &#8594; Модель.</b> Несколько лучших фрагментов уходят в контекст модели. Модель видит <b>только их, а не весь архив</b>, и отвечает со ссылками.'
+  ];
+  // Start on Пластина II (Эмбеддинг): its drill host is LIVE on load, so the
+  // level-1 zoom is clickable immediately (no wait for an auto page-turn).
+  var curPlate = 1;
+  var autoTimer = null;
+  var AUTO_MS = 4200;
+
+  function showPlate(idx, manual){
+    if(idx === curPlate && !manual) return;
+    var prev = plates[curPlate];
+    var next = plates[idx];
+    if(prev && prev !== next){
+      prev.classList.remove('live');
+      prev.classList.add('leaving');
+      (function(p){ window.setTimeout(function(){ p.classList.remove('leaving'); }, 460); })(prev);
+    }
+    if(next){
+      next.classList.remove('leaving');
+      next.classList.add('live');
+    }
+    curPlate = idx;
+    for(var i=0;i<tabs.length;i++){
+      tabs[i].setAttribute('aria-current', i === idx ? 'true' : 'false');
+    }
+    if(depth === 0 && caption){ caption.innerHTML = PLATE_CAPTIONS[idx] || ''; }
+  }
+
+  var FIRST_DWELL_MS = 9000;           // hold the drill plate long enough to be clicked on load
+  function startAuto(){
+    if(reduce) return;
+    stopAuto();
+    // longer dwell on the first (drill) plate so the level-1 zoom is reliably clickable on load
+    autoTimer = window.setTimeout(function(){
+      if(depth === 0) showPlate((curPlate + 1) % plates.length);
+      autoTimer = window.setInterval(function(){
+        if(depth !== 0) return;        // pause page-turns while zoomed in
+        showPlate((curPlate + 1) % plates.length);
+      }, AUTO_MS);
+    }, FIRST_DWELL_MS);
+  }
+  function stopAuto(){
+    if(autoTimer){ window.clearTimeout(autoTimer); window.clearInterval(autoTimer); autoTimer = null; }
+  }
+
+  /* ---------- render current zoom level ---------- */
+  function render(){
+    var L = LEVELS[depth];
+    camera.style.transform = L.transform;
+    for(var i=0;i<lvlEls.length;i++){
+      if(!lvlEls[i]) continue;
+      if(i === depth) lvlEls[i].classList.add('on');
+      else lvlEls[i].classList.remove('on');
+    }
+    if(crumb) crumb.innerHTML = L.crumb;
+    if(caption){
+      if(depth === 0) caption.innerHTML = PLATE_CAPTIONS[curPlate] || '';
+      else caption.innerHTML = L.caption;
+    }
+    if(btnUp) btnUp.disabled = (depth === 0);
+    if(ledger) ledger.style.opacity = (depth === 0) ? '1' : '.4';
+  }
+
+  // Bring the zoomed plate fully into view so its lower content (meaning-map +
+  // the next-level "смысл рядом ->" CTA) clears the fold AND the fixed bottom pill.
+  function scrollViewportIntoView(){
+    if(depth === 0) return;                 // only nudge when drilled in
+    if(!viewport || !viewport.getBoundingClientRect) return;
+    var doScroll = function(){
+      var r = viewport.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var pill = 110;                        // pill height + breathing room at the bottom
+      var topPad = 12;
+      // if the viewport bottom sits under the fold (behind/near the pill), scroll it up
+      var overBottom = r.bottom - (vh - pill);
+      var overTop = topPad - r.top;
+      var delta = 0;
+      if(overBottom > 0) delta = overBottom;       // pull content up to clear the pill
+      if(overTop > 0) delta = -overTop;            // but never push the panel top off-screen
+      if(Math.abs(delta) < 2) return;
+      var behavior = reduce ? 'auto' : 'smooth';
+      if(window.scrollBy){ window.scrollBy({top:delta, left:0, behavior:behavior}); }
+      else { window.scrollTo(0, (window.pageYOffset||0) + delta); }
+    };
+    // run after the zoom transition has reflowed the stage
+    if(window.requestAnimationFrame){ window.requestAnimationFrame(doScroll); }
+    else { window.setTimeout(doScroll, 0); }
+  }
+
+  function zoomTo(d){
+    if(d < 0) d = 0;
+    if(d > LEVELS.length - 1) d = LEVELS.length - 1;
+    depth = d;
+    render();
+    scrollViewportIntoView();
+    // move keyboard focus to the next drillable host (or the zoom-out control).
+    // preventScroll so focus doesn't fight our deliberate scroll-into-view.
+    var nextHost = lvlEls[depth] ? lvlEls[depth].querySelector('[data-drill]') : null;
+    if(nextHost && nextHost.focus){ try{ nextHost.focus({preventScroll:true}); }catch(_){ nextHost.focus(); } }
+    else if(btnUp && depth > 0){ try{ btnUp.focus({preventScroll:true}); }catch(_){ btnUp.focus(); } }
+  }
+
+  // each drill host declares WHERE it zooms via data-target; map target -> level index.
+  // embed (plate II) -> lvl-1; nearest (plate III, "поиск ближайших по смыслу")
+  // and meaning (node inside lvl-1) both land on lvl-2 (совпадение по смыслу).
+  var TARGET_LEVEL = { embed:1, nearest:2, meaning:2 };
+
+  function activate(e){
+    if(e.type === 'keydown'){
+      var k = e.key;
+      if(k !== 'Enter' && k !== ' ' && k !== 'Spacebar') return;
+      e.preventDefault();
+    }
+    stopAuto();                 // user is driving now; stop auto page-turns
+    var host = e.currentTarget;
+    var target = host && host.getAttribute ? host.getAttribute('data-target') : null;
+    var dest = (target && TARGET_LEVEL.hasOwnProperty(target)) ? TARGET_LEVEL[target] : (depth + 1);
+    zoomTo(dest);
+  }
+
+  // Wire every drill host once (they live across plates + levels).
+  var hosts = camera.querySelectorAll('[data-drill]');
+  for(var i=0;i<hosts.length;i++){
+    hosts[i].addEventListener('click', activate);
+    hosts[i].addEventListener('keydown', activate);
+  }
+
+  // Plate ledger tabs: jump to a stage plate (level 0).
+  for(var t=0;t<tabs.length;t++){
+    (function(idx){
+      tabs[idx].addEventListener('click', function(){
+        stopAuto();
+        if(depth !== 0){ depth = 0; render(); }
+        showPlate(idx, true);
+      });
+    })(t);
+  }
+
+  if(btnUp){
+    btnUp.addEventListener('click', function(){ zoomTo(depth - 1); });
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && depth > 0){ zoomTo(depth - 1); }
+  });
+
+  /* ---------- live gate (IntersectionObserver + reduced-motion) ---------- */
+  function setLive(on){
+    if(!journal) return;
+    if(on){ journal.classList.add('live'); startAuto(); }
+    else  { journal.classList.remove('live'); stopAuto(); }
+  }
+
+  if(reduce){
+    // meaningful final state: show all plates' first plate, no looping
+    journal && journal.classList.add('live');
+  } else if(!('IntersectionObserver' in window)){
+    setLive(true);
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      for(var j=0;j<entries.length;j++){ setLive(entries[j].isIntersecting); }
+    }, {threshold:0.08});
+    io.observe(viewport || journal);
+  }
+
+  render();
+})();
+</script>
+
+<style id="mokup-nav-style">#mokup-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;padding:4px 8px;background:linear-gradient(180deg,#f7efdc,#efe3c8);border:1px solid #bda878;border-radius:999px;box-shadow:0 4px 14px rgba(60,46,26,.25);font:600 12px/1 "Trebuchet MS",Verdana,sans-serif;color:#5c4a32}#mokup-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border-radius:999px;color:#335551;text-decoration:none}#mokup-nav a:hover{background:#ddcca8;color:#a55a35}#mokup-nav .lbl{padding:0 6px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}</style>
+<nav id="mokup-nav" aria-label="Concept navigator"><a href="02-birdseye-town.html" aria-label="Previous">&#8592;</a><span class="lbl">05 journal-plates</span><a href="../index.html">index</a><a href="06-naturalist-archive.html" aria-label="Next">&#8594;</a></nav>
+</body>
+</html>

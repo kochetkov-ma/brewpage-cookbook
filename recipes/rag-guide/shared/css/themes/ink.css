@@ -1,0 +1,75 @@
+/*
+ * Theme A -- INK. Technical atlas: near-black ink base, 4 jewel
+ * stage-accents (amber / teal / orchid / azure).
+ *
+ * Defines the COMPLETE variable contract consumed by base.css.
+ * Keep the variable NAMES identical across all three theme files;
+ * only the VALUES differ. ASCII only.
+ */
+:root {
+  color-scheme: dark;
+
+  /* color: base surfaces */
+  --c-bg: #0d0f14;
+  --c-surface: #161a22;
+  --c-surface-2: #1d222c;
+  --c-text: #e7e9ee;
+  --c-text-muted: #9aa1ad;
+  --c-border: #2c323e;
+  --c-link: #7cc3ff;
+  --c-link-hover: #a9d8ff;
+  --c-focus: #ffd166;
+
+  /* color: 4 jewel stage-accents + soft variants */
+  --c-accent-1: #f2b138;            /* amber  */
+  --c-accent-2: #2fd6c3;            /* teal   */
+  --c-accent-3: #c574e8;            /* orchid */
+  --c-accent-4: #4ea3ff;            /* azure  */
+  --c-accent-1-soft: #3a2f15;
+  --c-accent-2-soft: #123733;
+  --c-accent-3-soft: #2e1c3a;
+  --c-accent-4-soft: #142a44;
+
+  /* space scale */
+  --sp-0: 0;
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2.5rem;
+
+  /* radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+
+  /* type */
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --fs-0: 0.85rem;
+  --fs-1: 1rem;
+  --fs-2: 1.25rem;
+  --fs-3: 1.6rem;
+  --fs-4: 2.2rem;
+  --lh-tight: 1.2;
+  --lh-body: 1.6;
+  --fw-normal: 400;
+  --fw-bold: 650;
+
+  /* border widths */
+  --bw-1: 1px;
+  --bw-2: 2px;
+
+  /* shadow */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 6px 20px rgba(0, 0, 0, 0.55);
+
+  /* motion */
+  --dur-1: 140ms;
+  --dur-2: 320ms;
+  --ease-1: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* layout */
+  --container-max: 68rem;
+}

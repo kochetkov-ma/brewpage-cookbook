@@ -1,0 +1,12 @@
+<!--
+  nav.html -- shared primary navigation partial.
+  Data source: shared/data/nav.json (section order + titles).
+  Render: one <li> per nav.json entry; set aria-current="page" on the
+  active section. data-nav-src points page JS at the JSON to (re)hydrate.
+  Semantic fragment, class hooks only, NO inline styles, NO colors.
+-->
+<ul class="site-nav__list" data-component="nav" data-nav-src="../../shared/data/nav.json">
+  <li><a class="site-nav__link" href="../../variants/ink/index.html" aria-current="page">Overview</a></li>
+  <li><a class="site-nav__link" href="#chunking">Chunking</a></li>
+  <li><a class="site-nav__link" href="#embedding">Embedding</a></li>
+</ul>

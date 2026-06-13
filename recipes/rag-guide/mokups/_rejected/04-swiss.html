@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide</title>
+<style>
+  :root{
+    --ink:#111111;
+    --paper:#ffffff;
+    --rule:#d8d8d8;
+    --rule-strong:#111111;
+    --mute:#8a8a8a;
+    --accent:#0026ff; /* cobalt blue, committed */
+    --gap:24px;
+    --maxw:1320px;
+    --col:calc((100% - 11*var(--gap))/12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:Helvetica,Arial,"Helvetica Neue",sans-serif;
+    font-size:16px;
+    line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  /* tiny precise uppercase label */
+  .label{
+    font-size:11px;
+    line-height:1;
+    text-transform:uppercase;
+    letter-spacing:0.18em;
+    color:var(--mute);
+    font-weight:700;
+  }
+  .label.accent{color:var(--accent);}
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    border-bottom:1px solid var(--rule-strong);
+    padding:20px 0;
+    position:sticky;
+    top:0;
+    background:var(--paper);
+    z-index:50;
+  }
+  .top-inner{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:var(--gap);
+  }
+  .brand{
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .brand .mark{color:var(--accent);}
+  .brand-sub{
+    margin-left:14px;
+    font-weight:400;
+    color:var(--mute);
+    font-size:13px;
+    letter-spacing:0.02em;
+  }
+  /* RU/EN toggle */
+  .toggle{
+    display:inline-flex;
+    border:1px solid var(--rule-strong);
+  }
+  .toggle button{
+    font-family:inherit;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:8px 14px;
+    min-height:44px;
+    min-width:48px;
+    background:var(--paper);
+    color:var(--ink);
+    border:0;
+    cursor:pointer;
+  }
+  .toggle button + button{border-left:1px solid var(--rule-strong);}
+  .toggle button[aria-pressed="true"]{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .toggle button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:90px 0 70px;
+    border-bottom:1px solid var(--rule);
+    display:grid;
+    grid-template-columns:repeat(12,var(--col));
+    gap:var(--gap);
+    align-items:start;
+  }
+  .hero .kicker{grid-column:1 / span 3;}
+  .hero .promise{grid-column:1 / span 9;}
+  .hero h1{
+    font-size:64px;
+    line-height:1.02;
+    letter-spacing:-0.025em;
+    font-weight:700;
+    margin:18px 0 0;
+    max-width:14ch;
+  }
+  .hero h1 em{font-style:normal;color:var(--accent);}
+  .hero .lede{
+    margin:26px 0 0;
+    font-size:20px;
+    line-height:1.45;
+    max-width:46ch;
+    color:var(--ink);
+  }
+  .hero .meta{
+    grid-column:10 / span 3;
+    margin-top:18px;
+    border-top:2px solid var(--ink);
+    padding-top:12px;
+  }
+  .hero .meta dt{margin-top:14px;}
+  .hero .meta dd{margin:4px 0 0;font-size:14px;}
+  .hero .meta dt:first-child{margin-top:0;}
+
+  /* ---------- TRACK / TIMELINE ---------- */
+  .track{padding:70px 0 40px;}
+  .track-head{
+    display:grid;
+    grid-template-columns:repeat(12,var(--col));
+    gap:var(--gap);
+    align-items:baseline;
+    margin-bottom:54px;
+  }
+  .track-head .label{grid-column:1 / span 3;}
+  .track-head h2{
+    grid-column:1 / span 8;
+    grid-row:2;
+    font-size:34px;
+    line-height:1.05;
+    letter-spacing:-0.02em;
+    font-weight:700;
+    margin:14px 0 0;
+  }
+  .track-head .hint{
+    grid-column:10 / span 3;
+    grid-row:2;
+    font-size:13px;
+    color:var(--mute);
+    margin-top:18px;
+    text-align:right;
+  }
+
+  /* horizontal rail (desktop) */
+  .rail{position:relative;}
+  .scale{
+    position:relative;
+    height:64px;
+    border-bottom:1px solid var(--rule-strong);
+    margin-bottom:2px;
+  }
+  .scale .axis{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:1px;
+    background:var(--rule-strong);
+  }
+  .scale .endcap{
+    position:absolute;
+    bottom:0;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.12em;
+    color:var(--accent);
+    padding-bottom:8px;
+  }
+  .scale .endcap.start{left:0;}
+  .scale .endcap.end{right:0;}
+
+  /* tick row of stops */
+  .stops{
+    display:grid;
+    grid-template-columns:repeat(11,1fr);
+    position:relative;
+  }
+  .stop-tick{
+    position:relative;
+    padding-top:0;
+    text-align:left;
+  }
+  .stop-tick > .tickbtn{
+    display:block;
+    width:100%;
+    background:transparent;
+    border:0;
+    border-left:1px solid var(--rule);
+    padding:12px 8px 14px;
+    text-align:left;
+    cursor:pointer;
+    font-family:inherit;
+    color:var(--ink);
+    min-height:44px;
+    transition:background-color .15s ease;
+  }
+  .stop-tick:last-child > .tickbtn{
+    border-right:1px solid var(--rule);
+  }
+  .stop-tick > .tickbtn:hover{background:#f3f4ff;}
+  .stop-tick > .tickbtn:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;}
+  .stop-tick .pct{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    color:var(--mute);
+  }
+  .stop-tick.is-edge .pct{color:var(--accent);}
+  .stop-tick .num{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin-top:10px;
+    color:var(--accent);
+  }
+  .stop-tick .ttl{
+    display:block;
+    font-size:13px;
+    line-height:1.25;
+    margin-top:6px;
+    letter-spacing:-0.005em;
+  }
+  .stop-tick .plus{
+    margin-top:10px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .stop-tick[aria-expanded="true"] > .tickbtn{background:#eef0ff;}
+  .stop-tick[aria-expanded="true"] .plus{color:var(--ink);}
+
+  /* progress fill rule under active selection */
+  .progress-rule{
+    position:relative;
+    height:3px;
+    margin-top:0;
+    background:var(--rule);
+  }
+  .progress-rule .fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:0%;
+    background:var(--accent);
+    transition:width .25s ease;
+  }
+
+  /* expanding panel */
+  .panel{
+    display:none;
+    grid-template-columns:repeat(12,var(--col));
+    gap:var(--gap);
+    margin-top:28px;
+    padding-top:26px;
+    border-top:2px solid var(--ink);
+  }
+  .panel.open{display:grid;}
+  .panel .p-meta{grid-column:1 / span 3;}
+  .panel .p-meta .big{
+    font-size:42px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    line-height:1;
+    color:var(--accent);
+    margin-top:10px;
+  }
+  .panel .p-body{grid-column:4 / span 6;}
+  .panel .p-body h3{
+    font-size:24px;
+    line-height:1.1;
+    letter-spacing:-0.015em;
+    margin:0;
+  }
+  .panel .p-body .blurb{
+    margin:14px 0 0;
+    font-size:16px;
+    line-height:1.5;
+    max-width:52ch;
+  }
+  .panel .p-points{
+    grid-column:10 / span 3;
+    list-style:none;
+    margin:6px 0 0;
+    padding:0;
+  }
+  .panel .p-points li{
+    border-top:1px solid var(--rule);
+    padding:12px 0;
+    font-size:14px;
+    line-height:1.35;
+  }
+  .panel .p-points li:first-child{border-top:2px solid var(--ink);padding-top:14px;}
+  .panel .p-points li .pn{
+    display:inline-block;
+    color:var(--accent);
+    font-weight:700;
+    margin-right:8px;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer.btm{
+    margin-top:80px;
+    border-top:1px solid var(--rule-strong);
+    padding:34px 0 60px;
+  }
+  .btm-inner{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:var(--gap);
+    flex-wrap:wrap;
+  }
+  .btm-links{display:flex;gap:28px;flex-wrap:wrap;}
+  .btm-links a{
+    color:var(--ink);
+    text-decoration:none;
+    font-size:13px;
+    letter-spacing:0.01em;
+    border-bottom:1px solid var(--rule);
+    padding-bottom:2px;
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+  }
+  .btm-links a:hover{color:var(--accent);border-bottom-color:var(--accent);}
+  .btm .copy{font-size:12px;color:var(--mute);letter-spacing:0.03em;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .hero h1{font-size:48px;}
+    .hero .promise{grid-column:1 / span 12;}
+    .hero .meta{grid-column:1 / span 12;}
+    .track-head h2{grid-column:1 / span 12;}
+    .track-head .hint{grid-column:1 / span 12;grid-row:auto;text-align:left;margin-top:10px;}
+  }
+
+  @media (max-width:480px){
+    .wrap{padding:0 18px;}
+    .top-inner{flex-direction:row;align-items:center;}
+    .brand-sub{display:none;}
+    .hero{padding:48px 0 40px;display:block;}
+    .hero h1{font-size:38px;letter-spacing:-0.02em;}
+    .hero .lede{font-size:17px;margin-top:20px;}
+    .hero .meta{margin-top:30px;}
+
+    .track{padding:48px 0 20px;}
+    .track-head{display:block;margin-bottom:34px;}
+    .track-head h2{font-size:27px;}
+
+    /* timeline -> vertical rail */
+    .scale{display:none;}
+    .progress-rule{display:none;}
+    .stops{
+      display:block;
+      border-left:2px solid var(--ink);
+      padding-left:0;
+    }
+    .stop-tick{display:block;}
+    .stop-tick > .tickbtn{
+      border-left:0;
+      border-bottom:1px solid var(--rule);
+      padding:16px 4px 16px 18px;
+      position:relative;
+    }
+    .stop-tick:last-child > .tickbtn{border-right:0;}
+    .stop-tick > .tickbtn::before{
+      content:"";
+      position:absolute;
+      left:-7px;top:24px;
+      width:10px;height:10px;
+      background:var(--paper);
+      border:2px solid var(--accent);
+      border-radius:50%;
+    }
+    .stop-tick[aria-expanded="true"] > .tickbtn::before{background:var(--accent);}
+    .stop-tick .num{display:inline;margin-top:0;margin-right:8px;}
+    .stop-tick .pct{display:inline-block;float:right;}
+    .stop-tick .ttl{font-size:15px;margin-top:8px;}
+    .stop-tick .plus{position:absolute;right:6px;bottom:14px;}
+
+    .panel{display:none;margin-top:0;padding:18px 4px 22px 18px;border-top:0;border-bottom:1px solid var(--rule);}
+    .panel.open{display:block;}
+    .panel .p-meta .big{font-size:30px;}
+    .panel .p-body{margin-top:14px;}
+    .panel .p-body h3{font-size:20px;}
+    .panel .p-points{margin-top:16px;}
+
+    footer.btm{margin-top:48px;}
+    .btm-inner{flex-direction:column;align-items:flex-start;gap:18px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="brand">
+      <span class="mark">RAG</span>&nbsp;Guide<span class="brand-sub" data-i18n="brandSub"></span>
+    </div>
+    <div class="toggle" role="group" aria-label="Language">
+      <button id="btn-ru" aria-pressed="true" onclick="setLang('ru')">RU</button>
+      <button id="btn-en" aria-pressed="false" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div class="kicker"><span class="label accent" data-i18n="heroKicker"></span></div>
+    <div class="promise">
+      <h1 data-i18n-html="heroTitle"></h1>
+      <p class="lede" data-i18n="heroLede"></p>
+    </div>
+    <dl class="meta">
+      <dt class="label" data-i18n="metaLevelL"></dt>
+      <dd data-i18n="metaLevelV"></dd>
+      <dt class="label" data-i18n="metaPrereqL"></dt>
+      <dd data-i18n="metaPrereqV"></dd>
+      <dt class="label" data-i18n="metaFormatL"></dt>
+      <dd data-i18n="metaFormatV"></dd>
+    </dl>
+  </section>
+
+  <section class="track">
+    <div class="track-head">
+      <span class="label accent" data-i18n="trackKicker"></span>
+      <h2 data-i18n="trackTitle"></h2>
+      <p class="hint" data-i18n="trackHint"></p>
+    </div>
+
+    <div class="rail">
+      <div class="scale">
+        <span class="endcap start">0%</span>
+        <span class="endcap end">100%</span>
+        <span class="axis"></span>
+      </div>
+
+      <div class="stops" id="stops"></div>
+
+      <div class="progress-rule"><span class="fill" id="fill"></span></div>
+
+      <div class="panel" id="panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="btm">
+  <div class="wrap btm-inner">
+    <div class="btm-links">
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">github.com/kochetkov-ma/brewpage-openapi</a>
+    </div>
+    <div class="copy" data-i18n="footCopy"></div>
+  </div>
+</footer>
+
+<script>
+/* ---------- DATA ---------- */
+var STOPS = [
+  { pct:"0%",  num:"00",
+    ru:{t:"С чего начать", b:"Точка отсчета. Короткая карта маршрута от нуля до рабочего RAG без лишних терминов.",
+        p:["Что вы получите в конце","Как читать этот трек","Ничего не нужно устанавливать заранее"]},
+    en:{t:"Where to start", b:"The zero point. A short map of the journey from nothing to a working RAG, with no jargon.",
+        p:["What you will have at the end","How to read this track","Nothing to install up front"]} },
+  { pct:"10%", num:"01",
+    ru:{t:"Что такое RAG", b:"Retrieval Augmented Generation простыми словами: модель отвечает, опираясь на найденные документы.",
+        p:["Поиск плюс генерация","Откуда берутся факты","Отличие от обычного чата"]},
+    en:{t:"What RAG is", b:"Retrieval Augmented Generation in plain words: the model answers grounded in retrieved documents.",
+        p:["Retrieval plus generation","Where facts come from","How it differs from plain chat"]} },
+  { pct:"20%", num:"02",
+    ru:{t:"Зачем он нужен", b:"Свежие данные, меньше выдумок, ответы по вашим источникам вместо общих знаний модели.",
+        p:["Свежесть и точность","Снижение галлюцинаций","Ваши данные, не общие"]},
+    en:{t:"Why you need it", b:"Fresh data, fewer made-up answers, replies grounded in your sources instead of generic knowledge.",
+        p:["Freshness and accuracy","Fewer hallucinations","Your data, not generic"]} },
+  { pct:"30%", num:"03",
+    ru:{t:"Как работает поиск по документам", b:"Общая схема: запрос -> поиск релевантных кусков -> передача их модели.",
+        p:["Запрос пользователя","Поиск релевантного","Передача в модель"]},
+    en:{t:"How document retrieval works", b:"The big picture: query -> find relevant pieces -> hand them to the model.",
+        p:["The user query","Finding what is relevant","Passing it to the model"]} },
+  { pct:"40%", num:"04",
+    ru:{t:"Разбиваем текст на чанки", b:"Почему документы режут на небольшие чанки и как выбрать их размер и перекрытие.",
+        p:["Размер чанка","Перекрытие кусков","Границы по смыслу"]},
+    en:{t:"Splitting text into chunks", b:"Why documents are cut into small chunks and how to pick size and overlap.",
+        p:["Chunk size","Overlap between pieces","Boundaries by meaning"]} },
+  { pct:"50%", num:"05",
+    ru:{t:"Эмбеддинги: текст в векторы", b:"Как текст превращается в числа, чтобы близкие по смыслу куски были рядом.",
+        p:["Что такое вектор","Близость по смыслу","Выбор модели эмбеддингов"]},
+    en:{t:"Embeddings: text to vectors", b:"How text turns into numbers so that pieces close in meaning sit close together.",
+        p:["What a vector is","Closeness by meaning","Choosing an embedding model"]} },
+  { pct:"60%", num:"06",
+    ru:{t:"Векторная база и поиск", b:"Где хранятся векторы и как по ним быстро найти самые похожие на запрос.",
+        p:["Хранение векторов","Поиск ближайших","Top-k результатов"]},
+    en:{t:"Vector store and search", b:"Where vectors live and how to quickly find the ones most similar to a query.",
+        p:["Storing vectors","Nearest-neighbour search","Top-k results"]} },
+  { pct:"70%", num:"07",
+    ru:{t:"Собираем контекст для модели", b:"Как из найденных кусков собрать аккуратный промпт в пределах окна контекста.",
+        p:["Сборка промпта","Лимит контекста","Порядок и цитаты"]},
+    en:{t:"Assembling context for the model", b:"How to build a tidy prompt from retrieved pieces within the context window.",
+        p:["Building the prompt","Context limits","Order and citations"]} },
+  { pct:"80%", num:"08",
+    ru:{t:"Генерация ответа", b:"Модель читает контекст и пишет ответ, опираясь только на переданные факты.",
+        p:["Ответ по фактам","Ссылки на источники","Когда честно сказать не знаю"]},
+    en:{t:"Generating the answer", b:"The model reads the context and writes an answer grounded only in the provided facts.",
+        p:["Answer from facts","Citing sources","When to say I do not know"]} },
+  { pct:"90%", num:"09",
+    ru:{t:"Оценка качества", b:"Как понять, что система отвечает хорошо, и что измерять для улучшений.",
+        p:["Релевантность поиска","Точность ответа","Простые метрики"]},
+    en:{t:"Measuring quality", b:"How to tell the system answers well and what to measure to improve it.",
+        p:["Retrieval relevance","Answer accuracy","Simple metrics"]} },
+  { pct:"100%", num:"10",
+    ru:{t:"Вывод в продакшн", b:"Последний шаг: стабильность, обновление данных и наблюдаемость в работе.",
+        p:["Обновление данных","Мониторинг и логи","Стоимость и скорость"]},
+    en:{t:"Going to production", b:"The final step: stability, keeping data fresh and observability in operation.",
+        p:["Refreshing data","Monitoring and logs","Cost and latency"]} }
+];
+
+/* ---------- I18N STRINGS ---------- */
+var I18N = {
+  ru:{
+    brandSub:"интерактивный гид для начинающих",
+    heroKicker:"Гид для начинающих",
+    heroTitle:"От нуля до <em>рабочего RAG</em> за одну страницу",
+    heroLede:"Спокойный путь без предварительных знаний. Все на этой одной странице: от первого вопроса до вывода в продакшн. Без установок и лишних терминов.",
+    metaLevelL:"Уровень", metaLevelV:"С нуля, новичок",
+    metaPrereqL:"Предварительно", metaPrereqV:"Ничего не нужно",
+    metaFormatL:"Формат", metaFormatV:"Одна страница, 0 до 100%",
+    trackKicker:"Учебный трек",
+    trackTitle:"Шкала от 0 до 100 процентов",
+    trackHint:"Нажмите на любой шаг, чтобы раскрыть его прямо здесь.",
+    footCopy:"BrewPage Cookbook. Plain HTML. Открыто и офлайн."
+  },
+  en:{
+    brandSub:"interactive guide for beginners",
+    heroKicker:"Beginner guide",
+    heroTitle:"From zero to a <em>working RAG</em> in one page",
+    heroLede:"A calm path with no prerequisites. Everything lives on this one page: from your first question to going to production. No installs, no jargon.",
+    metaLevelL:"Level", metaLevelV:"From scratch, beginner",
+    metaPrereqL:"Prerequisites", metaPrereqV:"None required",
+    metaFormatL:"Format", metaFormatV:"One page, 0 to 100%",
+    trackKicker:"Learning track",
+    trackTitle:"A scale from 0 to 100 percent",
+    trackHint:"Tap any stop to expand it right here.",
+    footCopy:"BrewPage Cookbook. Plain HTML. Open and offline."
+  }
+};
+
+var lang = "ru";
+var openIndex = -1;
+
+/* ---------- BUILD STOPS ---------- */
+function buildStops(){
+  var host = document.getElementById("stops");
+  host.innerHTML = "";
+  STOPS.forEach(function(s, i){
+    var wrap = document.createElement("div");
+    wrap.className = "stop-tick" + ((i===0 || i===STOPS.length-1) ? " is-edge" : "");
+    wrap.setAttribute("aria-expanded","false");
+
+    var btn = document.createElement("button");
+    btn.className = "tickbtn";
+    btn.type = "button";
+    btn.setAttribute("aria-controls","panel");
+    btn.onclick = (function(idx){ return function(){ toggle(idx); }; })(i);
+    btn.innerHTML =
+      '<span class="pct">'+s.pct+'</span>'+
+      '<span class="num">'+s.num+'</span>'+
+      '<span class="ttl" data-stop-ttl="'+i+'"></span>'+
+      '<span class="plus" data-stop-plus="'+i+'">+</span>';
+    wrap.appendChild(btn);
+    host.appendChild(wrap);
+  });
+}
+
+/* ---------- TOGGLE PANEL ---------- */
+function toggle(i){
+  var ticks = document.querySelectorAll(".stop-tick");
+  var panel = document.getElementById("panel");
+  var fill = document.getElementById("fill");
+
+  if(openIndex === i){
+    openIndex = -1;
+    ticks[i].setAttribute("aria-expanded","false");
+    setPlus(i,"+");
+    panel.classList.remove("open");
+    fill.style.width = "0%";
+    return;
+  }
+  ticks.forEach(function(t,idx){ t.setAttribute("aria-expanded","false"); setPlus(idx,"+"); });
+  openIndex = i;
+  ticks[i].setAttribute("aria-expanded","true");
+  setPlus(i,"-");
+  fill.style.width = STOPS[i].pct;
+
+  renderPanel(i);
+  panel.classList.add("open");
+
+  /* on mobile move panel right under the tick */
+  if(window.matchMedia("(max-width:480px)").matches){
+    ticks[i].appendChild(panel);
+  } else {
+    document.querySelector(".rail").appendChild(panel);
+  }
+}
+
+function setPlus(i, ch){
+  var el = document.querySelector('[data-stop-plus="'+i+'"]');
+  if(el) el.textContent = ch;
+}
+
+function renderPanel(i){
+  var s = STOPS[i];
+  var d = s[lang];
+  var panel = document.getElementById("panel");
+  var pts = d.p.map(function(p,k){
+    return '<li><span class="pn">'+("0"+(k+1)).slice(-2)+'</span>'+p+'</li>';
+  }).join("");
+  panel.innerHTML =
+    '<div class="p-meta">'+
+      '<span class="label accent">'+(lang==="ru"?"Шаг":"Stop")+' '+s.num+'</span>'+
+      '<div class="big">'+s.pct+'</div>'+
+    '</div>'+
+    '<div class="p-body">'+
+      '<h3>'+d.t+'</h3>'+
+      '<p class="blurb">'+d.b+'</p>'+
+    '</div>'+
+    '<ul class="p-points">'+pts+'</ul>';
+}
+
+/* ---------- LANGUAGE ---------- */
+function applyI18n(){
+  var dict = I18N[lang];
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var k = el.getAttribute("data-i18n");
+    if(dict[k] !== undefined) el.textContent = dict[k];
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach(function(el){
+    var k = el.getAttribute("data-i18n-html");
+    if(dict[k] !== undefined) el.innerHTML = dict[k];
+  });
+  /* stop titles */
+  STOPS.forEach(function(s,i){
+    var el = document.querySelector('[data-stop-ttl="'+i+'"]');
+    if(el) el.textContent = s[lang].t;
+  });
+  document.documentElement.lang = lang;
+  if(openIndex !== -1) renderPanel(openIndex);
+}
+
+function setLang(l){
+  lang = l;
+  document.getElementById("btn-ru").setAttribute("aria-pressed", l==="ru" ? "true":"false");
+  document.getElementById("btn-en").setAttribute("aria-pressed", l==="en" ? "true":"false");
+  applyI18n();
+}
+
+/* ---------- INIT ---------- */
+buildStops();
+applyI18n();
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="03-terminal.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">04 / 10</span><span class="mn-name">Swiss</span></span>
+  <a href="05-glass.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="03-terminal.html", NEXT="05-glass.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

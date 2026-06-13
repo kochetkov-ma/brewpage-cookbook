@@ -1,0 +1,1242 @@
+/*
+ * base.css -- structure + ALL component shells for the RAG Guide (AtlasMD).
+ *
+ * Shared by every page + (the single) theme. NEVER forked per theme.
+ * Carries NO literal color / size / font / duration -- color/space/motion
+ * come via var(--...) ONLY. Token VALUES live in css/themes/atlas.css.
+ *
+ * Token namespace this file references (supplied by the theme on :root):
+ *   color  --c-bg --c-surface --c-surface-2 --c-surface-3 --c-text
+ *          --c-text-muted --c-heading --c-border --c-border-soft --c-link
+ *          --c-link-hover --c-focus --c-accent-1..4(+-soft) --c-progress
+ *          --c-focus-glow --c-current-ring --c-visited-ring + cartography set
+ *   space  --sp-0..6      radius --radius-sm/md/lg
+ *   type   --font-body --font-ui --font-mono --fs-0..4 --lh-tight --lh-body
+ *          --fw-normal --fw-bold
+ *   border --bw-1/2       shadow --shadow-1/2 + recipes
+ *   motion --dur-1/2 --dur-zoom --ease-1 --ease-zoom    layout --container-max
+ *
+ * Selection / focus is ALWAYS the themed rust/gold treatment (AtlasMD 3.13);
+ * the browser default blue ring is forbidden everywhere.
+ * ASCII only.
+ */
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--c-text);
+  background-color: var(--c-bg);
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+    radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+    repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+  line-height: var(--lh-body);
+  min-height: 100vh;
+}
+
+/* ---------- layout utilities ---------- */
+.container,
+.wrap {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--sp-5) var(--sp-6);
+}
+
+.stack > * + * { margin-top: var(--sp-3); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--sp-1);
+  top: -48px;
+  z-index: 100;
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--c-surface);
+  color: var(--c-heading);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  transition: top var(--dur-1) var(--ease-1);
+}
+.skip-link:focus { top: var(--sp-1); }
+
+/* visibility toggles: .has-js on <html> flips these */
+.js-only { display: none; }
+.has-js .js-only { display: revert; }
+.has-js .no-js-only { display: none; }
+
+a { color: var(--c-link); }
+
+/* ===========================================================
+   HEADER  (AtlasMD 3.1 compass slot lives here; 3.12 lang-toggle)
+   =========================================================== */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-5) 0 var(--sp-3);
+  border-bottom: 3px double var(--c-border);
+  box-shadow: var(--shadow-header);
+  flex-wrap: wrap;
+}
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+/* right-hand header cluster: back-to-map control + lang-toggle, grouped so
+   the always-visible back-to-map sits next to the language switch. */
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.site-header__brand .seal {
+  width: 56px; height: 56px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 1px 2px rgba(60,46,26,0.18));
+}
+.site-header__brand h1 {
+  font-size: 1.6rem;
+  letter-spacing: 0.14em;
+  margin: 0;
+  color: var(--c-heading);
+  text-transform: uppercase;
+  font-weight: var(--fw-bold);
+  line-height: 1.05;
+}
+.site-header__brand .sub {
+  font-style: italic;
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+  margin-top: var(--sp-0);
+  letter-spacing: 0.03em;
+}
+
+/* ---------- back-to-map control (sections only; always visible) ----------
+   A prominent, always-visible header control that returns to the main Atlas
+   map (index.html), regardless of the current drill level. Distinct from the
+   in-section breadcrumb root (which returns to the section's OWN level 0).
+   Shared shell here so every section reads identically; the landing/map does
+   NOT use it. Themed (sepia/rust, NEVER blue), >=44px, focus-visible. */
+.back-to-map {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 44px;
+  padding: 9px 15px;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--c-heading);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(0,0,0,0.015)),
+    var(--c-surface);
+  border: var(--bw-1) solid var(--c-accent-3);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sheen), var(--shadow-1);
+  transition: background-color var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1),
+              box-shadow var(--dur-1) var(--ease-1),
+              transform var(--dur-1) var(--ease-1);
+}
+.back-to-map .bm-arrow {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+  color: var(--c-accent-2);
+  line-height: 1;
+}
+.back-to-map:hover {
+  background: var(--c-surface-3);
+  border-color: var(--c-accent-2);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+.back-to-map:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- lang-toggle (brass/parchment switch) -- AtlasMD 3.12 ---------- */
+.lang-toggle {
+  display: inline-flex;
+  border: var(--bw-1) solid var(--c-accent-3);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.02)),
+    var(--c-surface);
+  box-shadow: var(--shadow-sheen), var(--shadow-1);
+}
+.lang-toggle button {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  font-weight: var(--fw-bold);
+  padding: 9px 17px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), color var(--dur-1) var(--ease-1);
+}
+.lang-toggle button + button { border-left: var(--bw-1) solid var(--c-accent-3); }
+.lang-toggle button.active,
+.lang-toggle button[aria-pressed="true"] {
+  background: linear-gradient(180deg, var(--sepia), var(--lang-active-bottom));
+  color: var(--c-bg);
+  box-shadow: var(--shadow-pressed);
+}
+.lang-toggle button:hover:not(.active):not([aria-pressed="true"]) {
+  background: var(--c-surface-3);
+  color: var(--c-heading);
+}
+.lang-toggle button:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: -2px;
+}
+
+/* ===========================================================
+   HERO  (landing only)
+   =========================================================== */
+.hero {
+  margin: 44px 0 var(--sp-4);
+  text-align: center;
+  position: relative;
+}
+.hero .kicker {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--c-link);
+  margin-bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.hero .kicker::before,
+.hero .kicker::after {
+  content: "";
+  width: 34px; height: 1px;
+  background: var(--c-border);
+}
+.hero h2 {
+  font-size: var(--fs-4);
+  line-height: var(--lh-tight);
+  letter-spacing: 0.005em;
+  margin: 0 auto var(--sp-3);
+  max-width: 17ch;
+  color: var(--c-text);
+  font-weight: var(--fw-bold);
+  text-wrap: balance;
+}
+.hero p.promise {
+  font-size: 1.08rem;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--c-text-muted);
+  max-width: 54ch;
+  margin: 0 auto;
+  text-wrap: balance;
+}
+.hero p.promise::first-line { color: var(--c-heading); }
+.hero .rule {
+  width: 220px; height: 18px;
+  margin: var(--sp-4) auto 0;
+  opacity: 0.75;
+}
+
+/* ===========================================================
+   PLATE-FRAME  (AtlasMD 3.2 -- framed antique plate stage)
+   =========================================================== */
+.plate,
+.atlas {
+  margin-top: 34px;
+  border: var(--bw-2) solid var(--c-text-muted);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.25), rgba(0,0,0,0.02)),
+    var(--c-surface-2);
+  box-shadow: var(--shadow-plate);
+  padding: var(--sp-5) var(--sp-4) var(--sp-5);
+  position: relative;
+  overflow: hidden;
+}
+/* soft non-geometric vignette -- aged corners, no concentric ring artefacts */
+.plate::before,
+.atlas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(120% 90% at 50% 45%, transparent 62%, rgba(92,74,50,0.10) 100%);
+  opacity: 0.85;
+}
+/* corner L-ticks at the four inner corners */
+.plate::after,
+.atlas::after {
+  content: "";
+  position: absolute;
+  inset: var(--sp-2);
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border));
+  background-repeat: no-repeat;
+  background-size:
+    14px 1px, 1px 14px, 14px 1px, 1px 14px,
+    14px 1px, 1px 14px, 14px 1px, 1px 14px;
+  background-position:
+    left top, left top, right top, right top,
+    left bottom, left bottom, right bottom, right bottom;
+  opacity: 0.7;
+}
+
+/* plate / atlas title head (carries the compass) -- AtlasMD 3.1 HARD RULE:
+   compass shares the TITLE row only, never a toolbar row. */
+.plate-head,
+.atlas-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+  position: relative;
+  z-index: 2;
+  flex-wrap: wrap;
+}
+.plate-head .title-block h3,
+.atlas-head .title-block h3 {
+  margin: 0;
+  font-size: var(--fs-3);
+  letter-spacing: 0.1em;
+  color: var(--c-heading);
+  text-transform: uppercase;
+  font-weight: var(--fw-bold);
+}
+.plate-head .title-block p,
+.atlas-head .title-block p {
+  margin: 5px 0 0;
+  font-style: italic;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  color: var(--c-text-muted);
+}
+
+/* ===========================================================
+   COMPASS  (AtlasMD 3.1 -- inert decoration, title header only)
+   =========================================================== */
+.compass {
+  width: 78px; height: 78px;
+  flex: 0 0 auto;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+/* ===========================================================
+   MAP-ROUTE + TRAIL SVG  (AtlasMD 3.12 landing)
+   =========================================================== */
+.trail-shell {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin-top: var(--sp-1);
+}
+.trail-svg { display: block; width: 100%; height: auto; }
+
+/* terrain backdrop -- cartography garnish, never steals clicks */
+.terrain { pointer-events: none; }
+.terrain * { vector-effect: non-scaling-stroke; }
+.ter-sea        { fill: var(--ter-sea); }
+.ter-sea-hatch  { stroke: var(--ter-sea-line); stroke-width: 0.8; fill: none; }
+.ter-coast      { stroke: var(--ter-coast); stroke-width: 1.4; fill: none; }
+.ter-island     { fill: var(--ter-island); stroke: var(--ter-island-ln); stroke-width: 1.1; }
+.ter-lake       { fill: var(--ter-lake); stroke: var(--ter-island-ln); stroke-width: 1.3; stroke-linejoin: round; }
+.ter-shore      { stroke: var(--ter-shore); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+.ter-water-tick { stroke: var(--ter-tick); stroke-width: 0.7; fill: none; }
+.ter-river      { stroke: var(--ter-river); fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ter-mtn        { fill: var(--ter-mtn); stroke: var(--ter-mtn-line); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
+.ter-mtn-shade  { fill: var(--ter-mtn-shade); stroke: none; }
+.ter-hill       { fill: none; stroke: var(--ter-hill); stroke-width: 1; stroke-linecap: round; }
+.ter-hachure    { stroke: var(--ter-hachure); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+.ter-contour    { stroke: var(--ter-contour); stroke-width: 0.9; fill: none; stroke-linecap: round; }
+.ter-tree       { stroke: var(--ter-tree-ln); stroke-width: 1; fill: var(--ter-tree-fill); stroke-linejoin: round; }
+.ter-conifer    { stroke: var(--ter-conifer-ln); stroke-width: 1; fill: var(--ter-conifer-fl); stroke-linejoin: round; }
+.ter-marsh      { stroke: var(--ter-marsh); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+.ter-grid       { stroke: var(--ter-grid); stroke-width: 0.6; fill: none; }
+.ter-rhumb      { stroke: var(--ter-rhumb); stroke-width: 0.55; fill: none; }
+.ter-flourish   { stroke: var(--ter-flourish); stroke-width: 1; fill: none; stroke-linecap: round; }
+.ter-cartouche  { stroke: var(--ter-cartouche); stroke-width: 0.8; fill: var(--ter-cart-fill); }
+.ter-scale-seg  { fill: var(--ter-scale-seg); stroke: none; }
+.ter-scale-rule { stroke: var(--ter-scale-rule); stroke-width: 0.9; fill: none; stroke-linecap: round; }
+.ter-scale-num  { font-family: var(--font-body); fill: var(--ter-scale-num); }
+.ter-bird       { stroke: var(--ter-bird); stroke-width: 0.9; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.ter-label      { font-family: var(--font-body); fill: var(--ter-label); font-style: italic; }
+
+.route-line {
+  fill: none;
+  stroke: var(--c-route);
+  stroke-width: 2.4;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+.route-shadow {
+  fill: none;
+  stroke: var(--c-route-shadow);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.route-draw {
+  fill: none;
+  stroke: var(--c-route);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+.has-anim .route-line { opacity: 0; }
+.has-anim .route-draw {
+  stroke-dasharray: var(--route-len);
+  stroke-dashoffset: var(--route-len);
+  animation: routeDraw var(--dur-draw) var(--ease-1) forwards;
+}
+@keyframes routeDraw { to { stroke-dashoffset: 0; } }
+.anim-done .route-line { opacity: 0.9; transition: opacity var(--dur-note) var(--ease-1); }
+.anim-done .route-draw { display: none; }
+
+/* ---------- map-flag pins (AtlasMD 3.3b) ---------- */
+.pin { cursor: pointer; }
+.pin .pin-hit { fill: transparent; opacity: 0; }
+.pin .flag-pole { stroke: var(--c-heading); stroke-width: 1.6; }
+.pin .flag {
+  fill: var(--c-accent-1);
+  stroke: var(--c-accent-4);
+  stroke-width: 1;
+  transition: transform var(--dur-1) var(--ease-1);
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+.pin .dot {
+  fill: var(--c-bg);
+  stroke: var(--c-heading);
+  stroke-width: 2;
+  transition: transform var(--dur-1) var(--ease-1), fill var(--dur-1) var(--ease-1);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.pin .num {
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: 700;
+  fill: var(--c-heading);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+/* pin labels sit ABOVE the terrain (the #pins group is painted after #terrain)
+   and carry a soft parchment halo so mountain ridges / rivers / contour hatching
+   never cut through the glyphs. The halo is the page-surface token stroked under
+   the fill via paint-order; the fill keeps the label's own ink/accent color. */
+.pin .pin-label,
+.pin .pin-pct {
+  paint-order: stroke fill;
+  stroke: var(--c-bg);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.pin .pin-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--c-text);
+  stroke-width: 4px;
+  pointer-events: none;
+}
+.pin .pin-pct {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--c-accent-2);
+  stroke-width: 3px;
+  pointer-events: none;
+}
+.pin:hover .flag { transform: scaleX(1.12); }
+.pin:hover .dot { transform: scale(1.18); fill: var(--c-accent-3); }
+.pin.terminal .flag { fill: var(--c-accent-2); stroke: var(--rust-deep); }
+.pin.start .flag { fill: var(--c-accent-3); stroke: var(--gold-deep); }
+.pin.active .dot { fill: var(--c-accent-2); stroke: var(--rust-deep); transform: scale(1.25); }
+.pin.active .pin-label { fill: var(--c-accent-2); font-weight: 700; }
+/* THREE-STATE chapter flags (persisted real section completion):
+   started = gold in-progress; done = earned green + check. NOT STARTED = the
+   default neutral look. Driven by chapter-state.js via map-route repaint;
+   opening a flag never sets these (requirement 3). */
+.pin.started .dot { fill: var(--c-accent-3); stroke: var(--gold-deep); stroke-width: 2.4; }
+.pin.started .pin-label { fill: var(--c-accent-3); font-weight: 700; }
+.pin.done .dot { fill: var(--c-progress); stroke: var(--green-text); stroke-width: 2.4; }
+.pin.done .pin-label { fill: var(--green-text); font-weight: 700; }
+/* small check glyph over the medallion number on a completed chapter */
+.pin.done .num { fill: var(--c-bg); }
+/* legacy earned-visited (no longer set on the landing; kept for safety) */
+.pin.visited .dot { stroke: var(--c-progress); }
+.pin.visited .pin-label { fill: var(--green-text); }
+/* current "вы здесь" -- faint rust ring, NOT green (AtlasMD 7) */
+.pin.current .dot { stroke: var(--c-accent-2); }
+.pin:focus { outline: none; }
+.pin:focus-visible .dot { stroke: var(--c-focus); stroke-width: 3; transform: scale(1.25); }
+.pin:focus-visible .pin-label { fill: var(--c-accent-2); font-weight: 700; }
+
+/* ===========================================================
+   CHAPTER LEGEND (desktop index) + MOBILE ROUTE  (AtlasMD 3.12)
+   =========================================================== */
+.legend-list-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: var(--sp-4);
+  padding-top: 18px;
+  border-top: var(--bw-1) solid var(--c-border-soft);
+}
+.legend-list-head {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-link);
+  margin: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.legend-list-head::before {
+  content: "";
+  width: 7px; height: 7px;
+  background: var(--c-accent-2);
+  transform: rotate(45deg);
+  flex: 0 0 auto;
+}
+.legend-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-1);
+}
+.legend-list button,
+.mobile-route .mpin {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-ui);
+  letter-spacing: 0.02em;
+  color: var(--c-text);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1),
+              box-shadow var(--dur-1) var(--ease-1),
+              transform var(--dur-1) var(--ease-1);
+}
+/* UNIFORM CHAPTER CARDS: every desktop legend card matches the tallest one
+   (a 3-line chapter title). The grid only equalizes items within one row, so
+   short titles in other rows would otherwise sit shorter. A min-height sized
+   for a 3-line title + the card's own vertical padding + borders pads the 1-
+   and 2-line cards up to the same height; content stays vertically centered
+   (align-items:center on the shared button rule) so short cards read as
+   intentional, not stretched. Built from tokens + the card font-size, never a
+   fragile magic px: 3 text lines (font-size * line-height) + 2*--sp-1 padding
+   + 2*--bw-1 border. .cs-name gets a fixed line-height so the 3-line math is
+   deterministic. Scoped to .legend-list (desktop) only -- the mobile route
+   (.mpin) is untouched. */
+.legend-list button {
+  min-height: calc(3 * (0.84rem * 1.3) + 2 * var(--sp-1) + 2 * var(--bw-1));
+  padding: var(--sp-1) 14px;
+  font-size: 0.84rem;
+}
+.legend-list .cs-name { line-height: 1.3; }
+.legend-list button:hover {
+  background: var(--c-surface-3);
+  border-color: var(--c-accent-3);
+  box-shadow: var(--shadow-2);
+  transform: translateY(-1px);
+}
+.legend-list button:hover .lnum { border-color: var(--c-accent-3); color: var(--c-accent-2); }
+.legend-list button:focus-visible,
+.mobile-route .mpin:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 1px;
+}
+.legend-list button[aria-expanded="true"],
+.mobile-route .mpin[aria-expanded="true"] {
+  background: var(--c-surface-3);
+  border-color: var(--c-accent-2);
+  box-shadow: var(--shadow-active-bar);
+}
+.legend-list button[aria-expanded="true"] .lnum,
+.mobile-route .mpin[aria-expanded="true"] .mnum {
+  background: var(--c-accent-2);
+  border-color: var(--rust-deep);
+  color: var(--c-bg);
+}
+.lnum, .mnum {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--c-bg);
+  border: var(--bw-2) solid var(--c-heading);
+  color: var(--c-heading);
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background-color var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1),
+              color var(--dur-1) var(--ease-1);
+}
+.lnum {
+  width: 30px; height: 30px;
+  font-size: 0.66rem; letter-spacing: 0;
+  box-shadow: inset 0 0 0 1px rgba(243,234,212,0.6);
+}
+.legend-list li.is-start .lnum,
+.mobile-route li.is-start .mnum { background: var(--c-accent-3); border-color: var(--gold-deep); color: var(--c-bg); }
+.legend-list li.is-terminal .lnum,
+.mobile-route li.is-terminal .mnum { background: var(--c-accent-2); border-color: var(--rust-deep); color: var(--c-bg); }
+/* THREE-STATE on the chapter index + mobile route (persisted completion).
+   started = gold in-progress medallion; done = earned green medallion. */
+.legend-list li.started .lnum,
+.mobile-route li.started .mnum { background: var(--c-accent-3); border-color: var(--gold-deep); color: var(--c-bg); }
+.legend-list li.done .lnum,
+.mobile-route li.done .mnum { background: var(--c-progress); border-color: var(--green-text); color: var(--c-bg); }
+/* legacy visited (kept for safety; landing no longer sets it) */
+.legend-list li.visited .lnum,
+.mobile-route li.visited .mnum { background: var(--c-progress); border-color: var(--green-text); color: var(--c-bg); }
+
+/* ---- chapter card: name fills, status pill sits at the row end (REQ-1) ---- */
+.legend-list .cs-name,
+.mobile-route .cs-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* glanceable completion status: text + (on done) a check tick. Neutral by
+   default; gold = in progress; green = completed. Colors via tokens only. */
+.cs-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--c-text-muted);
+}
+.cs-status.started { color: var(--c-accent-3); }
+.cs-status.done { color: var(--green-text); }
+.cs-status .cs-check {
+  flex: 0 0 auto;
+  width: 13px; height: 13px;
+  color: var(--green-text);
+}
+/* tighten the status text on narrow legend cards so it never wraps/clips */
+.legend-list .cs-status { letter-spacing: 0.02em; }
+
+/* mobile vertical route */
+.mobile-route { margin-top: var(--sp-1); position: relative; z-index: 2; }
+.mobile-route ol { list-style: none; margin: 0; padding: 0 0 0 var(--sp-4); position: relative; }
+.mobile-route ol::before {
+  content: "";
+  position: absolute;
+  left: 9px; top: 6px; bottom: 6px;
+  width: 0;
+  border-left: 2.4px dashed var(--c-route);
+  opacity: 0.85;
+}
+.mobile-route li { position: relative; margin: 0 0 6px; }
+.mobile-route .mpin {
+  min-height: 52px;
+  padding: var(--sp-2) 14px;
+  gap: 14px;
+  font-size: 0.94rem;
+}
+.mobile-route .mpin:hover { background: var(--c-surface-3); border-color: var(--c-accent-3); }
+.mobile-route .mnum {
+  width: 34px; height: 34px;
+  margin-left: -27px;
+  font-size: 0.66rem;
+  box-shadow: 0 1px 3px rgba(60,46,26,0.18), inset 0 0 0 1px rgba(243,234,212,0.6);
+}
+
+/* one-time pan affordance (mobile) */
+.map-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  margin: 0 0 6px;
+  font-style: italic;
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+  color: var(--c-text-muted);
+  transition: opacity var(--dur-note) var(--ease-1);
+}
+.map-hint .map-hint-arrow { width: 30px; height: 9px; opacity: 0.8; flex: 0 0 auto; }
+.map-hint.is-gone { opacity: 0; pointer-events: none; }
+
+/* ===========================================================
+   FIELD-NOTE / DETAIL-PANEL  (AtlasMD 3.11)
+   =========================================================== */
+.legend-wrap,
+.detail-wrap {
+  position: relative;
+  z-index: 3;
+  margin-top: 18px;
+  min-height: 10px;
+}
+.field-note,
+.detail-panel {
+  position: relative;
+  border: var(--bw-1) solid var(--c-text-muted);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.015)),
+    var(--c-surface);
+  box-shadow: var(--shadow-ring), var(--shadow-2);
+  padding: 0;
+  overflow: hidden;
+  max-width: 760px;
+  margin: 0 auto;
+  animation: noteIn var(--dur-note) var(--ease-1);
+}
+.field-note::before {
+  content: "";
+  position: absolute;
+  inset: var(--sp-1);
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border)),
+    linear-gradient(var(--c-border), var(--c-border));
+  background-repeat: no-repeat;
+  background-size:
+    12px 1px, 1px 12px, 12px 1px, 1px 12px,
+    12px 1px, 1px 12px, 12px 1px, 1px 12px;
+  background-position:
+    left top, left top, right top, right top,
+    left bottom, left bottom, right bottom, right bottom;
+  opacity: 0.55;
+}
+@keyframes noteIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.field-note .fn-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: var(--sp-3) var(--sp-4) 14px;
+  background: linear-gradient(90deg, rgba(92,74,50,0.12), rgba(92,74,50,0));
+  border-bottom: var(--bw-1) dashed var(--c-border);
+}
+.field-note .badge {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--c-bg);
+  background: linear-gradient(180deg, var(--c-accent-1), var(--c-accent-4));
+  border: var(--bw-1) solid var(--c-accent-4);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  padding: 7px 11px;
+  min-width: 52px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.field-note.is-terminal .badge { background: linear-gradient(180deg, var(--c-accent-2), var(--badge-rust-bottom)); border-color: var(--rust-deep); }
+.field-note.is-start .badge { background: linear-gradient(180deg, var(--c-accent-3), var(--gold-deep)); border-color: var(--gold-deep); }
+.field-note h4 {
+  margin: 0;
+  font-size: 1.24rem;
+  color: var(--c-heading);
+  letter-spacing: 0.015em;
+  line-height: 1.2;
+  flex: 1;
+}
+.field-note h4:focus { outline: none; }
+.field-note .fn-close {
+  flex: 0 0 auto;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--c-bg);
+  border: var(--bw-1) solid var(--c-text-muted);
+  color: var(--c-text-muted);
+  border-radius: var(--radius-sm);
+  padding: 9px 13px;
+  min-height: 40px;
+  min-width: 44px;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1),
+              color var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1);
+}
+.field-note .fn-close:hover { background: var(--c-accent-2); border-color: var(--rust-deep); color: var(--c-bg); }
+.field-note .fn-close:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 1px; }
+.field-note .fn-body { position: relative; z-index: 2; padding: 18px var(--sp-4) var(--sp-4); }
+/* REQ-2: per-chapter completion line at the top of the opened field note.
+   Reuses the .cs-status token coloring (neutral / gold / green). */
+.field-note .fn-progress {
+  margin: 0 0 var(--sp-3);
+}
+.field-note .fn-progress .cs-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  background: var(--c-surface-2);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+}
+.field-note .fn-progress .cs-status.started {
+  color: var(--c-accent-3);
+  border-color: var(--c-accent-3);
+  background: var(--c-accent-3-soft);
+}
+.field-note .fn-progress .cs-status.done {
+  color: var(--green-text);
+  border-color: var(--c-progress);
+  background: var(--c-visited-bg-1);
+}
+.field-note .fn-progress .cs-check { width: 13px; height: 13px; color: var(--green-text); }
+.field-note .blurb {
+  margin: 0 0 var(--sp-3);
+  font-style: italic;
+  color: var(--c-text);
+  font-size: var(--fs-2);
+  line-height: 1.58;
+}
+.field-note .blurb::first-letter {
+  font-style: normal;
+  font-weight: var(--fw-bold);
+  font-size: 2.6em;
+  line-height: 0.78;
+  float: left;
+  margin: var(--sp-0) var(--sp-1) 0 0;
+  color: var(--c-accent-2);
+}
+.field-note ul { margin: 0; padding: 0; list-style: none; }
+.field-note li {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--c-heading);
+  padding: var(--sp-1) 0 var(--sp-1) 26px;
+  position: relative;
+  border-top: var(--bw-1) dotted var(--c-border);
+  line-height: 1.45;
+}
+.field-note li:first-child { border-top: none; }
+.field-note li::before {
+  content: "";
+  position: absolute;
+  left: var(--sp-0);
+  top: 13px;
+  width: 9px; height: 9px;
+  background: var(--c-accent-2);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 2px var(--c-surface);
+}
+.field-note .fn-example {
+  margin: var(--sp-3) 0 0;
+  padding: 11px 14px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  line-height: var(--lh-body);
+  color: var(--c-link);
+  background: var(--c-accent-1-soft);
+  border-left: 3px solid var(--c-accent-1);
+  border-radius: var(--radius-sm);
+}
+.field-note .fn-example b {
+  display: inline-block;
+  margin-right: var(--sp-0);
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: var(--fs-0);
+  color: var(--c-accent-1);
+}
+/* a "go to chapter" link inside the field note (landing flag -> section page) */
+.field-note .fn-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: var(--fw-bold);
+  color: var(--c-link);
+  text-decoration: none;
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  min-height: 44px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    var(--c-surface);
+  transition: background-color var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1),
+              color var(--dur-1) var(--ease-1);
+}
+.field-note .fn-go:hover { background: var(--c-surface-3); border-color: var(--c-accent-3); color: var(--c-accent-2); }
+.field-note .fn-go:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.field-note .fn-go .arr { font-weight: 700; }
+
+.legend-hint {
+  text-align: center;
+  font-style: italic;
+  color: var(--c-text-muted);
+  font-size: 0.94rem;
+  letter-spacing: 0.01em;
+  padding: var(--sp-2) 0;
+}
+
+/* ===========================================================
+   BREADCRUMB  (AtlasMD 3.4)
+   =========================================================== */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-0);
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.04em;
+}
+.breadcrumb .crumb-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--c-link);
+  border-bottom: var(--bw-1) dotted var(--c-link);
+  padding: 2px 4px;
+}
+.breadcrumb .crumb-link:hover { color: var(--c-link-hover); background: var(--c-surface-3); }
+.breadcrumb .crumb-link:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 1px; }
+.breadcrumb .crumb-current {
+  color: var(--c-link-hover);
+  font-weight: var(--fw-bold);
+  cursor: default;
+}
+.breadcrumb .sep { color: var(--c-border); user-select: none; }
+
+/* ===========================================================
+   ZOOM-CONTROLS  (AtlasMD 3.5 -- ICON-only lens buttons)
+   =========================================================== */
+.zoomout, .drill, .deeper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  color: var(--c-heading);
+  background: var(--c-bg);
+  border: var(--bw-1) solid var(--c-text-muted);
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1), background-color var(--dur-1) var(--ease-1);
+}
+.zoomout {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  padding: 0;
+}
+.drill, .deeper {
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-2);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+}
+.zoomout svg, .drill svg, .deeper svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.zoomout:hover, .drill:hover, .deeper:hover { color: var(--c-link-hover); border-color: var(--c-accent-3); }
+.zoomout[disabled] { opacity: .4; cursor: default; }
+.zoomout:focus-visible, .drill:focus-visible, .deeper:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* ===========================================================
+   NODE-CARD  (AtlasMD 3.3a -- rectangular pipeline/track node)
+   =========================================================== */
+.node {
+  display: block;
+  text-align: left;
+  position: relative;
+  cursor: pointer;
+  padding: var(--sp-2) var(--sp-3);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-1) var(--ease-1),
+              box-shadow var(--dur-1) var(--ease-1),
+              border-color var(--dur-1) var(--ease-1);
+}
+.node .idx { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); letter-spacing: 0.08em; }
+.node .name { display: block; font-size: var(--fs-2); color: var(--c-heading); font-weight: var(--fw-bold); margin-top: 2px; }
+.node .hint { display: block; font-family: var(--font-ui); font-size: var(--fs-1); color: var(--c-text-muted); margin-top: var(--sp-0); }
+.node:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); border-color: var(--c-accent-3); }
+.node:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--c-focus-glow); }
+.node.current { box-shadow: 0 0 0 1px var(--c-current-ring), var(--shadow-1); }
+/* NEXT-STEP highlight: the affordance that opens the next uncompleted main-path
+   step. Themed gold/rust glow (AtlasMD 3.13 -- NEVER blue), gently pulsing to
+   draw the eye start-to-end. Advances as steps complete; gone when finalized. */
+.node.next-step {
+  border-color: var(--c-accent-3);
+  box-shadow: 0 0 0 2px var(--c-focus-glow), var(--shadow-2);
+  animation: nextStepPulse 1.8s var(--ease-1) infinite;
+}
+@keyframes nextStepPulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--c-focus-glow), var(--shadow-2); }
+  50% { box-shadow: 0 0 0 5px var(--c-accent-3-soft), var(--shadow-2); }
+}
+.node.visited {
+  border-color: var(--c-progress);
+  background: linear-gradient(180deg, var(--c-visited-bg-1), var(--c-visited-bg-2));
+  box-shadow: 0 0 0 1px var(--c-visited-ring), var(--shadow-1);
+}
+.node.active { box-shadow: var(--shadow-active-bar); border-color: var(--c-accent-2); }
+
+/* ===========================================================
+   PROGRESS-STRIP  (AtlasMD 3.7 -- earned green)
+   =========================================================== */
+.progress-strip {
+  position: relative;
+  z-index: 2;
+  margin-top: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 18px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-heading);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(0,0,0,0.015)),
+    var(--c-surface);
+  border: var(--bw-1) solid var(--c-text-muted);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ring), var(--shadow-1);
+}
+.progress-strip .ptrack,
+.progress-strip .track {
+  flex: 1;
+  height: 9px;
+  background: var(--c-surface-3);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: var(--shadow-track);
+}
+.progress-strip .pfill,
+.progress-strip .track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-accent-3), var(--c-accent-2));
+  width: 0;
+  transition: width var(--dur-2) var(--ease-1);
+}
+/* earned-green fill once any progress is made */
+.progress-strip.in-progress .pfill,
+.progress-strip.complete .pfill {
+  background: linear-gradient(90deg, var(--c-progress), var(--green-text));
+}
+.progress-strip .pcount b { color: var(--c-accent-2); }
+.progress-strip .pdone {
+  color: var(--c-progress);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-1);
+}
+.progress-strip.complete .pdone { opacity: 1; }
+
+/* ===========================================================
+   DRILLDOWN-HOST stage  (AtlasMD 3.6 -- semantic zoom camera)
+   =========================================================== */
+.diagram-host { position: relative; }
+.diagram-host__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-2);
+}
+.diagram-host__stage {
+  position: relative;
+  transition: transform var(--dur-zoom) var(--ease-zoom);
+  transform-origin: top left;
+}
+
+/* ===========================================================
+   FOOTER COLOPHON  (AtlasMD 3.12 -- MANDATORY cross-links)
+   =========================================================== */
+.site-footer {
+  margin-top: var(--sp-6);
+  padding-top: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  color: var(--c-text-muted);
+}
+.site-footer .colophon-rule { width: min(260px, 70%); height: 14px; opacity: 0.7; }
+.site-footer .colophon-note { font-style: italic; letter-spacing: 0.04em; color: var(--c-text-muted); }
+.site-footer a {
+  color: var(--c-link);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  border-bottom: var(--bw-1) dotted var(--c-accent-1);
+  transition: color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.site-footer a:hover { color: var(--c-link-hover); border-bottom-color: var(--c-link-hover); }
+.site-footer a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.site-footer .links {
+  display: flex;
+  gap: 14px var(--sp-4);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.site-footer .links .sep { color: var(--c-border); user-select: none; }
+
+/* ===========================================================
+   RESPONSIVE  (AtlasMD 1.6 -- must hold at 390 / 320)
+   =========================================================== */
+@media (min-width: 561px) {
+  .mobile-route { display: none; }
+  .desktop-trail { display: block; }
+  .map-hint { display: none; }
+}
+
+@media (max-width: 560px) {
+  .container, .wrap { padding: 0 var(--sp-3) 80px; }
+  .site-header { padding: 22px 0 14px; gap: var(--sp-2); }
+  .site-header__brand { gap: 13px; }
+  .site-header__brand .seal { width: 46px; height: 46px; }
+  .site-header__brand h1 { font-size: 1.18rem; letter-spacing: 0.1em; }
+  .hero { margin: 30px 0 14px; }
+  .hero .kicker { letter-spacing: 0.26em; gap: 10px; }
+  .hero .kicker::before, .hero .kicker::after { width: 20px; }
+  .hero h2 { font-size: clamp(1.5rem, 7.6vw, 2rem); max-width: 20ch; }
+  .hero p.promise { font-size: 1rem; }
+  .plate, .atlas { padding: var(--sp-4) var(--sp-3) 22px; margin-top: 26px; }
+  .plate::after, .atlas::after { inset: 9px; }
+  .plate-head .title-block h3, .atlas-head .title-block h3 { font-size: 1.1rem; }
+  .compass { width: 56px; height: 56px; }
+
+  .desktop-trail { display: block; }
+  .mobile-route { display: block; }
+  .legend-list-wrap { display: none; }
+
+  .trail-shell.desktop-trail {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-text-muted) transparent;
+  }
+  .trail-shell.desktop-trail::-webkit-scrollbar { height: 6px; }
+  .trail-shell.desktop-trail::-webkit-scrollbar-track { background: transparent; }
+  .trail-shell.desktop-trail::-webkit-scrollbar-thumb { background: var(--c-text-muted); border-radius: 3px; }
+  .trail-shell.desktop-trail .trail-svg {
+    width: 1080px;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1200 / 470;
+  }
+  .trail-shell.desktop-trail .pin .pin-hit { r: 32px; }
+  /* label de-collision is now handled generally in map-route.js
+     (computeLabelLayout flips crowded labels above/below) -- no per-index hack. */
+
+  .progress-strip { font-size: 0.64rem; gap: var(--sp-2); padding: 11px 14px; letter-spacing: 0.08em; }
+  /* mobile route cards: let the status pill wrap below the name on very narrow
+     screens (320px) so it never clips/overflows; medallion stays on row 1 */
+  .mobile-route .mpin { flex-wrap: wrap; row-gap: 4px; padding: 10px 12px; }
+  .mobile-route .cs-name { flex: 1 1 60%; }
+  .mobile-route .cs-status { margin-left: calc(34px + 14px); letter-spacing: 0.04em; }
+  .field-note { margin: 0 -2px; }
+  .field-note .fn-head { flex-wrap: wrap; padding: 14px var(--sp-3) var(--sp-2); }
+  .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
+  .field-note .fn-body { padding: var(--sp-3) 18px var(--sp-4); }
+  .field-note .blurb::first-letter { font-size: 2.3em; }
+}
+
+/* reduced-motion: snap to end state over the SAME DOM (AtlasMD 1.5 / 6) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .has-anim .route-line { opacity: 0.9 !important; }
+  .has-anim .route-draw { display: none !important; }
+}

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG с нуля</title>
+<style>
+  :root{
+    --bg:#f4f6fa;
+    --panel:#ffffff;
+    --ink:#16202e;
+    --mute:#5f6b7c;
+    --faint:#8d99a9;
+    --line:#d7dee8;
+    --route:#e2231a;       /* primary metro red (learning line) */
+    --route-prog:#9a0f0a;  /* deeper red = progress reveal on the main line */
+    --route-2:#0a66c2;     /* secondary BRANCH blue (data-prep feeder) */
+    --route-2-ink:#084c91;
+    --route-2-soft:#e4eefa;
+    --ring:#16202e;        /* station ring ink */
+    --ok:#1f9d55;
+    --ok-soft:#e6f4ec;
+    --radius:14px;
+    --maxw:1320px;
+    --shadow-soft:0 1px 2px rgba(22,32,46,.06),0 2px 8px rgba(22,32,46,.05);
+    --shadow-lift:0 6px 22px rgba(22,32,46,.12);
+    --dur:.17s;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/28px 100%,
+      var(--bg);
+    color:var(--ink);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+
+  /* ---------- header ---------- */
+  .site-header{
+    position:sticky;top:0;z-index:30;
+    background:rgba(244,246,250,.92);
+    backdrop-filter:saturate(1.1) blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .site-header .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;height:64px;
+  }
+  .brand{display:flex;align-items:center;gap:13px;font-weight:700;letter-spacing:.2px;}
+  /* authentic transit roundel: crisp red ring, white core, faint inner hairline */
+  .brand .roundel{
+    width:34px;height:34px;border-radius:50%;
+    border:6px solid var(--route);background:var(--panel);
+    display:inline-block;flex:none;position:relative;
+    box-shadow:0 1px 2px rgba(22,32,46,.16),inset 0 0 0 1px rgba(255,255,255,.9);
+  }
+  .brand .name{font-size:18px;line-height:1.15;}
+  .brand .name small{display:block;font-size:10.5px;font-weight:700;color:var(--mute);letter-spacing:.16em;text-transform:uppercase;margin-top:1px;}
+
+  .lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--panel);}
+  .lang button{
+    appearance:none;border:0;background:transparent;cursor:pointer;
+    font:inherit;font-weight:700;font-size:13px;letter-spacing:.06em;
+    padding:9px 16px;min-height:40px;color:var(--mute);
+    transition:background .15s ease,color .15s ease;
+  }
+  .lang button.is-active{background:var(--ink);color:#fff;}
+  .lang button:focus-visible{outline:3px solid var(--route-2);outline-offset:2px;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:48px 0 8px;}
+  .hero .tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--route);background:#fff;border:1px solid var(--line);
+    padding:7px 14px;border-radius:999px;box-shadow:var(--shadow-soft);
+  }
+  .hero .tag::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--route);box-shadow:0 0 0 3px rgba(226,35,26,.14);}
+  .hero h1{font-size:clamp(32px,5.4vw,56px);font-weight:800;line-height:1.04;margin:18px 0 12px;letter-spacing:-.6px;}
+  .hero p{font-size:clamp(16px,2vw,20px);color:var(--mute);max-width:62ch;margin:0;}
+
+  /* progress meter -- inset track, line-red fill, tabular percentage */
+  .meter-wrap{margin:30px 0 8px;display:flex;align-items:center;gap:16px;}
+  .meter{
+    flex:1;height:12px;border-radius:999px;
+    background:#e6ebf2;overflow:hidden;
+    border:1px solid var(--line);
+    box-shadow:inset 0 1px 2px rgba(22,32,46,.10);
+  }
+  .meter > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--route),var(--route-prog));transition:width .45s cubic-bezier(.4,0,.2,1);border-radius:999px;box-shadow:0 0 0 1px rgba(226,35,26,.25);}
+  .meter-val{font-weight:800;font-variant-numeric:tabular-nums;min-width:54px;text-align:right;color:var(--ink);}
+  .meter-lbl{font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);white-space:nowrap;}
+
+  /* ---------- legend ---------- */
+  .legend{
+    display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;
+    margin:26px 0 8px;padding:13px 18px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow-soft);
+  }
+  .legend .li{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--mute);font-weight:600;line-height:1;}
+  /* fixed-width optical alignment box for every legend glyph */
+  .legend .gl{display:inline-flex;align-items:center;justify-content:center;width:30px;flex:none;}
+  .legend .swatch{width:26px;height:8px;border-radius:4px;background:var(--route);}
+  .legend .swatch.is-int{background:var(--route-prog);}
+  .legend .dot{width:15px;height:15px;border-radius:50%;border:4px solid var(--ring);background:#fff;box-sizing:border-box;}
+  .legend .dot.is-term{border-color:var(--ok);}
+  /* transfer legend mark = two discs (red + blue) joined by a short bar */
+  .legend .xfer{display:inline-flex;align-items:center;}
+  .legend .xfer i{width:14px;height:14px;border-radius:50%;background:#fff;display:inline-block;box-sizing:border-box;}
+  .legend .xfer i.a{border:4px solid var(--route);}
+  .legend .xfer i.b{border:4px solid var(--route-2);margin-left:-3px;}
+
+  /* ---------- map ---------- */
+  .map{
+    margin:18px 0 8px;padding:22px 26px 26px;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow-soft);
+  }
+  .map svg{display:block;width:100%;height:auto;overflow:visible;}
+  .metroline{fill:none;stroke:var(--route);stroke-width:11;stroke-linejoin:round;stroke-linecap:round;}
+  .metroline.shadow{stroke:#cdd4df;stroke-width:18;}
+  .metroline.prog{stroke:var(--route-prog);stroke-width:11;transition:stroke-dashoffset .55s cubic-bezier(.4,0,.2,1);}
+  /* secondary feeder branch (the transfer line) -- a DIFFERENT colour */
+  .branchline{fill:none;stroke:var(--route-2);stroke-width:11;stroke-linejoin:round;stroke-linecap:round;}
+  .branchline.shadow{stroke:#cdd4df;stroke-width:18;}
+
+  .station{cursor:pointer;}
+  /* connector tick from the line to the label */
+  .st-tick{stroke:#b6bfcc;stroke-width:2.5;stroke-linecap:round;}
+  /* plain station = a clean ring sitting exactly on the stroke */
+  .station .ring{
+    fill:#fff;stroke:var(--ring);stroke-width:5;
+    transition:stroke .18s ease, fill .18s ease, r .18s ease;
+    transform-box:fill-box;transform-origin:center;
+  }
+  .station.term .ring{stroke:var(--ok);}
+  .station.start .ring{stroke:var(--route);}
+  .station.is-open .ring{fill:var(--route);stroke:var(--route);}
+  .station.term.is-open .ring{fill:var(--ok);stroke:var(--ok);}
+  .station.start.is-open .ring{fill:var(--route);stroke:var(--route);}
+  .station:hover .ring{stroke-width:6;}
+  .station:focus-visible{outline:none;}
+  .station:focus-visible .ring{stroke:var(--route-2);stroke-width:6;}
+
+  /* ---- interchange = classic "linked ticks" transfer symbol ----
+     two station discs (red main line + blue branch) joined by a short black
+     connector bar, sitting EXACTLY where the two lines meet. No stray ring. */
+  .xfer-bar{stroke:var(--ring);stroke-width:7;stroke-linecap:round;}
+  .station.interchange .ring{stroke-width:5;}            /* red disc on the main line */
+  .station.interchange .ring-2{                          /* blue disc on the branch */
+    fill:#fff;stroke:var(--route-2);stroke-width:5;
+    transition:stroke .18s ease, fill .18s ease;
+    transform-box:fill-box;transform-origin:center;
+  }
+  .station.interchange.is-open .ring-2{fill:var(--route-2);stroke:var(--route-2);}
+
+  .station.is-open .ring{animation:stationPulse 1.9s ease-in-out infinite;}
+  .station.interchange.is-open .ring,
+  .station.interchange.is-open .ring-2{animation:stationPulse 1.9s ease-in-out infinite;}
+  @keyframes stationPulse{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.14);}
+  }
+  /* ---- chapter numbering: ONE consistent convention ----
+     a small white numeral plate sitting on the dot, opposite the label side,
+     so the numeral is never hidden behind the line. */
+  .st-numbox{fill:#fff;stroke:var(--line);stroke-width:1.5;}
+  .station.term .st-numbox{stroke:var(--ok);}
+  .st-num{font:800 12px/1 "Segoe UI",Arial,sans-serif;fill:var(--mute);text-anchor:middle;dominant-baseline:central;pointer-events:none;}
+  .station.is-open .st-num{fill:var(--route);}
+  .station.term.is-open .st-num{fill:var(--ok);}
+  .st-label{font:700 13.5px/1 "Segoe UI",Arial,sans-serif;fill:var(--ink);pointer-events:none;}
+  .station.is-open .st-label{fill:var(--route);}
+  .station.term.is-open .st-label{fill:var(--ok);}
+  .st-pct{font:700 11px/1 "Segoe UI",Arial,sans-serif;fill:var(--faint);pointer-events:none;letter-spacing:.04em;}
+  .br-term{font:700 12.5px/1 "Segoe UI",Arial,sans-serif;letter-spacing:.01em;}
+
+  /* ---------- station cards ----------
+     metro idiom kept (left accent strip + roundel badge) but differentiated:
+     data-prep branch zone = blue, interchange = red+blue double mark,
+     terminal = green. Close X lives INSIDE the head row, right-aligned. */
+  .stops{margin:18px 0 40px;display:grid;gap:14px;}
+  .stop{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top-left-radius:0;border-bottom-left-radius:0;       /* square left */
+    border-top-right-radius:var(--radius);border-bottom-right-radius:var(--radius); /* rounded right */
+    overflow:hidden;
+    box-shadow:var(--shadow-soft);
+    transition:box-shadow var(--dur) ease,border-color var(--dur) ease,transform var(--dur) ease;
+  }
+  /* flat straight accent strip on the left edge, sharp corners */
+  .stop::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+    background:var(--route);border-radius:0;
+    transition:width var(--dur) ease,background var(--dur) ease;
+  }
+  /* data-prep branch zone wears the blue line colour */
+  .stop.branch::before{background:var(--route-2);}
+  .stop.term::before{background:var(--ok);}
+  /* interchange = a two-tone strip (red main / blue branch) */
+  .stop.interchange::before{background:linear-gradient(180deg,var(--route) 0 50%,var(--route-2) 50% 100%);}
+  .stop:hover{border-color:#c4cdda;box-shadow:var(--shadow-lift);transform:translateY(-1px);}
+  .stop.branch:hover{background:linear-gradient(0deg,var(--route-2-soft),var(--route-2-soft)) padding-box;}
+  .stop.term:hover{background:linear-gradient(0deg,var(--ok-soft),var(--ok-soft)) padding-box;}
+  .stop.is-open::before{width:10px;}
+  .stop.is-open{box-shadow:var(--shadow-lift);border-color:#c4cdda;transform:none;}
+  .stop > .head{
+    display:flex;align-items:center;gap:14px;width:100%;
+    background:transparent;border:0;cursor:pointer;font:inherit;text-align:left;
+    padding:14px 16px 14px 22px;color:inherit;min-height:44px;
+  }
+  .stop > .head:focus-visible{outline:3px solid var(--route-2);outline-offset:-3px;border-radius:0 var(--radius) var(--radius) 0;}
+  .stop .badge{
+    flex:none;width:44px;height:44px;border-radius:50%;
+    border:4px solid var(--route);background:#fff;color:var(--ink);
+    display:grid;place-items:center;font-weight:800;font-size:15px;line-height:1;
+    position:relative;
+    transition:background var(--dur) ease,color var(--dur) ease,border-color var(--dur) ease;
+  }
+  .stop.branch .badge{border-color:var(--route-2);}
+  .stop.term .badge{border-color:var(--ok);}
+  .stop.is-open .badge{background:var(--route);border-color:var(--route);color:#fff;}
+  .stop.branch.is-open .badge{background:var(--route-2);border-color:var(--route-2);}
+  .stop.term.is-open .badge{background:var(--ok);border-color:var(--ok);}
+  /* interchange card badge: small red+blue double-ring mark */
+  .stop.interchange .badge{border-color:var(--route);}
+  .stop.interchange .badge::after{
+    content:"";position:absolute;right:-6px;bottom:-4px;
+    width:16px;height:16px;border-radius:50%;
+    border:4px solid var(--route-2);background:#fff;box-sizing:border-box;
+    transition:background var(--dur) ease;
+  }
+  .stop.interchange.is-open .badge{background:var(--route);border-color:var(--route);color:#fff;}
+  .stop.interchange.is-open .badge::after{background:var(--route-2);}
+  .stop .badge .pct{font-size:12px;}
+  .stop .ttl{flex:1;min-width:0;}
+  .stop .ttl b{display:block;font-size:17px;line-height:1.25;}
+  .stop .ttl span{font-size:12px;color:var(--faint);font-weight:700;letter-spacing:.04em;}
+  /* close control (X) integrated into the head row, right-aligned roundel */
+  .stop .close{
+    flex:none;margin-left:8px;
+    width:32px;height:32px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel);color:var(--mute);cursor:pointer;
+    display:none;place-items:center;padding:0;line-height:1;
+    transition:background var(--dur) ease,color var(--dur) ease,border-color var(--dur) ease;
+  }
+  .stop.is-open .head .close{display:grid;}
+  .stop .close:hover{background:var(--bg);color:var(--ink);border-color:var(--mute);}
+  .stop .close:focus-visible{outline:3px solid var(--route-2);outline-offset:2px;}
+  .stop .close svg{width:14px;height:14px;display:block;}
+  .stop .close svg line{stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
+  .stop .body{
+    display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease;
+  }
+  .stop.is-open .body{grid-template-rows:1fr;}
+  .stop .body > .body-clip{overflow:hidden;min-height:0;}
+  .stop .body-inner{padding:2px 22px 20px 80px;}
+  .stop .blurb{margin:0 0 14px;color:var(--mute);max-width:72ch;}
+  .stop ul.sub{list-style:none;margin:0;padding:0;display:grid;gap:10px;}
+  .stop ul.sub li{position:relative;padding-left:26px;font-size:14.5px;line-height:1.45;}
+  .stop ul.sub li::before{
+    content:"";position:absolute;left:0;top:5px;
+    width:13px;height:13px;border-radius:50%;
+    border:3px solid var(--route);background:#fff;box-sizing:border-box;
+  }
+  .stop.branch ul.sub li::before{border-color:var(--route-2);}
+  .stop.interchange ul.sub li::before{border-color:var(--route-2);}
+  .stop.term ul.sub li::before{border-color:var(--ok);}
+  .stop .example{
+    margin:14px 0 0;padding:10px 14px;border-radius:10px;
+    background:var(--bg);border:1px solid var(--line);
+    font-size:13.5px;color:var(--ink);
+  }
+  .stop .example b{color:var(--route);font-weight:700;letter-spacing:.02em;}
+  .stop.branch .example b,.stop.interchange .example b{color:var(--route-2);}
+  .stop.term .example b{color:var(--ok);}
+
+  /* ---------- footer -- styled as a station sign plate ---------- */
+  .site-footer{border-top:3px solid var(--ink);margin-top:24px;background:var(--panel);box-shadow:0 -1px 2px rgba(22,32,46,.04);}
+  .site-footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding:22px 24px;}
+  .site-footer .links{display:flex;gap:24px;flex-wrap:wrap;}
+  .site-footer a{color:var(--mute);text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid transparent;transition:color var(--dur) ease,border-color var(--dur) ease;}
+  .site-footer a:hover{color:var(--route-2);border-bottom-color:var(--route-2);}
+  .site-footer .fnote{font-size:12px;color:var(--faint);letter-spacing:.02em;}
+
+  .desktop-only{display:block;}
+  .mobile-only{display:none;}
+
+  @media (max-width:860px){
+    .map.desktop-only{display:none;}
+    .desktop-only{display:none;}
+    .mobile-only{display:block;}
+  }
+  @media (max-width:480px){
+    .wrap{padding:0 16px;}
+    .site-header .wrap{height:58px;}
+    .brand .name{font-size:16px;}
+    .hero{padding:32px 0 4px;}
+    .meter-wrap{flex-wrap:wrap;gap:10px 14px;}
+    .meter{flex-basis:100%;order:3;}
+    .map{padding:14px 12px 16px;}
+    .stop > .head{padding:14px 52px 14px 18px;}
+    .stop .body-inner{padding:2px 18px 18px 18px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <span class="roundel" aria-hidden="true"></span>
+      <span class="name"><span class="js-brand">RAG с нуля</span><small class="js-brand-sub">Линия обучения</small></span>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="ru" class="is-active">RU</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="tag" data-i18n="tag">Маршрут обучения</span>
+    <h1 data-i18n="heroH">RAG с нуля</h1>
+    <p data-i18n="heroP">Пошаговый гайд для новичков: от 0 до 100%. Без подготовки, всё на одной странице.</p>
+
+    <div class="meter-wrap">
+      <span class="meter-lbl" data-i18n="progress">Прогресс</span>
+      <span class="meter" aria-hidden="true"><i id="meterFill"></i></span>
+      <span class="meter-val" id="meterVal">0%</span>
+    </div>
+  </section>
+
+  <section class="legend" aria-label="legend">
+    <span class="li"><span class="gl"><span class="swatch"></span></span><span data-i18n="legRoute">Линия RAG</span></span>
+    <span class="li"><span class="gl"><span class="dot"></span></span><span data-i18n="legStation">Станция = глава</span></span>
+    <span class="li"><span class="gl"><span class="xfer" aria-hidden="true"><i class="a"></i><i class="b"></i></span></span><span data-i18n="legXfer">Пересадка: подготовка данных -> запрос</span></span>
+    <span class="li"><span class="gl"><span class="swatch is-int"></span></span><span data-i18n="legSub">Пройдено</span></span>
+    <span class="li"><span class="gl"><span class="dot is-term"></span></span><span data-i18n="legTerm">Конечная = продакшн</span></span>
+  </section>
+
+  <!-- DESKTOP octolinear transit map (real 45-degree bends) -->
+  <figure class="map desktop-only">
+    <svg id="metro" viewBox="0 0 1400 400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="RAG learning line">
+      <path id="branchShadow" class="branchline shadow" d="" />
+      <path id="branchBase"   class="branchline"        d="" />
+      <path id="lineShadow" class="metroline shadow" d="" />
+      <path id="lineBase"   class="metroline"        d="" />
+      <path id="lineProg"   class="metroline prog"   d="" />
+      <g id="branchStation"></g>
+      <g id="stationLayer"></g>
+    </svg>
+  </figure>
+
+  <!-- MOBILE vertical metro line (built by JS) -->
+  <figure class="map mobile-only">
+    <svg id="metroMobile" viewBox="0 0 320 1180" preserveAspectRatio="xMidYMid meet" role="img" aria-label="RAG learning line">
+      <line class="metroline shadow" x1="44" y1="40" x2="44" y2="1140" />
+      <line class="metroline"        x1="44" y1="40" x2="44" y2="1140" />
+      <line id="lineProgM" class="metroline prog" x1="44" y1="40" x2="44" y2="40" />
+      <g id="stationLayerM"></g>
+    </svg>
+  </figure>
+
+  <!-- expandable station cards (the real interactive content) -->
+  <section class="stops" id="stops" aria-label="stations"></section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="fnote" data-i18n="foot">RAG с нуля. Часть проекта BrewPage Cookbook.</span>
+    <span class="links">
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- content model (RU + EN) ----
+  // each lang entry: [ title, blurb(2-3 sentences), [sub-points...], example ]
+  var STOPS = [
+    {pct:"0%",
+     ru:["С чего начать",
+         "Короткий план маршрута: что вы узнаете и как пользоваться этой страницей. Каждая станция -- это одна глава, от 0% до 100%. Можно читать по порядку или прыгать к нужной теме.",
+         ["Зачем нужен этот гайд и кому он подходит","Как двигаться: от станции 0% к 100%","Никакой подготовки не требуется -- хватит любопытства","Кликните станцию на схеме, чтобы открыть главу"],
+         "Пример: нажмите на красную точку 0% выше -- откроется эта самая глава."],
+     en:["Where to start",
+         "A short route plan: what you will learn and how to use this page. Each station is one chapter, from 0% to 100%. Read in order or jump to the topic you need.",
+         ["Why this guide exists and who it is for","How to move: from station 0% to 100%","No prerequisites -- curiosity is enough","Click a station on the map to open its chapter"],
+         "Example: tap the red 0% dot above -- it opens this very chapter."]},
+
+    {pct:"9%",
+     ru:["Что такое RAG",
+         "RAG (Retrieval-Augmented Generation) -- это поиск нужных фрагментов плюс ответ модели на их основе. Сначала система находит подходящий текст, потом модель отвечает, опираясь на него. Так ответ держится на ваших данных, а не только на памяти модели.",
+         ["Retrieval: находим релевантный текст в базе","Augmented: добавляем найденное в запрос","Generation: модель пишет ответ по контексту","Почему это надёжнее обычного промпта"],
+         "Пример: вопрос про вашу инструкцию -> система достаёт нужный абзац -> модель отвечает по нему."],
+     en:["What RAG is",
+         "RAG (Retrieval-Augmented Generation) means retrieving the right fragments and letting the model answer from them. First the system finds matching text, then the model answers grounded in it. The answer rests on your data, not only on the model memory.",
+         ["Retrieval: find relevant text in a base","Augmented: add the find into the query","Generation: model writes from the context","Why it beats a plain prompt"],
+         "Example: a question about your manual -> the system pulls the right paragraph -> the model answers from it."]},
+
+    {pct:"18%",
+     ru:["Зачем он нужен",
+         "RAG решает главную боль: модель знает только то, что было в обучении. С ним можно подключить свежие и приватные данные без дорогого дообучения. Бонус -- меньше выдумок и есть ссылка на источник.",
+         ["Свежие и приватные данные без дообучения","Меньше галлюцинаций, есть ссылка на источник","Дешевле, чем переобучать модель","Данные меняются -- ответы обновляются сами"],
+         "Пример: внутренняя база компании меняется каждый день -- RAG отвечает по последней версии."],
+     en:["Why you need it",
+         "RAG fixes the core pain: a model only knows its training data. It lets you plug in fresh and private data without expensive fine-tuning. Bonus -- fewer made-up facts and a link to the source.",
+         ["Fresh and private data without fine-tuning","Fewer hallucinations, a real source link","Cheaper than retraining the model","Data changes -> answers update by themselves"],
+         "Example: a company knowledge base changes daily -- RAG answers from the latest version."]},
+
+    {pct:"27%",
+     ru:["Как работает поиск по документам",
+         "Запрос превращается в поиск по вашей базе знаний, а не в догадку. Система сравнивает вопрос с кусками текста и возвращает самые близкие. Главный выбор -- искать по точным словам или по смыслу.",
+         ["Из вопроса -- к релевантным отрывкам","Точное совпадение слов против поиска по смыслу","Что попадает в выдачу и в каком порядке","Несколько отрывков лучше одного"],
+         "Пример: запрос 'как вернуть товар' находит абзац про возврат, даже без слова 'товар'."],
+     en:["How document retrieval works",
+         "A query becomes a search over your knowledge base, not a guess. The system compares the question with text pieces and returns the closest. The key choice is exact-word vs meaning search.",
+         ["From question to relevant passages","Keyword match vs meaning search","What ends up in results and in what order","Several passages beat a single one"],
+         "Example: 'how to return an item' finds the refund paragraph even without the word 'item'."]},
+
+    {pct:"36%",
+     ru:["Разбиваем текст на чанки",
+         "Длинные документы режем на небольшие куски (чанки), удобные для поиска. Так в ответ попадает только нужный фрагмент, а не вся страница. Размер и перекрытие чанков сильно влияют на качество.",
+         ["Зачем дробить: окно контекста ограничено","Размер чанка: не слишком большой и не мелкий","Перекрытие, чтобы не терять смысл на стыках","Сохраняем структуру: заголовки и абзацы"],
+         "Пример: статья на 10 страниц -> 40 чанков по 3-4 абзаца с лёгким перекрытием."],
+     en:["Splitting text into chunks",
+         "Long documents are cut into small pieces (chunks) that are easy to search. Then only the needed fragment lands in the answer, not the whole page. Chunk size and overlap strongly affect quality.",
+         ["Why split: the context window is limited","Chunk size: not too big, not too tiny","Overlap so meaning is not lost at the seams","Keep structure: headings and paragraphs"],
+         "Example: a 10-page article -> 40 chunks of 3-4 paragraphs with light overlap."]},
+
+    {pct:"45%",
+     ru:["Эмбеддинги: текст в векторы",
+         "Каждый чанк превращается в вектор -- длинный список чисел, где близость означает похожий смысл. Так компьютер сравнивает не буквы, а значение. Модель эмбеддингов выбирают под язык и задачу.",
+         ["Что такое вектор простыми словами","Похожий смысл -> близкие векторы","Один вектор и на вопрос, и на чанк","Выбор модели эмбеддингов под ваш язык"],
+         "Пример: 'кот' и 'котёнок' дают близкие векторы, 'кот' и 'банк' -- далёкие."],
+     en:["Embeddings: text to vectors",
+         "Each chunk becomes a vector -- a long list of numbers where closeness means similar meaning. So the computer compares meaning, not letters. The embedding model is chosen for the language and task.",
+         ["What a vector is, in plain words","Similar meaning -> nearby vectors","One vector for the question and the chunk alike","Choosing an embedding model for your language"],
+         "Example: 'cat' and 'kitten' give nearby vectors, 'cat' and 'bank' give far ones."]},
+
+    {pct:"55%",
+     ru:["Векторная база и поиск",
+         "Векторы складываем в специальную базу и быстро находим ближайшие к запросу. Это и есть момент 'retrieval'. Метрика близости и число top-k задают, что вернётся.",
+         ["Зачем нужна векторная база, а не обычная","Поиск ближайших соседей (top-k)","Метрика близости: косинус и другие","Скорость на больших объёмах данных"],
+         "Пример: top-k = 4 -- берём четыре самых близких чанка к вопросу."],
+     en:["Vector store and search",
+         "Vectors go into a dedicated store, and we quickly fetch the nearest to the query. This is the retrieval moment. The distance metric and top-k decide what comes back.",
+         ["Why a vector store, not a plain database","Nearest-neighbour search (top-k)","Distance metric: cosine and others","Speed at large data volumes"],
+         "Example: top-k = 4 -- take the four chunks closest to the question."]},
+
+    {pct:"64%",
+     ru:["Собираем контекст для модели",
+         "Найденные куски аккуратно складываем в промпт модели вместе с вопросом. Хороший шаблон отделяет контекст от инструкции и просит отвечать только по нему. Тут же добавляем ссылки на источники.",
+         ["Шаблон промпта: контекст + вопрос + правила","Сколько отрывков добавлять, чтобы влезло","Просим отвечать только по контексту","Ставим ссылки на источники прямо в промпт"],
+         "Пример: 'Ответь по тексту ниже. Если ответа нет -- скажи об этом. Текст: ...'."],
+     en:["Assembling context for the model",
+         "The retrieved pieces are placed neatly into the model prompt together with the question. A good template separates context from instruction and asks to answer only from it. Source links go in here too.",
+         ["Prompt template: context + question + rules","How many passages fit in the window","Ask to answer strictly from the context","Put source links right into the prompt"],
+         "Example: 'Answer from the text below. If there is no answer, say so. Text: ...'."]},
+
+    {pct:"73%",
+     ru:["Генерация ответа",
+         "Модель пишет ответ, опираясь на переданный контекст, а не на догадки. Хороший ответ цитирует источник и честно признаётся, когда данных не хватает. Это снижает выдумки до минимума.",
+         ["Ответ строго по контексту, без фантазий","Цитаты и ссылки прямо в ответе","Что делать, если ответа нет в данных","Короткий ответ часто лучше длинного"],
+         "Пример: 'Возврат -- в течение 14 дней (см. источник 2)'. Нет данных -> 'не нашёл в документах'."],
+     en:["Generating the answer",
+         "The model writes an answer grounded in the supplied context, not in guesses. A good answer cites the source and admits honestly when data is missing. This cuts made-up facts to a minimum.",
+         ["Answer strictly from context, no invention","Quotes and links right in the reply","What to do when data has no answer","A short answer often beats a long one"],
+         "Example: 'Returns within 14 days (see source 2).' No data -> 'not found in the documents'."]},
+
+    {pct:"82%",
+     ru:["Оценка качества",
+         "Проверяем, что система отвечает точно и по делу, а не просто красиво. Смотрим отдельно на поиск (нашли ли нужное) и на ответ (верно ли по найденному). Маленький золотой набор вопросов экономит много времени.",
+         ["Релевантность поиска: нашли ли нужный чанк","Точность ответа: верно ли по контексту","Золотой набор вопросов и ответов","Ловим галлюцинации и пустые ответы"],
+         "Пример: 20 вопросов с эталонными ответами -> прогон после каждого изменения."],
+     en:["Measuring quality",
+         "Check that the system answers accurately and to the point, not just nicely. Look separately at retrieval (did it find the right thing) and the answer (is it correct from the find). A small golden set of questions saves a lot of time.",
+         ["Retrieval relevance: was the right chunk found","Answer accuracy: correct from the context","A golden set of questions and answers","Catching hallucinations and empty answers"],
+         "Example: 20 questions with reference answers -> rerun after every change."]},
+
+    {pct:"100%",
+     ru:["Вывод в продакшн",
+         "Запускаем рабочий RAG-сервис и держим его в форме. Данные обновляются, поэтому нужна переиндексация и контроль скорости и стоимости. Логи и обратная связь показывают, где система ошибается.",
+         ["Обновление и переиндексация данных по расписанию","Кеш, скорость ответа и стоимость запроса","Логи, мониторинг и сбор обратной связи","План отката, если новая версия хуже"],
+         "Пример: ночью переиндексируем новые документы, утром сервис отвечает по свежим данным."],
+     en:["Going to production",
+         "Ship a working RAG service and keep it healthy. Data keeps changing, so you need re-indexing plus control of speed and cost. Logs and feedback show where the system errs.",
+         ["Scheduled data update and re-indexing","Cache, response speed and cost per query","Logs, monitoring and feedback collection","A rollback plan if a new version is worse"],
+         "Example: re-index new documents at night, the service answers from fresh data by morning."]}
+  ];
+
+  var UI = {
+    ru:{brand:"RAG с нуля",brandSub:"Линия обучения",tag:"Маршрут обучения",heroH:"RAG с нуля",
+        heroP:"Пошаговый гайд для новичков: от 0 до 100%. Без подготовки, всё на одной странице.",
+        progress:"Прогресс",legRoute:"Линия RAG",legStation:"Станция = глава",legXfer:"Пересадка: подготовка данных -> запрос",legSub:"Пройдено",legTerm:"Конечная = продакшн",
+        brTerm:"Подготовка данных",xferTip:"Пересадка",
+        foot:"RAG с нуля. Часть проекта BrewPage Cookbook.",exLabel:"Пример",close:"Закрыть"},
+    en:{brand:"RAG from zero",brandSub:"Learning line",tag:"Learning route",heroH:"RAG from zero",
+        heroP:"A step-by-step guide for beginners: from 0 to 100%. No prerequisites, all on one page.",
+        progress:"Progress",legRoute:"RAG line",legStation:"Station = chapter",legXfer:"Transfer: data prep -> query",legSub:"Done",legTerm:"Terminus = production",
+        brTerm:"Data prep",xferTip:"Transfer",
+        foot:"RAG from zero. Part of the BrewPage Cookbook.",exLabel:"Example",close:"Close"}
+  };
+
+  var lang = "ru";
+  var openIndex = -1;
+  var N = STOPS.length; // 11
+
+  function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+  function el(tag,attrs,parent){
+    var e=document.createElementNS("http://www.w3.org/2000/svg",tag);
+    if(attrs)for(var k in attrs)e.setAttribute(k,attrs[k]);
+    if(parent)parent.appendChild(e);
+    return e;
+  }
+
+  function prefersReduced(){
+    return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // ---- desktop: STRICT octolinear metro line (only 0 / 45 / 90 degree segments) ----
+  // GEOMETRY CONVENTION:
+  //   * Two y-lanes: TOP and BOT, GAP apart. Stations sit on a vertex of the polyline,
+  //     so every dot lands EXACTLY on the stroke.
+  //   * Same-lane neighbours are joined by a HORIZONTAL run (pitch HPITCH).
+  //   * Lane changes are a PERFECT 45-degree diagonal: x advances by exactly GAP so
+  //     dx === dy. No arbitrary slopes -- only 0, 45 or 90 degrees ever appear.
+  //   * Every bend is rounded with ONE uniform corner radius (CORNER) via quadratic
+  //     Beziers, giving the consistent metro-diagram corner look.
+  var TOP=140, BOT=270, GAP=BOT-TOP;     // GAP=130 -> diagonal dx must equal 130
+  var HPITCH=120;                        // horizontal run between same-lane stations
+  var CORNER=22;                         // uniform corner radius at every bend
+  var XSTART=70;
+  var LANE=[0,0,1,1,1,0,0,0,1,1,0];      // T/B profile; 11 vertices, octolinear S
+  var XFER=6;                            // interchange = "Vector store" (branch meets route)
+  // walk left-to-right: same lane => +HPITCH (horizontal); lane change => +GAP (45 diag)
+  var DPTS=[], cx=XSTART;
+  for(var di=0; di<N; di++){
+    if(di>0) cx += (LANE[di]!==LANE[di-1]) ? GAP : HPITCH;
+    DPTS.push({x:cx, y:LANE[di]?BOT:TOP});
+  }
+
+  // ---- same-lane label stagger -------------------------------------------------
+  // Long same-lane neighbours (HPITCH=120 apart) can have label blocks wide enough
+  // to touch. To guarantee a clear gap WITHOUT widening the pitch (which would push
+  // the line past the 1400 viewBox) or breaking octolinear geometry, alternate
+  // same-lane labels drop one band further from the line: within each same-lane run
+  // the 2nd, 4th, ... station is staggered. Adjacent same-lane neighbours therefore
+  // always sit on DIFFERENT vertical bands, so their blocks never collide.
+  var STAGGER=40, STAG=[], runPos=0;
+  for(var si=0; si<N; si++){
+    if(si>0 && LANE[si]===LANE[si-1]) runPos++; else runPos=0;
+    STAG[si]=(runPos%2===1);
+  }
+  // Bottom-lane run st2-st3-st4 shares its band with the blue feeder branch below it.
+  // The default phase staggers st3 DOWN, dropping its label into the branch terminus
+  // zone (collision). Invert the phase for THIS run only: st3 sits at the near band,
+  // st2 + st4 stagger down -- so st3's wide 2-line label clears the branch entirely.
+  STAG[2]=!STAG[2]; STAG[3]=!STAG[3]; STAG[4]=!STAG[4];
+
+  // ---- secondary feeder BRANCH (blue) merging into the interchange ----
+  // "data prep" route (split -> chunk -> embed) feeding the vector store. Strictly
+  // octolinear: a horizontal feeder run, a 45-degree climb, then a vertical rise INTO
+  // the node from below -- a merge angle clearly distinct from the red main line.
+  var XP=DPTS[XFER];                      // merge node = interchange station
+  // Terminus seated FAR lower-left (well below the bottom lane + clear of the st2/st4
+  // staggered labels) so the feeder run and the "data prep" label never touch any
+  // station block. Strictly octolinear: horizontal feeder -> 45 climb (dx=dy=156) ->
+  // vertical rise into the node. Label is anchored to the LEFT of the terminus disc.
+  var BRANCH=[
+    {x:XP.x-600, y:XP.y+246},            // 0: branch terminus (lower-left), disc + label -> (210,386)
+    {x:XP.x-156, y:XP.y+246},            // 1: horizontal feeder run right -> (654,386)
+    {x:XP.x,     y:XP.y+90},             // 2: perfect 45 climb (dx=156, dy=-156) -> (810,230)
+    {x:XP.x,     y:XP.y}                  // 3: clean vertical rise into the interchange -> (810,140)
+  ];
+
+  // --- uniform rounded-corner path builder (works for any octolinear polyline) ---
+  // Trims CORNER off each side of an interior vertex and joins with a quadratic Bezier,
+  // so every corner shares the SAME radius. Clamps the trim to half the shorter segment.
+  function roundedPath(pts, radius){
+    if(pts.length<2) return "";
+    function len(a,b){var dx=b.x-a.x,dy=b.y-a.y;return Math.sqrt(dx*dx+dy*dy);}
+    function lerp(a,b,t){return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t};}
+    var d="M"+pts[0].x+","+pts[0].y;
+    for(var i=1;i<pts.length-1;i++){
+      var p0=pts[i-1], p1=pts[i], p2=pts[i+1];
+      var r=Math.min(radius, len(p0,p1)/2, len(p1,p2)/2);
+      var a=lerp(p1,p0, r/len(p0,p1));   // point on incoming segment, r before the bend
+      var b=lerp(p1,p2, r/len(p1,p2));   // point on outgoing segment, r after the bend
+      d+=" L"+a.x+","+a.y+" Q"+p1.x+","+p1.y+" "+b.x+","+b.y;
+    }
+    var last=pts[pts.length-1];
+    d+=" L"+last.x+","+last.y;
+    return d;
+  }
+  function branchPathD(){ return roundedPath(BRANCH, CORNER); }
+
+  // cumulative arc-length up to each station vertex (straight-line metric is exact
+  // enough for the dash-reveal; rounded corners only shave a couple of px per bend).
+  var DSEG=[], DCUM=[0];
+  for(var di2=0; di2<N-1; di2++){
+    var dx=DPTS[di2+1].x-DPTS[di2].x, dy=DPTS[di2+1].y-DPTS[di2].y;
+    var L=Math.sqrt(dx*dx+dy*dy);
+    DSEG.push(L); DCUM.push(DCUM[di2]+L);
+  }
+  var DTOTAL=DCUM[N-1];
+
+  function desktopPathD(){ return roundedPath(DPTS, CORNER); }
+
+  var DREVEAL=DCUM.slice();   // rounded-path cumulative lengths (filled after path is laid)
+
+  function buildDesktop(){
+    // draw the line itself through every station (uniform rounded corners)
+    var d=desktopPathD();
+    document.getElementById("lineShadow").setAttribute("d",d);
+    document.getElementById("lineBase").setAttribute("d",d);
+    var prog=document.getElementById("lineProg");
+    prog.setAttribute("d",d);
+    // measure the ACTUAL rounded length and scale the per-station reveal marks to it,
+    // so the dash-reveal stops exactly at each station even though corners are rounded.
+    var realLen=DTOTAL;
+    try{ realLen=prog.getTotalLength(); }catch(e){}
+    var scale=realLen/DTOTAL;
+    for(var ri=0; ri<DCUM.length; ri++) DREVEAL[ri]=DCUM[ri]*scale;
+    prog.setAttribute("stroke-dasharray",realLen);
+    prog.setAttribute("stroke-dashoffset",realLen);
+
+    // secondary branch (blue feeder) merging into the interchange node
+    var bd=branchPathD();
+    document.getElementById("branchShadow").setAttribute("d",bd);
+    document.getElementById("branchBase").setAttribute("d",bd);
+    // branch terminus disc at the start of the branch + its label (to the LEFT, clear space)
+    var blayer=document.getElementById("branchStation");
+    blayer.innerHTML="";
+    var b0=BRANCH[0];
+    el("circle",{cx:b0.x,cy:b0.y,r:9,fill:"#fff",stroke:"var(--route-2)","stroke-width":5},blayer);
+    var bt=el("text",{"class":"st-label br-term",x:b0.x-16,y:b0.y+4,"text-anchor":"end",fill:"var(--route-2-ink)"},blayer);
+    bt.setAttribute("data-br","term"); bt.textContent="";
+
+    var layer=document.getElementById("stationLayer");
+    layer.innerHTML="";
+    for(var i=0;i<N;i++){
+      var p=DPTS[i], x=p.x, y=p.y;
+      var top=(LANE[i]===0);             // top-lane labels go ABOVE, bottom-lane BELOW
+      var g=el("g",{"class":"station","data-i":i,tabindex:"0",role:"button","aria-pressed":"false"},layer);
+      if(i===0)g.classList.add("start");
+      if(i===N-1)g.classList.add("term");
+      if(i===XFER)g.classList.add("interchange");
+
+      // staggered same-lane labels drop one band further from the line
+      var stag = STAG[i] ? STAGGER : 0;
+      // tick from the stroke out to the label (extended to reach a staggered label)
+      var tickEnd = top ? y-30-stag : y+30+stag;
+      el("line",{"class":"st-tick",x1:x,y1:top?y-16:y+16,x2:x,y2:tickEnd},g);
+
+      // interchange = classic linked-ticks transfer mark: red main-line disc + blue
+      // branch disc joined by a short connector bar, sitting where the lines meet.
+      // The branch rises vertically into the node, so the blue disc sits straight below.
+      if(i===XFER){
+        el("line",{"class":"xfer-bar",x1:x,y1:y,x2:x,y2:y+26},g);
+        el("circle",{"class":"ring-2",cx:x,cy:y+26,r:9},g);
+      }
+      el("circle",{"class":"ring",cx:x,cy:y,r:(i===XFER?11:12)},g);
+
+      // ---- chapter number: ONE convention -- a small white numeral plate on the dot,
+      // placed on the SIDE OPPOSITE the label so it never hides behind the line. ----
+      // The interchange has a branch descending below it, so its plate goes to the LEFT
+      // to clear both the upper label and the lower branch/transfer disc.
+      var numX = x, numY = top ? y+24 : y-24;
+      if(i===XFER){ numX = x+24; numY = y-22; } // up-right of the node: off the line + branch
+      el("rect",{"class":"st-numbox",x:numX-9,y:numY-9,width:18,height:18,rx:5},g);
+      var num=el("text",{"class":"st-num",x:numX,y:numY},g);
+      num.textContent=String(i+1);
+
+      // label: full title, wrapped to <=2 lines, stacked clear of the line + dots
+      var labY = top ? y-40-stag : y+40+stag;
+      var lab=el("text",{"class":"st-label",x:x,y:labY,"text-anchor":"middle"},g);
+      g.__lab=lab; g.__pct=null; g.__labX=x; g.__labTop=top; g.__multiline=true;
+      bindStation(g,i);
+    }
+    refreshLabels();
+  }
+
+  // ---- mobile: vertical line ----
+  var MTOP=60, MBOTTOM=1120, MX=44;
+  function mobileY(i){ return MTOP+(MBOTTOM-MTOP)*(i/(N-1)); }
+
+  function buildMobile(){
+    var layer=document.getElementById("stationLayerM");
+    layer.innerHTML="";
+    // the interchange's blue feeder branch is drawn BEHIND the stations so it attaches
+    // cleanly to the trunk: a short octolinear stub (horizontal in, 45 climb up into node).
+    var yx=mobileY(XFER);
+    // strictly octolinear feeder: a short horizontal run then a single 45 climb straight
+    // INTO the node (no vertical-on-trunk overlap). Kept BEHIND stations, attaches cleanly.
+    var feeder=[
+      {x:14, y:yx+48},                     // branch terminus (lower-left, clear of edge)
+      {x:14, y:yx+30},                     // short vertical run up
+      {x:MX, y:yx}                          // perfect 45 climb (dx=30,dy=-30) into the node
+    ];
+    el("path",{"class":"branchline shadow",d:roundedPath(feeder,12),fill:"none"},layer);
+    el("path",{"class":"branchline",d:roundedPath(feeder,12),fill:"none"},layer);
+    // branch terminus disc + label (data prep): label seated to the RIGHT of the disc so
+    // the full "Подготовка данных" string never touches the left SVG edge / mask fade.
+    var f0=feeder[0];
+    el("circle",{cx:f0.x,cy:f0.y,r:8,fill:"#fff",stroke:"var(--route-2)","stroke-width":5},layer);
+    var bm=el("text",{"class":"st-label br-term",x:f0.x+18,y:f0.y+4,"text-anchor":"start",fill:"var(--route-2-ink)"},layer);
+    bm.setAttribute("data-br","mterm"); bm.textContent="";
+
+    for(var i=0;i<N;i++){
+      var y=mobileY(i);
+      var g=el("g",{"class":"station","data-i":i,tabindex:"0",role:"button","aria-pressed":"false"},layer);
+      if(i===0)g.classList.add("start");
+      if(i===N-1)g.classList.add("term");
+      if(i===XFER){
+        g.classList.add("interchange");
+        // linked-ticks transfer mark: blue branch disc sits down-LEFT on the rising
+        // 45-degree feeder (not on the red trunk), joined by a short connector bar
+        el("line",{"class":"xfer-bar",x1:MX,y1:y,x2:MX-16,y2:y+16},g);
+        el("circle",{"class":"ring-2",cx:MX-16,cy:y+16,r:8},g);
+      }
+      el("circle",{"class":"ring",cx:MX,cy:y,r:(i===XFER?12:13)},g);
+      // chapter number: white numeral plate to the LEFT of the trunk, consistent for all
+      var numXm=MX-26;
+      el("rect",{"class":"st-numbox",x:numXm-9,y:y-9,width:18,height:18,rx:5},g);
+      var num=el("text",{"class":"st-num",x:numXm,y:y},g);
+      num.textContent=String(i+1);
+      // title + percent in the right column (full text, wrapped to <=2 lines, never truncated)
+      var lab=el("text",{"class":"st-label",x:78,y:y-2,"text-anchor":"start"},g);
+      var pct=el("text",{"class":"st-pct",x:78,y:y+30,"text-anchor":"start"},g);
+      g.__lab=lab; g.__pct=pct; g.__labX=78; g.__multiline=true; g.__labTop=true; g.__left=true;
+      bindStation(g,i);
+    }
+    refreshLabels();
+  }
+
+  function bindStation(g,i){
+    g.addEventListener("click",function(){ toggleStop(i,true); });
+    g.addEventListener("keydown",function(ev){
+      if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();toggleStop(i,true);}
+    });
+  }
+
+  // data-prep branch zone = the chapters the blue feeder represents (chunks, embeddings).
+  // The interchange (XFER) is marked separately with the red+blue double mark.
+  var BRANCHZONE={4:true,5:true};
+  function stopClasses(i){
+    var cls="stop";
+    if(i===0)cls+=" start";
+    if(i===N-1)cls+=" term";
+    if(i===XFER)cls+=" interchange";
+    else if(BRANCHZONE[i])cls+=" branch";
+    return cls;
+  }
+
+  // ---- station cards ----
+  function buildStops(){
+    var host=document.getElementById("stops");
+    host.innerHTML="";
+    for(var i=0;i<N;i++){
+      var s=STOPS[i];
+      var c=s[lang];
+      var art=document.createElement("article");
+      art.className=stopClasses(i);
+      art.id="stop-"+i;
+
+      var badgeInner=(i===0||i===N-1)?'<span class="pct">'+esc(s.pct)+'</span>':String(i);
+
+      // close (X) lives INSIDE the head row, right-aligned, so it belongs to the card head
+      art.innerHTML=
+        '<button class="head" type="button" aria-expanded="false" aria-controls="body-'+i+'">'+
+          '<span class="badge" aria-hidden="true">'+badgeInner+'</span>'+
+          '<span class="ttl"><b class="js-title">'+esc(c[0])+'</b><span class="js-pct">'+esc(s.pct)+'</span></span>'+
+          '<span class="close" role="button" tabindex="-1" aria-hidden="true" aria-label="'+esc(UI[lang].close)+'" title="'+esc(UI[lang].close)+'">'+
+            '<svg viewBox="0 0 14 14" aria-hidden="true"><line x1="3" y1="3" x2="11" y2="11"/><line x1="11" y1="3" x2="3" y2="11"/></svg>'+
+          '</span>'+
+        '</button>'+
+        '<div class="body" id="body-'+i+'" role="region"><div class="body-clip"><div class="body-inner">'+
+          '<p class="blurb js-blurb">'+esc(c[1])+'</p>'+
+          '<ul class="sub js-sub">'+c[2].map(function(t){return "<li>"+esc(t)+"</li>";}).join("")+'</ul>'+
+          '<p class="example js-example"><b class="js-ex-label">'+esc(UI[lang].exLabel)+'</b>: <span class="js-ex-text">'+esc(stripEx(c[3]))+'</span></p>'+
+        '</div></div></div>';
+
+      (function(idx){
+        art.querySelector(".head").addEventListener("click",function(){ toggleStop(idx,false); });
+        // close is inside the head; intercept its click so it collapses (not re-toggles)
+        art.querySelector(".close").addEventListener("click",function(ev){ ev.stopPropagation(); if(openIndex===idx){ toggleStop(idx,false); } });
+      })(i);
+      host.appendChild(art);
+    }
+  }
+
+  // example strings are stored with a leading "Primer: "/"Example: " prefix (RU/EN) for
+  // readability; strip that prefix so the styled <b>label</b> is not duplicated.
+  function stripEx(t){
+    return String(t).replace(/^\s*(?:Пример|Example)\s*:\s*/,"");
+  }
+
+  function toggleStop(i,fromMap){
+    var willOpen = (openIndex!==i);
+    setStopOpen(openIndex,false);
+    setStationOpen(openIndex,false);
+    if(willOpen){
+      openIndex=i;
+      setStopOpen(i,true);
+      setStationOpen(i,true);
+      updateMeter(i);
+      if(fromMap){
+        var card=document.getElementById("stop-"+i);
+        if(card)card.scrollIntoView({behavior: prefersReduced()?"auto":"smooth", block:"center"});
+      }
+    }else{
+      openIndex=-1;
+      updateMeter(-1);
+    }
+  }
+
+  function setStopOpen(i,on){
+    if(i<0)return;
+    var art=document.getElementById("stop-"+i);
+    if(!art)return;
+    art.classList.toggle("is-open",on);
+    var head=art.querySelector(".head");
+    if(head)head.setAttribute("aria-expanded",on?"true":"false");
+  }
+
+  function setStationOpen(i,on){
+    if(i<0)return;
+    document.querySelectorAll('.station[data-i="'+i+'"]').forEach(function(g){
+      g.classList.toggle("is-open",on);
+      g.setAttribute("aria-pressed",on?"true":"false");
+    });
+  }
+
+  // ---- progress meter + line fill ----
+  function updateMeter(i){
+    var fill=document.getElementById("meterFill");
+    var val=document.getElementById("meterVal");
+    var pct = (i<0)?0:parseInt(STOPS[i].pct,10);
+    if(isNaN(pct))pct=0;
+    fill.style.width=pct+"%";
+    val.textContent=pct+"%";
+    // desktop progress line: dash-reveal along the rounded polyline up to the open station
+    var prog=document.getElementById("lineProg");
+    if(prog){
+      var total=DREVEAL[N-1];
+      var revealed = (i<0)?0:DREVEAL[i];
+      prog.setAttribute("stroke-dasharray",total);
+      prog.setAttribute("stroke-dashoffset", total-revealed);
+    }
+    // mobile progress line
+    var progM=document.getElementById("lineProgM");
+    if(progM){
+      var y=(i<0)?MTOP:mobileY(i);
+      progM.setAttribute("y2", y);
+    }
+  }
+
+  // ---- labels follow language ----
+  function refreshLabels(){
+    document.querySelectorAll(".station").forEach(function(g){
+      var i=+g.getAttribute("data-i");
+      var c=STOPS[i][lang];
+      var nLines=1;
+      if(g.__lab){
+        if(g.__multiline) nLines=setMultilineLabel(g.__lab,c[0],g.__labX,g.__labTop,g.__left);
+        else g.__lab.textContent=trim(c[0],24);
+      }
+      if(g.__pct){
+        g.__pct.textContent=STOPS[i].pct;
+        // mobile: keep the percent line just under the (1- or 2-line) title
+        if(g.__left){
+          var by=parseFloat(g.__lab.getAttribute("y"))||0;
+          g.__pct.setAttribute("y", by + (nLines>1?32:16));
+        }
+      }
+    });
+    // branch terminus label follows language too (desktop + mobile)
+    document.querySelectorAll('.br-term[data-br="term"],.br-term[data-br="mterm"]').forEach(function(t){
+      t.textContent=UI[lang].brTerm;
+    });
+  }
+  function trim(t,n){return t.length>n? t.slice(0,n-1)+"..." : t;}
+
+  // wrap a FULL title into <=2 balanced lines -- NEVER truncate (a map must show full names).
+  // A single short title stays on one line; longer ones split at the word boundary nearest
+  // the midpoint so the two lines are roughly equal width.
+  var LINE_SOFT=18;         // soft target chars/line; titles over this wrap to two lines
+  function wrap2(t){
+    t=String(t).trim();
+    if(t.length<=LINE_SOFT) return [t];
+    var words=t.split(" ");
+    if(words.length===1) return [t];      // unbreakable single word -> keep whole, no ellipsis
+    // find the split index whose first-line length is closest to half the total
+    var half=t.length/2, best=1, bestDiff=Infinity, run=0;
+    for(var i=0;i<words.length-1;i++){
+      run+=words[i].length+(i>0?1:0);
+      var diff=Math.abs(run-half);
+      if(diff<bestDiff){bestDiff=diff;best=i+1;}
+    }
+    return [words.slice(0,best).join(" "), words.slice(best).join(" ")];
+  }
+  function setMultilineLabel(textEl,title,x,top,left){
+    while(textEl.firstChild)textEl.removeChild(textEl.firstChild);
+    var lines=wrap2(title);
+    // desktop two-line block lifts a touch to clear the stroke + numeral plate;
+    // left-anchored (mobile) flows downward from a fixed baseline, no lift.
+    var dy0 = (!left && lines.length>1) ? (top?-15:0) : 0;
+    for(var k=0;k<lines.length;k++){
+      var ts=el("tspan",{x:x, dy:(k===0?dy0:16)},textEl);
+      ts.textContent=lines[k];
+    }
+    return lines.length;
+  }
+
+  // ---- card text follows language ----
+  function refreshCards(){
+    for(var i=0;i<N;i++){
+      var c=STOPS[i][lang];
+      var art=document.getElementById("stop-"+i);
+      if(!art)continue;
+      art.querySelector(".js-title").textContent=c[0];
+      art.querySelector(".js-blurb").textContent=c[1];
+      var ul=art.querySelector(".js-sub");
+      ul.innerHTML=c[2].map(function(t){return "<li>"+esc(t)+"</li>";}).join("");
+      art.querySelector(".js-ex-label").textContent=UI[lang].exLabel;
+      art.querySelector(".js-ex-text").textContent=stripEx(c[3]);
+      var cl=art.querySelector(".close");
+      if(cl){ cl.setAttribute("aria-label",UI[lang].close); cl.setAttribute("title",UI[lang].close); }
+    }
+  }
+
+  // ---- UI i18n ----
+  function applyUI(){
+    var d=UI[lang];
+    document.querySelectorAll("[data-i18n]").forEach(function(node){
+      var key=node.getAttribute("data-i18n");
+      if(d[key]!=null)node.textContent=d[key];
+    });
+    var b=document.querySelector(".js-brand");
+    if(b)b.textContent=d.brand;
+    var bs=document.querySelector(".js-brand-sub");
+    if(bs)bs.textContent=d.brandSub;
+    document.documentElement.lang=lang;
+    document.title=d.heroH;
+  }
+
+  function setLang(l){
+    if(l===lang)return;
+    lang=l;
+    document.querySelectorAll(".lang button").forEach(function(b){
+      b.classList.toggle("is-active",b.getAttribute("data-lang")===l);
+    });
+    applyUI();
+    refreshLabels();
+    refreshCards();
+  }
+
+  // ---- init ----
+  document.querySelectorAll(".lang button").forEach(function(b){
+    b.addEventListener("click",function(){ setLang(b.getAttribute("data-lang")); });
+  });
+
+  buildDesktop();
+  buildMobile();
+  buildStops();
+  applyUI();
+  updateMeter(-1);
+
+})();
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+/* metro design language: white pill, hairline gray border, ink text, red accent on arrows */
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:#ffffff;color:#16202e;border:1px solid #d7dee8;border-radius:999px;box-shadow:0 4px 16px rgba(22,32,46,0.14);font-family:"Segoe UI",Roboto,Helvetica,Arial,system-ui,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#16202e;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px;color:#5f6b7c;transition:background 0.16s ease,color 0.16s ease}
+#mokup-nav a:hover{background:#f4f6fa;color:#e2231a}
+#mokup-nav a:focus-visible{outline:3px solid #0a66c2;outline-offset:2px}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;color:#16202e;font-size:12px}
+#mokup-nav .mn-num{font-weight:800}
+#mokup-nav .mn-name{color:#8d99a9;margin-left:6px;font-weight:600}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="01-atlas.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">2 / 2</span><span class="mn-name">Metro</span></span>
+  <a href="01-atlas.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="01-atlas.html", NEXT="01-atlas.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

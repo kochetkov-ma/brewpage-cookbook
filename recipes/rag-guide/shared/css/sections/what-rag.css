@@ -1,0 +1,439 @@
+/*
+ * sections/what-rag.css -- section-specific structural CSS for the
+ * "Что такое RAG" pipeline page. Linked ONLY by what-rag.html.
+ *
+ * base.css owns the shared shells (.plate, .breadcrumb, .zoomout/.drill,
+ * .progress-strip, .node, .compass) -- this file adds ONLY what the pipeline
+ * section needs beyond those shells and NEVER forks base.css:
+ *   - the 7-column nodes-grid + the pipeline node-card center layout
+ *     (base .node is the generic block form; the pipeline form is centered)
+ *   - the SVG spine (edge-base / edge-draw one-shot draw-in / edge-prog green)
+ *   - the zoom camera stage collapse (.stage.zoomed .camera) + graticule
+ *   - the inline-grow detail panes + their content blocks (readout / ranklist /
+ *     cards / prompt / budget / answer) + the transform/opacity-only didactic
+ *     animations (embed text->tokens->vector; cosine bars; prompt assembly)
+ *   - the earned-green node extras (check glyph, "вы здесь" tag, .done)
+ *
+ * Color/space/motion come via var(--...) from themes/atlas.css. The only
+ * literal hex used are the AtlasMD-2.1 FROZEN values that have no token (the
+ * dark prompt block + green-surface answer tints + token chip bg) -- these are
+ * section-local, never added to base.css. ASCII only.
+ */
+
+/* ---- pipeline diagram (level 0) --------------------------------------- */
+.pipeline { position: relative; padding: var(--sp-0) 2px 2px; }
+.svg-flow { display: block; width: 100%; height: auto; }
+.edge-base { stroke: var(--c-border); stroke-width: 2; fill: none; }
+/* one-time quiet draw-in of the spine; no traveling marker, no loop */
+.edge-draw {
+  stroke: var(--c-text-muted);
+  stroke-width: 2.4;
+  fill: none;
+  stroke-linecap: round;
+  opacity: 0.55;
+  transition: stroke-dashoffset 1100ms var(--ease-zoom);
+}
+.edge-draw.drawn { stroke-dashoffset: 0; }
+/* proportional green progress spine */
+.edge-prog {
+  stroke: var(--c-progress);
+  stroke-width: 2.6;
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--dur-2) var(--ease-zoom);
+}
+
+.nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: -4px;
+  position: relative;
+  z-index: 2;
+}
+
+/* the pipeline node-card is the centered form of the base .node shell */
+.nodes-grid .node {
+  text-align: center;
+  min-height: 64px;
+  padding: 9px 6px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.nodes-grid .node .idx {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-accent-3);
+}
+.nodes-grid .node .name { margin-top: 0; line-height: 1.22; }
+.nodes-grid .node .hint { margin-top: 0; }
+
+/* earned-green extras (base.css supplies the .visited bg/ring) */
+.nodes-grid .node { position: relative; }
+.nodes-grid .node .here {
+  display: none;
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  font-family: var(--font-ui);
+  font-size: 8px;
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-accent-2);
+}
+.nodes-grid .node.current .here { display: block; }
+.nodes-grid .node.current .idx { color: var(--c-accent-2); }
+.nodes-grid .node.visited .idx { color: var(--c-accent-1); }
+.nodes-grid .node.visited::after {
+  content: "\2713";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: var(--c-progress);
+}
+.nodes-grid.done .node {
+  border-color: var(--c-progress);
+  background: linear-gradient(180deg, var(--c-visited-bg-1), var(--c-visited-bg-2));
+}
+
+/* ---- the camera stage (drilldown-zoom toggles .zoomed on the stage) ---- */
+.stage { position: relative; border-radius: var(--radius-md); }
+.camera {
+  position: relative;
+  transition: transform var(--dur-zoom) var(--ease-zoom);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* when a detail pane is open the level-0 pipeline collapses out of flow so the
+   stage grows to fit the ACTIVE pane (no frozen short height, no clip) */
+.stage.zoomed .camera {
+  position: absolute;
+  inset: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.graticule { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5; }
+
+/* controls row: breadcrumb + zoom-out share a row (NO compass here) */
+.pipeline-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-0) var(--sp-1);
+  margin-bottom: 2px;
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.pipeline-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
+
+/* ---- detail panes (inline-grow zoom levels) --------------------------- */
+.detail {
+  display: none;
+  position: relative;
+  z-index: 5;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(247,239,220,0.6) 0, rgba(232,220,192,0) 75%),
+    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    var(--c-surface);
+  border: 1.5px solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-3) 14px;
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 380ms var(--ease-1), transform 380ms var(--ease-1);
+}
+.detail.show { display: block; opacity: 1; transform: scale(1); }
+.detail h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: 18px;
+  margin: 0 0 2px;
+  color: var(--c-text);
+}
+/* heading is a programmatic focus target; suppress UA ring, keep SR focus */
+.detail h2:focus,
+.detail h2:focus-visible { outline: none; }
+.detail .tag {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-accent-2);
+  margin: 0 0 10px;
+}
+.detail p {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--c-heading);
+  margin: var(--sp-1) 0;
+}
+.detail .note {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  font-style: italic;
+  border-left: var(--bw-2) solid var(--c-border);
+  padding-left: 9px;
+  margin-top: var(--sp-2);
+}
+
+/* inline lens-plus drill button text label (base.css styles .drill chrome) */
+.detail .drill { margin-top: var(--sp-2); border-style: dashed; border-color: var(--c-accent-1); color: var(--c-link); }
+.detail .drill:hover { color: var(--c-link-hover); border-color: var(--c-link-hover); }
+
+/* readouts */
+.readout {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 9px 11px;
+  color: var(--c-text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  box-shadow: var(--shadow-sheen);
+  margin-top: var(--sp-1);
+}
+.readout .lbl {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 4px;
+}
+.readout .num { color: var(--c-accent-1); }
+
+/* ranked candidate list (cosine bars + top-k) */
+.ranklist { list-style: none; margin: var(--sp-1) 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.ranklist li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: var(--c-text);
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.34s var(--ease-1), transform 0.34s var(--ease-1),
+              border-color var(--dur-2) var(--ease-1), background var(--dur-2) var(--ease-1);
+}
+.ranklist.run li { opacity: 1; transform: none; }
+.ranklist .chunk { font-family: var(--font-mono); font-size: 12px; color: var(--c-heading); }
+.ranklist .cos { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--c-accent-1); font-weight: var(--fw-bold); }
+.ranklist .barwrap { flex: 1 1 60px; height: 6px; background: var(--c-surface-3); border-radius: 3px; overflow: hidden; min-width: 40px; }
+.ranklist .barfill { height: 100%; width: 0; background: var(--c-progress); border-radius: 3px; transition: width 760ms var(--ease-zoom); }
+.ranklist li.topk { border-color: var(--c-progress); background: var(--c-visited-bg-1); }
+.ranklist li.topk .cos { color: var(--c-progress); }
+
+/* chunk cards (top-k) */
+.cards { display: flex; flex-direction: column; gap: var(--sp-1); margin-top: var(--sp-1); }
+.ccard {
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-left: 3px solid var(--c-accent-1);
+  border-radius: var(--radius-md);
+  padding: 8px 11px;
+}
+.ccard .src { font-family: var(--font-mono); font-size: 11px; color: var(--c-accent-2); margin-bottom: 3px; }
+.ccard .txt { font-family: var(--font-body); font-size: 13px; line-height: 1.45; color: var(--c-text); }
+
+/* prompt block (dark plate -- AtlasMD-2.1 frozen literals, no token exists) */
+.prompt {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  background: #2f2718;
+  color: #e8dcc0;
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  overflow: auto;
+}
+.prompt .sys { color: var(--c-accent-3); }
+.prompt .ctx { color: #9fc4be; }
+.prompt .q { color: #e9b27f; }
+.prompt .ctx-line { display: block; opacity: 0; transform: translateY(-8px); transition: opacity 0.4s var(--ease-1), transform 0.4s cubic-bezier(0.34,1.3,0.5,1); }
+.assemble.run .prompt .ctx-line { opacity: 1; transform: none; }
+.budget {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  margin-top: var(--sp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+}
+.budget .meter { flex: 1 1 100px; min-width: 80px; max-width: 160px; height: 7px; background: var(--c-surface-3); border-radius: 4px; overflow: hidden; }
+.budget .meter i { display: block; height: 100%; width: 0; background: var(--c-accent-1); border-radius: 4px; transition: width 900ms var(--ease-zoom); }
+.budget b { color: var(--c-accent-1); font-family: var(--font-mono); font-weight: var(--fw-bold); }
+
+/* answer block (grounded -- green-surface frozen tints, no token) */
+.answer {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--c-text);
+  background: var(--c-visited-bg-1);
+  border: var(--bw-1) solid #bcd9c5;
+  border-left: 3px solid var(--c-progress);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+}
+.answer cite {
+  font-style: normal;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: var(--fw-bold);
+  color: var(--c-bg);
+  background: var(--c-accent-1);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  margin: 0 1px;
+  vertical-align: 1px;
+}
+
+/* ---- didactic: эмбеддинг text -> tokens -> vector --------------------- */
+.embed-anim { margin: var(--sp-1) 0 4px; }
+.embed-stage {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0 0 6px;
+}
+.embed-stage + .embed-text,
+.embed-stage + .embed-tokens,
+.embed-stage + .embed-vec { margin-top: 0; }
+.embed-anim .embed-stage:not(:first-child) { margin-top: var(--sp-2); }
+.embed-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--c-text);
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 8px 11px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s var(--ease-1), transform 0.4s var(--ease-1);
+}
+.embed-anim.run .embed-text { opacity: 1; transform: none; }
+.embed-tokens { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+.tok {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: 4px;
+  padding: 3px 7px;
+  opacity: 0;
+  transform: translateY(-7px) scale(0.85);
+  transition: opacity 0.34s var(--ease-1), transform 0.34s cubic-bezier(0.34,1.4,0.5,1);
+}
+.embed-anim.run .tok { opacity: 1; transform: none; }
+.embed-vec {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  margin-top: 10px;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 9px 11px;
+  color: var(--c-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  align-items: baseline;
+}
+.embed-vec .vlbl {
+  flex: 1 0 100%;
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 2px;
+}
+.vnum {
+  color: var(--c-accent-1);
+  font-weight: var(--fw-bold);
+  min-width: 46px;
+  text-align: right;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s var(--ease-1), transform 0.3s var(--ease-1);
+}
+.embed-anim.run .vnum.in { opacity: 1; transform: none; }
+.vellip { color: var(--c-text-muted); opacity: 0; transition: opacity 0.3s var(--ease-1); }
+.embed-anim.run .vellip.in { opacity: 0.8; }
+
+/* reduced-motion static stepper hint (shown only under reduce) */
+.rm-only { display: none; }
+
+/* corner L-ticks inside the plate (decorative) */
+.corner { position: absolute; width: 16px; height: 16px; pointer-events: none; z-index: 2; opacity: 0.7; }
+.corner svg { display: block; }
+.corner.tl { top: 11px; left: 11px; }
+.corner.tr { top: 11px; right: 11px; transform: scaleX(-1); }
+.corner.bl { bottom: 11px; left: 11px; transform: scaleY(-1); }
+.corner.br { bottom: 11px; right: 11px; transform: scale(-1, -1); }
+
+/* ---- responsive: hold at 390 / 320 ----------------------------------- */
+@media (max-width: 680px) {
+  .nodes-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .detail { padding: var(--sp-3) 14px 14px; }
+  .detail h2 { font-size: 1.04rem; }
+  .ranklist li,
+  .ccard .txt,
+  .answer { font-size: 12.5px; }
+}
+
+/* reduced-motion: snap to end state over the SAME DOM */
+@media (prefers-reduced-motion: reduce) {
+  .edge-draw { transition: none !important; stroke-dashoffset: 0 !important; }
+  .edge-prog,
+  .ranklist .barfill,
+  .budget .meter i,
+  .detail,
+  .embed-text,
+  .tok,
+  .vnum,
+  .vellip,
+  .ranklist li,
+  .prompt .ctx-line { transition: none !important; }
+  .rm-only {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    color: var(--c-text-muted);
+    margin-top: 10px;
+  }
+}

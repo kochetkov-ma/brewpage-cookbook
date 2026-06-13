@@ -1,0 +1,14 @@
+<!--
+  node-card.html -- rectangular pipeline / track node (AtlasMD 3.3a, copy-in source of truth).
+  One render form of the unified marker (rect node-card; the map-flag + vector-
+  point SVG forms are built by their renderers). role=button + tabindex=0 +
+  data-node + data-anchor; click / Enter / Space opens its detail (drill level 1)
+  and marks it visited (earned green). States are class flips in base.css:
+  .current ("вы здесь", rust ring, NOT green) / .visited (earned green) / .active.
+  Copy the markup once per node, set data-node / data-anchor + the spans.
+-->
+<div class="node" role="button" tabindex="0" data-node="n0" data-anchor="0" aria-label="">
+  <span class="idx">01</span>
+  <span class="name" data-i18n="nodeName" data-ru="Название узла" data-en="Node name">Название узла</span>
+  <span class="hint" data-i18n="nodeHint" data-ru="Короткая подсказка" data-en="Short hint">Короткая подсказка</span>
+</div>

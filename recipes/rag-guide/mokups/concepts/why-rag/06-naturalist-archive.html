@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Зачем он нужен - naturalist-archive - Concept 06</title>
+<style>
+:root{
+  --sand:#e8dcc0; --sand-deep:#ddcca8; --parchment:#f3ead4; --parchment2:#efe3c8;
+  --sepia:#5c4a32; --sepia-soft:#7a6446; --ink:#3a2e1d;
+  --teal:#4a6f6a; --teal-deep:#335551; --rust:#a55a35; --gold:#b08a3e;
+  --line:#bda878; --line-soft:#d2bd8e;
+  --green:#17a673; --green-core:#15915f; --green-deep:#0f6e4d;
+  --ease:cubic-bezier(0.22,0.61,0.36,1);
+  --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:"Trebuchet MS","Gill Sans","Segoe UI",Verdana,sans-serif;
+  --sh-s:0 1px 3px rgba(60,46,26,0.14);
+  --sh-m:0 3px 9px rgba(60,46,26,0.18);
+  --sh-l:0 8px 22px rgba(60,46,26,0.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{overflow-x:hidden}
+body{
+  font-family:var(--serif); color:var(--ink); min-height:100vh;
+  background-color:#f3ead4;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+    radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+    repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+  overflow-x:hidden;
+}
+
+/* bottom padding reserves clearance for the fixed #mokup-nav pill so it never
+   sits over content at any scroll position (pill ~52px + 14px gap + room). */
+.frame{max-width:1180px;margin:0 auto;padding:22px 18px 110px}
+
+/* ---- expedition masthead ---- */
+.masthead{
+  display:flex;align-items:center;gap:14px;
+  border-bottom:2px solid var(--line);
+  padding-bottom:12px;margin-bottom:6px;
+}
+.compass{flex:0 0 auto}
+.masthead-text{flex:1 1 auto;min-width:0}
+.kicker{
+  font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--rust);margin:0 0 2px;font-weight:700;
+}
+h1{font-size:clamp(24px,5vw,38px);margin:0;line-height:1.05;letter-spacing:.01em;color:var(--ink);font-weight:600}
+.blurb{
+  font-size:clamp(13px,2.6vw,15px);color:var(--sepia);margin:8px 0 0;max-width:64ch;line-height:1.5;
+}
+.blurb .acr{color:var(--teal-deep);font-style:italic}
+
+.compass-rose{transform-origin:50% 50%;animation:rose 48s linear infinite}
+.compass-needle{transform-origin:50% 50%;animation:needle 4.5s var(--ease) infinite alternate}
+@keyframes rose{to{transform:rotate(360deg)}}
+@keyframes needle{0%{transform:rotate(-11deg)}100%{transform:rotate(10deg)}}
+
+/* ---- altitude bar: breadcrumb + zoom-out control ---- */
+.altbar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:16px 0 8px;
+}
+.crumbs{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-family:var(--sans);font-size:11px;letter-spacing:.06em;color:var(--sepia-soft);min-width:0;
+}
+.crumbs .cz{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--line-soft);background:rgba(247,239,220,0.6);
+  border-radius:999px;padding:5px 11px;color:var(--teal-deep);font-weight:700;
+  cursor:default;
+}
+.crumbs button.cz{cursor:pointer;transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease)}
+.crumbs button.cz:hover{background:var(--sand-deep);border-color:var(--rust);color:var(--rust)}
+.crumbs button.cz:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+.crumbs .cz.here{background:rgba(23,166,115,0.12);border-color:var(--green);color:var(--green-deep)}
+.crumbs .sep{color:var(--line);font-weight:700}
+.crumbs .cz .lvl{
+  font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--sand-deep);color:var(--sepia);border-radius:999px;padding:1px 6px;
+}
+.zoom-out{
+  margin-left:auto;
+  font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.04em;
+  border:1px solid var(--line);background:linear-gradient(180deg,#f7efdc,#efe3c8);color:var(--teal-deep);
+  border-radius:999px;cursor:pointer;
+  min-height:44px;padding:0 16px;display:inline-flex;align-items:center;gap:7px;
+  transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),opacity .2s var(--ease);
+}
+.zoom-out:hover{background:var(--sand-deep);border-color:var(--rust);color:var(--rust)}
+.zoom-out:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+.zoom-out[disabled]{opacity:.4;cursor:default;pointer-events:none}
+.zoom-out .mag{font-size:14px}
+
+/* ---- the archive stage (single scene, camera zooms INTO it) ---- */
+.stage-cap{
+  font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--sepia-soft);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.stage-cap .ex{font-family:var(--serif);text-transform:none;letter-spacing:0;color:var(--sepia);font-style:italic;font-size:13px}
+.stage{
+  position:relative;width:100%;aspect-ratio:1180/680;min-height:380px;
+  border:1px solid var(--line);border-radius:7px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255,250,235,0.55) 0, rgba(255,250,235,0) 62%),
+    linear-gradient(160deg,#efe3c8,#e8dcc0);
+  box-shadow:var(--sh-l), inset 0 0 60px rgba(60,46,26,0.06);
+  overflow:hidden;
+}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* corner brads */
+.brad{fill:#9a7d4a;stroke:#6f5832;stroke-width:1.2}
+
+/* THE CAMERA: a single <g> that scales+translates to zoom INTO an object.
+   transform set inline by JS; transition gives the smooth 400-600ms glide. */
+.camera{transition:transform .52s var(--ease)}
+@media (prefers-reduced-motion: reduce){ .camera{transition:none} }
+
+/* content layers cross-fade as the camera dives deeper */
+.layer{transition:opacity .42s var(--ease)}
+.layer[data-hidden="1"]{opacity:0;pointer-events:none}
+@media (prefers-reduced-motion: reduce){ .layer{transition:none} }
+
+/* drawn route line the query travels (explicit path, never teleports) */
+.route{
+  stroke:var(--line);stroke-width:2;fill:none;stroke-linecap:round;
+}
+.route.live{
+  stroke:var(--green);stroke-width:2.4;opacity:.55;
+  stroke-dasharray:1100;stroke-dashoffset:1100;
+  animation:drawroute 2.2s var(--ease) forwards;
+}
+@keyframes drawroute{to{stroke-dashoffset:0}}
+.route-back{stroke:var(--line-soft);stroke-width:2;fill:none;stroke-dasharray:3 6;opacity:.7}
+
+/* stage labels */
+.stage-name{font-family:var(--serif);font-size:15px;font-style:italic;fill:var(--teal-deep)}
+.stage-tag{font-family:var(--sans);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.stage-tag.q{fill:var(--green-deep)}
+.stage-tag.s{fill:var(--rust)}
+.stage-tag.m{fill:var(--gold)}
+.node-sub{font-family:var(--sans);font-size:10.5px;fill:var(--sepia)}
+.num{font-family:var(--sans);font-size:9px;fill:var(--teal-deep);letter-spacing:.02em}
+
+/* query card pinned center */
+.qcard{fill:#fbf6e6;stroke:var(--green);stroke-width:1.8}
+.qcard-tape{fill:rgba(23,166,115,.18)}
+.qcard-txt{font-family:var(--serif);font-size:13px;fill:var(--ink)}
+.qcard-cap{font-family:var(--sans);font-size:9.5px;letter-spacing:.14em;fill:var(--green-deep);text-transform:uppercase;font-weight:700}
+
+/* the card-index (kartoteka = index, named honestly) */
+.cab-body{fill:#e6d8b6;stroke:var(--line);stroke-width:1.4}
+.drawer-face{fill:#ddcca8;stroke:var(--line);stroke-width:1.2;transition:fill .2s var(--ease)}
+.drawer-knob{fill:#9a7d4a;stroke:#6f5832;stroke-width:1}
+.drawer-lbl{font-family:var(--sans);font-size:10px;letter-spacing:.04em;fill:var(--sepia)}
+
+/* evidence cards (chunks) pulled to sit beside the question */
+.card-paper{fill:#f7efdc;stroke:var(--line);stroke-width:1}
+.card-pin{fill:var(--rust);stroke:#7a3d20;stroke-width:.8}
+.card-line{stroke:var(--line-soft);stroke-width:1.4;stroke-linecap:round}
+.card-hl{stroke:var(--green);stroke-width:2.4;stroke-linecap:round;opacity:.85}
+
+/* the LLM block + answer */
+.model-body{fill:rgba(176,138,62,0.1);stroke:var(--gold);stroke-width:1.6}
+.answer-body{fill:rgba(23,166,115,0.07);stroke:var(--green);stroke-width:1.6}
+.answer-line{stroke:var(--line-soft);stroke-width:1.4;stroke-linecap:round}
+.answer-cite{fill:var(--green);font-family:var(--sans);font-size:9px;font-weight:700}
+
+/* drill host affordance */
+.drill{cursor:pointer;outline:none}
+.drill .hit{fill:transparent}
+.drill:hover .drawer-face,.drill:focus-visible .drawer-face{fill:#e7d7ad}
+.drill:hover .frame-box,.drill:focus-visible .frame-box{stroke-width:2.6}
+.frame-box{transition:stroke-width .18s var(--ease)}
+.drill .focus-ring{fill:none;stroke:transparent;opacity:0;transition:opacity .15s}
+.drill:focus-visible .focus-ring{stroke:var(--rust);stroke-width:2.6;stroke-dasharray:6 4;opacity:1}
+
+/* a "tap to zoom" hint badge that the drill hosts carry */
+.zhint{opacity:0;transition:opacity .18s var(--ease)}
+.drill:hover .zhint,.drill:focus-visible .zhint{opacity:1}
+.zhint rect{fill:rgba(23,166,115,0.12);stroke:var(--green);stroke-width:1}
+.zhint text{font-family:var(--sans);font-size:9px;font-weight:700;fill:var(--green-deep);letter-spacing:.04em}
+
+/* TRAVELLING QUERY DOT (embodiment) - rides the explicit route */
+.qdot-core{fill:var(--green-core);filter:drop-shadow(0 0 4px rgba(23,166,115,.85))}
+.qdot-halo{fill:var(--green);opacity:.3}
+.qtravel{animation:travel 7s var(--ease) infinite}
+@keyframes travel{
+  0%   {opacity:0; transform:translate(232px,300px)}
+  5%   {opacity:1; transform:translate(232px,300px)}
+  /* query -> index (kartoteka) */
+  26%  {opacity:1; transform:translate(560px,300px)}
+  /* index -> evidence cards beside the question */
+  46%  {opacity:1; transform:translate(560px,150px)}
+  /* cards -> model */
+  66%  {opacity:1; transform:translate(852px,300px)}
+  /* model -> answer */
+  88%  {opacity:1; transform:translate(1046px,300px)}
+  95%  {opacity:.5;transform:translate(1046px,300px)}
+  100% {opacity:0; transform:translate(1046px,300px)}
+}
+.qhalo-pulse{animation:halopulse 1.5s ease-in-out infinite}
+@keyframes halopulse{0%,100%{r:8}50%{r:12}}
+
+/* stage glow that lights up as the dot arrives (sequential life).
+   .glow holds the shared base; each .lit-* drives its own timed fade so the
+   stages light in sequence as the travelling query reaches them. */
+.glow{transform-origin:center;opacity:0}
+.lit-q{animation:litQ 7s ease-in-out infinite}
+.lit-idx{animation:litIdx 7s ease-in-out infinite}
+.lit-card{animation:litCard 7s ease-in-out infinite}
+.lit-model{animation:litModel 7s ease-in-out infinite}
+.lit-ans{animation:litAns 7s ease-in-out infinite}
+@keyframes litQ{0%,3%{opacity:0}6%,20%{opacity:.55}30%,100%{opacity:0}}
+@keyframes litIdx{0%,20%{opacity:0}28%,40%{opacity:.55}50%,100%{opacity:0}}
+@keyframes litCard{0%,40%{opacity:0}48%,60%{opacity:.55}70%,100%{opacity:0}}
+@keyframes litModel{0%,60%{opacity:0}68%,80%{opacity:.55}88%,100%{opacity:0}}
+@keyframes litAns{0%,82%{opacity:0}88%,96%{opacity:.6}100%{opacity:0}}
+
+/* evidence cards settle in (pin), gentle and adult */
+.card-settle{animation:settle 1s var(--ease) both}
+.card-settle.cs1{animation-delay:1.0s}
+.card-settle.cs2{animation-delay:1.25s}
+.card-settle.cs3{animation-delay:1.5s}
+@keyframes settle{
+  0%{opacity:0;transform:translateY(10px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+
+/* ---- DEEP LAYER (level 1: inside the index drawer -> the document) ---- */
+.doc-page{fill:#f5ecd6;stroke:var(--line);stroke-width:1.4}
+.doc-head-line{stroke:var(--rust);stroke-width:2;stroke-linecap:round;opacity:.7}
+.doc-line{stroke:var(--line-soft);stroke-width:2;stroke-linecap:round}
+.doc-line.matched{stroke:var(--green);stroke-width:3;opacity:.9}
+.doc-hl-band{fill:rgba(23,166,115,0.16);stroke:var(--green);stroke-width:1.2}
+.doc-meta{font-family:var(--sans);font-size:11px;fill:var(--sepia);letter-spacing:.04em}
+.doc-kick{font-family:var(--sans);font-size:10px;letter-spacing:.16em;text-transform:uppercase;fill:var(--green-deep);font-weight:700}
+.doc-title{font-family:var(--serif);font-size:16px;font-style:italic;fill:var(--ink)}
+.passage-txt{font-family:var(--serif);font-size:12.5px;fill:var(--ink)}
+.passage-txt.dim{fill:var(--sepia-soft)}
+.cite-chip{fill:rgba(23,166,115,0.1);stroke:var(--green);stroke-width:1}
+.cite-txt{font-family:var(--sans);font-size:10px;font-weight:700;fill:var(--green-deep);letter-spacing:.03em}
+
+/* level-2: zoom to the exact matched lines */
+.zoom-band{fill:rgba(23,166,115,0.1);stroke:var(--green);stroke-width:1.4}
+.zoom-big{font-family:var(--serif);font-size:18px;fill:var(--ink)}
+.zoom-big .pinw{fill:var(--green-deep)}
+.zoom-pin-bg{fill:rgba(23,166,115,0.22)}
+.zoom-anno{font-family:var(--sans);font-size:11px;fill:var(--teal-deep)}
+.zoom-anno b{fill:var(--green-deep)}
+
+/* ---- contrast legend: s RAG / bez RAG ---- */
+.contrast{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.col{border:1px solid var(--line-soft);border-radius:6px;padding:12px 13px;background:rgba(247,239,220,0.5)}
+.col.good{border-left:4px solid var(--green)}
+.col.bad{border-left:4px solid var(--rust)}
+.col h3{font-family:var(--sans);font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0 0 8px;font-weight:700}
+.col.good h3{color:var(--green-deep)}
+.col.bad h3{color:var(--rust)}
+.col ul{margin:0;padding:0;list-style:none}
+.col li{font-size:12.5px;color:var(--sepia);line-height:1.5;padding:3px 0 3px 18px;position:relative}
+.col li::before{position:absolute;left:0;top:3px;font-family:var(--sans);font-weight:700}
+.col.good li::before{content:"+";color:var(--green-deep)}
+.col.bad li::before{content:"-";color:var(--rust)}
+
+/* ---- legend strip: the 4 chapter points ---- */
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.lg{border:1px solid var(--line-soft);border-radius:5px;background:rgba(247,239,220,0.6);padding:10px 11px}
+.lg .n{font-family:var(--sans);font-weight:700;font-size:11px;color:var(--rust);letter-spacing:.1em}
+.lg .t{font-family:var(--serif);font-style:italic;color:var(--teal-deep);font-size:14px;margin:2px 0 3px}
+.lg .d{font-size:12px;color:var(--sepia);line-height:1.4}
+
+@media (max-width:680px){
+  .legend{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  .contrast{grid-template-columns:1fr}
+}
+@media (max-width:430px){
+  .frame{padding:16px 12px 106px}
+  .legend{grid-template-columns:1fr 1fr}
+  .altbar{gap:7px}
+  .zoom-out{margin-left:0}
+}
+
+/* reduced motion: kill loops, show meaningful final state */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important}
+  .route.live{stroke-dashoffset:0 !important;opacity:.55 !important}
+  .qtravel{opacity:1 !important;transform:translate(560px,300px) !important}
+  .qhalo-pulse{r:9 !important}
+  .lit-q,.lit-idx,.lit-card,.lit-model,.lit-ans{opacity:.4 !important}
+  .card-settle{opacity:1 !important;transform:none !important}
+}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ===== expedition masthead ===== -->
+  <header class="masthead">
+    <div class="compass" aria-hidden="true">
+      <svg width="58" height="58" viewBox="0 0 100 100" role="img" aria-label="compass">
+        <circle cx="50" cy="50" r="46" fill="#f7efdc" stroke="var(--line)" stroke-width="1.6"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line-soft)" stroke-width="1"/>
+        <g class="compass-rose" fill="none" stroke="var(--sepia-soft)" stroke-width="1">
+          <line x1="50" y1="10" x2="50" y2="90"/>
+          <line x1="10" y1="50" x2="90" y2="50"/>
+          <line x1="22" y1="22" x2="78" y2="78"/>
+          <line x1="78" y1="22" x2="22" y2="78"/>
+        </g>
+        <g class="compass-needle">
+          <path d="M50 16 L57 50 L50 47 L43 50 Z" fill="var(--rust)"/>
+          <path d="M50 84 L43 50 L50 53 L57 50 Z" fill="var(--teal-deep)"/>
+        </g>
+        <circle cx="50" cy="50" r="3.4" fill="var(--gold)" stroke="var(--sepia)" stroke-width="1"/>
+        <text x="50" y="9" text-anchor="middle" font-family="var(--serif)" font-size="9" fill="var(--sepia)">N</text>
+      </svg>
+    </div>
+    <div class="masthead-text">
+      <p class="kicker">Полевой архив &middot; маршрут запроса</p>
+      <h1>Зачем он нужен</h1>
+      <p class="blurb">Обычная модель не знает ваших данных и со временем устаревает. <span class="acr">RAG</span> решает обе проблемы сразу, подкладывая свежие источники в момент ответа.</p>
+    </div>
+  </header>
+
+  <!-- ===== altitude bar: breadcrumb + zoom-out ===== -->
+  <div class="altbar">
+    <nav class="crumbs" id="crumbs" aria-label="Уровень увеличения">
+      <span class="cz here" id="cz0" data-level="0"><span class="lvl">обзор</span>Карта запроса</span>
+    </nav>
+    <button class="zoom-out" id="zoomOut" type="button" disabled aria-label="Уменьшить - вернуться на уровень выше">
+      <span class="mag" aria-hidden="true">&#8722;&#9678;</span> Уменьшить
+    </button>
+  </div>
+
+  <!-- ===== the archive stage (one scene, camera zooms INTO objects) ===== -->
+  <section aria-label="Карта одного запроса RAG: вопрос, картотека-индекс, фрагменты, модель и ответ со ссылками">
+    <p class="stage-cap">
+      <span>Один запрос идёт по цепочке RAG &mdash; кликните объект, чтобы приблизиться внутрь</span>
+      <span class="ex">Пример: обновили инструкцию в файле &mdash; помощник сразу отвечает по новой версии.</span>
+    </p>
+
+    <div class="stage" id="stage">
+      <svg viewBox="0 0 1180 680" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-label="Запрос проходит через картотеку-индекс, поиск ближайших фрагментов, контекст, модель и ответ со ссылками">
+
+        <!-- corner brads (fixed to the frame, outside the camera) -->
+        <circle class="brad" cx="16" cy="16" r="6"/>
+        <circle class="brad" cx="1164" cy="16" r="6"/>
+        <circle class="brad" cx="16" cy="664" r="6"/>
+        <circle class="brad" cx="1164" cy="664" r="6"/>
+
+        <!-- ================= THE CAMERA ================= -->
+        <g class="camera" id="camera" transform="translate(0,0) scale(1)">
+
+          <!-- ---------- LAYER 0: the overview map ---------- -->
+          <g class="layer" id="layer0" data-hidden="0">
+
+            <!-- the drawn route the query travels (explicit, left-to-right) -->
+            <path class="route-back" d="M232 300 H560"/>
+            <path class="route live" d="M232 300 H560 M560 300 V150 M560 150 H760 M760 150 V300 H852 M852 300 H1046"/>
+
+            <!-- 1) QUERY: vivid green card pinned center-left -->
+            <g class="lit-q glow"><circle cx="232" cy="300" r="78" fill="rgba(23,166,115,0.16)"/></g>
+            <g>
+              <text class="stage-tag q" x="150" y="186">1 &middot; Запрос</text>
+              <rect class="qcard-tape" x="178" y="214" width="58" height="14" rx="2" transform="rotate(-4 207 221)"/>
+              <rect class="qcard" x="140" y="226" width="186" height="120" rx="5"/>
+              <text class="qcard-cap" x="156" y="250">Вопрос пользователя</text>
+              <text class="qcard-txt" x="156" y="274">Какая сейчас актуальная</text>
+              <text class="qcard-txt" x="156" y="294">версия инструкции?</text>
+              <text class="qcard-txt" x="156" y="324" font-style="italic" fill="var(--teal-deep)">эмбеддинг: [0.18, -0.42, 0.77 ...]</text>
+            </g>
+
+            <!-- 2) INDEX (kartoteka): the card-index cabinet = vector DB, named honestly.
+                 This is the FIRST [data-drill] in DOM order -> the reviewer clicks it. -->
+            <g class="drill" id="drill-index" data-drill data-target="index" tabindex="0" role="button"
+               aria-label="Приблизиться к картотеке-индексу: открыть найденный документ с подсвеченным фрагментом">
+              <rect class="focus-ring" x="468" y="196" width="184" height="208" rx="7"/>
+              <g class="lit-idx glow"><circle cx="560" cy="300" r="86" fill="rgba(176,138,62,0.18)"/></g>
+
+              <text class="stage-tag m" x="476" y="216">2 &middot; Индекс / векторная база</text>
+              <text class="node-sub" x="476" y="392">картотека: эмбеддинги фрагментов</text>
+
+              <!-- card-index cabinet with labelled drawers (chunks live here) -->
+              <rect class="cab-body" x="488" y="222" width="144" height="158" rx="5"/>
+              <g>
+                <rect class="drawer-face" x="498" y="232" width="124" height="32" rx="3"/>
+                <circle class="drawer-knob" cx="560" cy="248" r="4"/>
+                <text class="drawer-lbl" x="506" y="251">instr.md &middot; чанк 12</text>
+              </g>
+              <g>
+                <rect class="drawer-face" x="498" y="270" width="124" height="32" rx="3"/>
+                <circle class="drawer-knob" cx="560" cy="286" r="4"/>
+                <text class="drawer-lbl" x="506" y="289">faq.md &middot; чанк 03</text>
+              </g>
+              <g>
+                <rect class="drawer-face" x="498" y="308" width="124" height="32" rx="3"/>
+                <circle class="drawer-knob" cx="560" cy="324" r="4"/>
+                <text class="drawer-lbl" x="506" y="327">notes.md &middot; чанк 41</text>
+              </g>
+              <g>
+                <rect class="drawer-face" x="498" y="346" width="124" height="26" rx="3"/>
+                <circle class="drawer-knob" cx="560" cy="359" r="4"/>
+                <text class="drawer-lbl" x="506" y="362">поиск ближайших -&gt; топ-k</text>
+              </g>
+
+              <g class="zhint" transform="translate(560 196)">
+                <rect x="-46" y="-18" width="92" height="20" rx="10"/>
+                <text x="0" y="-4" text-anchor="middle">приблизить &#8594;</text>
+              </g>
+              <rect class="hit" x="468" y="196" width="184" height="208"/>
+            </g>
+
+            <!-- 3) EVIDENCE CARDS (top-k chunks) pulled beside the question -->
+            <g>
+              <text class="stage-tag q" x="486" y="64">3 &middot; Топ-k фрагментов (контекст)</text>
+              <g class="lit-card glow"><circle cx="610" cy="142" r="92" fill="rgba(23,166,115,0.14)"/></g>
+
+              <g class="card-settle cs1" transform="translate(490 84)">
+                <line class="card-line" x1="36" y1="-14" x2="36" y2="2"/>
+                <circle class="card-pin" cx="36" cy="0" r="4.5"/>
+                <rect class="card-paper" x="0" y="2" width="100" height="58" rx="4"/>
+                <line class="card-hl" x1="12" y1="22" x2="88" y2="22"/>
+                <line class="card-line" x1="12" y1="36" x2="88" y2="36"/>
+                <line class="card-line" x1="12" y1="48" x2="66" y2="48"/>
+                <text class="num" x="12" y="73">instr.md v3</text>
+              </g>
+              <g class="card-settle cs2" transform="translate(606 78)">
+                <line class="card-line" x1="36" y1="-14" x2="36" y2="2"/>
+                <circle class="card-pin" cx="36" cy="0" r="4.5"/>
+                <rect class="card-paper" x="0" y="2" width="100" height="58" rx="4"/>
+                <line class="card-hl" x1="12" y1="22" x2="88" y2="22"/>
+                <line class="card-line" x1="12" y1="36" x2="88" y2="36"/>
+                <line class="card-line" x1="12" y1="48" x2="60" y2="48"/>
+                <text class="num" x="12" y="73">faq.md v7</text>
+              </g>
+              <g class="card-settle cs3" transform="translate(722 84)">
+                <line class="card-line" x1="36" y1="-14" x2="36" y2="2"/>
+                <circle class="card-pin" cx="36" cy="0" r="4.5"/>
+                <rect class="card-paper" x="0" y="2" width="100" height="58" rx="4"/>
+                <line class="card-line" x1="12" y1="22" x2="88" y2="22"/>
+                <line class="card-line" x1="12" y1="36" x2="88" y2="36"/>
+                <line class="card-line" x1="12" y1="48" x2="70" y2="48"/>
+                <text class="num" x="12" y="73">notes.md v2</text>
+              </g>
+            </g>
+
+            <!-- 4) MODEL (LLM) -->
+            <g>
+              <text class="stage-tag m" x="788" y="216">4 &middot; Модель (LLM)</text>
+              <g class="lit-model glow"><circle cx="852" cy="300" r="74" fill="rgba(176,138,62,0.2)"/></g>
+              <rect class="model-body" x="790" y="234" width="128" height="132" rx="6"/>
+              <text class="node-sub" x="806" y="266">вопрос +</text>
+              <text class="node-sub" x="806" y="284">контекст</text>
+              <text class="node-sub" x="806" y="306" fill="var(--gold)" font-weight="700">-&gt; генерация</text>
+              <line class="answer-line" x1="806" y1="324" x2="902" y2="324"/>
+              <line class="answer-line" x1="806" y1="340" x2="902" y2="340"/>
+              <line class="answer-line" x1="806" y1="356" x2="876" y2="356"/>
+            </g>
+
+            <!-- 5) ANSWER WITH SOURCE LINKS -->
+            <g>
+              <text class="stage-tag q" x="952" y="216">5 &middot; Ответ со ссылками</text>
+              <g class="lit-ans glow"><circle cx="1046" cy="300" r="78" fill="rgba(23,166,115,0.16)"/></g>
+              <rect class="answer-body" x="954" y="234" width="174" height="132" rx="6"/>
+              <text class="passage-txt" x="968" y="262" font-size="12">Актуальна версия v3.</text>
+              <text class="passage-txt" x="968" y="282" font-size="12">Источник найден в</text>
+              <text class="passage-txt" x="968" y="300" font-size="12">индексе, не выдуман.</text>
+              <g transform="translate(968 314)">
+                <rect class="cite-chip" x="0" y="0" width="86" height="18" rx="9"/>
+                <text class="cite-txt" x="9" y="13">instr.md v3</text>
+              </g>
+              <g transform="translate(968 338)">
+                <rect class="cite-chip" x="0" y="0" width="78" height="18" rx="9"/>
+                <text class="cite-txt" x="9" y="13">faq.md v7</text>
+              </g>
+            </g>
+          </g>
+
+          <!-- ---------- LAYER 1: inside the index drawer -> the matched document ---------- -->
+          <g class="layer" id="layer1" data-hidden="1" aria-hidden="true">
+            <!-- positioned around the index node (560,300) so the camera frames it on zoom -->
+            <rect class="doc-page" x="430" y="150" width="320" height="300" rx="6"/>
+            <text class="doc-kick" x="452" y="184">Найденный фрагмент из индекса</text>
+            <text class="doc-title" x="452" y="206">instr.md &mdash; чанк 12 (версия v3)</text>
+            <line class="doc-head-line" x1="452" y1="216" x2="728" y2="216"/>
+
+            <!-- the document lines; the matched passage band is highlighted -->
+            <line class="doc-line" x1="452" y1="238" x2="724" y2="238"/>
+            <line class="doc-line" x1="452" y1="254" x2="700" y2="254"/>
+
+            <rect class="doc-hl-band" x="446" y="268" width="288" height="60" rx="4"/>
+            <text class="passage-txt" x="456" y="288">Свежие и приватные данные</text>
+            <text class="passage-txt" x="456" y="308">без переобучения модели &mdash;</text>
+            <text class="passage-txt" x="456" y="324" font-style="italic" fill="var(--green-deep)">источник подложен в момент ответа.</text>
+
+            <line class="doc-line" x1="452" y1="346" x2="716" y2="346"/>
+            <line class="doc-line" x1="452" y1="362" x2="680" y2="362"/>
+
+            <!-- the EXACT-LINES drill: second [data-drill], revealed inside layer 1 -->
+            <g class="drill" id="drill-lines" data-drill data-target="lines" tabindex="0" role="button"
+               aria-label="Приблизиться к точным совпавшим строкам и увидеть ссылку на источник">
+              <rect class="focus-ring" x="442" y="380" width="296" height="56" rx="6"/>
+              <rect class="cite-chip" x="452" y="388" width="220" height="22" rx="11"/>
+              <text class="cite-txt" x="464" y="403">Ссылка: instr.md v3, обновлён сегодня</text>
+              <g class="zhint" style="opacity:1" transform="translate(700 399)">
+                <rect x="-34" y="-11" width="68" height="20" rx="10"/>
+                <text x="0" y="3" text-anchor="middle">к строкам &#8594;</text>
+              </g>
+              <text class="doc-meta" x="452" y="428">щёлкните, чтобы увеличить совпавшие строки</text>
+              <rect class="hit" x="442" y="380" width="296" height="56"/>
+            </g>
+          </g>
+
+          <!-- ---------- LAYER 2: the exact matched lines, big ---------- -->
+          <g class="layer" id="layer2" data-hidden="1" aria-hidden="true">
+            <!-- framed around (560,300) too, so the camera dives one step further -->
+            <rect class="zoom-band" x="436" y="206" width="248" height="188" rx="6"/>
+            <text class="doc-kick" x="452" y="232">Точная совпавшая строка &middot; instr.md v3</text>
+
+            <text class="zoom-big" x="452" y="266">RAG даёт</text>
+            <rect class="zoom-pin-bg" x="448" y="276" width="224" height="26" rx="4"/>
+            <text class="zoom-big pinw" x="452" y="296">свежие данные</text>
+            <text class="zoom-big" x="452" y="324">без переобучения.</text>
+
+            <line class="doc-line matched" x1="452" y1="338" x2="668" y2="338"/>
+
+            <text class="zoom-anno" x="452" y="362"><tspan font-weight="700" fill="var(--green-deep)">Тезис:</tspan> обновили файл &mdash; помощник</text>
+            <text class="zoom-anno" x="452" y="378">отвечает по новой версии. Без дообучения.</text>
+          </g>
+
+          <!-- TRAVELLING QUERY DOT (rides the visible route; only on the overview layer) -->
+          <g class="qtravel" id="qdot" transform="translate(232,300)">
+            <circle class="qdot-halo qhalo-pulse" cx="0" cy="0" r="8"/>
+            <circle class="qdot-core" cx="0" cy="0" r="5"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- contrast: s RAG / bez RAG (real failure modes vs gains) -->
+    <div class="contrast">
+      <div class="col bad">
+        <h3>Без RAG</h3>
+        <ul>
+          <li>модель отвечает из устаревшей памяти на момент обучения</li>
+          <li>не найдя источника, выдумывает детали</li>
+          <li>ссылок нет: проверить ответ нечем</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h3>С RAG</h3>
+        <ul>
+          <li>свежие данные из индекса прямо в момент ответа</li>
+          <li>ответ опирается на найденный фрагмент, а не на догадку</li>
+          <li>ссылки видны: понятно, откуда взят ответ</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- legend: the 4 chapter points -->
+    <div class="legend">
+      <div class="lg"><div class="n">01 СВЕЖЕСТЬ</div><div class="t">без переобучения</div><div class="d">свежие и приватные данные без переобучения модели</div></div>
+      <div class="lg"><div class="n">02 МЕНЬШЕ ВЫДУМОК</div><div class="t">опора на источник</div><div class="d">меньше выдуманных фактов - ответ опирается на источник</div></div>
+      <div class="lg"><div class="n">03 ССЫЛКИ</div><div class="t">видно откуда</div><div class="d">ссылки на источники: видно, откуда взят ответ</div></div>
+      <div class="lg"><div class="n">04 ДЕШЕВЛЕ</div><div class="t">без дообучения</div><div class="d">дешевле, чем дообучать модель под каждое обновление</div></div>
+    </div>
+  </section>
+</div>
+
+<style id="mokup-nav-style">#mokup-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;padding:4px 8px;background:linear-gradient(180deg,#f7efdc,#efe3c8);border:1px solid #bda878;border-radius:999px;box-shadow:0 4px 14px rgba(60,46,26,.25);font:600 12px/1 "Trebuchet MS",Verdana,sans-serif;color:#5c4a32}#mokup-nav a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:0 10px;border-radius:999px;color:#335551;text-decoration:none}#mokup-nav a:hover{background:#ddcca8;color:#a55a35}#mokup-nav .lbl{padding:0 6px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}</style>
+<nav id="mokup-nav" aria-label="Concept navigator"><a href="05-journal-plates.html" aria-label="Previous">&#8592;</a><span class="lbl">06 naturalist-archive</span><a href="../index.html">index</a><a href="08-harbor.html" aria-label="Next">&#8594;</a></nav>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- scene graph: each level frames an object via a camera transform ----
+  // The camera is a single <g>; we scale it up and translate so the targeted
+  // object centres in the viewBox (1180 x 680). Content layers cross-fade.
+  var VIEW_W = 1180, VIEW_H = 680;
+
+  // levels: 0 = overview, 1 = inside index drawer (document), 2 = exact lines.
+  // For levels 1 and 2 the camera zooms toward the index node at (560,300).
+  var LEVELS = {
+    0: { layer:"layer0", scale:1,    cx:VIEW_W/2, cy:VIEW_H/2, crumb:"Карта запроса",        kind:"обзор" },
+    1: { layer:"layer1", scale:2.05, cx:560,      cy:300,      crumb:"Документ из индекса",    kind:"увеличение 1" },
+    2: { layer:"layer2", scale:3.4,  cx:560,      cy:300,      crumb:"Точные строки + ссылка", kind:"увеличение 2" }
+  };
+
+  var camera = document.getElementById("camera");
+  var crumbs = document.getElementById("crumbs");
+  var cz0    = document.getElementById("cz0");
+  var zoomOut= document.getElementById("zoomOut");
+  var qdot   = document.getElementById("qdot");
+  if(!camera || !crumbs || !zoomOut){ return; }
+
+  var current = 0;
+
+  function camTransform(lv){
+    var L = LEVELS[lv];
+    // translate so (cx,cy) maps to viewBox centre after scaling
+    var tx = VIEW_W/2 - L.cx * L.scale;
+    var ty = VIEW_H/2 - L.cy * L.scale;
+    return "translate(" + tx.toFixed(2) + "," + ty.toFixed(2) + ") scale(" + L.scale + ")";
+  }
+
+  function setLayerVisibility(lv){
+    var k;
+    for(k=0;k<=2;k++){
+      var lay = document.getElementById(LEVELS[k].layer);
+      if(!lay){ continue; }
+      var show = (k === lv);
+      lay.setAttribute("data-hidden", show ? "0" : "1");
+      lay.setAttribute("aria-hidden", show ? "false" : "true");
+    }
+    // the travelling dot belongs to the overview only
+    if(qdot){ qdot.style.opacity = (lv === 0) ? "" : "0"; }
+  }
+
+  function renderCrumbs(lv){
+    // rebuild breadcrumb chain 0..lv; each crumb below current is a button.
+    crumbs.innerHTML = "";
+    var i;
+    for(i=0;i<=lv;i++){
+      if(i>0){
+        var sep = document.createElement("span");
+        sep.className = "sep";
+        sep.textContent = "/";
+        crumbs.appendChild(sep);
+      }
+      var L = LEVELS[i];
+      var el;
+      if(i === lv){
+        el = document.createElement("span");
+        el.className = "cz here";
+      } else {
+        el = document.createElement("button");
+        el.type = "button";
+        el.className = "cz";
+        (function(target){
+          el.addEventListener("click", function(){ goLevel(target); });
+        })(i);
+      }
+      el.setAttribute("data-level", String(i));
+      var lvl = document.createElement("span");
+      lvl.className = "lvl";
+      lvl.textContent = L.kind;
+      el.appendChild(lvl);
+      el.appendChild(document.createTextNode(L.crumb));
+      crumbs.appendChild(el);
+    }
+  }
+
+  function goLevel(lv){
+    if(lv < 0){ lv = 0; }
+    if(lv > 2){ lv = 2; }
+    current = lv;
+    camera.setAttribute("transform", camTransform(lv));
+    setLayerVisibility(lv);
+    renderCrumbs(lv);
+    zoomOut.disabled = (lv === 0);
+    // move keyboard focus to the next drill host inside the freshly revealed
+    // layer so Enter/Space (and the harness "next [data-drill]") lands there.
+    window.setTimeout(function(){
+      var lay = document.getElementById(LEVELS[lv].layer);
+      var nextDrill = lay ? lay.querySelector("[data-drill]") : null;
+      if(nextDrill && lv > 0){
+        try{ nextDrill.focus(); }catch(e){}
+      }
+    }, 360);
+  }
+
+  function zoomInFrom(target){
+    // map a clicked drill target to the next deeper level
+    if(target === "index"){ goLevel(1); }
+    else if(target === "lines"){ goLevel(2); }
+  }
+
+  // wire every [data-drill] host: click + keyboard. The FIRST in DOM order is
+  // the index node (layer 0); the next, revealed inside layer 1, is the lines.
+  var hosts = document.querySelectorAll("[data-drill]");
+  var h;
+  for(h=0; h<hosts.length; h++){
+    (function(host){
+      var target = host.getAttribute("data-target");
+      host.addEventListener("click", function(){ zoomInFrom(target); });
+      host.addEventListener("keydown", function(e){
+        if(e.key === "Enter" || e.key === " "){
+          e.preventDefault();
+          zoomInFrom(target);
+        }
+      });
+    })(hosts[h]);
+  }
+
+  // zoom-out control: step one level shallower
+  zoomOut.addEventListener("click", function(){ goLevel(current - 1); });
+
+  // Escape pops to the overview
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && current > 0){ goLevel(current - 1); }
+  });
+
+  // initial paint
+  goLevel(0);
+
+  // IntersectionObserver: pause the ambient query travel + glows when offscreen
+  var stage = document.getElementById("stage");
+  if(stage && "IntersectionObserver" in window){
+    var animated = stage.querySelectorAll(".qtravel,.lit-q,.lit-idx,.lit-card,.lit-model,.lit-ans,.route.live,.card-settle,.qhalo-pulse");
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var state = en.isIntersecting ? "running" : "paused";
+        var s;
+        for(s=0;s<animated.length;s++){ animated[s].style.animationPlayState = state; }
+      });
+    }, {threshold:0.04});
+    io.observe(stage);
+  }
+})();
+</script>
+</body>
+</html>

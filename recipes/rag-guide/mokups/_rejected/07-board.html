@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide</title>
+<style>
+  :root{
+    --bg:#fbf3e8;
+    --bg2:#f6e7d4;
+    --paper:#ffffff;
+    --ink:#3d3326;
+    --ink-soft:#6b5e4c;
+    --warm:#f3b562;
+    --warm-dark:#e0954a;
+    --accent:#6fb3a8;
+    --accent-dark:#4e9389;
+    --accent-soft:#cfe8e3;
+    --pin:#f08a6b;
+    --pin-dark:#d96c4f;
+    --path:#e7d4bb;
+    --path-line:#d8bf9c;
+    --shadow:0 6px 18px rgba(120,90,50,.18);
+    --shadow-lg:0 14px 36px rgba(120,90,50,.24);
+    --radius:22px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Trebuchet MS","Segoe UI",Verdana,Geneva,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, var(--accent-soft) 0%, transparent 55%),
+      radial-gradient(1000px 500px at 110% 5%, #ffe6c9 0%, transparent 50%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.5;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:0 24px}
+
+  /* Header */
+  header.site{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;padding:18px 24px;max-width:1320px;margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:12px;font-weight:bold;font-size:1.25rem}
+  .brand .logo{
+    width:42px;height:42px;flex:0 0 42px;border-radius:14px;
+    background:linear-gradient(135deg,var(--warm),var(--pin));
+    display:grid;place-items:center;box-shadow:var(--shadow);
+  }
+  .brand .logo svg{width:24px;height:24px}
+  .toggle{
+    display:inline-flex;background:var(--paper);border-radius:999px;
+    padding:4px;box-shadow:var(--shadow);gap:2px;
+  }
+  .toggle button{
+    border:0;background:transparent;cursor:pointer;
+    font:inherit;font-weight:bold;color:var(--ink-soft);
+    padding:8px 16px;border-radius:999px;min-height:44px;min-width:52px;
+    transition:background .18s,color .18s;
+  }
+  .toggle button.active{background:var(--accent);color:#fff}
+  .toggle button:focus-visible{outline:3px solid var(--warm-dark);outline-offset:2px}
+
+  /* Hero */
+  .hero{text-align:center;padding:30px 24px 8px;max-width:860px;margin:0 auto}
+  .hero .badge{
+    display:inline-block;background:var(--accent-soft);color:var(--accent-dark);
+    font-weight:bold;padding:7px 16px;border-radius:999px;font-size:.85rem;
+    letter-spacing:.5px;margin-bottom:16px;
+  }
+  .hero h1{
+    font-size:clamp(1.8rem,4.4vw,3rem);line-height:1.15;margin:0 0 14px;
+    color:var(--ink);
+  }
+  .hero h1 .hl{color:var(--warm-dark)}
+  .hero p{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--ink-soft);margin:0 auto;max-width:620px}
+  .hero .start-cta{
+    margin-top:22px;display:inline-flex;align-items:center;gap:10px;
+    background:linear-gradient(135deg,var(--pin),var(--warm-dark));
+    color:#fff;font-weight:bold;font-size:1.05rem;
+    border:0;border-radius:999px;padding:14px 30px;min-height:44px;
+    cursor:pointer;box-shadow:var(--shadow-lg);text-decoration:none;
+    transition:transform .15s;
+  }
+  .hero .start-cta:hover{transform:translateY(-2px)}
+  .hero .start-cta:focus-visible{outline:3px solid var(--accent-dark);outline-offset:3px}
+
+  /* Board */
+  .board{position:relative;margin:18px auto 10px;max-width:1180px;padding:10px 0 30px}
+  .board-svg{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+  .nodes{position:relative;z-index:1}
+
+  .node{
+    position:absolute;transform:translate(-50%,-50%);
+    width:280px;
+  }
+  .pin{
+    display:flex;align-items:center;gap:12px;width:100%;
+    background:var(--paper);border:3px solid transparent;
+    border-radius:var(--radius);padding:12px 16px;cursor:pointer;
+    box-shadow:var(--shadow);text-align:left;font:inherit;color:var(--ink);
+    transition:transform .15s,box-shadow .15s,border-color .15s;
+  }
+  .pin:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+  .pin:focus-visible{outline:3px solid var(--accent-dark);outline-offset:3px}
+  .pin.open{border-color:var(--accent)}
+  .marker{
+    flex:0 0 50px;width:50px;height:50px;border-radius:16px;
+    display:grid;place-items:center;font-weight:bold;font-size:1.1rem;color:#fff;
+    background:linear-gradient(135deg,var(--warm),var(--warm-dark));
+    box-shadow:0 4px 10px rgba(180,120,50,.35);
+  }
+  .node.is-start .marker{background:linear-gradient(135deg,var(--accent),var(--accent-dark))}
+  .node.is-finish .marker{background:linear-gradient(135deg,var(--pin),var(--pin-dark))}
+  .marker .ico{width:24px;height:24px}
+  .pin .titles{flex:1;min-width:0}
+  .pin .pct{font-size:.72rem;font-weight:bold;color:var(--accent-dark);letter-spacing:.5px}
+  .node.is-finish .pin .pct{color:var(--pin-dark)}
+  .pin .ttl{font-size:.96rem;font-weight:bold;line-height:1.25}
+  .chev{flex:0 0 auto;width:18px;height:18px;color:var(--ink-soft);transition:transform .2s}
+  .pin.open .chev{transform:rotate(180deg)}
+
+  .card{
+    overflow:hidden;max-height:0;opacity:0;
+    transition:max-height .28s ease,opacity .2s ease,margin .2s ease;
+    background:var(--paper);border-radius:18px;margin-top:0;
+    box-shadow:var(--shadow);
+  }
+  .pin.open + .card{max-height:340px;opacity:1;margin-top:10px}
+  .card .inner{padding:14px 18px 16px;border-left:5px solid var(--accent)}
+  .node.is-start .card .inner{border-left-color:var(--accent-dark)}
+  .node.is-finish .card .inner{border-left-color:var(--pin)}
+  .card .blurb{margin:0 0 10px;color:var(--ink-soft);font-size:.92rem}
+  .card ul{margin:0;padding-left:18px}
+  .card li{margin:4px 0;font-size:.9rem;color:var(--ink)}
+
+  /* Mobile vertical track */
+  @media (max-width:900px){
+    .board-svg{display:none}
+    .board{max-width:560px;padding:0}
+    .nodes{display:flex;flex-direction:column;gap:18px;position:relative}
+    .nodes::before{
+      content:"";position:absolute;left:33px;top:24px;bottom:24px;width:6px;
+      background:var(--path-line);border-radius:6px;z-index:0;
+    }
+    .node{position:static;transform:none;width:100%;left:auto!important;top:auto!important}
+    .pin{position:relative;z-index:1}
+  }
+  @media (max-width:480px){
+    .wrap{padding:0 14px}
+    header.site{padding:14px}
+    .node{width:100%}
+    .pin{padding:10px 12px}
+    .marker{flex-basis:46px;width:46px;height:46px}
+  }
+
+  /* Footer */
+  footer.site{
+    text-align:center;padding:30px 24px 40px;color:var(--ink-soft);font-size:.88rem;
+  }
+  footer.site .links{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+  footer.site a{color:var(--accent-dark);text-decoration:none;font-weight:bold}
+  footer.site a:hover{text-decoration:underline}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    .card{transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v15.5H5.5C4.7 19.5 4 18.8 4 18V5.5Z" fill="#fff"/><path d="M20 5.5C20 4.7 19.3 4 18.5 4H13v15.5h5.5c.8 0 1.5-.7 1.5-1.5V5.5Z" fill="#fff" opacity=".75"/></svg>
+    </span>
+    <span data-i18n="brand">RAG с нуля</span>
+  </div>
+  <div class="toggle" role="group" aria-label="Language">
+    <button id="btn-ru" class="active" onclick="setLang('ru')">RU</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="badge" data-i18n="heroBadge">Для новичков</span>
+  <h1><span data-i18n="heroTitleA">От </span><span class="hl" data-i18n="heroTitleHl">0 до 100%</span><span data-i18n="heroTitleB"> в RAG -- без подготовки</span></h1>
+  <p data-i18n="heroSub">Теплый пошаговый путь по карте. Никаких требований, никуда уходить не надо -- все прямо здесь, на этой странице.</p>
+  <a href="#node-0" class="start-cta">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z" fill="#fff"/></svg>
+    <span data-i18n="heroCta">Начать путь</span>
+  </a>
+</section>
+
+<div class="board" id="board">
+  <svg class="board-svg" id="path-svg" viewBox="0 0 1180 1500" preserveAspectRatio="none" aria-hidden="true">
+    <path id="trail" fill="none" stroke="var(--path-line)" stroke-width="30" stroke-linecap="round" stroke-dasharray="2 26"/>
+    <path id="trail-bg" fill="none" stroke="var(--path)" stroke-width="44" stroke-linecap="round" opacity=".55"/>
+  </svg>
+  <div class="nodes" id="nodes"></div>
+</div>
+
+<footer class="site">
+  <div class="links">
+    <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+    <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+  </div>
+  <div data-i18n="footNote">Сделано с заботой для тех, кто только начинает.</div>
+</footer>
+
+<script>
+// ---- Content (RU primary / EN) ----
+var STEPS = [
+  {pct:"0%",  ru:{t:"С чего начать", b:"Короткая разминка: что вас ждет и как читать эту карту.", s:["Путь делится на маленькие шаги","Каждый пин -- одна идея","Можно идти в своем темпе"]},
+              en:{t:"Where to start", b:"A short warm-up: what to expect and how to read this map.", s:["The path is split into tiny steps","Each pin is one idea","Go at your own pace"]}},
+  {pct:"1",   ru:{t:"Что такое RAG", b:"Простыми словами: модель отвечает, опираясь на ваши документы.", s:["Retrieval + Generation","Ответ со ссылкой на источник","Без дообучения модели"]},
+              en:{t:"What RAG is", b:"In plain words: the model answers using your documents.", s:["Retrieval + Generation","Answers grounded in sources","No model fine-tuning needed"]}},
+  {pct:"2",   ru:{t:"Зачем он нужен", b:"Почему RAG лучше, чем просто спрашивать модель напрямую.", s:["Актуальные данные","Меньше выдумок","Свой домен знаний"]},
+              en:{t:"Why you need it", b:"Why RAG beats asking the model on its own.", s:["Fresh, up-to-date data","Fewer hallucinations","Your own knowledge domain"]}},
+  {pct:"3",   ru:{t:"Как работает поиск по документам", b:"Общая картина: вопрос -> нужные куски -> ответ.", s:["Индексация документов","Поиск по смыслу","Передача найденного модели"]},
+              en:{t:"How document retrieval works", b:"The big picture: question -> relevant pieces -> answer.", s:["Indexing the documents","Search by meaning","Feeding hits to the model"]}},
+  {pct:"4",   ru:{t:"Разбиваем текст на чанки", b:"Большие документы режем на аккуратные кусочки.", s:["Размер чанка","Перекрытие кусков","Сохраняем структуру"]},
+              en:{t:"Splitting text into chunks", b:"We cut big documents into neat little pieces.", s:["Chunk size","Overlap between chunks","Keeping structure"]}},
+  {pct:"5",   ru:{t:"Эмбеддинги: текст в векторы", b:"Превращаем слова в числа, понятные машине.", s:["Что такое вектор","Близость по смыслу","Выбор модели эмбеддингов"]},
+              en:{t:"Embeddings: text to vectors", b:"We turn words into numbers a machine understands.", s:["What a vector is","Similarity by meaning","Choosing an embedding model"]}},
+  {pct:"6",   ru:{t:"Векторная база и поиск", b:"Где хранятся векторы и как по ним искать быстро.", s:["Векторное хранилище","Поиск ближайших соседей","Метрики сходства"]},
+              en:{t:"Vector store and search", b:"Where vectors live and how to search them fast.", s:["The vector store","Nearest-neighbor search","Similarity metrics"]}},
+  {pct:"7",   ru:{t:"Собираем контекст для модели", b:"Из найденных кусков собираем аккуратный промпт.", s:["Отбор лучших кусков","Сборка промпта","Лимиты контекста"]},
+              en:{t:"Assembling context for the model", b:"We build a tidy prompt from the retrieved pieces.", s:["Picking the best pieces","Building the prompt","Context limits"]}},
+  {pct:"8",   ru:{t:"Генерация ответа", b:"Модель пишет ответ, опираясь на собранный контекст.", s:["Инструкции модели","Ссылки на источники","Формат ответа"]},
+              en:{t:"Generating the answer", b:"The model writes an answer grounded in the context.", s:["Instructions for the model","Citing sources","Answer format"]}},
+  {pct:"9",   ru:{t:"Оценка качества", b:"Как понять, что система отвечает хорошо.", s:["Точность поиска","Качество ответа","Обратная связь"]},
+              en:{t:"Measuring quality", b:"How to tell the system is answering well.", s:["Retrieval accuracy","Answer quality","Feedback loop"]}},
+  {pct:"100%",ru:{t:"Вывод в продакшн", b:"Финиш! Запускаем RAG в реальный мир.", s:["Стабильность и скорость","Мониторинг","Обновление данных"]},
+              en:{t:"Going to production", b:"Finish! Ship your RAG into the real world.", s:["Stability and speed","Monitoring","Keeping data fresh"]}}
+];
+
+var I18N = {
+  ru:{brand:"RAG с нуля",heroBadge:"Для новичков",heroTitleA:"От ",heroTitleHl:"0 до 100%",heroTitleB:" в RAG -- без подготовки",
+      heroSub:"Теплый пошаговый путь по карте. Никаких требований, никуда уходить не надо -- все прямо здесь, на этой странице.",
+      heroCta:"Начать путь",footNote:"Сделано с заботой для тех, кто только начинает."},
+  en:{brand:"RAG Guide",heroBadge:"For beginners",heroTitleA:"From ",heroTitleHl:"0 to 100%",heroTitleB:" in RAG -- no prerequisites",
+      heroSub:"A warm step-by-step journey across the map. No requirements, no need to go anywhere -- everything is right here on this page.",
+      heroCta:"Start the journey",footNote:"Made with care for those just getting started."}
+};
+
+var lang = "ru";
+
+// SVG marker icons (flag for start, trophy for finish)
+var ICO_FLAG = '<svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M6 3v18" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M7 4h9l-2.2 3.2L16 11H7V4Z" fill="#fff"/></svg>';
+var ICO_TROPHY = '<svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v3a5 5 0 0 1-10 0V4Z" fill="#fff"/><path d="M7 5H4v1a3 3 0 0 0 3 3M17 5h3v1a3 3 0 0 1-3 3" stroke="#fff" stroke-width="1.8"/><path d="M12 12v4M9 20h6M10 16h4l.5 4h-5l.5-4Z" stroke="#fff" stroke-width="1.8" fill="#fff"/></svg>';
+
+// Desktop winding positions (% of board). Snakes left<->right downward.
+var POS = [
+  {x:18,y:5},{x:50,y:11},{x:80,y:18},{x:55,y:25},{x:22,y:32},
+  {x:48,y:40},{x:78,y:48},{x:50,y:56},{x:24,y:64},{x:52,y:72},{x:80,y:82}
+];
+
+function buildNodes(){
+  var nodes = document.getElementById("nodes");
+  nodes.innerHTML = "";
+  STEPS.forEach(function(step, i){
+    var p = POS[i];
+    var isStart = i===0, isFinish = i===STEPS.length-1;
+    var node = document.createElement("div");
+    node.className = "node" + (isStart?" is-start":"") + (isFinish?" is-finish":"");
+    node.id = "node-"+i;
+    node.style.left = p.x + "%";
+    node.style.top = p.y + "%";
+
+    var markerInner = isStart ? ICO_FLAG : (isFinish ? ICO_TROPHY : (i));
+
+    var btn = document.createElement("button");
+    btn.className = "pin";
+    btn.type = "button";
+    btn.setAttribute("aria-expanded","false");
+    btn.innerHTML =
+      '<span class="marker">'+markerInner+'</span>'+
+      '<span class="titles"><span class="pct">'+step.pct+'</span>'+
+      '<span class="ttl"></span></span>'+
+      '<svg class="chev" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    var card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = '<div class="inner"><p class="blurb"></p><ul></ul></div>';
+
+    btn.addEventListener("click", function(){
+      var open = btn.classList.toggle("open");
+      btn.setAttribute("aria-expanded", open ? "true":"false");
+    });
+
+    node.appendChild(btn);
+    node.appendChild(card);
+    nodes.appendChild(node);
+  });
+  applyLang();
+  drawPath();
+}
+
+function applyLang(){
+  var t = I18N[lang];
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var k = el.getAttribute("data-i18n");
+    if(t[k]!==undefined) el.textContent = t[k];
+  });
+  document.documentElement.lang = lang;
+  STEPS.forEach(function(step,i){
+    var node = document.getElementById("node-"+i);
+    var d = step[lang];
+    node.querySelector(".ttl").textContent = d.t;
+    node.querySelector(".blurb").textContent = d.b;
+    var ul = node.querySelector("ul");
+    ul.innerHTML = "";
+    d.s.forEach(function(s){ var li=document.createElement("li"); li.textContent=s; ul.appendChild(li); });
+  });
+}
+
+function setLang(l){
+  lang = l;
+  document.getElementById("btn-ru").classList.toggle("active", l==="ru");
+  document.getElementById("btn-en").classList.toggle("active", l==="en");
+  applyLang();
+}
+
+function drawPath(){
+  // Build a smooth path through node centers in the SVG viewBox coords.
+  var W=1180, H=1500;
+  var pts = POS.map(function(p){ return {x:p.x/100*W, y:p.y/100*H}; });
+  var d = "M "+pts[0].x+" "+pts[0].y;
+  for(var i=1;i<pts.length;i++){
+    var prev=pts[i-1], cur=pts[i];
+    var midY=(prev.y+cur.y)/2;
+    d += " C "+prev.x+" "+midY+", "+cur.x+" "+midY+", "+cur.x+" "+cur.y;
+  }
+  document.getElementById("trail").setAttribute("d", d);
+  document.getElementById("trail-bg").setAttribute("d", d);
+}
+
+buildNodes();
+window.addEventListener("resize", drawPath);
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="06-blueprint.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">07 / 10</span><span class="mn-name">Board</span></span>
+  <a href="08-atlas.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="06-blueprint.html", NEXT="08-atlas.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

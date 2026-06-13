@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide</title>
+<style>
+  :root{
+    --bg-fallback:#171a2e;
+    --ink:#eef1fb;
+    --ink-soft:#b9c0dc;
+    --ink-dim:#8b93b8;
+    --glass:rgba(255,255,255,0.07);
+    --glass-strong:rgba(255,255,255,0.10);
+    --stroke:rgba(255,255,255,0.16);
+    --glow:rgba(140,170,255,0.35);
+    --line:rgba(150,180,240,0.55);
+    --accent:#9db6ff;
+    --teal:#7fe3d4;
+    --radius:22px;
+    --maxw:1160px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background-color:var(--bg-fallback);
+    line-height:1.55;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* Aurora mesh background, CSS gradients only */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:-20%;
+    z-index:-2;
+    background:
+      radial-gradient(40% 50% at 18% 22%, rgba(86,72,168,0.55), transparent 60%),
+      radial-gradient(45% 55% at 82% 18%, rgba(54,108,150,0.45), transparent 62%),
+      radial-gradient(50% 60% at 70% 82%, rgba(72,140,150,0.40), transparent 60%),
+      radial-gradient(55% 60% at 25% 85%, rgba(96,70,140,0.42), transparent 64%),
+      linear-gradient(160deg,#141733 0%,#161b32 45%,#12202c 100%);
+    background-color:var(--bg-fallback);
+    animation:drift 38s ease-in-out infinite alternate;
+  }
+  body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:radial-gradient(120% 90% at 50% -10%, transparent 40%, rgba(8,10,22,0.55) 100%);
+    pointer-events:none;
+  }
+  @keyframes drift{
+    0%{transform:translate3d(-2%,-1%,0) scale(1.02)}
+    100%{transform:translate3d(2%,2%,0) scale(1.06)}
+  }
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+  /* glass utility */
+  .glass{
+    background:var(--glass);
+    border:1px solid var(--stroke);
+    border-radius:var(--radius);
+    -webkit-backdrop-filter:blur(16px) saturate(120%);
+    backdrop-filter:blur(16px) saturate(120%);
+    box-shadow:0 8px 40px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.10);
+  }
+  /* fallback when backdrop-filter unsupported */
+  @supports not ((-webkit-backdrop-filter:blur(2px)) or (backdrop-filter:blur(2px))){
+    .glass{background:rgba(30,36,64,0.78)}
+    .node-head{background:rgba(30,36,64,0.82)}
+  }
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;padding:14px 0}
+  .bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 20px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.3px}
+  .logo{
+    width:34px;height:34px;border-radius:11px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--accent),var(--teal));
+    box-shadow:0 0 18px var(--glow);
+  }
+  .brand b{font-size:1.05rem}
+  .brand span{display:block;font-size:.72rem;color:var(--ink-dim);font-weight:500}
+  .toggle{display:flex;gap:4px;padding:4px;border-radius:999px;
+    background:rgba(255,255,255,0.06);border:1px solid var(--stroke)}
+  .toggle button{
+    appearance:none;border:0;cursor:pointer;
+    min-width:46px;min-height:36px;padding:0 14px;border-radius:999px;
+    color:var(--ink-soft);background:transparent;font:inherit;font-weight:600;font-size:.85rem;
+    transition:background .25s,color .25s;
+  }
+  .toggle button.active{color:#10131f;background:linear-gradient(135deg,var(--accent),var(--teal))}
+
+  /* Hero */
+  .hero{text-align:center;padding:60px 0 36px}
+  .eyebrow{
+    display:inline-block;font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase;
+    color:var(--teal);padding:7px 16px;border-radius:999px;margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:clamp(2rem,5vw,3.4rem);line-height:1.12;font-weight:800;
+    letter-spacing:-.5px;margin-bottom:18px;
+    background:linear-gradient(120deg,#ffffff,#cdd7ff 60%,#a9efe2);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p{max-width:640px;margin:0 auto;color:var(--ink-soft);font-size:clamp(1rem,2.2vw,1.18rem)}
+  .hero .meter{
+    max-width:420px;margin:30px auto 0;padding:16px 20px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .meter .label{font-size:.82rem;color:var(--ink-dim);white-space:nowrap}
+  .bar-track{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,0.10);overflow:hidden}
+  .bar-fill{height:100%;width:8%;border-radius:999px;
+    background:linear-gradient(90deg,var(--accent),var(--teal));box-shadow:0 0 12px var(--glow)}
+
+  /* Track */
+  .track-head{text-align:center;margin:46px 0 10px}
+  .track-head h2{font-size:clamp(1.5rem,3.5vw,2.1rem);font-weight:800;letter-spacing:-.3px}
+  .track-head p{color:var(--ink-dim);margin-top:8px}
+
+  .track{position:relative;max-width:760px;margin:36px auto 0;padding:6px 0 10px}
+  /* luminous spine */
+  .track::before{
+    content:"";position:absolute;left:31px;top:14px;bottom:14px;width:2px;
+    background:linear-gradient(180deg,var(--accent),var(--teal));
+    box-shadow:0 0 14px var(--glow);opacity:.85;
+  }
+
+  .node{position:relative;padding-left:74px;margin-bottom:18px}
+  .dot{
+    position:absolute;left:18px;top:18px;width:28px;height:28px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.7rem;font-weight:800;color:#0e1120;
+    background:linear-gradient(135deg,var(--accent),var(--teal));
+    box-shadow:0 0 0 5px rgba(20,24,46,0.65),0 0 16px var(--glow);
+    z-index:2;
+  }
+  .node.endcap .dot{width:34px;height:34px;left:15px;font-size:.66rem}
+
+  .node-card{overflow:hidden;transition:transform .25s ease}
+  .node-card:hover{transform:translateY(-1px)}
+  .node-head{
+    width:100%;text-align:left;cursor:pointer;border:0;background:transparent;
+    color:var(--ink);font:inherit;
+    display:flex;align-items:center;gap:14px;padding:16px 18px;
+  }
+  .node-head .pct{
+    font-size:.78rem;font-weight:800;color:var(--teal);min-width:42px;letter-spacing:.5px;
+  }
+  .node-head .ttl{flex:1;font-weight:700;font-size:1.02rem}
+  .chev{flex:0 0 auto;width:22px;height:22px;color:var(--ink-dim);transition:transform .3s}
+  .node-card.open .chev{transform:rotate(180deg)}
+
+  .node-body{
+    max-height:0;opacity:0;transition:max-height .35s ease,opacity .3s ease,padding .35s ease;
+    padding:0 18px;
+  }
+  .node-card.open .node-body{max-height:420px;opacity:1;padding:0 18px 18px 18px}
+  .node-body .blurb{color:var(--ink-soft);font-size:.95rem;margin-bottom:12px}
+  .node-body ul{list-style:none;display:grid;gap:9px}
+  .node-body li{
+    position:relative;padding-left:22px;color:var(--ink-soft);font-size:.9rem;
+  }
+  .node-body li::before{
+    content:"";position:absolute;left:0;top:8px;width:8px;height:8px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--teal));box-shadow:0 0 8px var(--glow);
+  }
+
+  /* Footer */
+  footer{margin:60px 0 40px;text-align:center;color:var(--ink-dim);font-size:.86rem}
+  footer .links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+  footer a{color:var(--ink-soft);text-decoration:none;padding:8px 12px;border-radius:12px;transition:color .2s,background .2s}
+  footer a:hover{color:#fff;background:rgba(255,255,255,0.06)}
+
+  @media (max-width:480px){
+    .wrap{padding:0 16px}
+    .hero{padding:40px 0 26px}
+    .hero .meter{flex-wrap:wrap}
+    .track::before{left:25px}
+    .node{padding-left:60px}
+    .dot{left:12px}
+    .node.endcap .dot{left:9px}
+    .toggle button{min-width:44px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    body::before{animation:none}
+    html{scroll-behavior:auto}
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="bar glass">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <b data-i18n="brand">RAG с нуля</b>
+          <span data-i18n="brandSub">Интерактивный гид для новичков</span>
+        </div>
+      </div>
+      <div class="toggle" role="group" aria-label="Language">
+        <button id="lang-ru" class="active" onclick="setLang('ru')">RU</button>
+        <button id="lang-en" onclick="setLang('en')">EN</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <span class="eyebrow glass" data-i18n="eyebrow">Без подготовки</span>
+    <h1 data-i18n="heroTitle">От нуля до RAG на 100%</h1>
+    <p data-i18n="heroText">Тёплый путь для новичка: никаких пререквизитов, никакой магии. Всё здесь, на этой странице - от первого вопроса до рабочего решения.</p>
+    <div class="meter glass">
+      <span class="label" data-i18n="meterLabel">Прогресс гида</span>
+      <div class="bar-track"><div class="bar-fill"></div></div>
+      <span class="label">0 -&gt; 100%</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="track-head">
+      <h2 data-i18n="trackTitle">Твой маршрут обучения</h2>
+      <p data-i18n="trackSub">Нажми на любой шаг, чтобы раскрыть его прямо здесь.</p>
+    </div>
+    <div class="track" id="track"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="links">
+    <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+    <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+  </div>
+  <div data-i18n="footNote">Сделано с любовью к тем, кто только начинает.</div>
+</footer>
+
+<script>
+  var I18N = {
+    ru:{
+      brand:"RAG с нуля", brandSub:"Интерактивный гид для новичков",
+      eyebrow:"Без подготовки",
+      heroTitle:"От нуля до RAG на 100%",
+      heroText:"Тёплый путь для новичка: никаких пререквизитов, никакой магии. Всё здесь, на этой странице - от первого вопроса до рабочего решения.",
+      meterLabel:"Прогресс гида",
+      trackTitle:"Твой маршрут обучения",
+      trackSub:"Нажми на любой шаг, чтобы раскрыть его прямо здесь.",
+      footNote:"Сделано с любовью к тем, кто только начинает."
+    },
+    en:{
+      brand:"RAG from scratch", brandSub:"Interactive guide for beginners",
+      eyebrow:"No prerequisites",
+      heroTitle:"From zero to RAG at 100%",
+      heroText:"A warm path for a beginner: no prerequisites, no magic. Everything is right here on this page -- from the first question to a working solution.",
+      meterLabel:"Guide progress",
+      trackTitle:"Your learning track",
+      trackSub:"Tap any step to expand it right here.",
+      footNote:"Made with care for everyone just starting out."
+    }
+  };
+
+  var NODES = [
+    {pct:"0%",
+      ru:{t:"С чего начать",b:"Короткая ориентация: что ты получишь в конце и почему это проще, чем кажется.",p:["Что такое этот гид и как им пользоваться","Какой результат ждёт в конце пути","Ничего не нужно устанавливать заранее"]},
+      en:{t:"Where to start",b:"A short orientation: what you get at the end and why it is simpler than it looks.",p:["What this guide is and how to use it","What result waits at the end of the path","Nothing to install in advance"]}},
+    {pct:"1",
+      ru:{t:"Что такое RAG",b:"RAG - это способ дать модели доступ к твоим документам во время ответа.",p:["Retrieval плюс Generation простыми словами","Откуда модель берёт факты","Чем это отличается от обычного чата"]},
+      en:{t:"What RAG is",b:"RAG is a way to give the model access to your documents while it answers.",p:["Retrieval plus Generation in plain words","Where the model gets its facts","How it differs from a plain chat"]}},
+    {pct:"2",
+      ru:{t:"Зачем он нужен",b:"Почему простого запроса к модели часто недостаточно.",p:["Борьба с выдуманными фактами","Актуальные и приватные данные","Ответы со ссылками на источник"]},
+      en:{t:"Why you need it",b:"Why a plain prompt to the model is often not enough.",p:["Fighting made-up facts","Fresh and private data","Answers with source references"]}},
+    {pct:"3",
+      ru:{t:"Как работает поиск по документам",b:"Общая картина: от вопроса до найденных фрагментов.",p:["Индекс и запрос на высоком уровне","Почему поиск по смыслу, а не по словам","Цикл: вопрос -> поиск -> ответ"]},
+      en:{t:"How document retrieval works",b:"The big picture: from a question to the matched fragments.",p:["Index and query at a high level","Why search by meaning, not by words","The loop: question -> search -> answer"]}},
+    {pct:"4",
+      ru:{t:"Разбиваем текст на чанки",b:"Почему большие документы делят на маленькие кусочки.",p:["Размер чанка и перекрытие","Границы по смыслу, а не по символам","Типичные ошибки нарезки"]},
+      en:{t:"Splitting text into chunks",b:"Why large documents are split into small pieces.",p:["Chunk size and overlap","Boundaries by meaning, not by characters","Common chunking mistakes"]}},
+    {pct:"5",
+      ru:{t:"Эмбеддинги: текст в векторы",b:"Как текст превращается в числа, понятные машине.",p:["Что такое вектор и почему близость важна","Выбор модели эмбеддингов","Одна модель для запросов и документов"]},
+      en:{t:"Embeddings: text to vectors",b:"How text turns into numbers a machine understands.",p:["What a vector is and why closeness matters","Choosing an embedding model","One model for queries and documents"]}},
+    {pct:"6",
+      ru:{t:"Векторная база и поиск",b:"Где хранят векторы и как находят похожие.",p:["Что делает векторная база","Поиск ближайших соседей","Фильтры и метаданные"]},
+      en:{t:"Vector store and search",b:"Where vectors live and how similar ones are found.",p:["What a vector store does","Nearest-neighbour search","Filters and metadata"]}},
+    {pct:"7",
+      ru:{t:"Собираем контекст для модели",b:"Из найденных фрагментов собираем подсказку для модели.",p:["Сколько фрагментов взять","Порядок и обрезка контекста","Шаблон промпта с источниками"]},
+      en:{t:"Assembling context for the model",b:"From the matched fragments we build the prompt for the model.",p:["How many fragments to include","Ordering and trimming the context","A prompt template with sources"]}},
+    {pct:"8",
+      ru:{t:"Генерация ответа",b:"Модель читает контекст и формулирует ответ.",p:["Как влияет контекст на ответ","Ссылки на источники в ответе","Что делать, когда ответа нет"]},
+      en:{t:"Generating the answer",b:"The model reads the context and forms an answer.",p:["How context shapes the answer","Citing sources in the answer","What to do when there is no answer"]}},
+    {pct:"9",
+      ru:{t:"Оценка качества",b:"Как понять, что система отвечает хорошо.",p:["Точность поиска и ответа","Простые проверки на примерах","Сбор обратной связи"]},
+      en:{t:"Measuring quality",b:"How to tell that the system answers well.",p:["Retrieval and answer accuracy","Simple checks on examples","Collecting feedback"]}},
+    {pct:"100%",
+      ru:{t:"Вывод в продакшн",b:"Последний шаг: твой RAG работает для реальных пользователей.",p:["Обновление данных и переиндексация","Скорость и стоимость","Мониторинг и следующие шаги"]},
+      en:{t:"Going to production",b:"The final step: your RAG works for real users.",p:["Refreshing data and reindexing","Speed and cost","Monitoring and next steps"]}}
+  ];
+
+  var lang = "ru";
+
+  function svgChevron(){
+    return '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+  }
+
+  function renderTrack(){
+    var track = document.getElementById("track");
+    var html = "";
+    for(var i=0;i<NODES.length;i++){
+      var n = NODES[i];
+      var d = n[lang];
+      var end = (i===0 || i===NODES.length-1) ? " endcap" : "";
+      var lis = "";
+      for(var j=0;j<d.p.length;j++){ lis += "<li>"+d.p[j]+"</li>"; }
+      html +=
+        '<div class="node'+end+'">'+
+          '<div class="dot">'+n.pct+'</div>'+
+          '<div class="node-card glass">'+
+            '<button class="node-head" onclick="toggleNode(this)" aria-expanded="false">'+
+              '<span class="pct">'+n.pct+'</span>'+
+              '<span class="ttl">'+d.t+'</span>'+
+              svgChevron()+
+            '</button>'+
+            '<div class="node-body">'+
+              '<p class="blurb">'+d.b+'</p>'+
+              '<ul>'+lis+'</ul>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+    }
+    track.innerHTML = html;
+  }
+
+  function toggleNode(btn){
+    var card = btn.parentNode;
+    var open = card.classList.toggle("open");
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function setLang(l){
+    lang = l;
+    document.documentElement.lang = l;
+    document.getElementById("lang-ru").classList.toggle("active", l==="ru");
+    document.getElementById("lang-en").classList.toggle("active", l==="en");
+    var dict = I18N[l];
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for(var i=0;i<nodes.length;i++){
+      var k = nodes[i].getAttribute("data-i18n");
+      if(dict[k] !== undefined) nodes[i].textContent = dict[k];
+    }
+    renderTrack();
+  }
+
+  renderTrack();
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="04-swiss.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">05 / 10</span><span class="mn-name">Glass</span></span>
+  <a href="06-blueprint.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="04-swiss.html", NEXT="06-blueprint.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Guide - Atlas</title>
+<style>
+  :root {
+    --sand:       #e8dcc0;
+    --sand-deep:  #ddcca8;
+    --parchment:  #f3ead4;
+    --parchment2: #efe3c8;
+    --sepia:      #5c4a32;
+    --sepia-soft: #7a6446;
+    --ink:        #3a2e1d;
+    --teal:       #4a6f6a;
+    --teal-deep:  #335551;
+    --rust:       #a55a35;
+    --gold:       #b08a3e;
+    --line:       #bda878;
+    --line-soft:  #d2bd8e;
+    --shadow:     rgba(60, 46, 26, 0.18);
+    --shadow-1:   0 2px 6px rgba(60, 46, 26, 0.14);
+    --shadow-2:   0 6px 20px rgba(60, 46, 26, 0.18);
+    --radius-sm:  3px;
+    --radius-md:  5px;
+    --radius-lg:  7px;
+    --ease:       cubic-bezier(0.22, 0.61, 0.36, 1);
+    --dur:        .18s;
+    --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans:  "Trebuchet MS", "Gill Sans", "Segoe UI", Verdana, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--serif);
+    color: var(--ink);
+    background-color: var(--parchment);
+    background-image:
+      radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
+      radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
+      repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 0 28px 84px;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* ---------- header ---------- */
+  header.site {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 30px 0 16px;
+    /* atlas-plate double rule: a thin hairline riding above a heavier line */
+    border-bottom: 3px double var(--line);
+    box-shadow: 0 2px 0 -1px rgba(189,168,120,0.45);
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .brand .seal {
+    width: 56px;
+    height: 56px;
+    flex: 0 0 auto;
+    filter: drop-shadow(0 1px 2px var(--shadow));
+  }
+
+  .brand h1 {
+    font-size: 1.6rem;
+    letter-spacing: 0.14em;
+    margin: 0;
+    color: var(--sepia);
+    text-transform: uppercase;
+    font-weight: 600;
+    line-height: 1.05;
+  }
+
+  .brand .sub {
+    font-style: italic;
+    font-size: 0.86rem;
+    color: var(--sepia-soft);
+    margin-top: 4px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---------- lang toggle (brass/parchment switch) ---------- */
+  .lang-toggle {
+    display: inline-flex;
+    border: 1px solid var(--gold);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.02)),
+      var(--parchment2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), var(--shadow-1);
+  }
+  .lang-toggle button {
+    font-family: var(--sans);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+    padding: 9px 17px;
+    min-height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--sepia-soft);
+    cursor: pointer;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .lang-toggle button + button { border-left: 1px solid var(--gold); }
+  .lang-toggle button.active {
+    background: linear-gradient(180deg, var(--sepia), #4a3a26);
+    color: var(--parchment);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .lang-toggle button:hover:not(.active) { background: var(--sand-deep); color: var(--sepia); }
+  .lang-toggle button:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: -2px;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    margin: 44px 0 20px;
+    text-align: center;
+    position: relative;
+  }
+  .hero .kicker {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    margin-bottom: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  /* hairline flourishes flanking the kicker */
+  .hero .kicker::before,
+  .hero .kicker::after {
+    content: "";
+    width: 34px;
+    height: 1px;
+    background: var(--line);
+  }
+  .hero h2 {
+    font-size: clamp(1.8rem, 3.7vw, 3rem);
+    line-height: 1.14;
+    letter-spacing: 0.005em;
+    margin: 0 auto 16px;
+    max-width: 17ch;
+    color: var(--ink);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .hero p.promise {
+    font-size: 1.08rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--sepia-soft);
+    max-width: 54ch;
+    margin: 0 auto;
+    text-wrap: balance;
+  }
+  /* small-caps lead-in on the promise line's first words */
+  .hero p.promise::first-line { color: var(--sepia); }
+  .hero .rule {
+    width: 220px;
+    height: 18px;
+    margin: 24px auto 0;
+    opacity: 0.75;
+  }
+
+  /* ---------- map section ---------- */
+  .atlas {
+    margin-top: 34px;
+    /* atlas-plate double frame: outer line + inset hairline ring (box-shadow) */
+    border: 2px solid var(--sepia-soft);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.25), rgba(0,0,0,0.02)),
+      var(--sand);
+    box-shadow:
+      inset 0 0 0 1px rgba(243,234,212,0.7),
+      inset 0 0 0 6px transparent,
+      inset 0 0 0 7px rgba(189,168,120,0.55),
+      inset 0 0 60px rgba(92,74,50,0.16),
+      0 6px 22px var(--shadow);
+    padding: 30px 26px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .atlas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* soft non-geometric vignette only -- darkens the four corners a touch
+       so the parchment reads aged, without any concentric ring artefacts. */
+    background-image:
+      radial-gradient(120% 90% at 50% 45%, transparent 62%, rgba(92,74,50,0.10) 100%);
+    opacity: 0.85;
+  }
+  /* corner ticks on the atlas plate (decorative L-marks at each inner corner) */
+  .atlas::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    pointer-events: none;
+    background-image:
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line));
+    background-repeat: no-repeat;
+    background-size:
+      14px 1px, 1px 14px,
+      14px 1px, 1px 14px,
+      14px 1px, 1px 14px,
+      14px 1px, 1px 14px;
+    background-position:
+      left top, left top,
+      right top, right top,
+      left bottom, left bottom,
+      right bottom, right bottom;
+    opacity: 0.7;
+  }
+
+  .atlas-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 2;
+    flex-wrap: wrap;
+  }
+  .atlas-head .title-block h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    letter-spacing: 0.1em;
+    color: var(--sepia);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .atlas-head .title-block p {
+    margin: 5px 0 0;
+    font-style: italic;
+    font-size: 0.88rem;
+    letter-spacing: 0.01em;
+    color: var(--sepia-soft);
+  }
+  .compass {
+    width: 78px;
+    height: 78px;
+    flex: 0 0 auto;
+    opacity: 0.92;
+  }
+
+  /* ---------- trail svg ---------- */
+  .trail-shell {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin-top: 6px;
+  }
+  .trail-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---------- terrain backdrop (antique-atlas scene) ----------
+     A composed, low-contrast cartographic scene drawn in the SAME
+     viewBox as the route, so it aligns + crops cleanly. It sits
+     FIRST in source order => lowest z within the SVG => the route,
+     pins, labels and field-note all paint on top and stay the hero.
+     All terrain inherits muted parchment-toned tints below. */
+  .terrain { pointer-events: none; }                 /* never steals pin clicks */
+  .terrain * { vector-effect: non-scaling-stroke; }  /* hairlines stay crisp at any scale */
+  .ter-sea        { fill: rgba(74,111,106,0.16); }
+  .ter-sea-hatch  { stroke: rgba(74,111,106,0.42); stroke-width: 0.8; fill: none; }
+  .ter-coast      { stroke: rgba(74,111,106,0.62); stroke-width: 1.4; fill: none; }
+  .ter-island     { fill: rgba(74,111,106,0.20); stroke: rgba(74,111,106,0.58); stroke-width: 1.1; }
+  .ter-lake       { fill: rgba(74,111,106,0.23); stroke: rgba(74,111,106,0.58); stroke-width: 1.3; stroke-linejoin: round; }
+  .ter-shore      { stroke: rgba(74,111,106,0.40); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+  .ter-water-tick { stroke: rgba(74,111,106,0.44); stroke-width: 0.7; fill: none; }
+  .ter-river      { stroke: rgba(74,111,106,0.50); fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .ter-mtn        { fill: rgba(120,96,60,0.15); stroke: rgba(92,74,50,0.58); stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
+  .ter-mtn-shade  { fill: rgba(92,74,50,0.19); stroke: none; }
+  .ter-hill       { fill: none; stroke: rgba(92,74,50,0.48); stroke-width: 1; stroke-linecap: round; }
+  .ter-hachure    { stroke: rgba(92,74,50,0.46); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+  .ter-contour    { stroke: rgba(189,168,120,0.68); stroke-width: 0.9; fill: none; stroke-linecap: round; }
+  .ter-tree       { stroke: rgba(74,90,60,0.58); stroke-width: 1; fill: rgba(74,90,60,0.16); stroke-linejoin: round; }
+  .ter-conifer    { stroke: rgba(60,80,54,0.62); stroke-width: 1; fill: rgba(60,80,54,0.18); stroke-linejoin: round; }
+  .ter-marsh      { stroke: rgba(74,111,106,0.44); stroke-width: 0.8; fill: none; stroke-linecap: round; }
+  .ter-grid       { stroke: rgba(120,96,60,0.17); stroke-width: 0.6; fill: none; }
+  .ter-rhumb      { stroke: rgba(120,96,60,0.15); stroke-width: 0.55; fill: none; }
+  .ter-flourish   { stroke: rgba(92,74,50,0.42); stroke-width: 1; fill: none; stroke-linecap: round; }
+  .ter-cartouche  { stroke: rgba(92,74,50,0.34); stroke-width: 0.8; fill: rgba(255,255,255,0.10); }
+  .ter-scale-seg  { fill: rgba(92,74,50,0.40); stroke: none; }
+  .ter-scale-rule { stroke: rgba(92,74,50,0.52); stroke-width: 0.9; fill: none; stroke-linecap: round; }
+  .ter-scale-num  { font-family: var(--serif); fill: rgba(92,74,50,0.50); }
+  .ter-bird       { stroke: rgba(92,74,50,0.40); stroke-width: 0.9; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .ter-label      { font-family: var(--serif); fill: rgba(92,74,50,0.48); font-style: italic; }
+  .route-line {
+    fill: none;
+    stroke: var(--rust);
+    stroke-width: 2.4;
+    stroke-dasharray: 7 6;
+    stroke-linecap: round;
+    opacity: 0.9;
+  }
+  .route-shadow {
+    fill: none;
+    stroke: rgba(60,46,26,0.18);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+  /* draw-in animation: stroke the solid overlay once on load */
+  .route-draw {
+    fill: none;
+    stroke: var(--rust);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    opacity: 0.9;
+  }
+  .has-anim .route-line { opacity: 0; }
+  .has-anim .route-draw {
+    stroke-dasharray: var(--route-len);
+    stroke-dashoffset: var(--route-len);
+    animation: routeDraw 1.5s ease forwards;
+  }
+  @keyframes routeDraw {
+    to { stroke-dashoffset: 0; }
+  }
+  /* once the draw finishes, hand back to the dashed line */
+  .anim-done .route-line { opacity: 0.9; transition: opacity .3s ease; }
+  .anim-done .route-draw { display: none; }
+
+  .pin {
+    cursor: pointer;
+  }
+  .pin .pin-hit {
+    fill: #fff;
+    opacity: 0;
+  }
+  .pin .flag-pole { stroke: var(--sepia); stroke-width: 1.6; }
+  .pin .flag {
+    fill: var(--teal);
+    stroke: var(--teal-deep);
+    stroke-width: 1;
+    transition: transform .18s ease;
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+  .pin .dot {
+    fill: var(--parchment);
+    stroke: var(--sepia);
+    stroke-width: 2;
+    transition: transform .16s ease, fill .16s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .pin .num {
+    font-family: var(--sans);
+    font-size: 8px;
+    font-weight: bold;
+    fill: var(--sepia);
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+  .pin .pin-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+  .pin .pin-pct {
+    font-family: var(--sans);
+    font-size: 8px;
+    font-weight: bold;
+    fill: var(--rust);
+    pointer-events: none;
+  }
+  .pin:hover .flag { transform: scaleX(1.12); }
+  .pin:hover .dot { transform: scale(1.18); fill: var(--gold); }
+  .pin.terminal .flag { fill: var(--rust); stroke: #7c3f24; }
+  .pin.start .flag { fill: var(--gold); stroke: #8c6a25; }
+  .pin.active .dot { fill: var(--rust); stroke: #7c3f24; transform: scale(1.25); }
+  .pin.active .pin-label { fill: var(--rust); font-weight: bold; }
+  .pin:focus { outline: none; }
+  .pin:focus-visible .dot { stroke: var(--rust); stroke-width: 3; transform: scale(1.25); }
+  .pin:focus-visible .pin-label { fill: var(--rust); font-weight: bold; }
+
+  /* ---------- chapter legend (antique index entries) ---------- */
+  .legend-list-wrap {
+    position: relative;
+    z-index: 2;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .legend-list-head {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+    margin: 0 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  /* small diamond ornament before the index heading */
+  .legend-list-head::before {
+    content: "";
+    width: 7px; height: 7px;
+    background: var(--rust);
+    transform: rotate(45deg);
+    flex: 0 0 auto;
+  }
+  .legend-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
+  }
+  .legend-list button {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 46px;
+    padding: 8px 14px;
+    font-family: var(--sans);
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+      var(--parchment2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-1);
+    cursor: pointer;
+    transition: background-color var(--dur) var(--ease),
+                border-color var(--dur) var(--ease),
+                box-shadow var(--dur) var(--ease),
+                transform var(--dur) var(--ease);
+  }
+  .legend-list button:hover {
+    background: var(--sand-deep);
+    border-color: var(--gold);
+    box-shadow: var(--shadow-2);
+    transform: translateY(-1px);
+  }
+  .legend-list button:hover .lnum {
+    border-color: var(--gold);
+    color: var(--rust);
+  }
+  .legend-list button:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: 1px;
+  }
+  .legend-list button[aria-expanded="true"] {
+    background: var(--sand-deep);
+    border-color: var(--rust);
+    box-shadow: inset 2px 0 0 var(--rust), var(--shadow-1);
+  }
+  .legend-list button[aria-expanded="true"] .lnum {
+    background: var(--rust);
+    border-color: #7c3f24;
+    color: var(--parchment);
+  }
+  .legend-list .lnum {
+    flex: 0 0 auto;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--parchment);
+    border: 2px solid var(--sepia);
+    color: var(--sepia);
+    font-weight: bold;
+    font-size: 0.66rem;
+    letter-spacing: 0;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 1px rgba(243,234,212,0.6);
+    transition: background-color var(--dur) var(--ease),
+                border-color var(--dur) var(--ease),
+                color var(--dur) var(--ease);
+  }
+  .legend-list li.is-start .lnum { background: var(--gold); border-color: #8c6a25; color: var(--parchment); }
+  .legend-list li.is-terminal .lnum { background: var(--rust); border-color: #7c3f24; color: var(--parchment); }
+
+  /* ---------- field note card ---------- */
+  .legend-wrap {
+    position: relative;
+    z-index: 3;
+    margin-top: 18px;
+    min-height: 10px;
+  }
+  .field-note {
+    position: relative;
+    border: 1px solid var(--sepia-soft);
+    border-radius: var(--radius-md);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.015)),
+      var(--parchment2);
+    box-shadow: inset 0 0 0 1px rgba(243,234,212,0.7), var(--shadow-2);
+    padding: 0;
+    overflow: hidden;
+    max-width: 760px;
+    margin: 0 auto;
+    animation: noteIn .3s var(--ease);
+  }
+  /* corner ticks framing the journal page */
+  .field-note::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    pointer-events: none;
+    z-index: 1;
+    background-image:
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line)),
+      linear-gradient(var(--line), var(--line));
+    background-repeat: no-repeat;
+    background-size:
+      12px 1px, 1px 12px,
+      12px 1px, 1px 12px,
+      12px 1px, 1px 12px,
+      12px 1px, 1px 12px;
+    background-position:
+      left top, left top,
+      right top, right top,
+      left bottom, left bottom,
+      right bottom, right bottom;
+    opacity: 0.55;
+  }
+  @keyframes noteIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .field-note .fn-head {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px 14px;
+    background: linear-gradient(90deg, rgba(92,74,50,0.12), rgba(92,74,50,0));
+    border-bottom: 1px dashed var(--line);
+  }
+  .field-note .badge {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    color: var(--parchment);
+    background: linear-gradient(180deg, var(--teal), var(--teal-deep));
+    border: 1px solid var(--teal-deep);
+    border-radius: var(--radius-sm);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+    padding: 7px 11px;
+    min-width: 52px;
+    text-align: center;
+    flex: 0 0 auto;
+  }
+  .field-note.is-terminal .badge { background: linear-gradient(180deg, var(--rust), #8c4a2b); border-color: #7c3f24; }
+  .field-note.is-start .badge { background: linear-gradient(180deg, var(--gold), #8c6a25); border-color: #8c6a25; }
+  .field-note h4 {
+    margin: 0;
+    font-size: 1.24rem;
+    color: var(--sepia);
+    letter-spacing: 0.015em;
+    line-height: 1.2;
+    flex: 1;
+  }
+  .field-note .fn-close {
+    flex: 0 0 auto;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--parchment);
+    border: 1px solid var(--sepia-soft);
+    color: var(--sepia-soft);
+    border-radius: var(--radius-sm);
+    padding: 9px 13px;
+    min-height: 40px;
+    min-width: 44px;
+    cursor: pointer;
+    transition: background-color var(--dur) var(--ease),
+                color var(--dur) var(--ease),
+                border-color var(--dur) var(--ease);
+  }
+  .field-note .fn-close:hover {
+    background: var(--rust);
+    border-color: #7c3f24;
+    color: var(--parchment);
+  }
+  .field-note .fn-close:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: 1px;
+  }
+  .field-note .fn-body {
+    position: relative;
+    z-index: 2;
+    padding: 18px 22px 22px;
+  }
+  .field-note .blurb {
+    margin: 0 0 16px;
+    font-style: italic;
+    color: var(--ink);
+    font-size: 1.04rem;
+    line-height: 1.58;
+  }
+  /* drop-cap on the journal blurb's opening letter */
+  .field-note .blurb::first-letter {
+    font-style: normal;
+    font-weight: 600;
+    font-size: 2.6em;
+    line-height: 0.78;
+    float: left;
+    margin: 4px 8px 0 0;
+    color: var(--rust);
+  }
+  .field-note ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .field-note li {
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    color: var(--sepia);
+    padding: 8px 0 8px 26px;
+    position: relative;
+    border-top: 1px dotted var(--line);
+    line-height: 1.45;
+  }
+  .field-note li:first-child { border-top: none; }
+  .field-note li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 13px;
+    width: 9px;
+    height: 9px;
+    background: var(--rust);
+    transform: rotate(45deg);
+    box-shadow: 0 0 0 2px var(--parchment2);
+  }
+  .field-note .fn-example {
+    margin: 16px 0 0;
+    padding: 11px 14px;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--teal-deep);
+    background: rgba(74,111,106,0.10);
+    border-left: 3px solid var(--teal);
+    border-radius: var(--radius-sm);
+  }
+  .field-note .fn-example b {
+    display: inline-block;
+    margin-right: 4px;
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    color: var(--teal);
+  }
+
+  .legend-hint {
+    text-align: center;
+    font-style: italic;
+    color: var(--sepia-soft);
+    font-size: 0.94rem;
+    letter-spacing: 0.01em;
+    padding: 10px 0;
+  }
+
+  /* progress bar under map -- styled as a brass-plate cartouche */
+  .progress-strip {
+    position: relative;
+    z-index: 2;
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sepia);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.32), rgba(0,0,0,0.015)),
+      var(--parchment2);
+    /* thin double border: outer line + inset hairline ring */
+    border: 1px solid var(--sepia-soft);
+    border-radius: var(--radius-md);
+    box-shadow: inset 0 0 0 1px rgba(243,234,212,0.7), var(--shadow-1);
+  }
+  .progress-strip .track {
+    flex: 1;
+    height: 9px;
+    background: var(--sand-deep);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(60,46,26,0.18);
+  }
+  .progress-strip .track span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--rust));
+    width: 100%;
+  }
+
+  /* ---------- footer (atlas colophon) ---------- */
+  footer.site {
+    margin-top: 54px;
+    padding-top: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    color: var(--sepia-soft);
+  }
+  /* ornamental hairline rule with a centred diamond */
+  footer.site .colophon-rule {
+    width: min(260px, 70%);
+    height: 14px;
+    opacity: 0.7;
+  }
+  footer.site .colophon-note {
+    font-style: italic;
+    letter-spacing: 0.04em;
+    color: var(--sepia-soft);
+  }
+  footer.site a {
+    color: var(--teal-deep);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    border-bottom: 1px dotted var(--teal);
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  footer.site a:hover { color: var(--rust); border-bottom-color: var(--rust); }
+  footer.site a:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; }
+  footer.site .links {
+    display: flex;
+    gap: 14px 24px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  footer.site .links .sep {
+    color: var(--line);
+    user-select: none;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px 80px; }
+    header.site { padding: 22px 0 14px; gap: 12px; }
+    .brand { gap: 13px; }
+    .brand .seal { width: 46px; height: 46px; }
+    .brand h1 { font-size: 1.18rem; letter-spacing: 0.1em; }
+    .hero { margin: 30px 0 14px; }
+    .hero .kicker { letter-spacing: 0.26em; gap: 10px; }
+    .hero .kicker::before, .hero .kicker::after { width: 20px; }
+    .hero h2 { font-size: clamp(1.5rem, 7.6vw, 2rem); max-width: 20ch; }
+    .hero p.promise { font-size: 1rem; }
+    .atlas { padding: 20px 16px 22px; margin-top: 26px; }
+    .atlas::after { inset: 9px; }
+    .atlas-head .title-block h3 { font-size: 1.1rem; }
+
+    /* ---- mobile scrollable map ----
+       The terrain map is NOT hidden on mobile; instead .trail-shell becomes a
+       horizontal scroll container and the SVG renders at a fixed readable width
+       so terrain, route + pin labels stay legible while the reader pans.
+       The .mobile-route vertical list below stays the PRIMARY navigation. */
+    .desktop-trail { display: block; }
+    .mobile-route { display: block; }
+    .legend-list-wrap { display: none; }
+
+    .trail-shell.desktop-trail {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      /* parchment edge fades hinting more map left/right (mask, no extra DOM) */
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+              mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+      scrollbar-width: thin;
+      scrollbar-color: var(--sepia-soft) transparent;
+    }
+    .trail-shell.desktop-trail::-webkit-scrollbar { height: 6px; }
+    .trail-shell.desktop-trail::-webkit-scrollbar-track { background: transparent; }
+    .trail-shell.desktop-trail::-webkit-scrollbar-thumb {
+      background: var(--sepia-soft);
+      border-radius: 3px;
+    }
+    /* fixed rendered width keeps the 1200x470 viewBox readable; height is
+       derived from the aspect ratio (1200/470) so terrain is never squashed */
+    .trail-shell.desktop-trail .trail-svg {
+      width: 1080px;
+      max-width: none;
+      height: auto;
+      aspect-ratio: 1200 / 470;
+    }
+    /* enlarge the invisible pin hit circles so they stay >=44px at the reduced
+       scale (960/1200 = 0.8 => r:32 SVG units -> ~51px tap target) */
+    .trail-shell.desktop-trail .pin .pin-hit { r: 32px; }
+
+    /* MOBILE-ONLY label de-collision for stops 7 + 8.
+       At the fixed 1080px mobile render the chapter-7 label "Vektornaya baza
+       i poisk" (data-idx 6, ~123 SVG units wide when bold/active) and the
+       chapter-8 label "Sobiraem kontekst dlya modeli" (data-idx 7) both land
+       on the same horizontal band (label baseline y~289, pin centres x=737.3
+       and x=862.1 => only ~125 SVG units apart) and overlap by ~11 units in
+       their shared x-extent. Split them onto separate bands: lift stop-7's
+       label+pct up 16 units, drop stop-8's down 12 units, giving ~7.2 SVG-unit
+       vertical clearance in the overlapping x-band while each block stays clear
+       of its own flag (idx6 ~20u) / dot (idx7 ~12u) and of the route + peaks.
+       Desktop is untouched (this lives inside the mobile media query). */
+    .trail-shell.desktop-trail .pin[data-idx="6"] .pin-label,
+    .trail-shell.desktop-trail .pin[data-idx="6"] .pin-pct { transform: translateY(-16px); }
+    .trail-shell.desktop-trail .pin[data-idx="7"] .pin-label,
+    .trail-shell.desktop-trail .pin[data-idx="7"] .pin-pct { transform: translateY(12px); }
+
+    /* one-time pan affordance, atlas-styled; removed after first scroll */
+    .map-hint {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 0 6px;
+      font-style: italic;
+      font-size: 0.84rem;
+      letter-spacing: 0.02em;
+      color: var(--sepia-soft);
+      transition: opacity .3s var(--ease);
+    }
+    .map-hint .map-hint-arrow { width: 30px; height: 9px; opacity: 0.8; flex: 0 0 auto; }
+    .map-hint.is-gone { opacity: 0; pointer-events: none; }
+    .compass { width: 56px; height: 56px; }
+    .progress-strip { font-size: 0.64rem; gap: 12px; padding: 11px 14px; letter-spacing: 0.08em; }
+    .field-note { margin: 0 -2px; }
+    .field-note .fn-head { flex-wrap: wrap; padding: 14px 16px 12px; }
+    .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
+    .field-note .fn-body { padding: 16px 18px 20px; }
+    .field-note .blurb::first-letter { font-size: 2.3em; }
+  }
+  @media (min-width: 561px) {
+    .mobile-route { display: none; }
+    .desktop-trail { display: block; }
+    .map-hint { display: none; }
+  }
+
+  /* mobile vertical route */
+  .mobile-route { margin-top: 8px; position: relative; z-index: 2; }
+  .mobile-route ol { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; }
+  .mobile-route ol::before {
+    content: "";
+    position: absolute;
+    left: 9px;
+    top: 6px;
+    bottom: 6px;
+    width: 0;
+    border-left: 2.4px dashed var(--rust);
+    opacity: 0.85;
+  }
+  .mobile-route li { position: relative; margin: 0 0 6px; }
+  .mobile-route .mpin {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 52px;
+    padding: 12px 14px;
+    font-family: var(--sans);
+    font-size: 0.94rem;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+      var(--parchment2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-1);
+    cursor: pointer;
+    transition: background-color var(--dur) var(--ease),
+                border-color var(--dur) var(--ease),
+                box-shadow var(--dur) var(--ease);
+  }
+  .mobile-route .mpin:hover { background: var(--sand-deep); border-color: var(--gold); }
+  .mobile-route .mpin:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: 1px;
+  }
+  .mobile-route .mpin[aria-expanded="true"] {
+    background: var(--sand-deep);
+    border-color: var(--rust);
+    box-shadow: inset 2px 0 0 var(--rust), var(--shadow-1);
+  }
+  .mobile-route .mpin[aria-expanded="true"] .mnum {
+    background: var(--rust);
+    border-color: #7c3f24;
+    color: var(--parchment);
+  }
+  .mobile-route .mpin .mnum {
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    margin-left: -27px;
+    border-radius: 50%;
+    background: var(--parchment);
+    border: 2px solid var(--sepia);
+    color: var(--sepia);
+    font-weight: bold;
+    font-size: 0.66rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px var(--shadow), inset 0 0 0 1px rgba(243,234,212,0.6);
+    transition: background-color var(--dur) var(--ease),
+                border-color var(--dur) var(--ease),
+                color var(--dur) var(--ease);
+  }
+  .mobile-route li.is-start .mnum { background: var(--gold); border-color:#8c6a25; color: var(--parchment); }
+  .mobile-route li.is-terminal .mnum { background: var(--rust); border-color:#7c3f24; color: var(--parchment); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .has-anim .route-line { opacity: 0.9 !important; }
+    .has-anim .route-draw { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="site">
+    <div class="brand">
+      <svg class="seal" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+        <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+        <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+        <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+      <div>
+        <h1 data-i18n="brandTitle">RAG С НУЛЯ</h1>
+        <div class="sub" data-i18n="brandSub">Путеводитель для начинающих</div>
+      </div>
+    </div>
+    <div class="lang-toggle" role="group" aria-label="Language / Язык">
+      <button id="lang-ru" class="active" type="button" onclick="setLang('ru')">RU</button>
+      <button id="lang-en" type="button" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker" data-i18n="heroKicker">Экспедиция 0 -> 100%</div>
+    <h2 data-i18n="heroTitle">От нуля до RAG без предварительной подготовки</h2>
+    <p class="promise" data-i18n="heroPromise">
+      Одна страница, один маршрут. Пройдите его от старта до вершины - и вы
+      понимаете RAG целиком. Никаких требований, никуда уходить не надо.
+    </p>
+    <svg class="rule" viewBox="0 0 200 18" aria-hidden="true">
+      <line x1="0" y1="9" x2="78" y2="9" stroke="#bda878" stroke-width="1.5"/>
+      <line x1="122" y1="9" x2="200" y2="9" stroke="#bda878" stroke-width="1.5"/>
+      <polygon points="100,2 108,9 100,16 92,9" fill="#a55a35"/>
+    </svg>
+  </section>
+
+  <section class="atlas" aria-labelledby="mapTitle">
+    <div class="atlas-head">
+      <div class="title-block">
+        <h3 id="mapTitle" data-i18n="mapTitle">Маршрут экспедиции</h3>
+        <p data-i18n="mapSub">Нажмите на флажок, чтобы открыть полевую заметку</p>
+      </div>
+      <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- pan affordance: shown only on mobile (CSS), removed after first scroll (JS) -->
+    <p id="mapHint" class="map-hint" aria-hidden="true">
+      <svg class="map-hint-arrow" viewBox="0 0 30 9" aria-hidden="true">
+        <line x1="5" y1="4.5" x2="25" y2="4.5" stroke="#7a6446" stroke-width="1.2"/>
+        <polyline points="8,1.5 4,4.5 8,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="22,1.5 26,4.5 22,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span data-i18n="mapHint">Проведите по карте</span>
+    </p>
+
+    <!-- winding trail map (desktop full-width; on mobile a horizontal scroller) -->
+    <div class="trail-shell desktop-trail">
+      <svg id="trailSvg" class="trail-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid meet"
+           role="group" aria-label="Expedition trail">
+        <!-- =====================================================================
+             TERRAIN BACKDROP -- swap-in point.
+             Everything inside this <g id="terrain"> is the antique-map scene
+             that paints BEHIND the route. To replace it with a user-supplied
+             background image later, delete the children of this group and drop
+             ONE <image> in its place, e.g.:
+               <image href="bg.png" x="0" y="0" width="1200" height="470"
+                      preserveAspectRatio="xMidYMid slice" opacity="0.7"/>
+             Nothing else in the page needs to change: the route + pins are
+             siblings that follow this group, so they keep painting on top.
+             aria-hidden -- purely decorative, never announced.
+        ====================================================================== -->
+        <g id="terrain" class="terrain" aria-hidden="true">
+
+          <!-- Antique-expedition-atlas scene, redrawn as believable hand-drawn
+               cartography. Composed AROUND the route corridor (which sweeps
+               lower-left ~70,410 up through ~600,210 and ~820,338 to the summit
+               ~1150,80) so nothing busy sits under the pins/labels. NO ellipse
+               or circle is used for any landform -- every shoreline, lake, hill
+               and peak is an irregular hand-drawn <path>. Terrain is FIRST in
+               source order, so route + pins paint on top and stay the hero. -->
+
+          <!-- faint reference graticule (decorative meridians/parallels) -->
+          <g class="ter-grid">
+            <line x1="240" y1="0" x2="240" y2="470"/>
+            <line x1="480" y1="0" x2="480" y2="470"/>
+            <line x1="720" y1="0" x2="720" y2="470"/>
+            <line x1="960" y1="0" x2="960" y2="470"/>
+            <line x1="0" y1="118" x2="1200" y2="118"/>
+            <line x1="0" y1="235" x2="1200" y2="235"/>
+            <line x1="0" y1="352" x2="1200" y2="352"/>
+          </g>
+
+          <!-- faint rhumb lines fanning out from the upper-right compass corner;
+               extra rays reach further into the calm upper-left expanse -->
+          <g class="ter-rhumb">
+            <line x1="1150" y1="40" x2="120" y2="300"/>
+            <line x1="1150" y1="40" x2="60" y2="470"/>
+            <line x1="1150" y1="40" x2="420" y2="470"/>
+            <line x1="1150" y1="40" x2="900" y2="470"/>
+            <line x1="1150" y1="40" x2="200" y2="120"/>
+            <line x1="1150" y1="40" x2="40" y2="160"/>
+            <line x1="1150" y1="40" x2="90" y2="60"/>
+            <line x1="1150" y1="40" x2="300" y2="40"/>
+          </g>
+
+          <!-- =====================  SEA + ORGANIC COAST (lower-left)  ===================== -->
+          <!-- Irregular coastline: bays + a headland, no symmetry. The sea fill
+               closes the same shore to the map corner. -->
+          <path class="ter-sea"
+                d="M0,470 L0,300 C46,318 58,352 96,360 C70,378 104,398 92,420
+                   C128,418 150,448 138,470 Z"/>
+          <path class="ter-coast"
+                d="M0,300 C46,318 58,352 96,360 C70,378 104,398 92,420
+                   C128,418 150,448 138,470"/>
+          <!-- shore line echoing the coast, set just out to sea (partial) -->
+          <path class="ter-shore"
+                d="M0,322 C36,338 50,366 82,376 C58,392 86,408 78,428"/>
+          <!-- the existing hatched-water technique, following the shore -->
+          <g class="ter-sea-hatch">
+            <path d="M0,338 C40,354 54,384 90,394 C68,410 96,428 86,448"/>
+            <path d="M0,366 C32,380 46,406 76,418 C56,432 80,448 72,466"/>
+            <path d="M0,394 C26,406 40,428 64,440"/>
+            <path d="M0,422 C20,432 34,450 52,462"/>
+          </g>
+          <!-- two small offshore islands (irregular blobs, NOT circles) -->
+          <path class="ter-island"
+                d="M40,250 C52,242 70,246 72,258 C68,270 50,272 42,266 C34,262 32,256 40,250 Z"/>
+          <path class="ter-island"
+                d="M118,330 C128,326 138,332 136,340 C130,348 118,346 114,340 C111,336 112,332 118,330 Z"/>
+          <text class="ter-label" x="22" y="288" font-size="13">Mare Vetus</text>
+
+          <!-- tiny three-masted ship flourish out in the water -->
+          <g class="ter-flourish" transform="translate(150,250)">
+            <path d="M-12,6 C-7,12 7,12 12,6 L8,6 L-8,6 Z"/>
+            <line x1="-6" y1="6" x2="-6" y2="-12"/>
+            <line x1="0" y1="6" x2="0" y2="-15"/>
+            <line x1="6" y1="6" x2="6" y2="-12"/>
+            <path d="M-6,-11 L-1,-6 L-6,-2 Z"/>
+            <path d="M0,-14 L6,-7 L0,-3 Z"/>
+            <path d="M6,-11 L11,-6 L6,-2 Z"/>
+          </g>
+
+          <!-- =====================  RIVER SYSTEM  ===================== -->
+          <!-- Main river: spring high in the right range, meandering down and
+               left, through the central lake, on to the sea. Two strokes give
+               it a tapered double-bank look; tributaries feed it. -->
+          <path class="ter-river" stroke-width="2.6"
+                d="M928,150 C916,182 944,206 922,236 C902,266 936,292 612,344
+                   C520,358 470,372 360,392 C300,402 250,418 198,448"/>
+          <path class="ter-river" stroke-width="1.3" opacity="0.55"
+                d="M928,150 C916,182 944,206 922,236 C902,266 936,292 612,344
+                   C520,358 470,372 360,392 C300,402 250,418 198,448"/>
+          <!-- tributary off the left massif joining the trunk -->
+          <path class="ter-river" stroke-width="1.5"
+                d="M486,212 C500,248 470,272 506,300 C540,326 560,330 600,346"/>
+          <!-- short tributary spilling from the central lake toward the sea -->
+          <path class="ter-river" stroke-width="1.4"
+                d="M474,402 C420,410 360,420 300,442"/>
+
+          <!-- =====================  CENTRAL LAKE (low ground, left of route dip)  ===================== -->
+          <!-- Irregular shoreline: a long bay on the south-west, a blunt
+               headland on the east. The route corridor stays clear above it. -->
+          <path class="ter-lake"
+                d="M520,386 C548,378 588,378 612,388 C636,398 644,414 626,426
+                   C600,440 556,442 524,432 C496,424 482,408 492,398
+                   C500,392 510,389 520,386 Z"/>
+          <!-- inset shore line following the SAME irregular shape (partial) -->
+          <path class="ter-shore"
+                d="M526,392 C552,386 586,386 606,394 C624,402 630,414 616,423"/>
+          <!-- short hatching ticks along part of the waterline -->
+          <g class="ter-water-tick">
+            <path d="M512,400 l-7,3"/><path d="M520,408 l-7,3"/>
+            <path d="M534,418 l-6,4"/><path d="M556,424 l-4,5"/>
+            <path d="M582,424 l-3,5"/>
+          </g>
+          <text class="ter-label" x="540" y="462" font-size="12">Lacus Mediae</text>
+
+          <!-- =====================  UPLAND TARN (right, below the summit range)  ===================== -->
+          <path class="ter-lake"
+                d="M1052,292 C1072,286 1098,288 1108,298 C1116,308 1106,320 1086,324
+                   C1064,328 1044,322 1040,310 C1037,302 1042,295 1052,292 Z"/>
+          <path class="ter-shore"
+                d="M1056,297 C1074,292 1096,294 1104,302"/>
+          <g class="ter-water-tick">
+            <path d="M1046,304 l-6,2"/><path d="M1052,314 l-6,3"/>
+            <path d="M1072,322 l-3,5"/>
+          </g>
+
+          <!-- =====================  OPEN CONTOURS (hug the ranges, never closed)  ===================== -->
+          <g class="ter-contour">
+            <path d="M334,300 C380,278 430,272 486,284 C540,296 590,290 636,300"/>
+            <path d="M352,278 C394,258 440,254 490,266 C536,278 580,272 620,282"/>
+            <path d="M372,256 C408,240 446,238 488,250"/>
+            <path d="M858,250 C906,224 962,216 1024,228 C1078,238 1118,232 1150,242"/>
+            <path d="M876,228 C918,206 968,200 1022,212 C1068,222 1106,216 1140,224"/>
+            <path d="M900,206 C936,188 980,184 1024,196"/>
+          </g>
+
+          <!-- DEAD-ZONE FILL: top-center above the ranges -- tiny bird glyphs
+               (two-stroke 'v' marks) plus one faint open contour, whisper-quiet. -->
+          <g class="ter-contour">
+            <path d="M548,88 C606,68 672,64 736,76 C792,86 836,82 872,92"/>
+          </g>
+          <g class="ter-bird">
+            <path d="M600,72 l7,-6 l7,6"/>
+            <path d="M636,80 l6,-5 l6,5"/>
+            <path d="M676,66 l7,-6 l7,6"/>
+            <path d="M724,78 l6,-5 l6,5"/>
+          </g>
+
+          <!-- =====================  MOUNTAIN RANGES (hand-drawn varied peaks)  ===================== -->
+          <!-- Each peak is an irregular path: asymmetric flanks, a slightly bent
+               summit, overlapping ridgelines. Shaded flank + downhill hachure on
+               the shadow (left) side only. -->
+          <g id="ter-range">
+
+            <!-- LEFT RANGE (mid-left high ground, kept below the route's upper arc) -->
+            <path class="ter-mtn"
+                  d="M330,302 C346,298 360,294 372,282 C384,266 398,242 410,222
+                     C420,236 430,256 444,272 C456,286 472,296 492,302 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M410,222 C420,236 430,256 444,272 C432,278 420,288 412,302
+                     C406,290 404,256 410,222 Z"/>
+            <path class="ter-mtn"
+                  d="M428,302 C446,296 462,290 478,274 C490,260 502,238 514,214
+                     C524,232 534,256 548,272 C560,286 576,296 594,302 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M514,214 C524,232 534,256 548,272 C536,280 524,290 516,302
+                     C510,288 508,250 514,214 Z"/>
+            <path class="ter-mtn"
+                  d="M560,302 C574,298 586,292 596,280 C606,266 616,250 626,236
+                     C634,250 642,266 654,278 C664,288 676,296 690,302 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M626,236 C634,250 642,266 654,278 C644,284 634,292 628,302
+                     C624,288 622,262 626,236 Z"/>
+            <g class="ter-hachure">
+              <path d="M409,228 C403,246 399,266 396,288"/>
+              <path d="M409,228 C406,248 405,268 404,288"/>
+              <path d="M409,228 C401,242 393,260 388,282"/>
+              <path d="M513,220 C507,240 503,262 500,286"/>
+              <path d="M513,220 C509,242 508,264 507,286"/>
+              <path d="M513,220 C504,238 496,258 490,280"/>
+              <path d="M625,242 C620,258 616,276 613,294"/>
+              <path d="M625,242 C621,260 619,278 618,294"/>
+            </g>
+
+            <!-- RIGHT RANGE (the summit cluster, upper-right under the goal pin) -->
+            <path class="ter-mtn"
+                  d="M838,252 C854,248 868,242 880,228 C892,212 904,186 916,162
+                     C926,180 936,206 950,224 C962,238 978,248 998,252 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M916,162 C926,180 936,206 950,224 C938,232 926,242 918,252
+                     C912,236 910,200 916,162 Z"/>
+            <path class="ter-mtn"
+                  d="M948,252 C966,246 982,240 996,222 C1008,206 1020,176 1032,148
+                     C1042,170 1052,200 1066,220 C1078,236 1094,246 1112,252 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M1032,148 C1042,170 1052,200 1066,220 C1054,228 1042,240 1034,252
+                     C1028,232 1026,190 1032,148 Z"/>
+            <path class="ter-mtn"
+                  d="M1088,252 C1100,248 1110,242 1118,232 C1126,220 1134,204 1142,190
+                     C1150,206 1158,224 1168,238 L1168,252 Z"/>
+            <path class="ter-mtn-shade"
+                  d="M1142,190 C1150,206 1158,224 1168,238 L1168,252 L1144,252
+                     C1140,232 1138,210 1142,190 Z"/>
+            <g class="ter-hachure">
+              <path d="M915,168 C909,190 905,214 902,240"/>
+              <path d="M915,168 C911,192 910,216 909,240"/>
+              <path d="M915,168 C906,188 898,212 893,236"/>
+              <path d="M1031,154 C1025,178 1021,206 1018,238"/>
+              <path d="M1031,154 C1027,180 1026,208 1025,238"/>
+              <path d="M1031,154 C1022,176 1014,204 1009,234"/>
+              <path d="M1141,196 C1135,214 1131,232 1129,248"/>
+              <path d="M1141,196 C1137,216 1136,234 1135,248"/>
+            </g>
+            <text class="ter-label" x="1006" y="138" font-size="12" text-anchor="middle">Mons Summus</text>
+          </g>
+
+          <!-- foothills as small open-curve bumps along the range fronts -->
+          <g class="ter-hill">
+            <path d="M300,318 C312,306 326,306 338,316"/>
+            <path d="M344,326 C356,314 372,314 384,326"/>
+            <path d="M664,312 C676,300 692,300 704,312"/>
+            <path d="M712,320 C724,310 738,310 750,320"/>
+            <path d="M788,268 C802,256 818,256 830,268"/>
+            <path d="M1108,262 C1120,252 1134,252 1146,262"/>
+          </g>
+
+          <!-- =====================  LOWLAND MARSH (between lake and sea)  =====================
+               Strengthened hatch band + more reed tufts across the bottom-center
+               lowland so it no longer reads as empty parchment. -->
+          <g class="ter-marsh">
+            <path d="M300,432 l16,0 M300,438 l16,0"/>
+            <path d="M330,428 l16,0 M330,434 l16,0"/>
+            <path d="M360,424 l16,0 M360,430 l16,0"/>
+            <path d="M390,430 l16,0 M390,436 l16,0"/>
+            <path d="M420,436 l16,0 M420,442 l16,0"/>
+            <path d="M270,440 l16,0 M270,446 l16,0"/>
+            <line x1="308" y1="424" x2="308" y2="430"/>
+            <line x1="338" y1="420" x2="338" y2="426"/>
+            <line x1="368" y1="416" x2="368" y2="422"/>
+            <line x1="398" y1="422" x2="398" y2="428"/>
+            <line x1="428" y1="428" x2="428" y2="434"/>
+            <line x1="278" y1="432" x2="278" y2="438"/>
+            <!-- a few reed tufts (three-blade marks) rising from the band -->
+            <path d="M316,430 l-3,-7 M316,430 l0,-8 M316,430 l3,-7"/>
+            <path d="M352,424 l-3,-7 M352,424 l0,-8 M352,424 l3,-7"/>
+            <path d="M406,428 l-3,-6 M406,428 l0,-7 M406,428 l3,-6"/>
+            <path d="M286,438 l-3,-6 M286,438 l0,-7 M286,438 l3,-6"/>
+          </g>
+          <text class="ter-label" x="304" y="412" font-size="11">Palus</text>
+
+          <!-- =====================  FORESTS  ===================== -->
+          <!-- Deciduous = rounded scribble crowns; conifers = stacked triangles.
+               Denser near the river/lake, thinning toward the edges. -->
+          <g class="ter-tree">
+            <!-- cluster hugging the central lake / river bend -->
+            <path d="M470,360 c-5,-7 4,-12 8,-6 c5,-5 12,1 8,7 c5,1 4,9 -3,8 c-1,6 -10,5 -11,-1 c-7,1 -9,-7 -2,-9 Z"/>
+            <path d="M498,348 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M452,376 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M524,360 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <!-- foothill belt below the left range -->
+            <path d="M360,322 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M390,332 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M334,338 c-3,-5 3,-8 6,-4 c3,-3 8,1 6,5 c3,1 2,6 -3,6 c-1,4 -7,3 -7,-1 c-5,1 -6,-5 -2,-6 Z"/>
+            <!-- belt below the right range, near the trunk river -->
+            <path d="M700,288 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M730,300 c-4,-6 4,-10 7,-5 c4,-4 10,1 7,6 c4,1 3,7 -3,7 c-1,5 -8,4 -9,-1 c-6,1 -7,-6 -2,-7 Z"/>
+            <path d="M672,300 c-3,-5 3,-8 6,-4 c3,-3 8,1 6,5 c3,1 2,6 -3,6 c-1,4 -7,3 -7,-1 c-5,1 -6,-5 -2,-6 Z"/>
+            <!-- thinning outliers toward the lower-right edge -->
+            <path d="M880,392 c-3,-5 3,-8 6,-4 c3,-3 8,1 6,5 c3,1 2,6 -3,6 c-1,4 -7,3 -7,-1 c-5,1 -6,-5 -2,-6 Z"/>
+            <path d="M912,404 c-3,-5 3,-8 6,-4 c3,-3 8,1 6,5 c3,1 2,6 -3,6 c-1,4 -7,3 -7,-1 c-5,1 -6,-5 -2,-6 Z"/>
+          </g>
+          <!-- a few conifers on the higher slopes -->
+          <g class="ter-conifer">
+            <g transform="translate(420,330)"><path d="M0,-12 L5,-2 L2,-2 L6,6 L-6,6 L-2,-2 L-5,-2 Z"/><line x1="0" y1="6" x2="0" y2="11" stroke-width="1.1"/></g>
+            <g transform="translate(444,340)"><path d="M0,-10 L4,-1 L2,-1 L5,5 L-5,5 L-2,-1 L-4,-1 Z"/><line x1="0" y1="5" x2="0" y2="9" stroke-width="1.1"/></g>
+            <g transform="translate(742,270)"><path d="M0,-12 L5,-2 L2,-2 L6,6 L-6,6 L-2,-2 L-5,-2 Z"/><line x1="0" y1="6" x2="0" y2="11" stroke-width="1.1"/></g>
+            <g transform="translate(766,282)"><path d="M0,-10 L4,-1 L2,-1 L5,5 L-5,5 L-2,-1 L-4,-1 Z"/><line x1="0" y1="5" x2="0" y2="9" stroke-width="1.1"/></g>
+            <g transform="translate(1080,272)"><path d="M0,-10 L4,-1 L2,-1 L5,5 L-5,5 L-2,-1 L-4,-1 Z"/><line x1="0" y1="5" x2="0" y2="9" stroke-width="1.1"/></g>
+          </g>
+
+          <!-- =====================  SCALE BAR (lower-right)  =====================
+               Proper antique scale bar: alternating filled/empty segments on a
+               thin baseline, end ticks, tiny numerals (0/10/20), italic label.
+               NO solid box frame. Four 20px segments span 0..20 Leucae. -->
+          <g transform="translate(940,438)">
+            <!-- italic label above the bar -->
+            <text class="ter-label" x="0" y="-10" font-size="10">Leucae</text>
+            <!-- thin baseline -->
+            <line class="ter-scale-rule" x1="0" y1="0" x2="80" y2="0"/>
+            <!-- alternating filled segments (1st + 3rd of four 20px cells) -->
+            <rect class="ter-scale-seg" x="0" y="-3" width="20" height="3"/>
+            <rect class="ter-scale-seg" x="40" y="-3" width="20" height="3"/>
+            <!-- end + interval ticks -->
+            <g class="ter-scale-rule">
+              <line x1="0" y1="-4" x2="0" y2="4"/>
+              <line x1="40" y1="-3" x2="40" y2="3"/>
+              <line x1="80" y1="-4" x2="80" y2="4"/>
+            </g>
+            <!-- tiny numerals at 0, 10, 20 leucae -->
+            <g class="ter-scale-num" font-size="8" text-anchor="middle">
+              <text x="0" y="11">0</text>
+              <text x="40" y="11">10</text>
+              <text x="80" y="11">20</text>
+            </g>
+          </g>
+
+          <!-- DEAD-ZONE FILL: upper-left (around Terra Incognita) -- a faint
+               distant open contour pair + a low far-off hill group, kept
+               whisper-quiet so the label stays the focus of the expanse. -->
+          <g class="ter-contour">
+            <path d="M70,118 C120,100 176,96 232,108 C282,118 326,114 360,124"/>
+            <path d="M86,138 C132,122 182,118 230,128 C272,136 308,132 338,140"/>
+          </g>
+          <g class="ter-hill">
+            <path d="M96,108 C110,96 126,96 140,108"/>
+            <path d="M146,114 C160,103 176,103 190,114"/>
+            <path d="M200,110 C212,100 226,100 238,110"/>
+          </g>
+
+          <!-- terra-incognita label in the calm upper-left expanse -->
+          <text class="ter-label" x="120" y="70" font-size="13">Terra Incognita</text>
+
+        </g>
+        <!-- ===================== /TERRAIN BACKDROP ===================== -->
+
+        <!-- contour decoration -->
+        <g stroke="#bda878" stroke-width="0.8" fill="none" opacity="0.45">
+          <path d="M120,380 q60,-40 120,-10 t120,-20"/>
+          <path d="M820,90 q60,30 120,10 t110,-30"/>
+        </g>
+        <!-- route shadow + dashed line + draw-in overlay (share the same d) -->
+        <path id="routeShadow" class="route-shadow"></path>
+        <path id="route" class="route-line"></path>
+        <path id="routeDraw" class="route-draw"></path>
+        <g id="pins"></g>
+      </svg>
+    </div>
+
+    <!-- scannable chapter legend (desktop) -->
+    <div class="legend-list-wrap">
+      <h4 class="legend-list-head" data-i18n="legendListHead">Главы маршрута</h4>
+      <ul id="legendList" class="legend-list"></ul>
+    </div>
+
+    <!-- MOBILE vertical route -->
+    <div class="mobile-route">
+      <ol id="mobilePins"></ol>
+    </div>
+
+    <div class="legend-wrap">
+      <div id="legendHint" class="legend-hint" data-i18n="legendHint">
+        Выберите пункт маршрута выше.
+      </div>
+      <div id="fieldNote" aria-live="polite"></div>
+    </div>
+
+    <div class="progress-strip">
+      <span data-i18n="pStart">СТАРТ 0%</span>
+      <div class="track"><span></span></div>
+      <span data-i18n="pEnd">100% ВЕРШИНА</span>
+    </div>
+  </section>
+
+  <footer class="site">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // ---- route geometry ----------------------------------------------------
+  // The route path. Pin coordinates are SAMPLED from this exact path at run
+  // time, so every pin sits ON the line (no drift, no overlap).
+  var ROUTE_D = "M70,410 C180,320 240,440 350,370 C450,308 480,180 600,210 " +
+                "C710,238 700,360 820,338 C940,316 930,170 1040,168 " +
+                "C1110,166 1135,110 1150,80";
+
+  var STOP_COUNT = 11;
+
+  var DATA = {
+    ru: {
+      brandTitle: "RAG С НУЛЯ",
+      brandSub: "Путеводитель для начинающих",
+      heroKicker: "Экспедиция 0 -> 100%",
+      heroTitle: "От нуля до RAG без предварительной подготовки",
+      heroPromise: "Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо.",
+      mapTitle: "Маршрут экспедиции",
+      mapSub: "Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку",
+      mapHint: "Проведите по карте",
+      legendListHead: "Главы маршрута",
+      legendHint: "Выберите пункт маршрута выше.",
+      pStart: "СТАРТ 0%",
+      pEnd: "100% ВЕРШИНА",
+      footNote: "Составлено в рамках BrewPage Cookbook.",
+      close: "Закрыть",
+      exampleLabel: "Пример",
+      stops: [
+        {label:"С чего начать",
+          blurb:"Точка отправления. Перед нами весь маршрут RAG, разложенный на простые шаги. Здесь не нужно знать ничего заранее - дальше каждое понятие появляется по очереди.",
+          pts:["Что вы получите в конце пути: свой помощник, отвечающий по вашим документам","Как читать эту карту: слева направо, от 0% к 100%","Ничего не нужно знать заранее - термины вводятся по ходу","Каждый пункт можно открыть и прочитать отдельно"],
+          ex:"Представьте справочную, которая отвечает строго по вашим инструкциям, а не наугад."},
+        {label:"Что такое RAG",
+          blurb:"RAG это способ дать модели доступ к вашим документам прямо во время ответа. Аббревиатура расшифровывается как Retrieval-Augmented Generation - поиск, дополнение, генерация.",
+          pts:["Retrieval - найти нужные куски текста в ваших данных","Augmented - добавить найденное прямо в запрос к модели","Generation - модель формулирует ответ на основе этих кусков","Модель отвечает по фактам из ваших документов, а не из памяти"],
+          ex:"Вопрос -> находим 3 абзаца из вашей базы -> модель отвечает по ним."},
+        {label:"Зачем он нужен",
+          blurb:"Обычная модель не знает ваших данных и со временем устаревает. RAG решает обе проблемы сразу, подкладывая свежие источники в момент ответа.",
+          pts:["Свежие и приватные данные без переобучения модели","Меньше выдуманных фактов - ответ опирается на источник","Ссылки на источники: видно, откуда взят ответ","Дешевле, чем дообучать модель под каждое обновление"],
+          ex:"Обновили инструкцию в файле - помощник сразу отвечает по новой версии."},
+        {label:"Как работает поиск по документам",
+          blurb:"Сначала находим релевантные куски текста, потом показываем их модели. Поиск идет не по точным словам, а по смыслу запроса.",
+          pts:["Все документы заранее складываем в индекс","Запрос пользователя превращается в поисковый запрос","Возвращаем несколько лучших совпадений по смыслу","Модель видит только эти куски, а не весь архив"],
+          ex:"Спросили про отпуск - нашлись пункты политики об отпусках, даже без слова отпуск."},
+        {label:"Разбиваем текст на чанки",
+          blurb:"Большие документы режем на небольшие фрагменты удобного размера - их называют чанки. Так поиск точнее, а в запрос помещается только нужное.",
+          pts:["Размер чанка: слишком крупный размывает смысл, слишком мелкий теряет контекст","Перекрытие соседних чанков, чтобы не разрывать мысль","Стараемся резать по абзацам и заголовкам, а не посреди фразы","К каждому чанку храним метаданные: источник, раздел, дата"],
+          ex:"Договор на 40 страниц -> 120 чанков примерно по абзацу каждый."},
+        {label:"Эмбеддинги: текст в векторы",
+          blurb:"Каждый чанк превращаем в числовой вектор - это координаты его смысла. Близкие по смыслу тексты получают близкие векторы.",
+          pts:["Похожий по смыслу текст - близкие векторы в пространстве","Выбор модели эмбеддингов влияет на качество поиска","Размерность вектора и стоимость обработки идут в связке","Один раз посчитали векторы и переиспользуем их при каждом запросе"],
+          ex:"Кошка и котенок окажутся рядом, а кошка и бухгалтерия - далеко."},
+        {label:"Векторная база и поиск",
+          blurb:"Векторы храним в специальной базе и ищем в ней ближайшие по смыслу. Это и есть быстрый смысловой поиск по всему архиву.",
+          pts:["Векторная БД хранит векторы и умеет искать ближайшие","Поиск ближайших соседей выдает топ самых похожих чанков","Фильтры по метаданным сужают поиск: только этот раздел или дата","Масштабируется на миллионы чанков без перебора всего архива"],
+          ex:"Из 100000 чанков за миллисекунды достаем 5 самых близких к вопросу."},
+        {label:"Собираем контекст для модели",
+          blurb:"Найденные куски аккуратно складываем в один запрос к модели. От того, как собран этот контекст, сильно зависит ответ.",
+          pts:["Шаблон промпта: инструкция, вопрос и найденные куски вместе","Сколько контекста вмещается - у модели есть предел длины","Порядок и приоритет кусков: самое важное ближе","Чистим дубли и обрезаем лишнее, чтобы не перегружать модель"],
+          ex:"Инструкция + вопрос пользователя + 4 найденных абзаца = готовый запрос."},
+        {label:"Генерация ответа",
+          blurb:"Модель читает собранный контекст и пишет ответ, опираясь на ваши данные. Здесь важно направить ее инструкциями.",
+          pts:["Инструкции для модели: отвечай только по контексту","Цитирование источников прямо в ответе","Борьба с выдумками: если данных нет - честно сказать об этом","Тон и формат ответа задаем в шаблоне промпта"],
+          ex:"Если в контексте нет ответа, помощник пишет: в документах этого нет."},
+        {label:"Оценка качества",
+          blurb:"Проверяем, насколько ответы точны и полезны, и системно их улучшаем. Без измерений нельзя понять, стало ли лучше.",
+          pts:["Точность поиска: нашлись ли действительно нужные чанки","Качество ответа: верно, полно и по делу ли он составлен","Обратная связь от пользователей превращаем в метрики","Прогон на наборе типовых вопросов до и после изменений"],
+          ex:"Собрали 50 вопросов с эталонными ответами и сверяем результат."},
+        {label:"Вывод в продакшн",
+          blurb:"Вершина маршрута. Собираем все звенья в работающий сервис для реальных пользователей и держим его в форме.",
+          pts:["Скорость и стоимость каждого запроса под контролем","Мониторинг ошибок и регулярное обновление данных","Безопасность и доступ: кто и к каким документам имеет право","Постепенное улучшение по метрикам из предыдущего пункта"],
+          ex:"Помощник в чате отвечает сотрудникам и каждую ночь подхватывает новые файлы."}
+      ]
+    },
+    en: {
+      brandTitle: "RAG ATLAS",
+      brandSub: "A field guide for beginners",
+      heroKicker: "Expedition 0 -> 100%",
+      heroTitle: "From zero to RAG with no prerequisites",
+      heroPromise: "One page, one route. Walk it from the trailhead to the summit and you understand RAG end to end. Nothing required, nowhere to go.",
+      mapTitle: "Expedition route",
+      mapSub: "Tap a flag or a list item to open its field note",
+      mapHint: "Swipe to pan the map",
+      legendListHead: "Route chapters",
+      legendHint: "Pick a stop on the route above.",
+      pStart: "START 0%",
+      pEnd: "100% SUMMIT",
+      footNote: "Drawn as part of the BrewPage Cookbook.",
+      close: "Close",
+      exampleLabel: "Example",
+      stops: [
+        {label:"Where to start",
+          blurb:"The trailhead. The whole RAG route laid out as plain, simple steps. You need no prior knowledge - each idea appears in turn as you walk.",
+          pts:["What you get at the summit: an assistant that answers from your documents","How to read this map: left to right, from 0% to 100%","No prior knowledge needed - terms are introduced as you go","Every stop opens on its own so you can read it in isolation"],
+          ex:"Picture a help desk that answers strictly from your handbook, not from guesswork."},
+        {label:"What RAG is",
+          blurb:"RAG gives a model access to your documents while it answers. The name stands for Retrieval-Augmented Generation - retrieve, augment, generate.",
+          pts:["Retrieval - find the relevant pieces of text in your data","Augmented - add what you found into the prompt to the model","Generation - the model writes an answer from those pieces","The model answers from your documents, not from memory"],
+          ex:"Question -> fetch 3 paragraphs from your store -> the model answers from them."},
+        {label:"Why you need it",
+          blurb:"A plain model does not know your data and goes stale over time. RAG fixes both at once by slipping fresh sources in at answer time.",
+          pts:["Fresh and private data with no model retraining","Fewer made-up facts - the answer leans on a source","Links back to sources: you can see where the answer came from","Cheaper than fine-tuning the model for every update"],
+          ex:"Update a line in a file and the assistant answers from the new version at once."},
+        {label:"How document retrieval works",
+          blurb:"First find the relevant text, then show it to the model. The search goes by meaning, not by exact words.",
+          pts:["All documents are placed into an index ahead of time","The user query is turned into a search","Return a few of the best matches by meaning","The model sees only those pieces, not the whole archive"],
+          ex:"Ask about leave and the leave policy clauses surface, even without that exact word."},
+        {label:"Splitting text into chunks",
+          blurb:"Big documents are cut into small, manageable fragments called chunks. This makes search sharper and keeps the prompt to just what is needed.",
+          pts:["Chunk size: too big blurs meaning, too small loses context","Overlap between neighbouring chunks so a thought is not cut in half","Cut on paragraphs and headings, not mid-sentence","Keep metadata per chunk: source, section, date"],
+          ex:"A 40-page contract -> about 120 chunks, roughly one paragraph each."},
+        {label:"Embeddings: text to vectors",
+          blurb:"Each chunk becomes a numeric vector - the coordinates of its meaning. Texts that mean similar things get nearby vectors.",
+          pts:["Similar meaning, nearby vectors in the space","The choice of embedding model drives search quality","Vector dimension and processing cost go together","Compute vectors once and reuse them on every query"],
+          ex:"Cat and kitten land close together; cat and accounting land far apart."},
+        {label:"Vector store and search",
+          blurb:"Vectors live in a special store and we search it for the closest in meaning. That is fast semantic search across the whole archive.",
+          pts:["A vector DB stores vectors and finds the nearest ones","Nearest-neighbour search returns the top similar chunks","Metadata filters narrow it down: only this section or date","Scales to millions of chunks without scanning everything"],
+          ex:"From 100000 chunks, pull the 5 closest to the question in milliseconds."},
+        {label:"Assembling context for the model",
+          blurb:"The retrieved pieces are packed neatly into one prompt for the model. How you assemble this context shapes the answer a lot.",
+          pts:["Prompt template: instruction, question and found pieces together","How much context fits - the model has a length limit","Order and priority of pieces: the most important come first","Strip duplicates and trim excess so the model is not overloaded"],
+          ex:"Instruction + the user question + 4 found paragraphs = the finished prompt."},
+        {label:"Generating the answer",
+          blurb:"The model reads the assembled context and writes an answer grounded in your data. Here it matters how you steer it with instructions.",
+          pts:["Instructions for the model: answer only from the context","Cite sources right in the answer","Fight hallucinations: if the data is missing, say so honestly","Set tone and format in the prompt template"],
+          ex:"If the context has no answer, the assistant says: that is not in the documents."},
+        {label:"Measuring quality",
+          blurb:"Check how accurate and useful the answers are, then improve them systematically. Without measuring you cannot tell if it got better.",
+          pts:["Retrieval accuracy: did the truly needed chunks come back","Answer quality: is it correct, complete and on point","Turn user feedback into metrics","Run a set of typical questions before and after each change"],
+          ex:"Collect 50 questions with reference answers and compare the results."},
+        {label:"Going to production",
+          blurb:"The summit of the route. Wire all the links into a working service for real users and keep it in shape.",
+          pts:["Speed and cost per request kept under control","Monitor errors and refresh the data regularly","Security and access: who may reach which documents","Steady improvement using the metrics from the previous stop"],
+          ex:"A chat assistant answers staff and picks up new files every night."}
+      ]
+    }
+  };
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var lang = "ru";
+  var activeStop = -1;
+  var pinPoints = [];   // sampled {x,y} on the route, one per stop
+
+  function pct(i){ return i === 0 ? "0%" : (i === STOP_COUNT-1 ? "100%" : (i*10) + "%"); }
+  function kind(i){ return i === 0 ? "start" : (i === STOP_COUNT-1 ? "terminal" : ""); }
+  function numLabel(i){ return i === STOP_COUNT-1 ? "100" : (i === 0 ? "0" : String(i)); }
+
+  // Sample STOP_COUNT evenly spaced points along the actual route path.
+  function samplePoints(){
+    var path = document.getElementById("route");
+    path.setAttribute("d", ROUTE_D);
+    document.getElementById("routeShadow").setAttribute("d", ROUTE_D);
+    document.getElementById("routeDraw").setAttribute("d", ROUTE_D);
+    var total = path.getTotalLength();
+    pinPoints = [];
+    for (var i = 0; i < STOP_COUNT; i++){
+      var p = path.getPointAtLength(total * i / (STOP_COUNT - 1));
+      pinPoints.push({x: p.x, y: p.y});
+    }
+    return total;
+  }
+
+  // decide a label side so labels never collide with the line/edges
+  function labelDx(c){ return 0; }
+  function labelDy(c){
+    // place label above the dot if the dot sits low, below if it sits high
+    return c.y > 235 ? -34 : 30;
+  }
+
+  function buildPins(){
+    var g = document.getElementById("pins");
+    g.innerHTML = "";
+    var stops = DATA[lang].stops;
+
+    pinPoints.forEach(function(c, i){
+      var grp = document.createElementNS(SVGNS, "g");
+      grp.setAttribute("class", "pin " + kind(i));
+      grp.setAttribute("tabindex", "0");
+      grp.setAttribute("role", "button");
+      grp.setAttribute("aria-expanded", "false");
+      grp.setAttribute("aria-label", pct(i) + " - " + stops[i].label);
+      grp.dataset.idx = i;
+
+      // generous transparent hit target (>= 44px effective on desktop scale)
+      var hit = document.createElementNS(SVGNS, "circle");
+      hit.setAttribute("class", "pin-hit");
+      hit.setAttribute("cx", c.x); hit.setAttribute("cy", c.y); hit.setAttribute("r", 26);
+      grp.appendChild(hit);
+
+      var pole = document.createElementNS(SVGNS, "line");
+      pole.setAttribute("class", "flag-pole");
+      pole.setAttribute("x1", c.x); pole.setAttribute("y1", c.y);
+      pole.setAttribute("x2", c.x); pole.setAttribute("y2", c.y - 28);
+      grp.appendChild(pole);
+
+      var flag = document.createElementNS(SVGNS, "path");
+      flag.setAttribute("class", "flag");
+      var fx = c.x, fy = c.y - 28;
+      flag.setAttribute("d", "M"+fx+","+fy+" L"+(fx+20)+","+(fy+4)+" L"+fx+","+(fy+9)+" Z");
+      grp.appendChild(flag);
+
+      var dot = document.createElementNS(SVGNS, "circle");
+      dot.setAttribute("class", "dot");
+      dot.setAttribute("cx", c.x); dot.setAttribute("cy", c.y); dot.setAttribute("r", 8);
+      grp.appendChild(dot);
+
+      var num = document.createElementNS(SVGNS, "text");
+      num.setAttribute("class", "num");
+      num.setAttribute("x", c.x); num.setAttribute("y", c.y + 0.5);
+      num.textContent = numLabel(i);
+      grp.appendChild(num);
+
+      // chapter label (short) + percentage, placed clear of the route
+      var dy = labelDy(c);
+      var lbl = document.createElementNS(SVGNS, "text");
+      lbl.setAttribute("class", "pin-label");
+      lbl.setAttribute("x", c.x);
+      lbl.setAttribute("y", c.y + dy);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.textContent = stops[i].label;
+      grp.appendChild(lbl);
+
+      var pctT = document.createElementNS(SVGNS, "text");
+      pctT.setAttribute("class", "pin-pct");
+      pctT.setAttribute("x", c.x);
+      pctT.setAttribute("y", c.y + dy + (dy < 0 ? -12 : 13));
+      pctT.setAttribute("text-anchor", "middle");
+      pctT.textContent = pct(i);
+      grp.appendChild(pctT);
+
+      grp.addEventListener("click", function(){ toggleStop(i); });
+      grp.addEventListener("keydown", function(e){
+        if (e.key === "Enter" || e.key === " " || e.key === "Spacebar"){
+          e.preventDefault();
+          toggleStop(i);
+        }
+      });
+      g.appendChild(grp);
+    });
+  }
+
+  function buildLegendList(){
+    var ul = document.getElementById("legendList");
+    ul.innerHTML = "";
+    var stops = DATA[lang].stops;
+    stops.forEach(function(s, i){
+      var li = document.createElement("li");
+      li.className = kind(i) ? "is-" + kind(i) : "";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("aria-expanded", "false");
+      btn.dataset.idx = i;
+      btn.innerHTML = '<span class="lnum">' + pct(i) + '</span><span>' + s.label + '</span>';
+      btn.addEventListener("click", function(){ toggleStop(i); });
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  }
+
+  function buildMobile(){
+    var ol = document.getElementById("mobilePins");
+    ol.innerHTML = "";
+    var stops = DATA[lang].stops;
+    stops.forEach(function(s, i){
+      var li = document.createElement("li");
+      li.className = kind(i) ? "is-" + kind(i) : "";
+      var btn = document.createElement("button");
+      btn.className = "mpin";
+      btn.type = "button";
+      btn.setAttribute("aria-expanded", "false");
+      btn.dataset.idx = i;
+      btn.innerHTML = '<span class="mnum">' + pct(i) + '</span><span>' + s.label + '</span>';
+      btn.addEventListener("click", function(){ toggleStop(i); });
+      li.appendChild(btn);
+      ol.appendChild(li);
+    });
+  }
+
+  function esc(t){
+    return String(t)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function toggleStop(i){
+    if (activeStop === i) { closeStop(); }
+    else { openStop(i); }
+  }
+
+  function openStop(i){
+    activeStop = i;
+    var d = DATA[lang];
+    var s = d.stops[i];
+    var box = document.getElementById("fieldNote");
+    document.getElementById("legendHint").style.display = "none";
+
+    var cls = kind(i) === "start" ? " is-start" : (kind(i) === "terminal" ? " is-terminal" : "");
+    var lis = s.pts.map(function(p){ return "<li>" + esc(p) + "</li>"; }).join("");
+    var ex = s.ex ? '<p class="fn-example"><b>' + esc(d.exampleLabel) + ':</b> ' + esc(s.ex) + '</p>' : "";
+
+    box.innerHTML =
+      '<div class="field-note' + cls + '">' +
+        '<div class="fn-head">' +
+          '<span class="badge">' + pct(i) + '</span>' +
+          '<h4>' + esc(s.label) + '</h4>' +
+          '<button class="fn-close" type="button" onclick="closeStop()">' + esc(d.close) + '</button>' +
+        '</div>' +
+        '<div class="fn-body">' +
+          '<p class="blurb">' + esc(s.blurb) + '</p>' +
+          '<ul>' + lis + '</ul>' +
+          ex +
+        '</div>' +
+      '</div>';
+
+    syncActiveState(i);
+    scrollPinIntoView(i);
+  }
+
+  function closeStop(){
+    activeStop = -1;
+    document.getElementById("fieldNote").innerHTML = "";
+    document.getElementById("legendHint").style.display = "";
+    syncActiveState(-1);
+  }
+
+  function syncActiveState(i){
+    document.querySelectorAll(".pin").forEach(function(p){
+      var on = parseInt(p.dataset.idx, 10) === i;
+      p.classList.toggle("active", on);
+      p.setAttribute("aria-expanded", on ? "true" : "false");
+    });
+    document.querySelectorAll("#legendList button, .mobile-route .mpin").forEach(function(b){
+      var on = parseInt(b.dataset.idx, 10) === i;
+      b.setAttribute("aria-expanded", on ? "true" : "false");
+    });
+  }
+
+  function setLang(l){
+    lang = l;
+    document.documentElement.setAttribute("lang", l);
+    document.getElementById("lang-ru").classList.toggle("active", l === "ru");
+    document.getElementById("lang-en").classList.toggle("active", l === "en");
+    document.getElementById("lang-ru").setAttribute("aria-pressed", l === "ru");
+    document.getElementById("lang-en").setAttribute("aria-pressed", l === "en");
+    document.querySelectorAll("[data-i18n]").forEach(function(el){
+      var k = el.getAttribute("data-i18n");
+      if (DATA[l][k] !== undefined) el.textContent = DATA[l][k];
+    });
+    buildPins();
+    buildLegendList();
+    buildMobile();
+    document.getElementById("legendHint").textContent = DATA[l].legendHint;
+    if (activeStop >= 0) openStop(activeStop);
+    else syncActiveState(-1);
+  }
+
+  // ---- motion: draw the route once on load (gated by reduced-motion) ------
+  function setupRouteAnim(){
+    var prefersReduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var path = document.getElementById("route");
+    var len = path.getTotalLength();
+    if (prefersReduced) return;
+    var svg = document.getElementById("trailSvg");
+    svg.style.setProperty("--route-len", len);
+    svg.classList.add("has-anim");
+    var draw = document.getElementById("routeDraw");
+    draw.addEventListener("animationend", function(){
+      svg.classList.add("anim-done");
+      svg.classList.remove("has-anim");
+    });
+    // safety fallback in case animationend does not fire
+    setTimeout(function(){
+      svg.classList.add("anim-done");
+      svg.classList.remove("has-anim");
+    }, 2200);
+  }
+
+  // ---- mobile scrollable map -------------------------------------------
+  // .trail-shell is a horizontal scroll container ONLY on mobile (CSS sets
+  // overflow-x:auto + a fixed SVG width there); on desktop overflow is visible
+  // so scrollWidth == clientWidth. We feature-detect actual scrollability
+  // rather than the viewport, so desktop is never touched.
+  function mapShell(){ return document.querySelector(".trail-shell.desktop-trail"); }
+  function mapScrollable(shell){ return shell && shell.scrollWidth - shell.clientWidth > 4; }
+
+  // Center the active pin's x in the scroll viewport (instant under
+  // reduced-motion, smooth otherwise). No-op on desktop / non-scrollable.
+  function scrollPinIntoView(i){
+    var shell = mapShell();
+    if (!mapScrollable(shell) || !pinPoints[i]) return;
+    var svg = document.getElementById("trailSvg");
+    var renderedW = svg.getBoundingClientRect().width || shell.scrollWidth;
+    var scaleX = renderedW / 1200;                 // viewBox is 0 0 1200 470
+    var pinX = pinPoints[i].x * scaleX;
+    var target = pinX - shell.clientWidth / 2;
+    var max = shell.scrollWidth - shell.clientWidth;
+    target = Math.max(0, Math.min(target, max));
+    var reduced = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (shell.scrollTo) {
+      shell.scrollTo({ left: target, behavior: reduced ? "auto" : "smooth" });
+    } else {
+      shell.scrollLeft = target;
+    }
+  }
+
+  // One-time pan hint: hide it the first time the reader scrolls the map.
+  function setupMapScroll(){
+    var shell = mapShell();
+    if (!shell) return;
+    // initial reading start: snap to the trailhead (left edge area)
+    shell.scrollLeft = 0;
+    var hint = document.getElementById("mapHint");
+    var dismissed = false;
+    function dismiss(){
+      if (dismissed) return;
+      dismissed = true;
+      if (hint) hint.classList.add("is-gone");
+      shell.removeEventListener("scroll", onScroll);
+    }
+    function onScroll(){ if (shell.scrollLeft > 6) dismiss(); }
+    shell.addEventListener("scroll", onScroll, { passive: true });
+  }
+
+  function init(){
+    samplePoints();
+    setLang("ru");
+    setupRouteAnim();
+    setupMapScroll();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:linear-gradient(180deg,#f3ead4,#e8dcc0);color:#3a2e1d;border:1px solid #5c4a32;border-radius:999px;box-shadow:inset 0 0 0 1px rgba(243,234,212,0.7),0 4px 16px rgba(60,46,26,0.28);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#3a2e1d;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px;color:#5c4a32;transition:background 0.15s ease,color 0.15s ease}
+#mokup-nav a:hover{background:rgba(176,138,62,0.28);color:#3a2e1d}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1;color:#3a2e1d}
+#mokup-nav .mn-name{opacity:0.82;margin-left:6px;color:#5c4a32}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="02-metro.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">1 / 2</span><span class="mn-name">Atlas</span></span>
+  <a href="02-metro.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="02-metro.html", NEXT="02-metro.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

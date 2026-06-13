@@ -1,0 +1,32 @@
+{
+  "_schema": {
+    "purpose": "DATA CONTRACT for glossary.js inline term popovers.",
+    "shape": "Top-level object keyed by term-key (kebab-case, stable id used in [data-term] / .term hooks). Each value is { ru, en } with the localised definition string. i18n.js picks ru or en from <html lang>. Keys prefixed with underscore (like this _schema) are metadata and MUST be skipped by consumers.",
+    "rules": [
+      "term-key is the stable id referenced by diagram-data.js data-term and prose .term triggers",
+      "both ru and en are required for every real term",
+      "ASCII punctuation only; RU text is the only non-English content allowed in this repo by site-builder; cookbook-author fills final copy",
+      "keep definitions to 1-2 sentences"
+    ]
+  },
+  "chunk": {
+    "ru": "Fragment dokumenta retrieval-razmera; edinica, kotoruyu embeddyat, hranyat i izvlekayut.",
+    "en": "A retrieval-sized fragment of a document; the unit that gets embedded, stored and retrieved."
+  },
+  "embedding": {
+    "ru": "Chislovoj vektor, kodiruyushchij smysl teksta tak, chtoby ego mozhno bylo iskat' po blizosti.",
+    "en": "A numeric vector that encodes the meaning of text so it can be searched by similarity."
+  },
+  "vector": {
+    "ru": "Uporyadochennyj spisok chisel fiksirovannoj dliny (dim); tochka v prostranstve smyslov, vyhod modeli-embeddera.",
+    "en": "A fixed-length ordered list of numbers (dim); a point in meaning-space, the output of an embedding model."
+  },
+  "overlap": {
+    "ru": "Obshchij hvost teksta, povtoryaemyj v konce odnogo chunka i v nachale sleduyushchego, chtoby ne teryat' smysl na granice reza.",
+    "en": "A shared tail of text repeated at the end of one chunk and the start of the next so meaning is not lost at the cut boundary."
+  },
+  "top-k": {
+    "ru": "K blizhajshih chunkov, vozvrashchaemyh na zapros pered generaciej otveta.",
+    "en": "The K nearest chunks returned for a query before the answer is generated."
+  }
+}

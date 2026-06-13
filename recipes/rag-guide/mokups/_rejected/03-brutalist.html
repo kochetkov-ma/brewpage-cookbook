@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG Guide</title>
+<style>
+  :root {
+    --paper: #f4f1e8;
+    --ink: #0d0d0d;
+    --accent: #ffd000; /* electric yellow - the one loud flat accent */
+    --border: 4px solid var(--ink);
+    --shadow: 8px 8px 0 0 var(--ink);
+    --shadow-sm: 5px 5px 0 0 var(--ink);
+    --mono: "Courier New", Courier, monospace;
+    --sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.4;
+    -webkit-font-smoothing: none;
+  }
+
+  .wrap {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    border-bottom: var(--border);
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+    gap: 16px;
+  }
+  .brand {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: clamp(20px, 3vw, 30px);
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .brand .tag {
+    display: inline-block;
+    background: var(--accent);
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 2px 10px;
+    margin-left: 4px;
+  }
+
+  .lang-toggle {
+    display: inline-flex;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    background: var(--paper);
+    flex-shrink: 0;
+  }
+  .lang-toggle button {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    min-height: 44px;
+    min-width: 52px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .lang-toggle button + button { border-left: var(--border); }
+  .lang-toggle button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--accent);
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 56px 0 40px;
+    border-bottom: var(--border);
+  }
+  .hero .kicker {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    display: inline-block;
+    background: var(--accent);
+    border: var(--border);
+    padding: 4px 10px;
+    margin: 0 0 22px;
+  }
+  .hero h2 {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: clamp(32px, 6vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -2px;
+    text-transform: uppercase;
+    margin: 0 0 20px;
+    max-width: 16ch;
+  }
+  .hero h2 mark {
+    background: var(--accent);
+    padding: 0 6px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+  .hero p {
+    font-size: clamp(16px, 2vw, 21px);
+    max-width: 54ch;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  /* ===== TRACK ===== */
+  .track-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 44px 0 26px;
+    flex-wrap: wrap;
+  }
+  .track-head h3 {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: clamp(22px, 3.5vw, 36px);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    margin: 0;
+  }
+  .track-meta {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .track {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 56px;
+  }
+
+  .stop {
+    border: var(--border);
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    transition: box-shadow .12s ease, transform .12s ease;
+  }
+  .stop-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 20px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: var(--ink);
+    min-height: 44px;
+  }
+  .pct {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 16px;
+    background: var(--ink);
+    color: var(--accent);
+    border: var(--border);
+    padding: 8px 10px;
+    min-width: 74px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .stop.is-edge .pct { background: var(--accent); color: var(--ink); }
+
+  .stop-title {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: clamp(17px, 2.4vw, 24px);
+    text-transform: uppercase;
+    letter-spacing: -.5px;
+    flex: 1;
+  }
+  .plus {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1;
+    border: var(--border);
+    background: var(--accent);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform .12s ease;
+  }
+  .stop[aria-expanded="true"] .plus { transform: rotate(45deg); }
+
+  .stop[aria-expanded="true"] {
+    box-shadow: 12px 12px 0 0 var(--accent), 12px 12px 0 4px var(--ink);
+    transform: translate(-2px, -2px);
+  }
+
+  .panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .18s ease;
+    border-top: 0 solid var(--ink);
+  }
+  .stop[aria-expanded="true"] .panel {
+    max-height: 420px;
+    border-top: var(--border);
+  }
+  .panel-inner { padding: 18px 20px 22px; }
+  .blurb {
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 14px;
+    max-width: 64ch;
+  }
+  .panel ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .panel li {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 12px;
+    border: 3px solid var(--ink);
+    background: var(--paper);
+  }
+  .panel li::before { content: ">> "; color: var(--ink); }
+
+  /* ===== FOOTER ===== */
+  footer {
+    border-top: var(--border);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 28px 0;
+  }
+  .foot-row {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+  footer .foot-note {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .foot-links { display: flex; gap: 14px; flex-wrap: wrap; }
+  footer a {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--accent);
+    border: 3px solid var(--paper);
+    padding: 8px 12px;
+    text-decoration: none;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  footer a:hover { background: var(--paper); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .wrap { padding: 0 16px; }
+    .header-row { flex-wrap: wrap; }
+    .hero { padding: 36px 0 28px; }
+    .stop-btn { flex-wrap: wrap; gap: 12px; }
+    .pct { min-width: 66px; }
+    .stop-title { flex-basis: 100%; order: 3; }
+    .stop[aria-expanded="true"] { transform: none; }
+    .foot-row { flex-direction: column; align-items: flex-start; gap: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-row">
+    <h1 class="brand"><span data-i="brand">RAG ГАЙД</span> <span class="tag" data-i="tagLevel">0 -&gt; 100%</span></h1>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button id="btnRu" aria-pressed="true" onclick="setLang('ru')">RU</button>
+      <button id="btnEn" aria-pressed="false" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="kicker" data-i="kicker">ДЛЯ НОВИЧКОВ</span>
+      <h2 data-i="heroH"></h2>
+      <p data-i="heroP"></p>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="track-head">
+      <h3 data-i="trackH">МАРШРУТ ОБУЧЕНИЯ</h3>
+      <span class="track-meta" data-i="trackMeta">11 ОСТАНОВОК / 0% -&gt; 100%</span>
+    </div>
+    <div class="track" id="track"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <span class="foot-note" data-i="footNote">BREWPAGE COOKBOOK // RAG GUIDE</span>
+    <div class="foot-links">
+      <a href="https://brewpage.app">brewpage.app</a>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi">github / brewpage-openapi</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var STR = {
+    ru: {
+      brand: "RAG ГАЙД",
+      tagLevel: "0 -> 100%",
+      kicker: "ДЛЯ НОВИЧКОВ",
+      heroH: "С нуля до RAG за один проход",
+      heroP: "Без предварительных знаний и без установок. Открой страницу и пройди маршрут от 0% до 100% - все объяснения тут, уходить никуда не нужно.",
+      trackH: "МАРШРУТ ОБУЧЕНИЯ",
+      trackMeta: "11 ОСТАНОВОК / 0% -> 100%",
+      footNote: "BREWPAGE COOKBOOK // RAG GUIDE"
+    },
+    en: {
+      brand: "RAG GUIDE",
+      tagLevel: "0 -> 100%",
+      kicker: "FOR BEGINNERS",
+      heroH: "From zero to RAG in one pass",
+      heroP: "No prerequisites, nothing to install. Open the page and walk the track from 0% to 100% - every explanation lives right here, you never leave.",
+      trackH: "LEARNING TRACK",
+      trackMeta: "11 STOPS / 0% -> 100%",
+      footNote: "BREWPAGE COOKBOOK // RAG GUIDE"
+    }
+  };
+
+  var STOPS = [
+    {
+      pct: "0%",
+      ru: { t: "С чего начать", b: "Короткая разминка: что ты получишь к концу маршрута и как им пользоваться.",
+            s: ["Цель: понять RAG без математики", "Все на одной странице", "Двигайся сверху вниз"] },
+      en: { t: "Where to start", b: "A short warm-up: what you will have by the end of the track and how to use it.",
+            s: ["Goal: understand RAG without math", "Everything on one page", "Move top to bottom"] }
+    },
+    {
+      pct: "1",
+      ru: { t: "Что такое RAG", b: "RAG - это когда модель сначала ищет нужные документы, а потом отвечает по ним.",
+            s: ["Retrieval = поиск", "Augmented = дополненный", "Generation = ответ модели"] },
+      en: { t: "What RAG is", b: "RAG means the model first finds relevant documents, then answers using them.",
+            s: ["Retrieval = search", "Augmented = enriched", "Generation = model answer"] }
+    },
+    {
+      pct: "2",
+      ru: { t: "Зачем он нужен", b: "Он дает свежие и проверяемые ответы по твоим данным, а не выдумки модели.",
+            s: ["Меньше галлюцинаций", "Ответы по твоим документам", "Можно ссылаться на источник"] },
+      en: { t: "Why you need it", b: "It gives fresh, verifiable answers from your own data instead of made-up text.",
+            s: ["Fewer hallucinations", "Answers from your docs", "You can cite the source"] }
+    },
+    {
+      pct: "3",
+      ru: { t: "Как работает поиск по документам", b: "Сначала находим куски текста, похожие на вопрос, и только их передаем модели.",
+            s: ["Вопрос -> похожие куски", "Похожесть по смыслу", "Лишнее отсекаем"] },
+      en: { t: "How document retrieval works", b: "First we find text pieces similar to the question, and pass only those to the model.",
+            s: ["Question -> similar pieces", "Similarity by meaning", "Drop the irrelevant"] }
+    },
+    {
+      pct: "4",
+      ru: { t: "Разбиваем текст на чанки", b: "Большие документы режем на небольшие куски, чтобы искать точечно.",
+            s: ["Чанк = небольшой кусок", "Размер с перекрытием", "Меньше шума в ответе"] },
+      en: { t: "Splitting text into chunks", b: "Large documents are cut into small pieces so search can be precise.",
+            s: ["Chunk = small piece", "Size with overlap", "Less noise in the answer"] }
+    },
+    {
+      pct: "5",
+      ru: { t: "Embeddings: текст в векторы", b: "Каждый чанк превращаем в набор чисел, который отражает его смысл.",
+            s: ["Вектор = список чисел", "Близкие смыслы - близкие векторы", "Считает модель эмбеддингов"] },
+      en: { t: "Embeddings: text to vectors", b: "Each chunk becomes a list of numbers that captures its meaning.",
+            s: ["Vector = list of numbers", "Close meaning -> close vectors", "An embedding model does it"] }
+    },
+    {
+      pct: "6",
+      ru: { t: "Векторная база и поиск", b: "Векторы храним в базе и быстро находим самые близкие к вопросу.",
+            s: ["Хранилище векторов", "Поиск ближайших соседей", "Возврат top-k кусков"] },
+      en: { t: "Vector store and search", b: "Vectors are kept in a store, and we quickly find the ones closest to the question.",
+            s: ["Vector storage", "Nearest-neighbor search", "Return top-k pieces"] }
+    },
+    {
+      pct: "7",
+      ru: { t: "Собираем контекст для модели", b: "Найденные куски склеиваем в один блок и кладем рядом с вопросом.",
+            s: ["Куски + вопрос = промпт", "Следим за длиной", "Порядок имеет значение"] },
+      en: { t: "Assembling context for the model", b: "The retrieved pieces are joined into one block placed next to the question.",
+            s: ["Pieces + question = prompt", "Watch the length", "Order matters"] }
+    },
+    {
+      pct: "8",
+      ru: { t: "Генерация ответа", b: "Модель читает контекст и формулирует ответ строго по нему.",
+            s: ["Отвечает по контексту", "Можно просить цитаты", "Не выходит за данные"] },
+      en: { t: "Generating the answer", b: "The model reads the context and writes an answer strictly based on it.",
+            s: ["Answers from context", "Can ask for citations", "Stays within the data"] }
+    },
+    {
+      pct: "9",
+      ru: { t: "Оценка качества", b: "Проверяем, точны ли ответы и нашлись ли правильные куски.",
+            s: ["Точность поиска", "Точность ответа", "Тестовые вопросы"] },
+      en: { t: "Measuring quality", b: "We check whether answers are accurate and the right pieces were retrieved.",
+            s: ["Retrieval accuracy", "Answer accuracy", "Test question set"] }
+    },
+    {
+      pct: "100%",
+      ru: { t: "Вывод в продукцию", b: "Собираем все в работающий сервис, за которым можно следить.",
+            s: ["Обновление документов", "Мониторинг и логи", "Контроль стоимости"] },
+      en: { t: "Going to production", b: "We assemble everything into a working service you can monitor.",
+            s: ["Refresh the documents", "Monitoring and logs", "Cost control"] }
+    }
+  ];
+
+  var lang = "ru";
+
+  function buildTrack() {
+    var t = document.getElementById("track");
+    t.innerHTML = "";
+    STOPS.forEach(function (st, i) {
+      var d = st[lang];
+      var edge = (st.pct === "0%" || st.pct === "100%");
+      var wrap = document.createElement("div");
+      wrap.className = "stop" + (edge ? " is-edge" : "");
+      wrap.setAttribute("aria-expanded", "false");
+
+      var pid = "panel-" + i;
+      wrap.innerHTML =
+        '<button class="stop-btn" aria-controls="' + pid + '" aria-expanded="false">' +
+          '<span class="pct">' + st.pct + '</span>' +
+          '<span class="stop-title">' + d.t + '</span>' +
+          '<span class="plus" aria-hidden="true">+</span>' +
+        '</button>' +
+        '<div class="panel" id="' + pid + '">' +
+          '<div class="panel-inner">' +
+            '<p class="blurb">' + d.b + '</p>' +
+            '<ul>' + d.s.map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul>' +
+          '</div>' +
+        '</div>';
+
+      var btn = wrap.querySelector(".stop-btn");
+      btn.addEventListener("click", function () {
+        var open = wrap.getAttribute("aria-expanded") === "true";
+        wrap.setAttribute("aria-expanded", open ? "false" : "true");
+        btn.setAttribute("aria-expanded", open ? "false" : "true");
+      });
+      t.appendChild(wrap);
+    });
+  }
+
+  function setLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    var dict = STR[l];
+    document.querySelectorAll("[data-i]").forEach(function (el) {
+      var k = el.getAttribute("data-i");
+      if (dict[k] !== undefined) el.textContent = dict[k];
+    });
+    document.getElementById("btnRu").setAttribute("aria-pressed", l === "ru" ? "true" : "false");
+    document.getElementById("btnEn").setAttribute("aria-pressed", l === "en" ? "true" : "false");
+    buildTrack();
+  }
+
+  setLang("ru");
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px;transition:background 0.15s ease}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="02-editorial.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">3 / 5</span><span class="mn-name">Brutalist</span></span>
+  <a href="04-metro.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="02-editorial.html", NEXT="04-metro.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

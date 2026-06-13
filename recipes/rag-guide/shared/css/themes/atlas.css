@@ -1,0 +1,172 @@
+/*
+ * themes/atlas.css -- the ONLY token VALUES file for the RAG Guide (AtlasMD).
+ *
+ * Atlas = warm antique-cartography skin over serious RAG content.
+ * This file defines ONLY :root token VALUES (no structure, no selectors
+ * beyond :root). base.css references these names; swapping this single
+ * <link> reskins the whole site. Atlas is the only theme, but the
+ * theme-as-a-file contract is preserved (AtlasMD section 2 + 8).
+ *
+ * ASCII only. No webfonts, no external requests.
+ */
+
+:root {
+  /* ---- theme-internal palette aliases (kept so SVG/cartography reads
+          naturally; base.css may reference these directly) -- AtlasMD 2.1 ---- */
+  --parchment:  #f3ead4;
+  --parchment2: #efe3c8;
+  --sand:       #e8dcc0;
+  --sand-deep:  #ddcca8;
+  --sepia:      #5c4a32;
+  --sepia-soft: #7a6446;
+  --ink:        #3a2e1d;
+  --teal:       #4a6f6a;
+  --teal-deep:  #335551;
+  --rust:       #a55a35;
+  --gold:       #b08a3e;
+  --green:      #17a673;
+  --line:       #bda878;
+  --line-soft:  #d2bd8e;
+
+  /* fixed inline darkening hex (frozen, AtlasMD 2.1) */
+  --lang-active-bottom: #4a3a26;
+  --rust-deep:          #7c3f24;
+  --gold-deep:          #8c6a25;
+  --badge-rust-bottom:  #8c4a2b;
+  --compass-nw:         #c47a55;
+  --compass-sw:         #6a8d88;
+  --green-text:         #0c7a52;
+
+  /* ---- base.css color namespace (site-architecture section 2) ---- */
+  --c-bg:            var(--parchment);
+  --c-surface:       var(--parchment2);
+  --c-surface-2:     var(--sand);
+  --c-surface-3:     var(--sand-deep);   /* atlas extra: hover/track tier */
+  --c-text:          var(--ink);
+  --c-text-muted:    var(--sepia-soft);
+  --c-heading:       var(--sepia);        /* atlas extra: heading ink */
+  --c-border:        var(--line);
+  --c-border-soft:   var(--line-soft);    /* atlas extra: soft divider */
+  --c-link:          var(--teal-deep);
+  --c-link-hover:    var(--rust);
+  --c-focus:         var(--rust);
+  --c-accent-1:      var(--teal);
+  --c-accent-1-soft: rgba(74,111,106,0.10);
+  --c-accent-2:      var(--rust);
+  --c-accent-2-soft: rgba(165,90,53,0.10);
+  --c-accent-3:      var(--gold);
+  --c-accent-3-soft: rgba(176,138,62,0.10);
+  --c-accent-4:      var(--teal-deep);
+  --c-accent-4-soft: rgba(74,111,106,0.16);
+  --c-progress:      var(--green);        /* atlas extra: EARNED-progress semantic */
+
+  /* focus / selection ring rgba (AtlasMD 3.13) */
+  --c-focus-glow:    rgba(176,138,62,0.5);    /* gold glow for gold-accent surfaces */
+  --c-current-ring:  rgba(165,90,53,0.32);    /* faint rust "вы здесь" ring */
+  --c-visited-ring:  rgba(23,166,115,0.4);    /* earned-green ring */
+
+  /* green-surface tints (visited node bg) */
+  --c-visited-bg-1:  #eef7ea;
+  --c-visited-bg-2:  #e3efd9;
+
+  /* cartography rgba set (landing terrain only, AtlasMD 2.8) -- frozen */
+  --ter-sea:        rgba(74,111,106,0.16);
+  --ter-sea-line:   rgba(74,111,106,0.42);
+  --ter-coast:      rgba(74,111,106,0.62);
+  --ter-island:     rgba(74,111,106,0.20);
+  --ter-island-ln:  rgba(74,111,106,0.58);
+  --ter-lake:       rgba(74,111,106,0.23);
+  --ter-shore:      rgba(74,111,106,0.40);
+  --ter-tick:       rgba(74,111,106,0.44);
+  --ter-river:      rgba(74,111,106,0.50);
+  --ter-mtn:        rgba(120,96,60,0.15);
+  --ter-mtn-line:   rgba(92,74,50,0.58);
+  --ter-mtn-shade:  rgba(92,74,50,0.19);
+  --ter-hill:       rgba(92,74,50,0.48);
+  --ter-hachure:    rgba(92,74,50,0.46);
+  --ter-contour:    rgba(189,168,120,0.68);
+  --ter-tree-ln:    rgba(74,90,60,0.58);
+  --ter-tree-fill:  rgba(74,90,60,0.16);
+  --ter-conifer-ln: rgba(60,80,54,0.62);
+  --ter-conifer-fl: rgba(60,80,54,0.18);
+  --ter-marsh:      rgba(74,111,106,0.44);
+  --ter-grid:       rgba(120,96,60,0.17);
+  --ter-rhumb:      rgba(120,96,60,0.15);
+  --ter-flourish:   rgba(92,74,50,0.42);
+  --ter-cartouche:  rgba(92,74,50,0.34);
+  --ter-cart-fill:  rgba(255,255,255,0.10);
+  --ter-scale-seg:  rgba(92,74,50,0.40);
+  --ter-scale-rule: rgba(92,74,50,0.52);
+  --ter-scale-num:  rgba(92,74,50,0.50);
+  --ter-bird:       rgba(92,74,50,0.40);
+  --ter-label:      rgba(92,74,50,0.48);
+
+  /* route ink */
+  --c-route:        var(--rust);
+  --c-route-shadow: rgba(60,46,26,0.18);
+
+  /* ---- space (AtlasMD 2.4) ---- */
+  --sp-0: 4px;
+  --sp-1: 8px;
+  --sp-2: 12px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+  --sp-5: 32px;
+  --sp-6: 54px;
+
+  /* ---- radius (AtlasMD 2.6) ---- */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+
+  /* ---- type (AtlasMD 2.2 / 2.3) ---- */
+  --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans:  "Trebuchet MS", "Gill Sans", "Segoe UI", Verdana, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-body: var(--serif);
+  --font-ui:   var(--sans);   /* atlas extra: UI/label font */
+  --font-mono: var(--mono);
+
+  --fs-0: 0.72rem;
+  --fs-1: 0.86rem;
+  --fs-2: 1.04rem;
+  --fs-3: 1.3rem;
+  --fs-4: clamp(1.8rem, 3.7vw, 3rem);
+  --lh-tight: 1.14;
+  --lh-body:  1.5;
+  --fw-normal: 400;
+  --fw-bold:   600;
+
+  /* ---- borders (AtlasMD 2.6) ---- */
+  --bw-1: 1px;
+  --bw-2: 2px;
+
+  /* ---- shadows -- sepia-tinted only (AtlasMD 2.5) ---- */
+  --shadow-1: 0 2px 6px rgba(60,46,26,0.14);
+  --shadow-2: 0 6px 20px rgba(60,46,26,0.18);
+  --shadow-plate:
+    inset 0 0 0 1px rgba(243,234,212,0.7),
+    inset 0 0 0 7px rgba(189,168,120,0.55),
+    inset 0 0 60px rgba(92,74,50,0.16),
+    0 6px 22px rgba(60,46,26,0.18);
+  --shadow-ring:    inset 0 0 0 1px rgba(243,234,212,0.7);  /* parchment hairline ring */
+  --shadow-sheen:   inset 0 1px 0 rgba(255,255,255,0.5);    /* toggle top sheen */
+  --shadow-pressed: inset 0 1px 2px rgba(0,0,0,0.25);       /* lang-active */
+  --shadow-track:   inset 0 1px 2px rgba(60,46,26,0.18);    /* progress track */
+  --shadow-active-bar: inset 2px 0 0 var(--rust), var(--shadow-1);
+  --shadow-header:  0 2px 0 -1px rgba(189,168,120,0.45);
+
+  /* ---- motion (AtlasMD 2.6) ---- */
+  --dur-1: .18s;
+  --dur-2: .42s;
+  --dur-zoom: .52s;   /* atlas extra: drill camera */
+  --dur-note: .3s;    /* atlas extra: field-note reveal / route handoff */
+  --dur-draw: 1.5s;   /* atlas extra: one-shot route draw-in */
+  --ease-1: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-zoom: cubic-bezier(0.4, 0.05, 0.2, 1);   /* atlas extra */
+
+  /* ---- layout (AtlasMD 2.4) ---- */
+  --container-max: 1380px;
+
+  color-scheme: light;
+}

@@ -1,0 +1,21 @@
+<!--
+  plate-frame.html -- framed antique-plate stage (AtlasMD 3.2, copy-in source of truth).
+  The double-rule frame + corner L-ticks + vignette are drawn by base.css
+  (.plate ::before / ::after); this partial supplies the semantic shell.
+  The title head carries the compass (AtlasMD 3.1) -- a SEPARATE row from any
+  toolbar. data-slot="stage" marks the region a drill camera scales/grows.
+  Replace the slot contents with the page's diagram (pipeline / vector-map /
+  comparison) when composing a section page.
+-->
+<section class="plate" data-component="plate" aria-labelledby="plateTitle">
+  <div class="plate-head">
+    <div class="title-block">
+      <h3 id="plateTitle" data-i18n="plateTitle" data-ru="Заголовок плиты" data-en="Plate title">Заголовок плиты</h3>
+      <p data-i18n="plateSub" data-ru="Подзаголовок" data-en="Subtitle">Подзаголовок</p>
+    </div>
+    <!-- compass.html inlined here (title row only) -->
+  </div>
+  <div class="plate-body" data-slot="stage">
+    <!-- diagram / pipeline / vector-map / comparison goes here -->
+  </div>
+</section>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Как работает поиск по документам - RAG С НУЛЯ</title>
+<meta name="description" content="Семантический поиск по документам: запрос становится вектором, kNN возвращает top-k ближайших фрагментов по косинусу. Интерактивная карта векторного пространства - BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file +
+     this section's own CSS. base.css / atlas.css are NEVER forked or edited. -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/search.css">
+</head>
+<body>
+<a class="skip-link" href="#plateTitle">К карте векторного пространства</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <a class="site-header__brand" href="index.html" aria-label="К карте маршрута RAG С НУЛЯ" style="text-decoration:none">
+      <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+        <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+        <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+        <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+      <div>
+        <h1>RAG С НУЛЯ</h1>
+        <div class="sub">Путеводитель для начинающих</div>
+      </div>
+    </a>
+    <div class="site-header__nav">
+      <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span>К карте</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+  <!-- ===================== drilldown-host: plate + toolbar + camera ===================== -->
+  <section class="plate" data-component="drilldown-host" aria-labelledby="plateTitle">
+
+    <!-- title row: compass lives ONLY here (AtlasMD 3.1 HARD RULE) -->
+    <div class="plate-head">
+      <div class="title-block">
+        <p class="eyebrow" style="font-family:var(--font-ui);font-size:var(--fs-0);letter-spacing:.22em;text-transform:uppercase;color:var(--c-text-muted);margin:0 0 4px">Карта векторного пространства</p>
+        <h3 id="plateTitle">Как работает поиск по документам</h3>
+        <p>Семантический поиск: близость по смыслу, а не по словам</p>
+      </div>
+      <!-- compass: title row only, inert decoration -->
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- toolbar row: breadcrumb + zoom-out (SEPARATE row, never the compass row) -->
+    <div class="vmap-toolbar">
+      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень масштаба">
+        <span class="crumb-current" aria-current="step">Карта пространства</span>
+      </nav>
+      <button type="button" class="zoomout" data-slot="zoomout" aria-label="Отдалить на уровень выше" disabled>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5"/>
+          <line x1="15.2" y1="15.2" x2="21" y2="21"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- earned-progress strip: MAIN PATH = query + the top-k near points (the kNN
+         backbone). The 3 far points + level-2 deeps are SIDE (optional). -->
+    <div class="progress-strip js-only" data-component="progress" aria-hidden="true">
+      <span class="pcount"></span>
+      <div class="ptrack" aria-hidden="true"><span class="pfill"></span></div>
+      <span class="pdone"></span>
+    </div>
+
+    <!-- body: plot (drill stage) + side rail -->
+    <div class="vmap-grid">
+
+      <!-- ============ PLOT (camera stage) ============ -->
+      <div>
+        <!-- the plate growToFit target = the plot frame; the panel grows it -->
+        <div class="plot-frame" data-component="plate">
+          <svg class="plot" data-component="vector-map" data-slot="stage" viewBox="0 0 520 420" role="img"
+               aria-label="2D-проекция векторного пространства: точка запроса в центре, ближайшие документы зелёные, далёкие серые. Все точки можно открыть.">
+            <!-- vector-map.js renders the graticule, cosine rings, axis caption,
+                 top-k links and all drillable points here on load.
+                 NO-JS fallback (static labelled plot) lives below in .no-js-only. -->
+          </svg>
+          <!-- drill detail panel mount (grows the frame to its content) -->
+          <div data-slot="panel" aria-live="polite"></div>
+        </div>
+
+        <!-- scale bar + legend -->
+        <div class="scalebar">
+          <span class="sb-cap">косинусная близость</span>
+          <span class="sb-track" aria-hidden="true">
+            <span class="sb-seg a"></span><span class="sb-seg b"></span>
+            <span class="sb-seg c"></span><span class="sb-seg d"></span>
+          </span>
+          <span class="sb-cap">1.0 &rarr; 0.0</span>
+          <span class="vmap-legend">
+            <span class="lg"><span class="sw g"></span> ближние (top-k)</span>
+            <span class="lg"><span class="sw r"></span> дальние</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ============ SIDE RAIL ============ -->
+      <aside class="vmap-rail" data-slot="rail">
+        <div class="card">
+          <h2>Запрос &rarr; вектор</h2>
+          <p class="qline">"Сколько дней отпуска в году?"</p>
+          <p class="embed-step" data-slot="embed-step" aria-live="polite">текст -&gt; токены -&gt; вектор</p>
+          <div class="tokrow" data-slot="tokrow" aria-hidden="true">
+            <span class="tok">сколько</span><span class="tok">дней</span><span class="tok">отпуска</span><span class="tok">в</span><span class="tok">году</span>
+          </div>
+          <p class="vread"><span class="vlbl">поисковый вектор (dim 1536):</span><br>
+            <span class="qvec" data-slot="qvec">[0.81, -0.12, 0.47, 0.05, -0.33, 0.19, ...]</span></p>
+          <p class="meta">Запрос превращается в <b>поисковый вектор</b> той же размерности, что и фрагменты в индексе. Каждый фрагмент уже хранится как вектор - сравнение идёт <b>числами, а не словами</b>.</p>
+        </div>
+
+        <div class="callout">
+          <p class="ctag">Поиск по словам промахнулся бы здесь</p>
+          <p>В лучшем совпадении нет слова <span class="cw">"отпуск"</span> - только
+            <span class="cg">"ежегодный оплачиваемый отдых"</span>. Keyword-поиск его бы пропустил;
+            семантический находит по близости векторов.</p>
+        </div>
+
+        <div class="card">
+          <h2>kNN - ранжирование по косинусу <span class="kbadge">k = 3</span></h2>
+          <ol class="ranklist" data-slot="ranklist">
+            <li class="near"><span class="rk">#1</span><span class="rtxt">ежегодный оплачиваемый отдых - 28 дней</span><span class="rcos">0.92</span></li>
+            <li class="near"><span class="rk">#2</span><span class="rtxt">дни отдыха можно перенести</span><span class="rcos">0.86</span></li>
+            <li class="near"><span class="rk">#3</span><span class="rtxt">отгулы за переработку</span><span class="rcos">0.74</span></li>
+            <li class="far"><span class="rk">#4</span><span class="rtxt">командировочные расходы</span><span class="rcos">0.21</span></li>
+            <li class="far"><span class="rk">#5</span><span class="rtxt">оплата проезда</span><span class="rcos">0.19</span></li>
+            <li class="far"><span class="rk">#6</span><span class="rtxt">пропуск на вход в офис</span><span class="rcos">0.14</span></li>
+          </ol>
+          <div class="cut">граница top-k</div>
+          <p class="meta">Модель видит только <b>top-k</b> ближайших фрагментов, а не весь архив.</p>
+        </div>
+      </aside>
+    </div>
+
+    <div class="vmap-foot">
+      <b>Как читать карту.</b> Документы заранее разбиты на фрагменты и сохранены в индексе как векторы (<code>dim 1536</code>).
+      Запрос превращается в вектор; <b>kNN / поиск ближайших соседей</b> (часто приближённый, <code>ANN</code>) возвращает несколько лучших по
+      <b>косинусной близости</b>. Плоскость - это 2D-<b>проекция</b> высокоразмерного пространства: реальная близость считается в 1536 измерениях.
+      Кликните точку (включая дальние), чтобы заглянуть внутрь - семантический зум покажет данные фрагмента или причину, почему он не вошёл в top-k.
+    </div>
+
+    <!-- ============ NO-JS fallback: static labelled plot data + kNN list ============ -->
+    <div class="no-js-only">
+      <p class="legend-hint">Включите JavaScript, чтобы открыть интерактивную карту: точки, косинусные кольца, семантический зум.</p>
+      <div class="card" style="max-width:760px;margin:16px auto 0">
+        <h2 style="font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.12em;font-size:var(--fs-0);color:var(--c-text-muted);border-bottom:1px solid var(--c-border);padding-bottom:6px;margin:0 0 8px">Запрос</h2>
+        <p class="qline" style="font-family:var(--font-body);font-style:italic;font-size:var(--fs-2);margin:0">"Сколько дней отпуска в году?" -> поисковый вектор (dim 1536), сравнение по косинусу, k = 3.</p>
+      </div>
+      <div class="card" style="max-width:760px;margin:12px auto 0">
+        <h2 style="font-family:var(--font-ui);text-transform:uppercase;letter-spacing:.12em;font-size:var(--fs-0);color:var(--c-text-muted);border-bottom:1px solid var(--c-border);padding-bottom:6px;margin:0 0 8px">kNN - ранжирование по косинусу (k = 3)</h2>
+        <ol class="ranklist" style="opacity:1">
+          <li class="near shown"><span class="rk">#1</span><span class="rtxt">ежегодный оплачиваемый отдых - 28 дней</span><span class="rcos">0.92</span></li>
+          <li class="near shown"><span class="rk">#2</span><span class="rtxt">дни отдыха можно перенести</span><span class="rcos">0.86</span></li>
+          <li class="near shown"><span class="rk">#3</span><span class="rtxt">отгулы за переработку</span><span class="rcos">0.74</span></li>
+        </ol>
+        <div class="cut">граница top-k</div>
+        <ol class="ranklist" style="opacity:1">
+          <li class="far shown"><span class="rk">#4</span><span class="rtxt">командировочные расходы</span><span class="rcos">0.21</span></li>
+          <li class="far shown"><span class="rk">#5</span><span class="rtxt">оплата проезда</span><span class="rcos">0.19</span></li>
+          <li class="far shown"><span class="rk">#6</span><span class="rtxt">пропуск на вход в офис</span><span class="rcos">0.14</span></li>
+        </ol>
+        <p class="meta" style="font-family:var(--font-ui);font-size:11.5px;color:var(--c-heading);margin-top:8px">Поиск по словам пропустил бы #1: в нём нет слова "отпуск", только "ежегодный оплачиваемый отдых". Семантический поиск находит по близости векторов.</p>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/search.js"></script>
+</body>
+</html>

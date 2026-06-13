@@ -1,0 +1,26 @@
+<!--
+  zoom-controls.html -- ICON-only lens zoom controls (AtlasMD 3.5, copy-in source of truth).
+  zoom-out = lens-MINUS (come out one level); drill-in = lens-PLUS (dive one
+  level deeper). NO verb words on the icon button; meaning is in aria-label.
+  Driven by drilldown-zoom.js (zoom-out via [data-slot="zoomout"]; inline .drill
+  buttons live inside a detail panel and carry data-deep="<key>").
+  Lens geometry frozen: viewBox 0 0 24 24, currentColor, stroke-width 1.8.
+-->
+<button class="zoomout" data-slot="zoomout" type="button" aria-label="Выйти на уровень выше" disabled>
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+</button>
+
+<!-- inline drill-in (lens-PLUS) -- place inside a detail panel; may carry a
+     short text label next to the glyph (icon stays glyph-only) -->
+<button class="drill" data-deep="" type="button" aria-label="Приблизить на уровень глубже">
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <line x1="10.5" y1="7" x2="10.5" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+</button>

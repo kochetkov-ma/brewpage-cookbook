@@ -1,0 +1,12 @@
+<!--
+  progress.html -- earned-progress strip (AtlasMD 3.7, copy-in source of truth).
+  Brass-plate cartouche: NEUTRAL on load (0 / total, fill width 0). A node
+  greens only AFTER the user drills it; the strip grows. NEVER pre-light green.
+  progress.js builds/locates .pcount / .ptrack>.pfill / .pdone inside this host.
+  aria-hidden because the live count is also surfaced via the a11y announcer.
+-->
+<div class="progress-strip" data-component="progress" aria-hidden="true">
+  <span class="pcount"></span>
+  <div class="ptrack" aria-hidden="true"><span class="pfill"></span></div>
+  <span class="pdone"></span>
+</div>

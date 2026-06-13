@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAG с нуля</title>
+<style>
+  :root{
+    --paper:#f4f0e4;
+    --ink:#1c1a17;
+    --pink:#ff2e7e;     /* fluoro spot 1 */
+    --blue:#2b3ad6;     /* cobalt spot 2 */
+    --pink-soft:rgba(255,46,126,.16);
+    --blue-soft:rgba(43,58,214,.16);
+    --shift:3px;
+    --maxw:1280px;
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Helvetica Neue",Arial,"Segoe UI",sans-serif;
+    line-height:1.5;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* paper grain via SVG noise */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    z-index:0;pointer-events:none;
+    opacity:.10;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* faint registration corner marks */
+  body::after{
+    content:"";
+    position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background:
+      linear-gradient(var(--blue),var(--blue)) 14px 14px/1px 26px no-repeat,
+      linear-gradient(var(--blue),var(--blue)) 14px 14px/26px 1px no-repeat,
+      linear-gradient(var(--pink),var(--pink)) calc(100% - 14px) calc(100% - 14px)/1px 26px no-repeat,
+      linear-gradient(var(--pink),var(--pink)) calc(100% - 39px) calc(100% - 14px)/26px 1px no-repeat;
+  }
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 28px}
+
+  /* ---- HEADER ---- */
+  header{padding:30px 0 18px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+  .brand{position:relative;font-weight:900;letter-spacing:-.02em;font-size:clamp(26px,4.2vw,46px);line-height:.95;text-transform:uppercase}
+  .brand .reg{position:relative;display:inline-block;color:var(--ink)}
+  /* misregister overprint on the brand decorative shadow */
+  .brand .reg::before,.brand .reg::after{
+    content:attr(data-t);position:absolute;left:0;top:0;z-index:-1;mix-blend-mode:multiply;
+  }
+  .brand .reg::before{color:var(--pink);transform:translate(calc(-1*var(--shift)),var(--shift))}
+  .brand .reg::after{color:var(--blue);transform:translate(var(--shift),calc(-1*var(--shift)))}
+
+  .toggle{display:inline-flex;border:2.5px solid var(--ink);background:var(--paper)}
+  .toggle button{
+    font:inherit;font-weight:800;letter-spacing:.06em;cursor:pointer;
+    border:0;background:transparent;color:var(--ink);
+    padding:9px 16px;min-height:44px;min-width:48px;text-transform:uppercase;
+  }
+  .toggle button+button{border-left:2.5px solid var(--ink)}
+  .toggle button[aria-pressed="true"]{background:var(--blue);color:var(--paper)}
+  .rule{height:6px;background:
+      repeating-linear-gradient(90deg,var(--pink) 0 18px,transparent 18px 36px),
+      repeating-linear-gradient(90deg,var(--blue) 18px 36px,transparent 36px 54px);
+    mix-blend-mode:multiply;margin-bottom:34px}
+
+  /* ---- HERO ---- */
+  .hero{position:relative;padding:18px 0 46px}
+  .kicker{display:inline-block;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:13px;
+    color:var(--paper);background:var(--pink);padding:6px 12px;mix-blend-mode:multiply;margin-bottom:18px}
+  .hero h1{position:relative;font-size:clamp(34px,7vw,80px);font-weight:900;line-height:.96;letter-spacing:-.02em;text-transform:uppercase;max-width:14ch}
+  .hero h1 span{position:relative}
+  .hero h1 span::before{content:attr(data-t);position:absolute;left:0;top:0;z-index:-1;color:var(--blue);mix-blend-mode:multiply;transform:translate(var(--shift),var(--shift))}
+  .hero p{margin-top:22px;font-size:clamp(16px,2vw,21px);max-width:46ch;font-weight:500}
+  .blob{position:absolute;z-index:-1;border-radius:50%;mix-blend-mode:multiply;filter:blur(1px)}
+  .blob.a{width:230px;height:230px;background:var(--pink);right:2%;top:-6px;opacity:.78}
+  .blob.b{width:170px;height:170px;background:var(--blue);right:14%;top:120px;opacity:.78}
+  @media (max-width:760px){.blob.a{width:140px;height:140px;right:-20px;top:-30px}.blob.b{display:none}}
+
+  /* ---- TRACK ---- */
+  .track-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin:8px 0 22px;flex-wrap:wrap}
+  .track-head h2{font-size:clamp(22px,3.4vw,34px);font-weight:900;text-transform:uppercase;letter-spacing:-.01em}
+  .meter{flex:1;min-width:220px;height:18px;border:2.5px solid var(--ink);position:relative;background:var(--paper);overflow:hidden}
+  .meter i{position:absolute;inset:0;width:0;background:
+      repeating-linear-gradient(45deg,var(--pink) 0 10px,var(--blue) 10px 20px);
+    mix-blend-mode:multiply;transition:width .4s ease}
+  .meter b{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:900;mix-blend-mode:difference;color:#fff}
+
+  .track{list-style:none;display:flex;flex-direction:column;gap:16px;padding-bottom:30px}
+  .stop{border:2.5px solid var(--ink);background:var(--paper);position:relative}
+  .stop>button{
+    width:100%;text-align:left;font:inherit;cursor:pointer;background:transparent;border:0;color:var(--ink);
+    display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:20px;padding:16px 18px;min-height:44px;
+  }
+  .stamp{
+    position:relative;display:grid;place-items:center;width:70px;height:70px;flex:none;
+    border:2.5px solid var(--ink);font-weight:900;font-size:18px;letter-spacing:-.02em;
+    background:var(--paper);text-transform:uppercase;
+  }
+  /* overprint misregister on stamp */
+  .stamp::before,.stamp::after{content:"";position:absolute;inset:-2.5px;border:2.5px solid;mix-blend-mode:multiply;z-index:-1}
+  .stamp::before{border-color:var(--pink);transform:translate(calc(-1*var(--shift)),var(--shift))}
+  .stamp::after{border-color:var(--blue);transform:translate(var(--shift),calc(-1*var(--shift)))}
+  .stop[data-done="1"] .stamp{background:var(--blue);color:var(--paper)}
+  .stop .title{font-weight:800;font-size:clamp(16px,2vw,21px);line-height:1.15}
+  .stop .pct{font-weight:900;font-size:13px;letter-spacing:.05em;color:var(--pink);mix-blend-mode:multiply;white-space:nowrap}
+  .chev{width:16px;height:16px;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg);transition:transform .25s ease;justify-self:end}
+  .stop[aria-expanded-host="1"] .chev{transform:rotate(225deg)}
+
+  .panel{overflow:hidden;max-height:0;transition:max-height .3s ease}
+  .stop[data-open="1"] .panel{max-height:560px}
+  .card{margin:0 18px 18px;padding:18px;border:2.5px dashed var(--ink);background:
+      linear-gradient(0deg,var(--pink-soft),var(--pink-soft)),
+      linear-gradient(0deg,var(--blue-soft),var(--blue-soft));
+    background-blend-mode:multiply}
+  .card p.blurb{font-weight:600;font-size:16px;margin-bottom:12px}
+  .card ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+  .card li{position:relative;padding-left:26px;font-size:15px}
+  .card li::before{content:"";position:absolute;left:0;top:6px;width:13px;height:13px;background:var(--pink);
+    mix-blend-mode:multiply;box-shadow:3px 3px 0 var(--blue-soft)}
+
+  /* ---- FOOTER ---- */
+  footer{border-top:2.5px solid var(--ink);margin-top:18px;padding:26px 0 60px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  footer .ft{font-size:13px;font-weight:600;opacity:.8}
+  footer a{color:var(--blue);font-weight:800;text-decoration:none;border-bottom:2px solid var(--pink)}
+  footer a:hover{color:var(--pink);border-bottom-color:var(--blue)}
+  .ft-links{display:flex;gap:20px;flex-wrap:wrap}
+
+  @media (max-width:480px){
+    .wrap{padding:0 16px}
+    .stop>button{grid-template-columns:auto 1fr;gap:14px}
+    .stop .pct{grid-column:2;grid-row:2;justify-self:start}
+    .chev{grid-column:2;grid-row:1;justify-self:end}
+    .stamp{width:56px;height:56px;font-size:15px}
+    .card{margin:0 12px 14px}
+    footer{justify-content:flex-start}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="reg" data-t="RAG" data-key="brand1">RAG</span> <span class="reg" data-t="" data-key="brand2">с нуля</span></div>
+    <div class="toggle" role="group" aria-label="language">
+      <button id="ru" aria-pressed="true">RU</button>
+      <button id="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+  <div class="rule"></div>
+
+  <section class="hero">
+    <span class="blob a"></span><span class="blob b"></span>
+    <span class="kicker" data-key="kicker">0 -&gt; 100%</span>
+    <h1><span data-t="" data-key="h1">Освой RAG за одну страницу</span></h1>
+    <p data-key="hero">Пошаговый гайд для новичков: от 0 до 100%. Без подготовки, всё на одной странице.</p>
+  </section>
+
+  <div class="track-head">
+    <h2 data-key="trackTitle">Маршрут обучения</h2>
+    <div class="meter" aria-hidden="true"><i id="meterFill"></i><b id="meterPct">0%</b></div>
+  </div>
+
+  <ul class="track" id="track"></ul>
+
+  <footer>
+    <div class="ft" data-key="madeWith">Напечатано в цифровом риз-цеху. Сделано для новичков.</div>
+    <div class="ft-links">
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STOPS = [
+    {pct:"0%", n:"0",
+      ru:{t:"С чего начать", b:"Начни здесь: пара минут на ориентировку, и ты понимаешь, куда движешься.",
+          s:["Что ты получишь к концу страницы","Никаких установок и аккаунтов","Читай сверху вниз, по порядку"]},
+      en:{t:"Where to start", b:"Begin here: a couple of minutes to orient, and you know where you are going.",
+          s:["What you will have by the end of the page","No installs and no accounts","Read top to bottom, in order"]}},
+    {pct:"9%", n:"1",
+      ru:{t:"Что такое RAG", b:"RAG -- это когда модель сначала ищет нужные документы, а потом отвечает по ним.",
+          s:["Retrieval: поиск фактов","Augmented: добавляем их в запрос","Generation: модель пишет ответ"]},
+      en:{t:"What RAG is", b:"RAG is when the model first finds the right documents, then answers from them.",
+          s:["Retrieval: find the facts","Augmented: add them to the prompt","Generation: the model writes the answer"]}},
+    {pct:"18%", n:"2",
+      ru:{t:"Зачем он нужен", b:"Модель не знает твоих данных; RAG даёт ей свежие и точные источники.",
+          s:["Меньше выдумок и галлюцинаций","Ответы по твоим документам","Обновляешь данные без переобучения"]},
+      en:{t:"Why you need it", b:"The model does not know your data; RAG gives it fresh, accurate sources.",
+          s:["Fewer made-up answers","Answers from your own documents","Update data without retraining"]}},
+    {pct:"27%", n:"3",
+      ru:{t:"Как работает поиск по документам", b:"Сначала находим самые подходящие куски текста, и только их отдаём модели.",
+          s:["Запрос превращаем в поисковый ключ","Сравниваем со всеми кусками","Берём топ самых близких"]},
+      en:{t:"How document retrieval works", b:"First we find the most relevant pieces of text, and pass only those to the model.",
+          s:["Turn the query into a search key","Compare against all the pieces","Keep the closest few"]}},
+    {pct:"36%", n:"4",
+      ru:{t:"Разбиваем текст на чанки", b:"Длинные документы режем на небольшие куски, чтобы их было удобно искать.",
+          s:["Кусок не слишком большой и не мелкий","Лёгкий нахлёст, чтобы не терять смысл","У каждого чанка своя ссылка на источник"]},
+      en:{t:"Splitting text into chunks", b:"We cut long documents into small pieces so they are easy to search.",
+          s:["A piece that is not too big or too small","A light overlap to keep meaning","Each chunk keeps its source link"]}},
+    {pct:"45%", n:"5",
+      ru:{t:"Эмбеддинги: текст в векторы", b:"Каждый кусок текста превращаем в числовой вектор, который ловит смысл.",
+          s:["Похожий смысл -- близкие векторы","Один и тот же способ для всех чанков","Так смысл становится измеримым"]},
+      en:{t:"Embeddings: text to vectors", b:"We turn each piece of text into a number vector that captures meaning.",
+          s:["Similar meaning -- close vectors","Same method for every chunk","Now meaning becomes measurable"]}},
+    {pct:"54%", n:"6",
+      ru:{t:"Векторная база и поиск", b:"Векторы храним в базе, которая быстро находит самые близкие к запросу.",
+          s:["Запрос тоже становится вектором","База возвращает ближайших соседей","Работает быстро даже на больших объёмах"]},
+      en:{t:"Vector store and search", b:"We keep the vectors in a store that quickly finds the closest to the query.",
+          s:["The query also becomes a vector","The store returns nearest neighbours","Fast even on large volumes"]}},
+    {pct:"63%", n:"7",
+      ru:{t:"Собираем контекст для модели", b:"Найденные куски аккуратно складываем в запрос рядом с вопросом пользователя.",
+          s:["Только релевантные куски","Следим за лимитом длины","Добавляем ссылки на источники"]},
+      en:{t:"Assembling context for the model", b:"We carefully place the found pieces into the prompt next to the user question.",
+          s:["Only the relevant pieces","Mind the length limit","Add source references"]}},
+    {pct:"72%", n:"8",
+      ru:{t:"Генерация ответа", b:"Модель читает вопрос и найденный контекст и пишет ответ по фактам.",
+          s:["Опирается на данные источников","Просим ссылаться на куски","Получаем связный ответ"]},
+      en:{t:"Generating the answer", b:"The model reads the question and the found context and writes a fact-based answer.",
+          s:["Grounded in the source data","Ask it to cite the pieces","You get a coherent answer"]}},
+    {pct:"81%", n:"9",
+      ru:{t:"Оценка качества", b:"Проверяем, что ответы точные и опираются на правильные источники.",
+          s:["Нашёлся ли нужный кусок","Совпадает ли ответ с источником","Тестовый набор вопросов и ответов"]},
+      en:{t:"Measuring quality", b:"We check that answers are accurate and grounded in the right sources.",
+          s:["Was the right piece retrieved","Does the answer match the source","A test set of questions and answers"]}},
+    {pct:"100%", n:"100%",
+      ru:{t:"Вывод в продакшн", b:"Собираем всё в рабочий сервис и следим за ним в боевом режиме.",
+          s:["Кэш и контроль расходов","Логи и мониторинг качества","Обновление данных по расписанию"]},
+      en:{t:"Going to production", b:"We assemble everything into a working service and watch it in production.",
+          s:["Caching and cost control","Logs and quality monitoring","Scheduled data refresh"]}}
+  ];
+
+  var T = {
+    ru:{ brand2:"с нуля", kicker:"0 -&gt; 100%", h1:"Освой RAG за одну страницу",
+         hero:"Пошаговый гайд для новичков: от 0 до 100%. Без подготовки, всё на одной странице.",
+         trackTitle:"Маршрут обучения",
+         madeWith:"Напечатано в цифровом риз-цеху. Сделано для новичков." },
+    en:{ brand2:"from zero", kicker:"0 -&gt; 100%", h1:"Learn RAG on one page",
+         hero:"A step-by-step guide for beginners: from 0 to 100%. No prerequisites, all on one page.",
+         trackTitle:"Learning track",
+         madeWith:"Printed in the digital riso shop. Made for beginners." }
+  };
+
+  var lang = "ru";
+  var track = document.getElementById("track");
+
+  function buildTrack(){
+    track.innerHTML = "";
+    STOPS.forEach(function(stop, idx){
+      var d = stop[lang];
+      var li = document.createElement("li");
+      li.className = "stop";
+      li.setAttribute("data-idx", idx);
+      li.innerHTML =
+        '<button type="button" aria-expanded="false">'
+        + '<span class="stamp">'+stop.n+'</span>'
+        + '<span class="title">'+esc(d.t)+'</span>'
+        + '<span class="pct">'+stop.pct+'</span>'
+        + '<span class="chev" aria-hidden="true"></span>'
+        + '</button>'
+        + '<div class="panel"><div class="card">'
+        + '<p class="blurb">'+esc(d.b)+'</p><ul>'
+        + d.s.map(function(x){return "<li>"+esc(x)+"</li>";}).join("")
+        + '</ul></div></div>';
+      var btn = li.querySelector("button");
+      btn.addEventListener("click", function(){ toggleStop(li, btn); });
+      track.appendChild(li);
+    });
+  }
+
+  function toggleStop(li, btn){
+    var open = li.getAttribute("data-open") === "1";
+    li.setAttribute("data-open", open ? "0" : "1");
+    li.setAttribute("aria-expanded-host", open ? "0" : "1");
+    btn.setAttribute("aria-expanded", open ? "false" : "true");
+    if(!open) markProgress(li);
+  }
+
+  function markProgress(openLi){
+    var idx = parseInt(openLi.getAttribute("data-idx"),10);
+    var items = track.querySelectorAll(".stop");
+    var maxDone = -1;
+    items.forEach(function(li){
+      var i = parseInt(li.getAttribute("data-idx"),10);
+      if(i <= idx){ li.setAttribute("data-done","1"); if(i>maxDone) maxDone=idx; }
+    });
+    var pctNum = Math.round((idx/(STOPS.length-1))*100);
+    var fill = document.getElementById("meterFill");
+    var lab = document.getElementById("meterPct");
+    fill.style.width = pctNum + "%";
+    lab.textContent = pctNum + "%";
+  }
+
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function applyLang(){
+    document.documentElement.lang = lang;
+    var dict = T[lang];
+    document.querySelectorAll("[data-key]").forEach(function(el){
+      var k = el.getAttribute("data-key");
+      if(k === "brand1") return; // "RAG" stays constant
+      if(dict[k] !== undefined){
+        el.innerHTML = dict[k];
+        if(el.hasAttribute("data-t")) el.setAttribute("data-t", el.textContent);
+      }
+    });
+    buildTrack();
+  }
+
+  document.getElementById("ru").addEventListener("click", function(){ setLang("ru"); });
+  document.getElementById("en").addEventListener("click", function(){ setLang("en"); });
+  function setLang(l){
+    lang = l;
+    document.getElementById("ru").setAttribute("aria-pressed", l==="ru");
+    document.getElementById("en").setAttribute("aria-pressed", l==="en");
+    applyLang();
+  }
+
+  applyLang();
+})();
+</script>
+<!-- mokup-nav: scoped prev/next mockup navigator (file:// safe, isolated) -->
+<style id="mokup-nav-style">
+#mokup-nav{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:2px;background:rgba(20,20,22,0.86);color:#fff;border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,0.35);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;line-height:1;padding:4px;max-width:calc(100vw - 24px);box-sizing:border-box}
+#mokup-nav a,#mokup-nav .mn-label{color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;min-height:44px;box-sizing:border-box}
+#mokup-nav a{min-width:44px;padding:0 14px;border-radius:999px;font-weight:700;font-size:16px;transition:background 0.15s ease}
+#mokup-nav a:hover{background:rgba(255,255,255,0.16)}
+#mokup-nav .mn-label{padding:0 10px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:0.02em;opacity:0.92;font-size:12px}
+#mokup-nav .mn-num{font-weight:700;opacity:1}
+#mokup-nav .mn-name{opacity:0.78;margin-left:6px}
+@media (max-width:380px){#mokup-nav{font-size:11px}#mokup-nav a{padding:0 10px}#mokup-nav .mn-name{display:none}}
+@media (prefers-reduced-motion:reduce){#mokup-nav a{transition:none}}
+</style>
+<nav id="mokup-nav" aria-label="Mockup navigator">
+  <a href="07-comic.html" rel="prev" aria-label="Previous mockup" title="Previous">&#8592;</a>
+  <span class="mn-label"><span class="mn-num">08 / 10</span><span class="mn-name">Riso</span></span>
+  <a href="09-notebook.html" rel="next" aria-label="Next mockup" title="Next">&#8594;</a>
+</nav>
+<script id="mokup-nav-script">
+(function(){
+  var PREV="07-comic.html", NEXT="09-notebook.html";
+  document.addEventListener("keydown", function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey||e.shiftKey) return;
+    var t=e.target, tag=t&&t.tagName?t.tagName.toUpperCase():"";
+    if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT"||(t&&t.isContentEditable)) return;
+    if(e.key==="ArrowLeft"){ window.location.href=PREV; }
+    else if(e.key==="ArrowRight"){ window.location.href=NEXT; }
+  });
+})();
+</script>
+</body>
+</html>

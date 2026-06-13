@@ -1,0 +1,30 @@
+<!--
+  field-note.html -- in-place journal / detail panel (AtlasMD 3.11, copy-in source of truth).
+  The unified detail panel: opens detail in place, never navigates away.
+  Landing uses it as a single-open field note (map-route.js renders into
+  [data-slot="panel"]); section pages reuse the same shell via drilldown-zoom.js.
+  Anatomy: .fn-head (badge + h4 focus target + close) and .fn-body (.blurb with
+  drop-cap, diamond-bullet <ul>, optional .fn-example, optional .fn-go chapter
+  link). role=dialog; the heading takes programmatic focus on open.
+  This is the EMPTY host wrapper; the panel HTML is injected by the lib.
+-->
+<div class="legend-wrap">
+  <div class="legend-hint" data-slot="hint" data-i18n="legendHint" data-ru="Выберите пункт маршрута выше." data-en="Pick a stop on the route above.">Выберите пункт маршрута выше.</div>
+  <div data-slot="panel" aria-live="polite"></div>
+</div>
+
+<!-- reference structure the lib builds inside [data-slot="panel"]:
+<div class="field-note" role="dialog" aria-modal="false" aria-label="...">
+  <div class="fn-head">
+    <span class="badge">0%</span>
+    <h4 tabindex="-1">Title</h4>
+    <button class="fn-close" type="button">Закрыть</button>
+  </div>
+  <div class="fn-body">
+    <p class="blurb">...</p>
+    <ul><li>...</li></ul>
+    <p class="fn-example"><b>Пример:</b> ...</p>
+    <a class="fn-go" href="../../what-rag.html">Открыть главу <span class="arr">-&gt;</span></a>
+  </div>
+</div>
+-->

@@ -1,0 +1,217 @@
+{
+  "_schema": {
+    "purpose": "DATA CONTRACT for the landing expedition map (AtlasMD 3.12): the route geometry + the ordered chapter stops (flags) with RU/EN copy. Consumed by map-route.js via pages/landing.js.",
+    "shape": "{ routeD, stopCount, stops: [{ id, slug, href?, ru:{label,blurb,pts[],ex}, en:{...} }], ui:{ ru:{...}, en:{...} } }",
+    "fields": {
+      "routeD": "SVG path d for the rust expedition route; pins are SAMPLED on it at runtime (no drift).",
+      "stopCount": "number of flags = stops.length (start 0% .. terminal 100%).",
+      "id": "stable kebab id for the stop (used for earned-progress tracking).",
+      "slug": "kebab section slug (matches a built section page id where one exists).",
+      "href": "OPTIONAL relative link to a built section page; flags with an href get a 'go to chapter' link in the field note. Only the 3 built chapters carry one this phase.",
+      "ru / en": "per-language copy block: { label, blurb, pts:[...], ex }.",
+      "ui": "per-language UI strings: { close, exampleLabel, goLabel, hint }."
+    },
+    "rules": [
+      "stops array order IS the route order; index 0 = start, last = terminal.",
+      "final label/blurb/pts/ex VALUES are cookbook-author's; this is the harvested seed from mokups/01-atlas.html DATA.",
+      "underscore-prefixed keys (like _schema) are metadata and MUST be skipped by consumers (dom.stripMeta)."
+    ]
+  },
+  "routeD": "M70,410 C180,320 240,440 350,370 C450,308 480,180 600,210 C710,238 700,360 820,338 C940,316 930,170 1040,168 C1110,166 1135,110 1150,80",
+  "stopCount": 11,
+  "ui": {
+    "ru": {
+      "close": "Закрыть",
+      "exampleLabel": "Пример",
+      "goLabel": "Открыть главу",
+      "hint": "Выберите пункт маршрута выше."
+    },
+    "en": {
+      "close": "Close",
+      "exampleLabel": "Example",
+      "goLabel": "Open chapter",
+      "hint": "Pick a stop on the route above."
+    }
+  },
+  "stops": [
+    {
+      "id": "start",
+      "slug": "start",
+      "ru": {
+        "label": "С чего начать",
+        "blurb": "Точка отправления. Перед нами весь маршрут RAG, разложенный на простые шаги. Здесь не нужно знать ничего заранее - дальше каждое понятие появляется по очереди.",
+        "pts": ["Что вы получите в конце пути: свой помощник, отвечающий по вашим документам", "Как читать эту карту: слева направо, от 0% к 100%", "Ничего не нужно знать заранее - термины вводятся по ходу", "Каждый пункт можно открыть и прочитать отдельно"],
+        "ex": "Представьте справочную, которая отвечает строго по вашим инструкциям, а не наугад."
+      },
+      "en": {
+        "label": "Where to start",
+        "blurb": "The trailhead. The whole RAG route laid out as plain, simple steps. You need no prior knowledge - each idea appears in turn as you walk.",
+        "pts": ["What you get at the summit: an assistant that answers from your documents", "How to read this map: left to right, from 0% to 100%", "No prior knowledge needed - terms are introduced as you go", "Every stop opens on its own so you can read it in isolation"],
+        "ex": "Picture a help desk that answers strictly from your handbook, not from guesswork."
+      }
+    },
+    {
+      "id": "what-rag",
+      "slug": "what-rag",
+      "href": "what-rag.html",
+      "ru": {
+        "label": "Что такое RAG",
+        "blurb": "RAG это способ дать модели доступ к вашим документам прямо во время ответа. Аббревиатура расшифровывается как Retrieval-Augmented Generation - поиск, дополнение, генерация.",
+        "pts": ["Retrieval - найти нужные куски текста в ваших данных", "Augmented - добавить найденное прямо в запрос к модели", "Generation - модель формулирует ответ на основе этих кусков", "Модель отвечает по фактам из ваших документов, а не из памяти"],
+        "ex": "Вопрос -> находим 3 абзаца из вашей базы -> модель отвечает по ним."
+      },
+      "en": {
+        "label": "What RAG is",
+        "blurb": "RAG gives a model access to your documents while it answers. The name stands for Retrieval-Augmented Generation - retrieve, augment, generate.",
+        "pts": ["Retrieval - find the relevant pieces of text in your data", "Augmented - add what you found into the prompt to the model", "Generation - the model writes an answer from those pieces", "The model answers from your documents, not from memory"],
+        "ex": "Question -> fetch 3 paragraphs from your store -> the model answers from them."
+      }
+    },
+    {
+      "id": "why-rag",
+      "slug": "why-rag",
+      "href": "why-rag.html",
+      "ru": {
+        "label": "Зачем он нужен",
+        "blurb": "Обычная модель не знает ваших данных и со временем устаревает. RAG решает обе проблемы сразу, подкладывая свежие источники в момент ответа.",
+        "pts": ["Свежие и приватные данные без переобучения модели", "Меньше выдуманных фактов - ответ опирается на источник", "Ссылки на источники: видно, откуда взят ответ", "Дешевле, чем дообучать модель под каждое обновление"],
+        "ex": "Обновили инструкцию в файле - помощник сразу отвечает по новой версии."
+      },
+      "en": {
+        "label": "Why you need it",
+        "blurb": "A plain model does not know your data and goes stale over time. RAG fixes both at once by slipping fresh sources in at answer time.",
+        "pts": ["Fresh and private data with no model retraining", "Fewer made-up facts - the answer leans on a source", "Links back to sources: you can see where the answer came from", "Cheaper than fine-tuning the model for every update"],
+        "ex": "Update a line in a file and the assistant answers from the new version at once."
+      }
+    },
+    {
+      "id": "search",
+      "slug": "search",
+      "href": "search.html",
+      "ru": {
+        "label": "Как работает поиск по документам",
+        "blurb": "Сначала находим релевантные куски текста, потом показываем их модели. Поиск идет не по точным словам, а по смыслу запроса.",
+        "pts": ["Все документы заранее складываем в индекс", "Запрос пользователя превращается в поисковый запрос", "Возвращаем несколько лучших совпадений по смыслу", "Модель видит только эти куски, а не весь архив"],
+        "ex": "Спросили про отпуск - нашлись пункты политики об отпусках, даже без слова отпуск."
+      },
+      "en": {
+        "label": "How document retrieval works",
+        "blurb": "First find the relevant text, then show it to the model. The search goes by meaning, not by exact words.",
+        "pts": ["All documents are placed into an index ahead of time", "The user query is turned into a search", "Return a few of the best matches by meaning", "The model sees only those pieces, not the whole archive"],
+        "ex": "Ask about leave and the leave policy clauses surface, even without that exact word."
+      }
+    },
+    {
+      "id": "chunking",
+      "slug": "chunking",
+      "ru": {
+        "label": "Разбиваем текст на чанки",
+        "blurb": "Большие документы режем на небольшие фрагменты удобного размера - их называют чанки. Так поиск точнее, а в запрос помещается только нужное.",
+        "pts": ["Размер чанка: слишком крупный размывает смысл, слишком мелкий теряет контекст", "Перекрытие соседних чанков, чтобы не разрывать мысль", "Стараемся резать по абзацам и заголовкам, а не посреди фразы", "К каждому чанку храним метаданные: источник, раздел, дата"],
+        "ex": "Договор на 40 страниц -> 120 чанков примерно по абзацу каждый."
+      },
+      "en": {
+        "label": "Splitting text into chunks",
+        "blurb": "Big documents are cut into small, manageable fragments called chunks. This makes search sharper and keeps the prompt to just what is needed.",
+        "pts": ["Chunk size: too big blurs meaning, too small loses context", "Overlap between neighbouring chunks so a thought is not cut in half", "Cut on paragraphs and headings, not mid-sentence", "Keep metadata per chunk: source, section, date"],
+        "ex": "A 40-page contract -> about 120 chunks, roughly one paragraph each."
+      }
+    },
+    {
+      "id": "embedding",
+      "slug": "embedding",
+      "ru": {
+        "label": "Эмбеддинги: текст в векторы",
+        "blurb": "Каждый чанк превращаем в числовой вектор - это координаты его смысла. Близкие по смыслу тексты получают близкие векторы.",
+        "pts": ["Похожий по смыслу текст - близкие векторы в пространстве", "Выбор модели эмбеддингов влияет на качество поиска", "Размерность вектора и стоимость обработки идут в связке", "Один раз посчитали векторы и переиспользуем их при каждом запросе"],
+        "ex": "Кошка и котенок окажутся рядом, а кошка и бухгалтерия - далеко."
+      },
+      "en": {
+        "label": "Embeddings: text to vectors",
+        "blurb": "Each chunk becomes a numeric vector - the coordinates of its meaning. Texts that mean similar things get nearby vectors.",
+        "pts": ["Similar meaning, nearby vectors in the space", "The choice of embedding model drives search quality", "Vector dimension and processing cost go together", "Compute vectors once and reuse them on every query"],
+        "ex": "Cat and kitten land close together; cat and accounting land far apart."
+      }
+    },
+    {
+      "id": "vector-store",
+      "slug": "vector-store",
+      "ru": {
+        "label": "Векторная база и поиск",
+        "blurb": "Векторы храним в специальной базе и ищем в ней ближайшие по смыслу. Это и есть быстрый смысловой поиск по всему архиву.",
+        "pts": ["Векторная БД хранит векторы и умеет искать ближайшие", "Поиск ближайших соседей выдает топ самых похожих чанков", "Фильтры по метаданным сужают поиск: только этот раздел или дата", "Масштабируется на миллионы чанков без перебора всего архива"],
+        "ex": "Из 100000 чанков за миллисекунды достаем 5 самых близких к вопросу."
+      },
+      "en": {
+        "label": "Vector store and search",
+        "blurb": "Vectors live in a special store and we search it for the closest in meaning. That is fast semantic search across the whole archive.",
+        "pts": ["A vector DB stores vectors and finds the nearest ones", "Nearest-neighbour search returns the top similar chunks", "Metadata filters narrow it down: only this section or date", "Scales to millions of chunks without scanning everything"],
+        "ex": "From 100000 chunks, pull the 5 closest to the question in milliseconds."
+      }
+    },
+    {
+      "id": "assemble-context",
+      "slug": "assemble-context",
+      "ru": {
+        "label": "Собираем контекст для модели",
+        "blurb": "Найденные куски аккуратно складываем в один запрос к модели. От того, как собран этот контекст, сильно зависит ответ.",
+        "pts": ["Шаблон промпта: инструкция, вопрос и найденные куски вместе", "Сколько контекста вмещается - у модели есть предел длины", "Порядок и приоритет кусков: самое важное ближе", "Чистим дубли и обрезаем лишнее, чтобы не перегружать модель"],
+        "ex": "Инструкция + вопрос пользователя + 4 найденных абзаца = готовый запрос."
+      },
+      "en": {
+        "label": "Assembling context for the model",
+        "blurb": "The retrieved pieces are packed neatly into one prompt for the model. How you assemble this context shapes the answer a lot.",
+        "pts": ["Prompt template: instruction, question and found pieces together", "How much context fits - the model has a length limit", "Order and priority of pieces: the most important come first", "Strip duplicates and trim excess so the model is not overloaded"],
+        "ex": "Instruction + the user question + 4 found paragraphs = the finished prompt."
+      }
+    },
+    {
+      "id": "generation",
+      "slug": "generation",
+      "ru": {
+        "label": "Генерация ответа",
+        "blurb": "Модель читает собранный контекст и пишет ответ, опираясь на ваши данные. Здесь важно направить ее инструкциями.",
+        "pts": ["Инструкции для модели: отвечай только по контексту", "Цитирование источников прямо в ответе", "Борьба с выдумками: если данных нет - честно сказать об этом", "Тон и формат ответа задаем в шаблоне промпта"],
+        "ex": "Если в контексте нет ответа, помощник пишет: в документах этого нет."
+      },
+      "en": {
+        "label": "Generating the answer",
+        "blurb": "The model reads the assembled context and writes an answer grounded in your data. Here it matters how you steer it with instructions.",
+        "pts": ["Instructions for the model: answer only from the context", "Cite sources right in the answer", "Fight hallucinations: if the data is missing, say so honestly", "Set tone and format in the prompt template"],
+        "ex": "If the context has no answer, the assistant says: that is not in the documents."
+      }
+    },
+    {
+      "id": "evaluation",
+      "slug": "evaluation",
+      "ru": {
+        "label": "Оценка качества",
+        "blurb": "Проверяем, насколько ответы точны и полезны, и системно их улучшаем. Без измерений нельзя понять, стало ли лучше.",
+        "pts": ["Точность поиска: нашлись ли действительно нужные чанки", "Качество ответа: верно, полно и по делу ли он составлен", "Обратная связь от пользователей превращаем в метрики", "Прогон на наборе типовых вопросов до и после изменений"],
+        "ex": "Собрали 50 вопросов с эталонными ответами и сверяем результат."
+      },
+      "en": {
+        "label": "Measuring quality",
+        "blurb": "Check how accurate and useful the answers are, then improve them systematically. Without measuring you cannot tell if it got better.",
+        "pts": ["Retrieval accuracy: did the truly needed chunks come back", "Answer quality: is it correct, complete and on point", "Turn user feedback into metrics", "Run a set of typical questions before and after each change"],
+        "ex": "Collect 50 questions with reference answers and compare the results."
+      }
+    },
+    {
+      "id": "production",
+      "slug": "production",
+      "ru": {
+        "label": "Вывод в продакшн",
+        "blurb": "Вершина маршрута. Собираем все звенья в работающий сервис для реальных пользователей и держим его в форме.",
+        "pts": ["Скорость и стоимость каждого запроса под контролем", "Мониторинг ошибок и регулярное обновление данных", "Безопасность и доступ: кто и к каким документам имеет право", "Постепенное улучшение по метрикам из предыдущего пункта"],
+        "ex": "Помощник в чате отвечает сотрудникам и каждую ночь подхватывает новые файлы."
+      },
+      "en": {
+        "label": "Going to production",
+        "blurb": "The summit of the route. Wire all the links into a working service for real users and keep it in shape.",
+        "pts": ["Speed and cost per request kept under control", "Monitor errors and refresh the data regularly", "Security and access: who may reach which documents", "Steady improvement using the metrics from the previous stop"],
+        "ex": "A chat assistant answers staff and picks up new files every night."
+      }
+    }
+  ]
+}

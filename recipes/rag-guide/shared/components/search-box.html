@@ -1,0 +1,17 @@
+<!--
+  search-box.html -- shared client-side search partial.
+  Progressive enhancement: input is wrapped in .js-only because search
+  requires JS; without JS the page relies on nav + in-page anchors.
+  search.js (interactive-engineer) mounts on [data-component="search-box"],
+  reads data-index-src, and renders matches into [data-slot="results"].
+  Class hooks only, NO inline styles, NO colors.
+-->
+<div class="search-box js-only" data-component="search-box"
+     data-index-src="../../shared/data/search-index.json">
+  <label class="visually-hidden" for="rag-search">Search the RAG Guide</label>
+  <input id="rag-search" class="search-box__input" type="search"
+         placeholder="Search the guide" autocomplete="off"
+         role="combobox" aria-expanded="false" aria-controls="rag-search-results" />
+  <ul id="rag-search-results" class="search-box__results"
+      data-slot="results" role="listbox" hidden></ul>
+</div>

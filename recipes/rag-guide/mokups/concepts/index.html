@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лаборатория концептов - RAG Guide</title>
+<style>
+  :root {
+    --parchment: #f3ead4;
+    --parchment2: #efe3c8;
+    --ink: #3a2e1d;
+    --ink2: #5c4a32;
+    --ink3: #7a6446;
+    --teal: #4a6f6a;
+    --rust: #a55a35;
+    --gold: #b08a3e;
+    --hair: #bda878;
+    --serif: "Hoefler Text", "Iowan Old Style", Palatino, Georgia, serif;
+    --sans: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background-color: var(--parchment);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(176,138,62,0.08), transparent 42%),
+      radial-gradient(circle at 82% 78%, rgba(74,111,106,0.07), transparent 46%),
+      repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+    color: var(--ink);
+    font-family: var(--serif);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 56px; }
+
+  header.page {
+    text-align: center;
+    padding: 28px 12px 22px;
+    border-bottom: 1px solid var(--hair);
+    margin-bottom: 30px;
+  }
+  .compass { display: block; margin: 0 auto 14px; width: 56px; height: 56px; }
+  header.page h1 {
+    font-family: var(--serif);
+    font-size: 2.05rem;
+    margin: 0 0 8px;
+    letter-spacing: 0.4px;
+    color: var(--ink);
+  }
+  header.page .subtitle {
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    color: var(--ink2);
+    max-width: 580px;
+    margin: 0 auto 12px;
+    line-height: 1.55;
+  }
+  .hint {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--ink3);
+    margin: 6px auto 0;
+    max-width: 540px;
+    font-style: italic;
+  }
+  .hint .pill-demo {
+    display: inline-block;
+    border: 1px solid var(--hair);
+    border-radius: 7px;
+    padding: 1px 7px;
+    font-style: normal;
+    background: var(--parchment2);
+  }
+
+  section.chapter { margin-bottom: 42px; }
+  .chapter-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--hair);
+  }
+  .chapter-head h2 {
+    font-family: var(--serif);
+    font-size: 1.45rem;
+    margin: 0;
+    color: var(--ink);
+  }
+  .chapter-head .folder {
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    color: var(--ink3);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+  }
+
+  a.card {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 96px;
+    padding: 13px 14px;
+    background: var(--parchment2);
+    border: 1px solid var(--hair);
+    border-radius: 5px;
+    text-decoration: none;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(60,46,26,0.10);
+    transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+  }
+  a.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 14px rgba(60,46,26,0.16);
+    border-color: var(--teal);
+  }
+  a.card:focus-visible {
+    outline: 2px solid var(--rust);
+    outline-offset: 2px;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-name {
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: var(--ink);
+    letter-spacing: 0.2px;
+  }
+  .card-name .num { color: var(--rust); }
+  .card-desc {
+    font-family: var(--serif);
+    font-size: 0.86rem;
+    color: var(--ink2);
+    line-height: 1.4;
+  }
+
+  .badge {
+    flex: 0 0 auto;
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--hair);
+    background: var(--parchment);
+    color: var(--ink3);
+    white-space: nowrap;
+  }
+  .badge.top {
+    border-color: var(--gold);
+    background: rgba(176,138,62,0.16);
+    color: #7a5a18;
+  }
+  .badge.fail {
+    border-color: var(--rust);
+    background: rgba(165,90,53,0.14);
+    color: #8a3f1d;
+  }
+  .card-fail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .card-fail .flag {
+    font-family: var(--sans);
+    font-size: 0.66rem;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--rust);
+    background: rgba(165,90,53,0.10);
+    color: #8a3f1d;
+    white-space: nowrap;
+  }
+
+  footer.page {
+    margin-top: 48px;
+    padding-top: 18px;
+    border-top: 1px solid var(--hair);
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 0.76rem;
+    color: var(--ink3);
+    font-style: italic;
+  }
+
+  @media (max-width: 430px) {
+    .grid { grid-template-columns: 1fr; }
+    header.page h1 { font-size: 1.6rem; }
+    .chapter-head { flex-direction: column; gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <svg class="compass" viewBox="0 0 100 100" role="img" aria-label="Компас">
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#4a6f6a" stroke-width="2"/>
+      <circle cx="50" cy="50" r="34" fill="none" stroke="#bda878" stroke-width="1"/>
+      <g stroke="#7a6446" stroke-width="1">
+        <line x1="50" y1="8" x2="50" y2="18"/>
+        <line x1="50" y1="82" x2="50" y2="92"/>
+        <line x1="8" y1="50" x2="18" y2="50"/>
+        <line x1="82" y1="50" x2="92" y2="50"/>
+      </g>
+      <polygon points="50,16 57,50 50,46 43,50" fill="#a55a35"/>
+      <polygon points="50,84 43,50 50,54 57,50" fill="#5c4a32"/>
+      <circle cx="50" cy="50" r="3.5" fill="#b08a3e" stroke="#3a2e1d" stroke-width="0.8"/>
+    </svg>
+    <h1>Лаборатория концептов - RAG Guide</h1>
+    <p class="subtitle">18 переработанных концептов: реальные ИТ-абстракции, зум-проваливание, 6 архетипов на главу.</p>
+    <p class="hint">Внутри каждого варианта закрепленный навигатор-пилюля <span class="pill-demo">&larr; prev / next &rarr;</span> листает соседние концепты внутри той же главы.</p>
+  </header>
+
+  <!-- Chapter 1: what-rag -->
+  <section class="chapter" aria-labelledby="ch-what">
+    <div class="chapter-head">
+      <h2 id="ch-what">Что такое RAG</h2>
+      <span class="folder">what-rag/</span>
+    </div>
+    <div class="grid">
+      <a class="card" href="what-rag/02-birdseye-town.html">
+        <div class="card-top"><span class="card-name"><span class="num">02</span> - birdseye-town</span><span class="badge top">8.5/10</span></div>
+        <span class="card-desc">план RAG-системы с высоты: запрос едет между Хранилищем, Индексом, Поиском и Моделью, провал внутрь показывает один фрагмент.</span>
+      </a>
+      <a class="card" href="what-rag/05-journal-plates.html">
+        <div class="card-top"><span class="card-name"><span class="num">05</span> - journal-plates</span><span class="badge">7.5/10</span></div>
+        <span class="card-desc">конвейер RAG как страницы журнала: запрос становится вектором, едет по этапам и возвращается ответом со ссылкой.</span>
+      </a>
+      <a class="card" href="what-rag/06-naturalist-archive.html">
+        <div class="card-top"><span class="card-name"><span class="num">06</span> - naturalist-archive</span><span class="badge">7.5/10</span></div>
+        <span class="card-desc">пайплайн из четырех станций: Запрос, Поиск по индексу, Сборка контекста, Ответ - каждая открывается в деталях.</span>
+      </a>
+      <a class="card" href="what-rag/08-harbor.html">
+        <div class="card-top"><span class="card-name"><span class="num">08</span> - harbor</span><span class="badge top">8.5/10</span></div>
+        <span class="card-desc">гавань-индекс: запрос отправляет сигнал, релевантные чанки-лодки швартуются и идут топ-k в контекст модели.</span>
+      </a>
+      <a class="card" href="what-rag/09-logbook.html">
+        <div class="card-top"><span class="card-name"><span class="num">09</span> - logbook</span><span class="badge top">8.5/10</span></div>
+        <span class="card-desc">маршрут RAG как узлы графа: Запрос, эмбеддинг, Векторная база, контекст, Модель - провал открывает узел изнутри.</span>
+      </a>
+      <a class="card" href="what-rag/10-map-zoom.html">
+        <div class="card-top"><span class="card-name"><span class="num">10</span> - map-zoom</span><span class="badge">8/10</span></div>
+        <span class="card-desc">одна карта, три высоты: клик проваливает камеру от общей схемы RAG к этапу и дальше к одному фрагменту.</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Chapter 2: why-rag -->
+  <section class="chapter" aria-labelledby="ch-why">
+    <div class="chapter-head">
+      <h2 id="ch-why">Зачем он нужен</h2>
+      <span class="folder">why-rag/</span>
+    </div>
+    <div class="grid">
+      <a class="card" href="why-rag/02-birdseye-town.html">
+        <div class="card-top"><span class="card-name"><span class="num">02</span> - birdseye-town</span><span class="badge top">9/10</span></div>
+        <span class="card-desc">с высоты видно слепое пятно модели без RAG: провал внутрь сравнивает устаревшую память и свежий источник.</span>
+      </a>
+      <a class="card" href="why-rag/05-journal-plates.html">
+        <div class="card-top"><span class="card-name"><span class="num">05</span> - journal-plates</span><span class="badge">8.4/10</span></div>
+        <span class="card-desc">журнал с пластинами: каждое утверждение ответа подкреплено вклеенной ссылкой на найденный источник.</span>
+      </a>
+      <a class="card" href="why-rag/06-naturalist-archive.html">
+        <div class="card-top"><span class="card-name"><span class="num">06</span> - naturalist-archive</span><span class="badge">8.5/10</span></div>
+        <span class="card-desc">пайплайн от вопроса к ответу со ссылками: вывод опирается на найденный документ, а не на память модели.</span>
+      </a>
+      <a class="card" href="why-rag/09-logbook.html">
+        <div class="card-top"><span class="card-name"><span class="num">09</span> - logbook</span><span class="badge top">9/10</span></div>
+        <span class="card-desc">граф маршрута хранит ссылки на источники: любое утверждение ответа можно довести до проверяемого факта.</span>
+      </a>
+      <a class="card" href="why-rag/08-harbor.html">
+        <div class="card-top"><span class="card-name"><span class="num">08</span> - harbor</span><span class="badge top">9/10</span></div>
+        <span class="card-desc">два курса рядом: без RAG модель идет вслепую, с RAG векторный индекс приводит ответ к ссылкам на факты.</span>
+      </a>
+      <a class="card" href="why-rag/10-map-zoom.html">
+        <div class="card-top"><span class="card-name"><span class="num">10</span> - map-zoom</span><span class="badge">8/10</span></div>
+        <span class="card-desc">наезд карты от общей пользы RAG к Индексу и к конкретной строке промпта с пометкой источника.</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Chapter 3: search -->
+  <section class="chapter" aria-labelledby="ch-search">
+    <div class="chapter-head">
+      <h2 id="ch-search">Как работает поиск по документам</h2>
+      <span class="folder">search/</span>
+    </div>
+    <div class="grid">
+      <a class="card" href="search/02-birdseye-town.html">
+        <div class="card-top"><span class="card-name"><span class="num">02</span> - birdseye-town</span><span class="badge top">9/10</span></div>
+        <span class="card-desc">город фрагментов с высоты: запрос подсвечивает кварталы близких векторов, провал открывает один чанк и его эмбеддинг.</span>
+      </a>
+      <a class="card" href="search/05-journal-plates.html">
+        <div class="card-top"><span class="card-name"><span class="num">05</span> - journal-plates</span><span class="badge top">9/10</span></div>
+        <span class="card-desc">картотека чанков: слова запроса становятся вектором, пластины сортируются по близости в топ-k.</span>
+      </a>
+      <a class="card" href="search/06-naturalist-archive.html">
+        <div class="card-top"><span class="card-name"><span class="num">06</span> - naturalist-archive</span><span class="badge">8/10</span></div>
+        <span class="card-desc">архив образцов: каждый чанк помечен векторной биркой, запрос вытягивает топ-k точных совпадений.</span>
+      </a>
+      <a class="card" href="search/08-harbor.html">
+        <div class="card-top"><span class="card-name"><span class="num">08</span> - harbor</span><span class="badge">7.5/10</span></div>
+        <span class="card-desc">гавань-индекс: лодки-чанки выстраиваются по близости к причалу запроса, провал показывает 2D-проекцию смысла.</span>
+      </a>
+      <a class="card" href="search/09-logbook.html">
+        <div class="card-top"><span class="card-name"><span class="num">09</span> - logbook</span><span class="badge">8.5/10</span></div>
+        <span class="card-desc">судовой журнал поиска: найденные чанки записываются строка за строкой с оценкой близости.</span>
+      </a>
+      <a class="card" href="search/10-map-zoom.html">
+        <div class="card-top"><span class="card-name"><span class="num">10</span> - map-zoom</span><span class="badge">8.5/10</span></div>
+        <span class="card-desc">наезд по карте эмбеддингов от облака векторов к Индексу и к одному точному совпадению-соседу.</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="page">Концепт-артефакты, не для публикации. 18 вариантов: все 18 приняты.</footer>
+
+</div>
+</body>
+</html>
