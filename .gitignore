@@ -9,6 +9,8 @@ dist/
 .env
 .env.local
 .env.*.local
+# private owner-token / published-pages log -- MUST NEVER be tracked (public repo)
+.claude/brewpage-history.md
 
 # editor / OS
 .idea/
