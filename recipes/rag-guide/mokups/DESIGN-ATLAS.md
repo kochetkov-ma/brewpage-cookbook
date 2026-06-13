@@ -520,4 +520,4 @@ Class hooks to author (map mockup classes -> shared classes; carry NO literal):
 
 ### 6.4 Variants
 
-The atlas theme is one `themes/atlas.css`. Other RAG-Guide themes (e.g. metro from `02-metro.html`) are sibling token files over the SAME `base.css` + page glue; only the theme `<link>` differs per variant `index.html`.
+The atlas theme is one `themes/atlas.css`. A future RAG-Guide theme would be a sibling token file over the SAME `base.css` + page glue; only the theme `<link>` differs per variant `index.html`.

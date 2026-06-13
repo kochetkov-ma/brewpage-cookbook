@@ -20,7 +20,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 
 Per-recipe editorial plans live as per-task design specs in `.claude/features/specs/<TASK-ID>.md` (e.g. `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`), authored by `CA` and linked from the matching task card.
 
-`AtlasMD.md` is the canonical RAG Guide design-system doc (supersedes `mokups/DESIGN-ATLAS.md`, kept only as the landing derivation note). `RATING.md` and the metro variant were removed -- metro archived under `recipes/rag-guide/mokups/_rejected/`. Site draft lives at `recipes/rag-guide/`: `index.html` Atlas MAP landing + 3 section pages (`what-rag.html`, `why-rag.html`, `search.html`) on the shared `shared/` lib (css themes + component partials + `js/lib` modules + `js/pages` glue).
+`AtlasMD.md` is the canonical RAG Guide design-system doc (supersedes `mokups/DESIGN-ATLAS.md`, kept only as the landing derivation note). `RATING.md`, the metro variant, and the rejected mockups were dropped. Site draft lives at `recipes/rag-guide/`: `index.html` Atlas MAP landing + 3 section pages (`what-rag.html`, `why-rag.html`, `search.html`) on the shared `shared/` lib (css themes + component partials + `js/lib` modules + `js/pages` glue).
 
 ## 3. Task tracking flow
 

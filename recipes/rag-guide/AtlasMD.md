@@ -10,7 +10,7 @@ As-built pages (the site is 4 top-level HTML files + shared lib, NOT `variants/`
 - `why-rag.html` -- two-track comparison (без/с RAG) + modal drill camera.
 - `search.html` -- 2D vector-space map, every point drillable, cosine rings, kNN top-k.
 
-> `mokups/DESIGN-ATLAS.md` is folded in (kept only as the landing derivation note). `RATING.md` + the metro variant were dropped (metro archived under `mokups/_rejected/`). See section 8.
+> `mokups/DESIGN-ATLAS.md` is folded in (kept only as the landing derivation note). `RATING.md` + the metro variant were dropped. See section 8.
 
 ---
 
@@ -417,4 +417,4 @@ Every contract documents its schema in-file; JSON carries a `_schema` block; con
 ## 8. Supersedes
 
 - `mokups/DESIGN-ATLAS.md` is FOLDED into this doc (token contract + base.css namespace + cartography palette + landing anatomy). AtlasMD.md is the single source of truth; DESIGN-ATLAS.md is retained only as the landing derivation note.
-- `RATING.md` + the metro variant are DROPPED. The RAG Guide is atlas-only: one theme (`atlas`), one token file. The theme-as-a-file contract is preserved (a future theme = one `themes/<name>.css` over the same `base.css`), but no second theme is planned or built.
+- `RATING.md`, the metro variant, and the rejected mockups are DROPPED. The RAG Guide is atlas-only: one theme (`atlas`), one token file. The theme-as-a-file contract is preserved (a future theme = one `themes/<name>.css` over the same `base.css`), but no second theme is planned or built.
