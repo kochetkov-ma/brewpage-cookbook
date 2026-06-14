@@ -19,11 +19,13 @@
   --sand-deep:  #ddcca8;
   --sepia:      #5c4a32;
   --sepia-soft: #7a6446;
+  --sepia-muted: #6e5a3e;   /* darkened muted text -- AA on sand (4.83:1) + parchment (5.49:1) */
   --ink:        #3a2e1d;
   --teal:       #4a6f6a;
   --teal-deep:  #335551;
   --rust:       #a55a35;
   --gold:       #b08a3e;
+  --gold-text:  #7c5b1e;   /* AA-safe gold for TEXT on parchment/sand (>=4.5:1) */
   --green:      #17a673;
   --line:       #bda878;
   --line-soft:  #d2bd8e;
@@ -37,13 +39,45 @@
   --compass-sw:         #6a8d88;
   --green-text:         #0c7a52;
 
+  /* dark code-plate syntax accents (ride the frozen #2f2718 plate; section files
+     reference these instead of repeating the literals) -- AtlasMD 2.1 frozen */
+  --c-code-ctx:         #9fc4be;   /* context line (muted teal on dark plate) */
+  --c-code-q:           #e9b27f;   /* question line (warm sand on dark plate) */
+  --c-answer-border:    #bcd9c5;   /* grounded-answer card border (green-surface) */
+
+  /* frozen dark code-plate bg/fg, promoted to tokens so base.css .code-block
+     references vars (base.css carries no literal) -- AtlasMD 2.1 frozen plate */
+  --c-code-plate-bg:    #2f2718;   /* dark code plate background (frozen) */
+  --c-code-plate-fg:    #e8dcc0;   /* default code text on plate (= --sand) */
+
+  /* focus ring for code-plate surfaces (.ca-region / .ca-popover). The base
+     --c-focus (rust #a55a35) reads only 2.89:1 on the dark plate #2f2718 --
+     below the WCAG 1.4.11 non-text 3:1 floor. This brighter warm-amber stays
+     in the Atlas rust/gold focus family (non-blue) and reaches 6.47:1 on the
+     plate (and ~3.0:1 on parchment, so the offset segment stays visible too).
+     -- W6-FIX L4 */
+  --c-focus-code:       #d9a24a;   /* code-plate focus ring; 6.47:1 vs #2f2718 */
+
+  /* block-code syntax-highlight tokens (code-highlight.js -> .tok-KIND).
+     Every value verified WCAG AA >= 4.5:1 vs the plate bg #2f2718:
+       kw 6.38  str 7.19  num 6.20  com 5.25  fn 8.84  punc 6.29
+       op 7.82 (reuse --c-code-q)   key 7.80 (reuse --c-code-ctx) */
+  --c-code-kw:          #7fb0d6;          /* keywords -- azure schematic ink */
+  --c-code-str:         #c7b56a;          /* strings -- warm gold-green */
+  --c-code-num:         #d99a76;          /* numbers -- terracotta */
+  --c-code-com:         #a89976;          /* comments -- muted sepia-tan (lowest, still AA) */
+  --c-code-fn:          #d8c890;          /* function names -- pale gold */
+  --c-code-punc:        #b7a886;          /* punctuation -- tan */
+  --c-code-op:          var(--c-code-q);  /* operators -- reuse question warm-sand */
+  --c-code-key:         var(--c-code-ctx);/* json object keys -- reuse context teal */
+
   /* ---- base.css color namespace (site-architecture section 2) ---- */
   --c-bg:            var(--parchment);
   --c-surface:       var(--parchment2);
   --c-surface-2:     var(--sand);
   --c-surface-3:     var(--sand-deep);   /* atlas extra: hover/track tier */
   --c-text:          var(--ink);
-  --c-text-muted:    var(--sepia-soft);
+  --c-text-muted:    var(--sepia-muted);
   --c-heading:       var(--sepia);        /* atlas extra: heading ink */
   --c-border:        var(--line);
   --c-border-soft:   var(--line-soft);    /* atlas extra: soft divider */
@@ -54,7 +88,8 @@
   --c-accent-1-soft: rgba(74,111,106,0.10);
   --c-accent-2:      var(--rust);
   --c-accent-2-soft: rgba(165,90,53,0.10);
-  --c-accent-3:      var(--gold);
+  --c-accent-3:      var(--gold);          /* decorative fills/borders only */
+  --c-accent-3-text: var(--gold-text);     /* AA-safe gold for load-bearing TEXT */
   --c-accent-3-soft: rgba(176,138,62,0.10);
   --c-accent-4:      var(--teal-deep);
   --c-accent-4-soft: rgba(74,111,106,0.16);
@@ -68,6 +103,30 @@
   /* green-surface tints (visited node bg) */
   --c-visited-bg-1:  #eef7ea;
   --c-visited-bg-2:  #e3efd9;
+
+  /* ---- structural tints promoted out of base.css (no literal color in base) ----
+     base.css must carry NO literal color; these are the recurring rgba() it used
+     for paper grain, raised-surface sheen, deep vignette, plate hairline ring and
+     the scroll mask. Resolved colors are unchanged (same rgba values). */
+  --c-paper-grain-gold: rgba(176,138,62,0.08);   /* body radial gold bloom (top) */
+  --c-paper-grain-gold-0: rgba(176,138,62,0);    /* "" fade-out stop */
+  --c-paper-grain-teal: rgba(74,111,106,0.07);   /* body radial teal bloom (bottom) */
+  --c-paper-grain-teal-0: rgba(74,111,106,0);    /* "" fade-out stop */
+  --c-paper-grain-line: rgba(120,96,60,0.035);   /* body cross-hatch grid line */
+  --c-sheen-top:    rgba(255,255,255,0.32);   /* raised-surface top sheen (controls) */
+  --c-sheen-top-strong: rgba(255,255,255,0.4); /* stronger top sheen (toggle/note) */
+  --c-sheen-top-soft: rgba(255,255,255,0.28); /* softer top sheen (cards/nodes) */
+  --c-sheen-plate:  rgba(255,255,255,0.25);   /* plate diagonal sheen */
+  --c-sheen-inset:  rgba(255,255,255,0.2);    /* badge inset top highlight */
+  --c-tint-deep:    rgba(0,0,0,0.015);        /* raised-surface bottom shade */
+  --c-tint-deep-2:  rgba(0,0,0,0.02);         /* stronger bottom shade */
+  --c-tint-deep-soft: rgba(0,0,0,0.012);      /* softer bottom shade (cards/nodes) */
+  --c-vignette:     rgba(92,74,50,0.10);      /* plate aged-corner vignette */
+  --c-fn-head-tint: rgba(92,74,50,0.12);      /* field-note head gradient (start) */
+  --c-fn-head-tint-0: rgba(92,74,50,0);       /* "" fade-out stop */
+  --c-plate-ring:   rgba(243,234,212,0.6);    /* parchment hairline inside medallions */
+  --c-drop-shadow:  rgba(60,46,26,0.18);      /* sepia drop/elevation shadow */
+  --c-mask:         #000;                      /* scroll-edge mask opaque stop */
 
   /* cartography rgba set (landing terrain only, AtlasMD 2.8) -- frozen */
   --ter-sea:        rgba(74,111,106,0.16);

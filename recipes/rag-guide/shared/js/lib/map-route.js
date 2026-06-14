@@ -568,7 +568,7 @@ export function init(rootEl, config) {
       : "";
 
     panel.innerHTML =
-      '<div class="field-note' + cls + '" role="dialog" aria-modal="false" aria-label="' + esc(s.label) + '">' +
+      '<div class="field-note' + cls + '" role="group" aria-label="' + esc(s.label) + '">' +
       '<div class="fn-head">' +
       '<span class="badge">' + pct(i) + "</span>" +
       '<h4 tabindex="-1">' + esc(s.label) + "</h4>" +

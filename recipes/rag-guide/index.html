@@ -5,13 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG С НУЛЯ - Atlas</title>
 <meta name="description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
+<!-- Open Graph / social card. og:url is a placeholder until the live URL is assigned at publish. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="RAG С НУЛЯ - Atlas">
+<meta property="og:description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
+<meta property="og:url" content="https://brewpage.app/REPLACE_AT_PUBLISH">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RAG С НУЛЯ - Atlas">
+<meta name="twitter:description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file.
      Swapping the theme <link> below is the ONLY differing line between variants. -->
 <link rel="stylesheet" href="shared/css/base.css">
 <link rel="stylesheet" href="shared/css/themes/atlas.css">
 </head>
 <body>
-<a class="skip-link" href="#mapTitle" data-i18n="skip" data-ru="К карте маршрута" data-en="Skip to the route map">К карте маршрута</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте маршрута" data-en="Skip to the route map">К карте маршрута</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
@@ -25,7 +34,7 @@
         <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
       </svg>
       <div>
-        <h1 data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</h1>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
         <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">Путеводитель для начинающих</div>
       </div>
     </div>
@@ -38,7 +47,7 @@
   <!-- ===================== hero ===================== -->
   <section class="hero">
     <div class="kicker" data-i18n="heroKicker" data-ru="Экспедиция 0 -&gt; 100%" data-en="Expedition 0 -&gt; 100%">Экспедиция 0 -&gt; 100%</div>
-    <h2 data-i18n="heroTitle" data-ru="От нуля до RAG без предварительной подготовки" data-en="From zero to RAG with no prerequisites">От нуля до RAG без предварительной подготовки</h2>
+    <h1 data-i18n="heroTitle" data-ru="От нуля до RAG без предварительной подготовки" data-en="From zero to RAG with no prerequisites">От нуля до RAG без предварительной подготовки</h1>
     <p class="promise" data-i18n="heroPromise" data-ru="Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо." data-en="One page, one route. Walk it from the trailhead to the summit and you understand RAG end to end. Nothing required, nowhere to go.">Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо.</p>
     <svg class="rule" viewBox="0 0 200 18" aria-hidden="true" focusable="false">
       <line x1="0" y1="9" x2="78" y2="9" stroke="#bda878" stroke-width="1.5"/>
@@ -48,11 +57,11 @@
   </section>
 
   <!-- ===================== atlas MAP (trail) ===================== -->
-  <main>
+  <main id="main" tabindex="-1">
   <section class="atlas" data-component="trail" aria-labelledby="mapTitle">
     <div class="atlas-head">
       <div class="title-block">
-        <h3 id="mapTitle" data-i18n="mapTitle" data-ru="Маршрут экспедиции" data-en="Expedition route">Маршрут экспедиции</h3>
+        <h2 id="mapTitle" data-i18n="mapTitle" data-ru="Маршрут экспедиции" data-en="Expedition route">Маршрут экспедиции</h2>
         <p data-i18n="mapSub" data-ru="Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку" data-en="Tap a flag or a list item to open its field note">Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку</p>
       </div>
       <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
@@ -297,7 +306,7 @@
 
     <!-- desktop chapter index -->
     <div class="legend-list-wrap">
-      <h4 class="legend-list-head" data-i18n="legendListHead" data-ru="Главы маршрута" data-en="Route chapters">Главы маршрута</h4>
+      <h3 class="legend-list-head" data-i18n="legendListHead" data-ru="Главы маршрута" data-en="Route chapters">Главы маршрута</h3>
       <ul class="legend-list" data-slot="legend"></ul>
     </div>
 
@@ -316,7 +325,7 @@
          the full chapter list as the meaningful navigation + a note. -->
     <div class="no-js-only">
       <div class="legend-list-wrap">
-        <h4 class="legend-list-head">Главы маршрута</h4>
+        <h3 class="legend-list-head">Главы маршрута</h3>
         <ul class="legend-list">
           <li class="is-start"><span class="lnum" style="width:auto;height:auto;border-radius:0;border:none;padding-right:8px;background:none">0%</span><span>С чего начать</span></li>
           <li><a class="node" href="what-rag.html"><span class="name">Что такое RAG</span><span class="hint">10% - открыть главу</span></a></li>

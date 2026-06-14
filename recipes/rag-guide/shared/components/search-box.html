@@ -1,17 +1,33 @@
 <!--
-  search-box.html -- shared client-side search partial.
-  Progressive enhancement: input is wrapped in .js-only because search
-  requires JS; without JS the page relies on nav + in-page anchors.
-  search.js (interactive-engineer) mounts on [data-component="search-box"],
-  reads data-index-src, and renders matches into [data-slot="results"].
-  Class hooks only, NO inline styles, NO colors.
+  search-box.html -- shared client-side full-text site search partial (copy-in
+  source of truth). Sits in the header cluster (.site-header__nav) ALONGSIDE the
+  back-to-map control + lang-toggle; the i18n lang-toggle was left clean for this.
+
+  Progressive enhancement: wrapped in .js-only because search needs JS; with JS
+  off the page relies on nav + in-page anchors. search.js (shared/js/lib) mounts
+  on [data-component="search-box"], loads data-index-src, scores the query with
+  field weighting (title > heading > body), and renders ranked results into
+  [data-slot="results"] as an accessible combobox/listbox linking to page#anchor.
+
+  Accessibility: input role=combobox (aria-expanded / aria-controls /
+  aria-activedescendant set by JS); results role=listbox of role=option; a polite
+  live region (created by JS) announces the result count. Keyboard: Down/Up move
+  the active option, Enter follows, Esc closes, Tab leaves.
+
+  data-i18n on the label + placeholder gives meaningful RU/EN text with JS off.
+  data-index-src is RELATIVE TO THE PAGE: root chapter pages use
+  "shared/data/search-index.json"; variant pages (variants/<name>/) use
+  "../../shared/data/search-index.json". Class hooks only, NO inline styles.
 -->
 <div class="search-box js-only" data-component="search-box"
-     data-index-src="../../shared/data/search-index.json">
-  <label class="visually-hidden" for="rag-search">Search the RAG Guide</label>
+     data-index-src="shared/data/search-index.json">
+  <label class="visually-hidden" for="rag-search"
+         data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
   <input id="rag-search" class="search-box__input" type="search"
-         placeholder="Search the guide" autocomplete="off"
-         role="combobox" aria-expanded="false" aria-controls="rag-search-results" />
+         placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+         data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+         role="combobox" aria-autocomplete="list" aria-expanded="false"
+         aria-controls="rag-search-results" />
   <ul id="rag-search-results" class="search-box__results"
-      data-slot="results" role="listbox" hidden></ul>
+      data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
 </div>

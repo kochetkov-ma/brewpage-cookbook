@@ -121,9 +121,29 @@ Frozen darkening hex tokens (in atlas.css): `--lang-active-bottom #4a3a26`, `--r
 | `--font-body` `--font-ui` (extra) `--font-mono` | serif / sans / mono | |
 | (rest) `--sp-*` `--radius-*` `--fs-*` `--bw-*` `--shadow-*` `--dur-*` `--ease-*` `--container-max` | per 2.3-2.6 | |
 
-Atlas EXTRA tokens base.css may reference: `--c-surface-3`, `--c-heading`, `--c-border-soft`, `--c-progress`, `--c-focus-glow`, `--c-current-ring`, `--c-visited-ring`, `--c-visited-bg-1/2`, `--c-route`, `--c-route-shadow`, `--font-ui`, `--rust-deep`, `--gold-deep`, `--green-text`, `--dur-zoom`, `--dur-note`, `--dur-draw`, `--ease-zoom`, `--shadow-plate/ring/sheen/pressed/track/active-bar/header`. The palette aliases + cartography rgba set stay so SVG/cartography rules read naturally.
+Atlas EXTRA tokens base.css may reference: `--c-surface-3`, `--c-heading`, `--c-border-soft`, `--c-progress`, `--c-focus-glow`, `--c-current-ring`, `--c-visited-ring`, `--c-visited-bg-1/2`, `--c-route`, `--c-route-shadow`, `--font-ui`, `--rust-deep`, `--gold-deep`, `--green-text`, `--c-focus-code`, `--c-code-plate-bg/-fg`, `--c-code-kw/-str/-num/-com/-fn/-punc/-op/-key`, `--c-code-ctx/-q`, `--dur-zoom`, `--dur-note`, `--dur-draw`, `--ease-zoom`, `--shadow-plate/ring/sheen/pressed/track/active-bar/header`. The palette aliases + cartography rgba set stay so SVG/cartography rules read naturally.
 
-### 2.8 Cartography rgba set (landing terrain only)
+### 2.8 Code-plate tokens (`--c-code-*`)
+
+Block code rides a frozen dark plate `--c-code-plate-bg #2f2718`; default text `--c-code-plate-fg #e8dcc0` (= `--sand`, 10.83:1 on the plate). The syntax-highlight tokens (`code-highlight.js` -> `.tok-KIND`) and the code-region focus ring all live as `:root` values in `atlas.css`; `base.css` references the names only. Every token below is verified WCAG AA (>= 4.5:1) vs the plate `#2f2718`, except `--c-focus-code` which is held to the WCAG 1.4.11 non-text floor (>= 3:1) and clears it with margin.
+
+| Token | Value | Contrast vs `#2f2718` | Role |
+|-------|-------|-----------------------|------|
+| `--c-code-plate-bg` | `#2f2718` | -- (the plate bg) | code plate background (frozen) |
+| `--c-code-plate-fg` | `#e8dcc0` | 10.83 | default code text (= `--sand`) |
+| `--c-code-kw` | `#7fb0d6` | 6.38 | keywords -- azure schematic ink |
+| `--c-code-str` | `#c7b56a` | 7.19 | strings -- warm gold-green |
+| `--c-code-num` | `#d99a76` | 6.20 | numbers -- terracotta |
+| `--c-code-com` | `#a89976` | 5.25 | comments -- muted sepia-tan (lowest, still AA) |
+| `--c-code-fn` | `#d8c890` | 8.84 | function names -- pale gold |
+| `--c-code-punc` | `#b7a886` | 6.29 | punctuation -- tan |
+| `--c-code-op` | `= --c-code-q` `#e9b27f` | 7.82 | operators -- reuse question warm-sand |
+| `--c-code-key` | `= --c-code-ctx` `#9fc4be` | 7.80 | json object keys -- reuse context teal |
+| `--c-code-ctx` | `#9fc4be` | 7.80 | sample context line (muted teal) |
+| `--c-code-q` | `#e9b27f` | 7.82 | sample question line (warm sand) |
+| `--c-focus-code` | `#d9a24a` | 6.47 | code-plate focus ring (`.ca-region` / code surfaces); brighter warm-amber, non-blue. Base `--c-focus` (rust `#a55a35`) is only 2.89:1 on the plate -- below the 3:1 non-text floor -- so code regions use this composite: rust outline (keeps 4.26:1 on parchment) + a tight `--c-focus-code` box-shadow ring that hugs the region on the plate (6.47:1). -- W6-FIX L4 |
+
+### 2.9 Cartography rgba set (landing terrain only)
 
 `--ter-*` tokens carry every terrain fill/stroke (sea/coast/island/lake/shore/tick/river/mtn/hill/hachure/contour/tree/conifer/marsh/grid/rhumb/flourish/scale/bird/label/cartouche). Families: teal `rgba(74,111,106,*)`, brown `rgba(92,74,50,*)` + `rgba(120,96,60,*)`, contour `rgba(189,168,120,*)`, forest `rgba(74,90,60,*)`/`rgba(60,80,54,*)`. All low-alpha (<=~0.68), always reading BELOW the rust route. Composition rules: organic bezier landforms only (NO `<ellipse>`/`<circle>` for any landform; circles only for pins/seal/compass/flourish ornaments); open contours; hachure on shadow side; whisper-quiet garnish. The `--ter-*` tokens are referenced by terrain `fill`/`stroke` attributes from inside the inline SVG; the literal hex inside the terrain SVG is the page's ONLY literal color (base.css carries none).
 

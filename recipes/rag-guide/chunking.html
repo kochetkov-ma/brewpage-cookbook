@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чанкинг - где резать документ - RAG С НУЛЯ</title>
+<meta name="description" content="Чанкинг: каталог из 9 стратегий реза с рейтингами сложности и стоимости, рабочим Python и обучающими анимациями. Нажмите строку, чтобы раскрыть стратегию. Интерактивная глава BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
+     + this section's own structural CSS (linked only here, never base.css). -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/chunking.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К каталогу стратегий" data-en="Skip to the strategy catalog">К каталогу стратегий</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <div class="site-header__brand">
+      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+          <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+          <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+          <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+        </svg>
+      </a>
+      <div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Чанкинг" data-en="Plate - Chunking">Глава - Чанкинг</div>
+      </div>
+    </div>
+    <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
+      <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+  <!-- ===================== the framed atlas plate (strategy catalog) ===================== -->
+  <!-- drilldown-host: stage + crumbs + zoomout + panel slots (AtlasMD 3.6) -->
+  <section class="plate" data-component="plate drilldown-host" aria-labelledby="plateTitle">
+    <!-- corner L-ticks -->
+    <span class="corner tl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner tr"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner bl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner br"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+
+    <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
+    <div class="plate-head">
+      <div class="title-block">
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Стратегии реза: каталог" data-en="Cut strategies: the catalog">Стратегии реза: каталог</h1>
+        <p data-i18n="plateSub" data-ru="Девять стратегий от самой простой к самой умной. Сравните строчки по сложности и трем осям стоимости, затем нажмите строку, чтобы раскрыть алгоритм и анимацию реза." data-en="Nine strategies from simplest to smartest. Compare the rows by complexity and the three cost axes, then open a row to drill into its algorithm and cut animation.">Девять стратегий от самой простой к самой умной. Сравните строчки по сложности и трем осям стоимости, затем нажмите строку, чтобы раскрыть алгоритм и анимацию реза.</p>
+      </div>
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Trebuchet MS, sans-serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- controls row (separate from the title row): breadcrumb + zoom-out.
+         The breadcrumb ROOT crumb returns to the catalog overview; a header
+         link (the seal above) returns to the map (index.html). -->
+    <div class="cat-controls js-only">
+      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+      <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- earned-progress strip (neutral on load; greens as rows are opened) -->
+    <div class="progress-strip js-only" data-component="progress" aria-hidden="true">
+      <span class="pcount"></span>
+      <div class="ptrack" aria-hidden="true"><span class="pfill"></span></div>
+      <span class="pdone"></span>
+    </div>
+
+    <!-- the zoom camera stage: holds the level-0 catalog table + grows to fit the
+         active strategy panel (the drill panel mount). The JS glue clears this
+         slot and builds the drillable table into it; with JS off the static
+         .no-js-only table below stays and the chapter reads complete. -->
+    <div class="stage" data-slot="stage">
+      <div class="no-js-only">
+        <div class="cat-scroll">
+        <table class="cat-table">
+          <thead>
+            <tr>
+              <th scope="col">Стратегия</th>
+              <th scope="col">Сложность</th>
+              <th scope="col">Токены</th>
+              <th scope="col">Время</th>
+              <th scope="col">Вычисления</th>
+              <th scope="col">Когда применять</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="cat-name"><span class="cat-name__idx">01</span><span class="cat-name__txt">fixed-size: рез каждые N единиц</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-when">Быстрый прототип, однородный текст без явной структуры; нужна предсказуемость размера чанка.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">02</span><span class="cat-name__txt">sliding-window: окно с перекрытием</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-when">Факты часто попадают на границы; надо гарантировать, что пограничный смысл не потеряется.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">03</span><span class="cat-name__txt">recursive: рез по приоритету разделителей</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-when">Универсальный выбор по умолчанию для прозы: режем по абзацам и предложениям, но жестко держим лимит размера.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">04</span><span class="cat-name__txt">structure-aware: рез по границам структуры</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low-medium">low-medium</span></td><td class="cat-when">Есть надежная структура (заголовки Markdown, AST кода, границы предложений), которую нужно сохранить.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">05</span><span class="cat-name__txt">markdown: рез по заголовкам документа</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--low-medium">low-medium</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-when">Документ в Markdown с заголовками: режем по #/##, а уровень заголовков кладем в метаданные чанка.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">06</span><span class="cat-name__txt">parent-document: индексируем мелкое, возвращаем крупное</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--low-medium">low-medium</span></td><td class="cat-when">Нужна точность мелких чанков на поиске, но широкий контекст в ответе: индексируем мелкие, возвращаем родительские.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">07</span><span class="cat-name__txt">late chunking: эмбеддинг целого, потом пулинг</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--low">low</span></td><td class="cat-rate"><span class="rating rating--medium">medium</span></td><td class="cat-rate"><span class="rating rating--medium-high">medium-high</span></td><td class="cat-when">Есть long-context модель эмбеддингов; чанк должен нести контекст всего документа, а не только своего фрагмента.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">08</span><span class="cat-name__txt">contextual retrieval: контекст перед эмбеддингом</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-when">Изолированные чанки теряют смысл без документа; цена LLM-обогащения каждого чанка оправдана качеством поиска.</td></tr>
+            <tr><td class="cat-name"><span class="cat-name__idx">09</span><span class="cat-name__txt">semantic: рез по смысловым сдвигам</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-rate"><span class="rating rating--high">high</span></td><td class="cat-when">Качество границ критично и оправдывает цену; рез по смысловым сдвигам, а не по символам.</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="cat-hint">Каждая стратегия раскрыта ниже в полном тексте главы: как работает, когда применять, пошаговый алгоритм и (для основных) рабочий Python. Включите JavaScript, чтобы открыть строку каталога и пройти обучающую анимацию реза.</p>
+      </div>
+    </div>
+
+    <!-- the inline-grow detail panel mount (drilldown-zoom renders panels here) -->
+    <div class="js-only" data-slot="panel" aria-live="polite"></div>
+  </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/chunking.md (strategy A: md-as-source, hand-ported).
+       Always visible: reads fully with JS on or off. The interactive .js-only
+       drill table above only ENHANCES; this prose is the chapter text. The
+       per-strategy detail (how / when / algorithm / Python) is mirrored here so
+       the catalog is fully readable as a static chapter with JavaScript off. -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема: где резать документ и насколько крупно</h2>
+      <p>Отдать ретриверу весь документ целиком не получится. Первая причина чисто техническая: модель эмбеддингов принимает текст ограниченной длины, и один гигантский фрагмент в нее просто не влезет. Вторая причина тоньше и важнее: даже когда длинный контекст помещается, модель хуже использует информацию в его середине - эффект "lost in the middle", измеренный на нескольких моделях: точность выше, когда нужный факт стоит в начале или в конце контекста, и заметно проседает в центре (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Поэтому большой документ режут на чанки - фрагменты retrieval-размера, которые дальше превращают в эмбеддинги, хранят в индексе и извлекают по одному.</p>
+      <p>Вопрос не в том, резать или нет, а в том, где резать и насколько крупно. Это и есть стадия чанкинга - одна из остановок на верхнеуровневой карте маршрута. Ключевая мысль главы: выбор стратегии реза - это измеряемый компромисс между простотой, ценой и качеством границ, а не одна правильная константа.</p>
+      <p>RAG как метод - "найти, дополнить, сгенерировать" - введен в <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020, arXiv:2005.11401</a>; чанкинг - это первый шаг стадии поиска: без нарезки нечего превращать в эмбеддинги и нечего искать.</p>
+    </section>
+
+    <section aria-labelledby="pr-parts">
+      <h2 id="pr-parts">Из чего состоит чанкинг</h2>
+      <p>При детализации стадия чанкинга распадается на три части. Это общий каркас любой стратегии - меняется только сплиттер.</p>
+      <ul>
+        <li><strong>Splitter</strong> - решает, ГДЕ резать. От этого зависит, попадет ли связанный смысл в один чанк или рез разорвет предложение пополам. Весь каталог ниже - это разные сплиттеры.</li>
+        <li><strong>Overlap</strong> - общий хвост текста, который повторяется в конце одного чанка и в начале следующего. Без перекрытия факт, попавший на границу реза, не найдется целиком ни в одном чанке; небольшое перекрытие сохраняет контекст на стыке (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</li>
+        <li><strong>Metadata</strong> - источник, позиция (<code>fromChar</code>/<code>toChar</code>) и теги, прикрепленные к чанку. Позже они нужны, чтобы фильтровать кандидатов в векторной базе и вернуть точную цитату в ответе генерации.</li>
+      </ul>
+      <p>Размер чанка и перекрытие - это компромисс, а не константа: мелкие чанки точнее попадают в запрос, но теряют окружающий контекст; крупные несут контекст, но размывают релевантность и упираются в "lost in the middle" (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Правильное значение зависит от ваших документов, поэтому его подбирают измерением на золотом наборе вопросов, а не угадыванием (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+
+      <h3>В чем мерить размер: символы или токены</h3>
+      <p>Размер чанка можно считать в символах, а можно - в токенах, и это не косметическая разница. Символьный счет прост: длина строки в Python - это <code>len(text)</code>, никаких зависимостей. Но настоящий бюджет, в который упирается RAG, измеряется не в символах, а в токенах: и окно контекста модели, и счет за вызов считаются в токенах. Один токен - это в среднем кусок слова, и для разных языков соотношение символов к токенам разное (кириллица обычно дает больше токенов на тот же текст, чем латиница). Поэтому чанк в 1000 символов может неожиданно не влезть в токен-бюджет шага сборки контекста.</p>
+      <p>Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует <code>tiktoken</code> - токенизатор ее моделей (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI, tiktoken</a>; <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>); LangChain оборачивает его в <code>TokenTextSplitter</code>, который режет по токенам, а не по символам (<a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">LangChain, split by token</a>). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.</p>
+    </section>
+
+    <section aria-labelledby="pr-catalog">
+      <h2 id="pr-catalog">Стратегии реза: каталог</h2>
+      <p>Девять стратегий - от самой простой к самой умной. Сначала обзорная таблица с рейтингами - ее можно читать как шпаргалку и сравнивать строчки глазами. Под таблицей каждая стратегия раскрыта: как работает, когда применять, пошаговый алгоритм и (для основных) рабочий Python.</p>
+      <p>Стоимость разбита на три оси, потому что они растут неравномерно: <strong>Token cost</strong> - сколько дополнительных токенов порождает стратегия; <strong>Time cost</strong> - задержка нарезки одного документа; <strong>Compute cost</strong> - вычислительная нагрузка. Рейтинги относительные (low / medium / high), а не абсолютные числа: они показывают порядок стратегий между собой, а не бенчмарк на вашем железе.</p>
+
+      <div class="cat-scroll">
+      <table class="cat-table">
+        <caption>Каталог стратегий реза с рейтингами сложности и трех осей стоимости.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Стратегия</th>
+            <th scope="col">Сложность</th>
+            <th scope="col">Токены</th>
+            <th scope="col">Время</th>
+            <th scope="col">Вычисления</th>
+            <th scope="col">Когда применять</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>fixed-size</td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td>Быстрый прототип, однородный текст без явной структуры; нужна предсказуемость размера чанка.</td></tr>
+          <tr><td>sliding-window (overlap)</td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td>Факты часто попадают на границы; надо гарантировать, что пограничный смысл не потеряется.</td></tr>
+          <tr><td>recursive (separator hierarchy)</td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low">low</span></td><td>Универсальный выбор по умолчанию для прозы: режем по абзацам и предложениям, но жестко держим лимит размера.</td></tr>
+          <tr><td>structure-aware</td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low-medium">low-medium</span></td><td>Есть надежная структура (заголовки Markdown, AST кода, границы предложений), которую нужно сохранить.</td></tr>
+          <tr><td>markdown / document-structure</td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--low-medium">low-medium</span></td><td><span class="rating rating--low">low</span></td><td>Документ в Markdown с заголовками: режем по #/##, а уровень заголовков кладем в метаданные чанка.</td></tr>
+          <tr><td>parent-document (small-to-big)</td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--low-medium">low-medium</span></td><td>Нужна точность мелких чанков на поиске, но широкий контекст в ответе: индексируем мелкие, возвращаем родительские.</td></tr>
+          <tr><td>late chunking</td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--low">low</span></td><td><span class="rating rating--medium">medium</span></td><td><span class="rating rating--medium-high">medium-high</span></td><td>Есть long-context модель эмбеддингов; чанк должен нести контекст всего документа, а не только своего фрагмента.</td></tr>
+          <tr><td>contextual retrieval</td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td>Изолированные чанки теряют смысл без документа; цена LLM-обогащения каждого чанка оправдана качеством поиска.</td></tr>
+          <tr><td>semantic / LLM-based</td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td><span class="rating rating--high">high</span></td><td>Качество границ критично и оправдывает цену; рез по смысловым сдвигам, а не по символам.</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3 id="pr-fixed">fixed-size: режем каждые N единиц</h3>
+      <p><strong>Как работает.</strong> Самая простая стратегия: идем по тексту и отрезаем ровно N единиц (символов или токенов) подряд, игнорируя смысловые границы. Размер каждого чанка предсказуем; границы могут попадать посередине слова или предложения.</p>
+      <p><strong>Когда применять.</strong> Быстрый прототип; однородный текст без явной структуры; когда вам важна именно предсказуемость размера. Это базовая линия, от которой отталкиваются остальные стратегии (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p><strong>Алгоритм.</strong> Задайте размер окна <code>size</code>; поставьте курсор <code>i = 0</code>; отрежьте подстроку <code>text[i : i + size]</code>; сдвиньте курсор <code>i = i + size</code>; повторяйте, пока <code>i &lt; len(text)</code>; последний чанк может быть короче <code>size</code> - это нормально.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-fixed-size">
+        <figcaption class="code-block__cap" data-i18n data-ru="fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy." data-en="fixed-size: cut exactly N units in a row, ignoring meaning boundaries.">fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy.</figcaption>
+        <pre><code>def fixed_size_chunks(text: str, size: int) -&gt; list[str]:
+    if size &lt;= 0:
+        raise ValueError("size must be positive")
+    return [text[i:i + size] for i in range(0, len(text), size)]
+
+
+if __name__ == "__main__":
+    doc = "RAG podmeshivaet vashi dokumenty v zapros k modeli. " \
+          "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor. " \
+          "Vektory hranyat v indekse i ishchut blizhajshie po smyslu."
+    for n, chunk in enumerate(fixed_size_chunks(doc, 60)):
+        print(n, repr(chunk))</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Proverka razmera</strong> -- Signatura funkcii i zashchita ot nepozitivnogo razmera okna - inache rez ne imeet smysla.</li>
+          <li><strong>Narezka po shagu size</strong> -- Odin prohod srezami text[i:i+size] s shagom size - rezy padajut cherez ravnye intervaly, ignoriruja slova.</li>
+          <li><strong>Demonstracija</strong> -- Primer na transliterirovannom dokumente s size=60; pechataet kazhdyj chank - vidno, chto granicy mogut past poseredine slova.</li>
+        </ol>
+      </figure>
+      <p class="strat-schematic">Анимация: резы падают через равные интервалы независимо от границ слов - рез может пасть посередине слова.</p>
+
+      <h3 id="pr-sliding">sliding-window (overlap): окно с перекрытием</h3>
+      <p><strong>Как работает.</strong> То же fixed-size окно, но соседние чанки перекрываются на <code>overlap</code> единиц: каждый следующий чанк начинается не там, где кончился предыдущий, а на <code>overlap</code> раньше. Так факт, разорванный границей, целиком попадает хотя бы в один чанк.</p>
+      <p><strong>Когда применять.</strong> Когда факты часто ложатся на границы и потеря пограничного смысла недопустима. Цена - дублирование текста: часть токенов идет в индекс дважды (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p><strong>Алгоритм.</strong> Задайте <code>size</code> и <code>overlap</code> (<code>0 &lt;= overlap &lt; size</code>); вычислите шаг <code>step = size - overlap</code>; режьте <code>text[i : i + size]</code> и сдвигайте курсор на <code>step</code>; хвост <code>overlap</code> предыдущего чанка повторяется в начале следующего.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-sliding-window">
+        <figcaption class="code-block__cap" data-i18n data-ru="sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic." data-en="sliding-window: the same window, but neighbouring chunks overlap by overlap units.">sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic.</figcaption>
+        <pre><code>def sliding_window_chunks(text: str, size: int, overlap: int) -&gt; list[str]:
+    if size &lt;= 0:
+        raise ValueError("size must be positive")
+    if not 0 &lt;= overlap &lt; size:
+        raise ValueError("overlap must satisfy 0 &lt;= overlap &lt; size")
+    step = size - overlap
+    chunks = []
+    i = 0
+    while i &lt; len(text):
+        chunks.append(text[i:i + size])
+        i += step
+    return chunks
+
+
+if __name__ == "__main__":
+    doc = "RAG podmeshivaet vashi dokumenty v zapros k modeli. " \
+          "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor."
+    for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):
+        print(n, repr(chunk))</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Proverki size i overlap</strong> -- Signatura i dve zashchity: polozhitelnyj size i 0 &lt;= overlap &lt; size, inache okno ne sdvigaetsja vpered.</li>
+          <li><strong>Shag s perekrytiem</strong> -- Shag step = size - overlap menshe okna, poetomu sosednie chanki nakladyvajutsja na overlap edinic.</li>
+          <li><strong>Cikl narezki</strong> -- Rezhem text[i:i+size] i dvigaem kursor na step; hvost overlap predydushchego chanka povtorjaetsja v nachale sledujushchego.</li>
+          <li><strong>Demonstracija</strong> -- Primer s size=50, overlap=15; pechat chankov pokazyvaet povtorjajushchijsja pogranichnyj hvost.</li>
+        </ol>
+      </figure>
+      <p class="strat-schematic">Анимация: окно едет по тексту с шагом step = size - overlap; зона перекрытия повторяется в соседнем чанке.</p>
+
+      <h3 id="pr-recursive">recursive (separator hierarchy): рез по приоритету разделителей</h3>
+      <p><strong>Как работает.</strong> Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит <code>size</code>. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель. Это стратегия по умолчанию в LangChain <code>RecursiveCharacterTextSplitter</code> (<a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">LangChain, RecursiveCharacterTextSplitter</a>).</p>
+      <p><strong>Когда применять.</strong> Универсальный выбор по умолчанию для прозы: аккуратные границы по абзацам и предложениям, но ни один чанк не превышает лимит. Почти всегда лучше голого fixed-size при той же низкой цене.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-recursive">
+        <figcaption class="code-block__cap" data-i18n data-ru="recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size." data-en="recursive: descend the separator priority until a piece fits the size limit.">recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size.</figcaption>
+        <pre><code>def recursive_chunks(text: str, size: int,
+                     separators: list[str] | None = None) -&gt; list[str]:
+    if separators is None:
+        separators = ["\n\n", "\n", " ", ""]
+    if len(text) &lt;= size:
+        return [text] if text else []
+
+    sep = separators[0]
+    rest = separators[1:]
+    parts = list(text) if sep == "" else text.split(sep)
+
+    chunks: list[str] = []
+    buf = ""
+    glue = "" if sep == "" else sep
+    for part in parts:
+        candidate = part if not buf else buf + glue + part
+        if len(candidate) &lt;= size:
+            buf = candidate
+            continue
+        if buf:
+            chunks.append(buf)
+            buf = ""
+        if len(part) &lt;= size:
+            buf = part
+        elif rest:
+            chunks.extend(recursive_chunks(part, size, rest))
+        else:
+            chunks.extend(part[i:i + size] for i in range(0, len(part), size))
+    if buf:
+        chunks.append(buf)
+    return chunks
+
+
+if __name__ == "__main__":
+    doc = ("RAG podmeshivaet dokumenty v zapros.\n\n"
+           "Korpus rezhut na chunki. Kazhdyj chunk embeddyat.\n\n"
+           "Vektory hranyat v indekse i ishchut blizhajshie po smyslu.")
+    for n, chunk in enumerate(recursive_chunks(doc, 70)):
+        print(n, repr(chunk))</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Baza rekursii</strong> -- Spisok razdelitelej po umolchaniju ot krupnogo k melkomu; esli tekst uzhe vlezaet v size, on vozvrashchaetsja kak est.</li>
+          <li><strong>Rez tekushchim razdelitelem</strong> -- Berem pervyj razdelitel urovnja i rezhem im; pustoj razdelitel oznachaet rez po simvolam.</li>
+          <li><strong>Sklejka melkih kuskov</strong> -- Kopim chasti v bufer, poka summa vlezaet v size - chtoby ne plodit slishkom melkie chanki.</li>
+          <li><strong>Spusk na sledujushchij uroven</strong> -- Esli chast vse eshche bolshe size, rekursivno primenjaem SLEDUJUSHCHIJ razdelitel; kogda razdeliteli konchilis - zhestkij fixed-size rez.</li>
+          <li><strong>Demonstracija</strong> -- Dokument s abzacami cherez dvojnoj perevod stroki i size=70; vidno spusk ot abzacev k predlozhenijam i slovam.</li>
+        </ol>
+      </figure>
+      <blockquote>Это упрощенная, но рабочая реализация той же идеи, что в LangChain <code>RecursiveCharacterTextSplitter</code>. Продакшен-сплиттер добавляет счет по токенам и перекрытие; логика спуска по разделителям - та же.</blockquote>
+      <p class="strat-schematic">Анимация: сначала рез по абзацам; куски, не влезшие в size, режутся по предложениям, потом по словам - спуск по дереву.</p>
+
+      <h3 id="pr-structure">structure-aware: рез по границам предложений и структуре</h3>
+      <p><strong>Как работает.</strong> Режем не по счету символов, а по естественным границам: концам предложений, заголовкам Markdown, элементам AST кода. Это лучше всего сохраняет смысл - чанк совпадает с законченной мыслью - но зависит от формата входа: нужны надежные границы.</p>
+      <p><strong>Когда применять.</strong> Есть явная структура, которую ценно сохранить: документация с заголовками, код, транскрипты с репликами. Time cost выше fixed-size из-за этапа сегментации или разбора (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-markdown-header">
+        <figcaption class="code-block__cap" data-i18n data-ru="structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka." data-en="structure-aware (markdown): cut by headings, put the heading level into the chunk metadata.">structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka.</figcaption>
+        <pre><code>import re
+
+
+def markdown_header_chunks(text: str, size: int) -&gt; list[dict]:
+    sections: list[dict] = []
+    heading = ""
+    buf: list[str] = []
+
+    def flush() -&gt; None:
+        body = "\n".join(buf).strip()
+        if body:
+            sections.append({"heading": heading, "text": body})
+
+    for line in text.splitlines():
+        m = re.match(r"^(#{1,6})\s+(.*)$", line)
+        if m:
+            flush()
+            buf = []
+            heading = m.group(2).strip()
+        else:
+            buf.append(line)
+    flush()
+
+    chunks: list[dict] = []
+    for sec in sections:
+        body = sec["text"]
+        if len(body) &lt;= size:
+            chunks.append(sec)
+            continue
+        for i in range(0, len(body), size):
+            chunks.append({"heading": sec["heading"], "text": body[i:i + size]})
+    return chunks
+
+
+if __name__ == "__main__":
+    doc = ("# Otpuska\n"
+           "Posle 3 let stazha polagaetsya 28 dnej otpuska.\n"
+           "## Bolnichnyj\n"
+           "Bolnichnyj oplachivaetsya s pervogo dnya.")
+    for n, chunk in enumerate(markdown_header_chunks(doc, 200)):
+        print(n, chunk["heading"], repr(chunk["text"]))</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Sostojanie razbora</strong> -- Zavodim spisok sekcij, tekushchij zagolovok i bufer tela - prostoj potokovyj parser po strokam.</li>
+          <li><strong>Zakrytie sekcii</strong> -- flush sbrasyvaet nakoplennoe telo v sekciju vmeste s ee zagolovkom, esli telo nepustoe.</li>
+          <li><strong>Poisk zagolovkov</strong> -- Reguljarka lovit stroki # .. ###### ; na kazhdom zagolovke zakryvaem proshluju sekciju i zapominaem novyj zagolovok.</li>
+          <li><strong>Sekcii v chanki</strong> -- Kazhdaja sekcija stanovitsja chankom s metadannymi zagolovka; slishkom dlinnuju sekciju rezhem zapasnym fixed-size.</li>
+          <li><strong>Demonstracija</strong> -- Markdown-dokument s # i ## ; pechat pokazyvaet zagolovok rjadom s telom kazhdogo chanka.</li>
+        </ol>
+      </figure>
+      <blockquote>Это упрощенная версия идеи LangChain <code>MarkdownHeaderTextSplitter</code>: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Для предложений и AST кода обертка та же, меняется только парсер.</blockquote>
+      <p class="strat-schematic">Анимация: резы ложатся только на концы предложений и после заголовка, никогда внутри фразы.</p>
+
+      <h3 id="pr-markdown">markdown / document-structure: рез по заголовкам документа</h3>
+      <p><strong>Как работает.</strong> Частный, но очень частый случай structure-aware: документ уже размечен заголовками Markdown (<code>#</code>, <code>##</code>, ...). Режем по заголовкам, каждую секцию делаем чанком, а уровень и текст заголовка кладем в метаданные. Так чанк всегда совпадает с логической секцией, а в метаданных видно его место в иерархии документа.</p>
+      <p><strong>Когда применять.</strong> Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Рабочий Python для этой стратегии дан выше, в разделе structure-aware (функция <code>markdown_header_chunks</code>).</p>
+      <p class="strat-schematic">Схема: каждая секция между заголовками # становится отдельным чанком; уровень заголовка едет в метаданные.</p>
+
+      <h3 id="pr-parent">parent-document (small-to-big): индексируем мелкое, возвращаем крупное</h3>
+      <p><strong>Как работает.</strong> Разводим единицу поиска и единицу контекста. Документ режется дважды: на мелкие дочерние чанки (точное попадание в запрос) и на крупные родительские (широкий контекст). В векторный индекс кладутся только мелкие чанки, но у каждого хранится ссылка на родителя. На поиске вы находите мелкий чанк, а в контекст модели подкладываете его крупного родителя.</p>
+      <p><strong>Когда применять.</strong> Когда мелкие чанки выигрывают на поиске, но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска (<a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">LangChain, ParentDocumentRetriever</a>).</p>
+      <p class="strat-schematic">Схема: мелкие дочерние чанки в индексе ссылаются на крупного родителя; на попадание возвращается родитель (small-to-big).</p>
+
+      <h3 id="pr-late">late chunking: эмбеддинг целого документа, потом пулинг по чанкам</h3>
+      <p><strong>Как работает.</strong> Обычный конвейер сначала режет, потом эмбеддит каждый чанк изолированно - и чанк не знает ничего о соседях. Late chunking меняет порядок: сначала прогоняем весь документ через long-context модель эмбеддингов и получаем токенные представления, уже видевшие весь текст; и только потом пулим (усредняем) эти токенные векторы по границам чанков. Каждый итоговый вектор чанка несет контекст всего документа (<a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">Gunther et al., 2024, "Late Chunking", arXiv:2409.04701</a>).</p>
+      <p><strong>Когда применять.</strong> Есть long-context модель эмбеддингов и важно, чтобы мелкий чанк не терял разрешение кореференций ("компания", "она", "этот продукт") за пределами своего фрагмента. Цена - один проход тяжелой модели по всему документу.</p>
+      <p class="strat-schematic">Схема: весь документ эмбеддится одним проходом; токенные векторы потом усредняются по границам чанков (embed-whole-then-pool).</p>
+
+      <h3 id="pr-contextual">contextual retrieval: дописываем контекст перед эмбеддингом</h3>
+      <p><strong>Как работает.</strong> Перед тем как эмбеддить чанк, дописываем ему короткое поясняющее предложение, которое ставит фрагмент в контекст всего документа. Это пояснение генерирует LLM по паре "документ + чанк". Эмбеддится и индексируется уже чанк-плюс-контекст, поэтому изолированный фрагмент перестает быть непонятным вне документа (<a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">Anthropic, Contextual Retrieval</a>).</p>
+      <p><strong>Когда применять.</strong> Когда чанки часто оказываются неинформативными в отрыве от документа (таблицы, короткие пункты, местоимения без антецедента), и качество поиска важнее, чем разовая цена LLM на обогащение каждого чанка при индексации.</p>
+      <p class="strat-schematic">Схема: к каждому чанку перед эмбеддингом дописывается LLM-сгенерированный поясняющий контекст (blurb prepended before embed).</p>
+
+      <h3 id="pr-semantic">semantic / LLM-based: рез по смысловым сдвигам</h3>
+      <p><strong>Как работает.</strong> Вместо счета символов или разделителей решение о резе принимается по смыслу. Типичный подход: разбить текст на предложения, посчитать эмбеддинг каждого и ставить границу там, где соседние предложения резко расходятся по смыслу (падает косинусная близость между соседями). Вариант - спросить LLM, где логично разрезать. Границы получаются самыми "смысловыми", но каждый кандидат границы стоит вызова модели - отсюда high по всем трем осям стоимости (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p><strong>Когда применять.</strong> Когда качество границ критично и оправдывает цену. Для большинства корпусов recursive дает 90% пользы за долю цены; semantic берется, когда измерения показывают, что границы - узкое место.</p>
+      <blockquote>Порог подбирается измерением на золотом наборе, а не угадывается. Косинус как мера близости смысла разбирается в главе Embedding; semantic-чанкинг опирается на тот же принцип, но применяет его к границам реза, а не к поиску.</blockquote>
+      <p class="strat-schematic">Анимация: граница ставится там, где соседние предложения резко расходятся по смыслу (косинус падает ниже порога), а не на равных интервалах.</p>
+    </section>
+
+    <section aria-labelledby="pr-reveal">
+      <h2 id="pr-reveal">Как каталог раскрывается: прогрессивное раскрытие</h2>
+      <p>Каталог устроен как semantic-zoom drill с двумя уровнями (больше двух нет):</p>
+      <ul>
+        <li><strong>Уровень 0 - обзор.</strong> Видна только обзорная таблица стратегий с рейтингами. Это сравнительный слой: глазами пробегаете строчки и выбираете кандидата. Статичный no-JS вариант - именно эта таблица, полностью читаемая без скриптов.</li>
+        <li><strong>Уровень 1 - одна стратегия.</strong> Клик или drill по строчке стратегии делает semantic zoom в ее панель: развернутое "как работает" плюс "когда применять" плюс пошаговый алгоритм плюс (для базовых) рабочий Python плюс обучающая анимация реза именно этой стратегии. Выход из зума возвращает к таблице.</li>
+      </ul>
+      <p>Глубже уровня 1 зум не идет. Все анимации запускаются только когда панель на экране (IntersectionObserver) и только при <code>prefers-reduced-motion: no-preference</code>; иначе показывается конечное состояние над тем же DOM.</p>
+    </section>
+
+    <section aria-labelledby="pr-tradeoff">
+      <h2 id="pr-tradeoff">Размер и перекрытие: компромисс</h2>
+      <p>Размер чанка и перекрытие - две ручки одного компромисса. Мелкий чанк: точное попадание в запрос, но узкий контекст и риск разорвать факт. Крупный чанк: богатый контекст, но размытая релевантность и "lost in the middle" при сборке промпта (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Перекрытие смягчает главный минус реза по границам - потерю пограничного факта - ценой дублирования токенов (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p>Правило без магических чисел: не угадывайте. Возьмите золотой набор вопросов (см. главу Evaluation), прогоните две-три конфигурации (size/overlap/стратегия) и сравните recall нужных чанков. Стратегия из каталога выше - это пространство выбора; измерение - способ выбрать точку в нем.</p>
+    </section>
+
+    <section aria-labelledby="pr-live">
+      <h2 id="pr-live">Связь с живым примером</h2>
+      <p>В живом примере из обзора исходный документ <code>doc.text</code> режется на три чанка по границам предложений - это фактически structure-aware рез по знаку конца предложения. Поля <code>fromChar</code>/<code>toChar</code> индексируют именно <code>doc.text</code>: каждый чанк - это точный срез исходного текста, а не его пересказ. Это и есть Metadata-позиция из drill-down в действии: по ней всегда можно восстановить, откуда взят чанк, и вернуть цитату в ответе.</p>
+      <p>В этом примере чанки не пересекаются (overlap = 0) ради наглядности - это чистый structure-aware без sliding-window. Мысленно добавьте перекрытие: пусть второй чанк начинается на несколько слов раньше, захватывая хвост первого - так факт на границе предложений не потеряется. Это ровно переход от structure-aware к sliding-window из каталога выше.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li>Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">arxiv.org/abs/2409.04701</a></li>
+        <li>LangChain. RecursiveCharacterTextSplitter. <a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">recursive_text_splitter</a></li>
+        <li>LangChain. Split by token. <a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">split_by_token</a></li>
+        <li>LangChain. MarkdownHeaderTextSplitter. <a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">markdown_header_metadata_splitter</a></li>
+        <li>LangChain. ParentDocumentRetriever. <a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">parent_document_retriever</a></li>
+        <li>OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a></li>
+        <li>OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li>Anthropic. Contextual Retrieval. <a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">anthropic.com/news/contextual-retrieval</a></li>
+        <li>Pinecone. Chunking strategies (vendor explainer). <a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">pinecone.io/learn/chunking-strategies</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>Откройте каталог на уровне 0 и сравните строчки <code>fixed-size</code> и <code>recursive</code>: при той же низкой цене recursive дает аккуратные границы по разделителям - поэтому он выбор по умолчанию для прозы.</li>
+        <li>Сделайте drill в стратегию <code>sliding-window</code> и запустите ее анимацию: посмотрите, как окно едет с шагом <code>step = size - overlap</code> и зона перекрытия повторяется в соседнем чанке.</li>
+        <li>Сделайте drill в <code>recursive</code> и пройдите анимацию спуска по разделителям <code>["\n\n", "\n", " ", ""]</code>: те куски, что не влезли по абзацам, режутся по предложениям, потом по словам.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Следующая остановка маршрута - <strong>Embedding</strong>: она берет эти чанки и превращает каждый в числовой вектор, где близость = близость смысла (тот же косинус, на который опирается semantic-чанкинг).</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/chunking.js"></script>
+</body>
+</html>

@@ -204,7 +204,7 @@ button.cmp-node.next-step { border-color: var(--c-accent-3); }
   font-size: var(--fs-0);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--c-accent-3);
+  color: var(--c-accent-3-text);
   font-weight: var(--fw-bold);
 }
 .drillhint svg { width: 14px; height: 14px; flex: 0 0 auto; }
@@ -291,7 +291,7 @@ button.cmp-node.next-step { border-color: var(--c-accent-3); }
     var(--c-surface);
   box-shadow: var(--shadow-1);
 }
-.cmp-takeaways h3 {
+.cmp-takeaways h2 {
   margin: 0 0 var(--sp-2);
   font-family: var(--font-body);
   font-size: var(--fs-3);
@@ -485,4 +485,96 @@ body.drilling .tracks .cmp-node[data-drill] { visibility: hidden; }
   .freezetag { opacity: 1; transform: none; }
   .cmp-node--grounding::after { display: none; }
   .drill-stage { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* ===========================================================
+   CHAPTER PROSE  (ported manuscript -- S-SB-REPORT3)
+   Full chapter text rendered as semantic article content.
+   Structure + spacing only; color/space/motion via var(--...).
+   Lives here (section file), never in base.css. ASCII only.
+   The same block is mirrored inside .no-js-only so the chapter
+   reads complete with JavaScript off.
+   =========================================================== */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+@media (max-width: 560px) {
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
 }

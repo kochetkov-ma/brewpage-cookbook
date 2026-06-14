@@ -186,6 +186,41 @@ function buildScene(rootEl, data) {
         }
       });
     }
+
+    // Reduced-motion / end-state snap: when a step lands at its end, any card
+    // whose materialize belongs to an EARLIER phase may never have had --p
+    // advanced (the embed branch never ran if the user seeked straight to store
+    // under reduced motion). Drive every already-visible card's --p to the end
+    // so its width snaps to the END px instead of computing auto.
+    if (atEnd) {
+      snapVisibleProgress();
+    }
+  }
+
+  // Reduced-motion / end-state snap. The materialize width must land on a
+  // DETERMINISTIC end px, not the interpolated `auto` it would read when the
+  // user seeks straight to a later step (the --p the CSS width keyed off was
+  // never advanced for the skipped phase). We advance --p to its end value AND,
+  // crucially, pin the END width explicitly inline on each materialized card so
+  // the computed width is a real px regardless of which phases actually ran.
+  // Same DOM, no alternate markup -- we only set an inline width on the cards
+  // already present and visible.
+  function snapCardWidth(card) {
+    card.style.setProperty("--p", "1");
+    // Measure the laid-out end width and pin it inline so the snapped state is
+    // a concrete px (not "auto") even when the --p-driven transition was skipped.
+    const w = card.getBoundingClientRect().width;
+    if (w > 0) card.style.width = w + "px";
+  }
+  function snapVisibleProgress() {
+    Object.values(chunkCards).forEach((card) => {
+      const st = card.dataset.state;
+      if (st === "active" || st === "done") snapCardWidth(card);
+    });
+    Object.values(vecCards).forEach((card) => {
+      const st = card.dataset.state;
+      if (st === "active" || st === "done" || st === "stored") snapCardWidth(card);
+    });
   }
 
   return {

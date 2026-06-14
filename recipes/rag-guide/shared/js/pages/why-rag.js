@@ -17,9 +17,11 @@
 import { qs, qsa } from "../lib/dom.js";
 import * as a11y from "../lib/a11y.js";
 import * as i18n from "../lib/i18n.js";
+import { init as initSiteSearch } from "../lib/site-search.js";
 import { init as initCompass } from "../lib/compass.js";
 import { init as initComparison } from "../lib/comparison.js";
 import { init as initProgress } from "../lib/progress.js";
+import { init as initCodeBlocks } from "../lib/code-blocks.js";
 import * as chapterState from "../lib/chapter-state.js";
 import whyRagData from "../../data/why-rag.js";
 
@@ -39,6 +41,14 @@ function track(inst) {
 }
 
 function boot() {
+  // header full-text site search (client-side, zero external requests) --------
+  track(initSiteSearch(document, {}));
+
+  // annotated code blocks: highlight + hover/focus region popovers + caption +
+  // no-JS list. code-blocks.js finds every [data-component="code-block"] and
+  // re-renders itself on i18n lang:change (it subscribes internally).
+  track(initCodeBlocks(document, {}));
+
   // a11y live-region announcer (scoped) ----------------------------------
   const liveHost = qs('[data-component="a11y-live"]') || document.body;
   const announcer = track(a11y.init(liveHost, { politeness: "polite" }));
@@ -107,6 +117,7 @@ function boot() {
     i18n.subscribe((loc) => {
       applyToggleState(loc);
       rewriteStaticText(loc);
+      announce(loc === "en" ? "Language: English" : "Язык: русский");
     });
   }
 

@@ -1,0 +1,630 @@
+/*
+ * sections/chunking.css -- section-specific structural CSS for the "Чанкинг"
+ * (chunking) catalog page. Linked ONLY by chunking.html.
+ *
+ * base.css owns the shared shells (.plate, .breadcrumb, .zoomout, .progress-strip,
+ * .node, .compass, .site-header/.site-footer, .js-only/.no-js-only). This file
+ * adds ONLY what the chunking section needs beyond those shells and NEVER forks
+ * base.css:
+ *   - the level-0 catalog ratings/complexity TABLE (.cat-table + .rating chips)
+ *   - the camera stage collapse for the table (.stage.zoomed reuses the same idea)
+ *   - the level-1 strategy panel (.strat-panel: how/when/algorithm/python + recap)
+ *   - the chunk-anim.js scene hooks (.chunk-anim__*) -- ALL styled via tokens;
+ *     animation mutates transform/opacity only (the module sets inline transform)
+ *   - the timeline.js control shell (.timeline / .btn) chunk-anim mounts
+ *   - the chapter prose block (mirrored inside .no-js-only)
+ *
+ * Color/space/motion come via var(--...) from themes/atlas.css. Section-local
+ * literal hex are limited to the AtlasMD-2.1 frozen dark code-plate (no token).
+ * ASCII only. No new theme, no webfont, no external request.
+ */
+
+/* ============================================================
+   LEVEL-0  catalog ratings/complexity table (the drill stage)
+   ============================================================ */
+.cat-hint {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+  margin: 0 0 var(--sp-2);
+  letter-spacing: 0.02em;
+}
+
+/* Page-overflow guard (AtlasMD 6/12): the wide catalog table lives INSIDE a
+   .cat-scroll wrapper that is the ONLY horizontal scroller. The wrapper is a
+   block clamped to the viewport (max-width:100% + min-width:0 so it cannot be
+   forced wider than its parent inside flex/grid), and it scrolls its overflow on
+   the x axis. The table keeps its natural width inside the scroller, so the PAGE
+   never x-overflows at 320/390 -- only the inner scroller does. */
+.cat-scroll {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  /* subtle themed scroll affordance */
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-text-muted) transparent;
+}
+.cat-scroll::-webkit-scrollbar { height: 6px; }
+.cat-scroll::-webkit-scrollbar-track { background: transparent; }
+.cat-scroll::-webkit-scrollbar-thumb { background: var(--c-text-muted); border-radius: 3px; }
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  color: var(--c-text);
+  min-width: 640px;
+}
+/* inside the scroller the table stays a normal table at its natural (min-)width
+   and simply exceeds the wrapper, which scrolls -- never the page. */
+.cat-scroll .cat-table { display: table; overflow-x: visible; }
+.cat-table thead th {
+  text-align: left;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-0);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  padding: var(--sp-1) var(--sp-2);
+  border-bottom: var(--bw-2) solid var(--c-border);
+  white-space: nowrap;
+}
+
+.cat-row {
+  cursor: pointer;
+  border-bottom: var(--bw-1) solid var(--c-border);
+  transition: background var(--dur-1) var(--ease-1), box-shadow var(--dur-1) var(--ease-1);
+}
+.cat-row > td {
+  padding: var(--sp-2);
+  vertical-align: top;
+}
+.cat-row:hover { background: var(--c-accent-3-soft); }
+.cat-row:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: -2px;
+}
+
+.cat-name { white-space: nowrap; }
+.cat-name__idx {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  color: var(--c-accent-3-text);
+  margin-right: var(--sp-1);
+}
+.cat-name__txt {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  color: var(--c-heading);
+}
+.cat-when {
+  font-size: var(--fs-1);
+  color: var(--c-text);
+  min-width: 220px;
+  white-space: normal;
+}
+.cat-rate { white-space: nowrap; }
+
+/* earned-progress row states (themed, never blue -- AtlasMD 3.13) */
+.cat-row.current { box-shadow: inset 3px 0 0 var(--c-current-ring); }
+.cat-row.next-step {
+  box-shadow: inset 3px 0 0 var(--c-accent-3);
+  background: var(--c-accent-3-soft);
+}
+.cat-row.visited { background: var(--c-visited-bg-1); }
+.cat-row.visited .cat-name__idx { color: var(--c-progress); }
+.cat-row.visited .cat-name__txt::after {
+  content: " \2713";
+  color: var(--c-progress);
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+}
+
+/* rating chip -- low/medium/high (+ hyphenated) via accent tokens */
+.rating {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  border: var(--bw-1) solid var(--c-border);
+  color: var(--c-heading);
+  background: var(--c-surface);
+}
+.rating--low { color: var(--c-accent-1); border-color: var(--c-accent-1); background: var(--c-accent-1-soft); }
+.rating--low-medium { color: var(--c-accent-4); border-color: var(--c-accent-4); background: var(--c-accent-4-soft); }
+.rating--medium { color: var(--c-accent-3-text); border-color: var(--c-accent-3); background: var(--c-accent-3-soft); }
+.rating--medium-high { color: var(--c-accent-2); border-color: var(--c-accent-2); background: var(--c-accent-2-soft); }
+.rating--high { color: var(--c-bg); border-color: var(--c-accent-2); background: var(--c-accent-2); }
+
+/* the camera stage shell (drilldown-zoom toggles .zoomed) */
+.stage { position: relative; border-radius: var(--radius-md); }
+.stage.zoomed .cat-stage-inner { display: none; }
+
+/* corner L-ticks inside the plate (decorative, mirrors what-rag) */
+.corner { position: absolute; width: 16px; height: 16px; pointer-events: none; z-index: 2; opacity: 0.7; }
+.corner svg { display: block; }
+.corner.tl { top: 11px; left: 11px; }
+.corner.tr { top: 11px; right: 11px; transform: scaleX(-1); }
+.corner.bl { bottom: 11px; left: 11px; transform: scaleY(-1); }
+.corner.br { bottom: 11px; right: 11px; transform: scale(-1, -1); }
+
+/* controls row: breadcrumb + zoom-out share a row (NO compass here) */
+.cat-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-0) var(--sp-1);
+  margin-bottom: 2px;
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.cat-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
+
+/* ============================================================
+   LEVEL-1  strategy panel (inline-grow detail)
+   ============================================================ */
+.strat-panel {
+  position: relative;
+  z-index: 5;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-3) var(--sp-3) 14px;
+  opacity: 0;
+  transform: scale(1.02);
+  animation: stratIn 360ms var(--ease-1) forwards;
+}
+@keyframes stratIn {
+  to { opacity: 1; transform: scale(1); }
+}
+.strat-panel h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  margin: 0 0 var(--sp-1);
+  color: var(--c-heading);
+}
+/* heading is a programmatic focus target; suppress UA ring */
+.strat-panel h2:focus,
+.strat-panel h2:focus-visible { outline: none; }
+.strat-panel h3 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-accent-2);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.strat-panel p {
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+  margin: var(--sp-1) 0;
+}
+
+/* ratings recap chips */
+.strat-recap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin: var(--sp-1) 0 var(--sp-2);
+}
+.strat-recap__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.strat-recap__lbl {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+}
+
+/* algorithm ordered steps */
+.strat-algo {
+  margin: var(--sp-1) 0;
+  padding-left: 1.4em;
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.strat-algo li { margin: var(--sp-1) 0; }
+
+/* runnable Python (frozen dark code-plate -- AtlasMD 2.1, no token) */
+.strat-py {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-1) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.strat-py code { font-family: inherit; color: inherit; background: none; border: none; padding: 0; }
+
+/* static schematic caption (the 4 non-anim strategies) */
+.strat-schematic {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  font-style: italic;
+  color: var(--c-text-muted);
+  border-left: var(--bw-2) solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-1);
+}
+
+/* ============================================================
+   chunk-anim.js scene hooks (transform/opacity only)
+   The module sets inline transform/opacity; these rules supply
+   the base geometry + token-driven color. ALL hooks styled.
+   ============================================================ */
+.strat-anim { margin: var(--sp-1) 0 4px; }
+
+.chunk-anim {
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-accent-3-soft);
+  padding: var(--sp-2) var(--sp-2) var(--sp-1);
+}
+.chunk-anim__caption {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  line-height: 1.45;
+  color: var(--c-text-muted);
+  margin: 0 0 var(--sp-2);
+}
+
+/* per-mode wrap modifiers (sceneShell sets one of these on .chunk-anim).
+   Each mode carries a left accent bar in its own token so the five cut
+   mechanisms read as distinct scenes; geometry stays shared. */
+.chunk-anim--fixed { border-left: 3px solid var(--c-accent-2); }
+.chunk-anim--sliding { border-left: 3px solid var(--c-accent-1); }
+.chunk-anim--recursive { border-left: 3px solid var(--c-accent-3); }
+.chunk-anim--structure { border-left: 3px solid var(--c-progress); }
+.chunk-anim--semantic { border-left: 3px solid var(--c-accent-4); }
+/* the semantic scene shows sentence rows, not a single char line */
+.chunk-anim--semantic .chunk-anim__stage { padding: var(--sp-1) var(--sp-2); }
+.chunk-anim__stage {
+  position: relative;
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-2);
+  overflow-x: auto;
+}
+
+/* the monospace text line the cuts/windows ride on */
+.chunk-anim__line {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 2.1;
+  color: var(--c-text);
+  white-space: nowrap;
+}
+.chunk-anim__line--wrap { white-space: normal; word-break: break-word; }
+
+/* per-char spans (cuts anchor on exact char boundaries) */
+.chunk-anim__char {
+  position: relative;
+  display: inline-block;
+  transition: opacity var(--dur-2) var(--ease-1);
+}
+.chunk-anim__char--sp { white-space: pre; }
+.chunk-anim__char--nl { display: inline; }
+
+/* vertical cut line; module animates scaleY 0->1 (transform-origin top) */
+.chunk-anim__cut {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  margin: 0 1px;
+  border-left: var(--bw-2) solid var(--c-accent-2);
+  align-self: stretch;
+  height: 1.5em;
+  vertical-align: -0.35em;
+  transform-origin: top center;
+  transform: scaleY(0);
+  opacity: 0;
+}
+/* recursive descent: per-level cut color (lvl-0 coarse .. lvl-3 fine) */
+.chunk-anim__cut--lvl-0 { border-color: var(--c-accent-2); }
+.chunk-anim__cut--lvl-1 { border-color: var(--c-accent-3); }
+.chunk-anim__cut--lvl-2 { border-color: var(--c-accent-1); }
+.chunk-anim__cut--lvl-3 { border-color: var(--c-accent-4); }
+/* structure-aware: allowed boundary vs forbidden mid-sentence */
+.chunk-anim__cut--ok { border-color: var(--c-progress); }
+.chunk-anim__cut--bad { border-color: var(--c-accent-2); border-left-style: dashed; }
+
+/* sliding-window overlays (module animates translateX + width) */
+.chunk-anim__window {
+  position: absolute;
+  top: 0.1em;
+  left: 0;
+  height: 1.7em;
+  background: var(--c-accent-1-soft);
+  border: var(--bw-1) solid var(--c-accent-1);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: opacity var(--dur-2) var(--ease-1);
+}
+.chunk-anim__overlap {
+  position: absolute;
+  top: 0.1em;
+  left: 0;
+  height: 1.7em;
+  background: var(--c-accent-2-soft);
+  border: var(--bw-1) dashed var(--c-accent-2);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0);
+  transition: opacity var(--dur-2) var(--ease-1);
+}
+
+/* semantic: sentence rows + neighbour-similarity bars + gap cut markers */
+.chunk-anim__sents { display: flex; flex-direction: column; gap: 2px; }
+.chunk-anim__sent {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  font-family: var(--font-body);
+  font-size: var(--fs-1);
+  color: var(--c-text);
+  padding: 3px 0;
+}
+.chunk-anim__sent-idx {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  color: var(--c-text-muted);
+  flex: 0 0 auto;
+  min-width: 1.4em;
+}
+.chunk-anim__sent-text { flex: 1 1 auto; }
+
+.chunk-anim__gap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 2px 0 2px 1.6em;
+  border-left: var(--bw-2) solid transparent;
+  margin-left: 0.4em;
+  transition: border-color var(--dur-2) var(--ease-1);
+}
+.chunk-anim__gap--cut.is-cut {
+  border-left-color: var(--c-progress);
+  border-left-style: dashed;
+}
+.chunk-anim__bar-wrap {
+  display: inline-block;
+  width: 64px;
+  height: 8px;
+  background: var(--c-surface-3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+/* similarity bar: module animates scaleY 0->val (transform-origin bottom) */
+.chunk-anim__bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--c-accent-1);
+  transform-origin: left center;
+  transform: scaleX(0);
+  opacity: 1;
+}
+.chunk-anim__bar.is-low { background: var(--c-accent-2); }
+.chunk-anim__sim {
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+}
+
+/* ---- timeline.js control shell (chunk-anim mounts .timeline) ---------- */
+.chunk-anim__timeline,
+.timeline {
+  display: block;
+  margin-top: var(--sp-2);
+}
+.timeline__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+}
+.timeline .btn {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  color: var(--c-link);
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  min-height: 32px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sheen);
+  transition: color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.timeline .btn:hover { color: var(--c-link-hover); border-color: var(--c-accent-3); }
+.timeline .btn:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 1px; }
+.timeline__scrub {
+  flex: 1 1 120px;
+  min-width: 90px;
+  accent-color: var(--c-accent-2);
+}
+.timeline__track {
+  flex: 1 1 100%;
+  height: 5px;
+  background: var(--c-surface-3);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: var(--shadow-track);
+}
+.timeline__progress {
+  display: block;
+  block-size: 100%;
+  inline-size: 0;
+  background: var(--c-progress);
+  border-radius: 3px;
+}
+.timeline__caption {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+  margin: var(--sp-1) 0 0;
+}
+
+/* ---- responsive: hold at 390 / 320 ----------------------------------- */
+@media (max-width: 560px) {
+  .strat-panel { padding: var(--sp-3) 14px 14px; }
+  .strat-panel h2 { font-size: 1.1rem; }
+  .strat-panel p,
+  .strat-algo { font-size: var(--fs-1); }
+  .chunk-anim__line { font-size: 12px; }
+}
+
+/* reduced-motion: chunk-anim snaps to end state over the SAME DOM. The
+   transform/opacity values are driven inline by timeline.js (progress=1/atEnd)
+   under reduce; here we only kill the panel/char/bar/window transitions so
+   nothing eases. (AtlasMD 1.5 / do-not 7) */
+@media (prefers-reduced-motion: reduce) {
+  .strat-panel { animation: none; opacity: 1; transform: none; }
+  .chunk-anim__char,
+  .chunk-anim__window,
+  .chunk-anim__overlap,
+  .chunk-anim__gap { transition: none !important; }
+}
+
+/* ============================================================
+   CHAPTER PROSE (ported manuscript)
+   Full chapter text as semantic article content; mirrored inside
+   .no-js-only so the chapter reads complete with JavaScript off.
+   Structure + spacing only; color/space/motion via var(--...).
+   ============================================================ */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+
+/* the no-JS static catalog table mirror -- the scroller carries the margin so
+   spacing holds whether or not the table is wrapped. */
+.chapter-prose .cat-scroll { margin: var(--sp-2) 0; }
+.chapter-prose .cat-table { margin: var(--sp-2) 0; }
+.chapter-prose .cat-scroll > .cat-table { margin: 0; }
+.chapter-prose .cat-table caption {
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  margin-bottom: var(--sp-1);
+}
+.chapter-prose blockquote {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-1) var(--sp-3);
+  margin: var(--sp-2) 0;
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+}
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+@media (max-width: 560px) {
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
+}

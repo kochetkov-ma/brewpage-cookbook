@@ -2,9 +2,20 @@
 
 Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and games, each built as a self-contained interactive artifact and published live on [brewpage.app](https://brewpage.app). It is a standalone editorial brand under the BrewPage ecosystem (in the spirit of the [anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) and Stripe Press), not a docs folder or a marketing site. The target is roughly 40 recipes over time. Status: **SCAFFOLD** (pre-release, no production tag yet). Bootstrapped 2026-05-21.
 
-## First recipe
+## Recipe index
 
-[RAG Guide](./recipes/rag-guide.md) -- a long-form interactive walkthrough of retrieval-augmented generation, with inline-SVG drill-down diagrams, mini-games and client-side search. It doubles as the production dogfood for the publish pipeline. _Draft._
+The machine-readable index is [`recipes/index.json`](./recipes/index.json).
+
+| Recipe | Status | Languages | Live URL | Source |
+|--------|--------|-----------|----------|--------|
+| **RAG Guide** | Staged (publish pending) | RU (default), EN-ready | _assigned at publish_ -- placeholder `https://brewpage.app/REPLACE_AT_PUBLISH` | [`recipes/rag-guide/`](./recipes/rag-guide/) |
+
+[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (RU default, EN-ready). It doubles as the production dogfood for the publish pipeline. The built site is staged and verified; the live URL is assigned when it is published to BrewPage.
+
+Every recipe page back-links to both ecosystem surfaces (mandatory cross-link rule):
+
+- BrewPage platform -- https://brewpage.app
+- Ecosystem coordination / contract repo -- https://github.com/kochetkov-ma/brewpage-openapi
 
 The editorial plan for it lives as a per-task design spec in the board: [`.claude/features/specs/T-RECIPE-RAG-GUIDE.md`](./.claude/features/specs/T-RECIPE-RAG-GUIDE.md).
 

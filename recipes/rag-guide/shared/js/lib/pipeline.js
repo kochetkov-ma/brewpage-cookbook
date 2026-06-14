@@ -43,8 +43,19 @@
 
 import { qs, el, svg, clear, listeners } from "./dom.js";
 import { prefersReducedMotion } from "./a11y.js";
+import { getLocale } from "./i18n.js";
 
 const SPINE_LEN = 680; // matches stroke-dasharray on the spine paths in markup
+
+// Resolve a value that may be a { ru, en } pair OR a plain lang-neutral string
+// (code-ish html, vec numbers, file paths) against the given locale. Falls back
+// ru -> en -> "" so a half-translated field never renders [object Object].
+function loc(v, lang) {
+  if (v && typeof v === "object" && !Array.isArray(v) && ("ru" in v || "en" in v)) {
+    return v[lang] != null ? v[lang] : v.ru != null ? v.ru : v.en != null ? v.en : "";
+  }
+  return v != null ? v : "";
+}
 
 const LENS_PLUS =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
@@ -64,6 +75,15 @@ export function init(rootEl, config) {
   const L = listeners();
   const reduced = prefersReducedMotion();
 
+  // Active locale: explicit config.lang wins, else the i18n store. setLang()
+  // updates it and re-labels the node-cards (page glue calls it on lang:change).
+  let lang = cfg.lang || getLocale();
+  const tr = (v) => loc(v, lang);
+
+  // "you are here" + lens-plus fallback labels, localised.
+  const HERE_LABEL = { ru: "вы здесь", en: "you are here" };
+  const MORE_LABEL = { ru: "подробнее", en: "more" };
+
   const nodesHost = rootEl ? qs('[data-slot="nodes"]', rootEl) : null;
   const flowHost = rootEl ? qs('[data-slot="flow"]', rootEl) : null;
 
@@ -79,10 +99,12 @@ export function init(rootEl, config) {
     order.forEach((id) => {
       const n = nodes[id];
       if (!n) return;
-      const here = el("span", { class: "here", text: "вы здесь" });
+      const nameTxt = tr(n.label) || id;
+      const hintTxt = tr(n.hint);
+      const here = el("span", { class: "here", text: tr(HERE_LABEL) });
       const idx = el("span", { class: "idx", text: n.idx || "" });
-      const name = el("span", { class: "name", text: n.label || id });
-      const hint = el("span", { class: "hint", text: n.hint || "" });
+      const name = el("span", { class: "name", text: nameTxt });
+      const hint = el("span", { class: "hint", text: hintTxt });
       const card = el(
         "div",
         {
@@ -92,14 +114,14 @@ export function init(rootEl, config) {
             tabindex: "0",
             "data-node": id,
             "data-anchor": String(n.anchor != null ? n.anchor : 0),
-            "aria-label": (n.label || id) + (n.hint ? ", " + n.hint : ""),
+            "aria-label": nameTxt + (hintTxt ? ", " + hintTxt : ""),
           },
         },
         [here, idx, name, hint]
       );
       const open = () => {
         if (!camera) return;
-        camera.openNode({ id, crumb: n.crumb || n.label || id, anchor: n.anchor, fromEl: card });
+        camera.openNode({ id, crumb: tr(n.crumb) || tr(n.label) || id, anchor: n.anchor, fromEl: card });
       };
       L.on(card, "click", open);
       L.on(card, "keydown", (e) => {
@@ -145,23 +167,23 @@ export function init(rootEl, config) {
 
   // ===== block renderers (data -> DOM) ====================================
   function elReadout(b) {
-    const lbl = el("span", { class: "lbl", text: b.label || "" });
-    const body = el("span", { html: b.html || "" });
+    const lbl = el("span", { class: "lbl", text: tr(b.label) });
+    const body = el("span", { html: tr(b.html) || "" });
     return el("div", { class: "readout" }, [lbl, body]);
   }
 
   function elEmbed(b) {
     const wrap = el("div", { class: "embed-anim", attrs: { "aria-hidden": "true" } });
-    const stages = b.stages || [];
+    const stages = (b.stages || []).map((s) => tr(s));
     wrap.appendChild(el("p", { class: "embed-stage", text: stages[0] || "" }));
-    wrap.appendChild(el("div", { class: "embed-text", text: b.text || "" }));
+    wrap.appendChild(el("div", { class: "embed-text", text: tr(b.text) || "" }));
     wrap.appendChild(el("p", { class: "embed-stage", text: stages[1] || "" }));
     const toks = el("div", { class: "embed-tokens" });
-    (b.tokens || []).forEach((t) => toks.appendChild(el("span", { class: "tok", text: t })));
+    (b.tokens || []).forEach((t) => toks.appendChild(el("span", { class: "tok", text: tr(t) })));
     wrap.appendChild(toks);
     wrap.appendChild(el("p", { class: "embed-stage", text: stages[2] || "" }));
     const vec = el("div", { class: "embed-vec" });
-    vec.appendChild(el("span", { class: "vlbl", text: b.vlbl || "" }));
+    vec.appendChild(el("span", { class: "vlbl", text: tr(b.vlbl) }));
     (b.vec || []).forEach((v) => vec.appendChild(el("span", { class: "vnum", text: v })));
     if (b.ellip) vec.appendChild(el("span", { class: "vellip", text: b.ellip }));
     wrap.appendChild(vec);
@@ -184,8 +206,8 @@ export function init(rootEl, config) {
   function elCards(b) {
     const wrap = el("div", { class: "cards" });
     (b.items || []).forEach((it) => {
-      const src = el("div", { class: "src", text: it.src || "" });
-      const txt = el("div", { class: "txt", text: it.txt || "" });
+      const src = el("div", { class: "src", text: tr(it.src) });
+      const txt = el("div", { class: "txt", text: tr(it.txt) });
       wrap.appendChild(el("div", { class: "ccard" }, [src, txt]));
     });
     return wrap;
@@ -195,18 +217,19 @@ export function init(rootEl, config) {
     const wrap = el("div", { class: "assemble" });
     const prompt = el("div", { class: "prompt" });
     (b.lines || []).forEach((ln) => {
-      prompt.appendChild(el("span", { class: (ln.cls || "") + " ctx-line", text: ln.text || "" }));
+      prompt.appendChild(el("span", { class: (ln.cls || "") + " ctx-line", text: tr(ln.text) }));
     });
     wrap.appendChild(prompt);
     if (b.budget) {
       const meterFill = el("i", { attrs: { "data-w": String(b.budget.w != null ? b.budget.w : 0) } });
       const meter = el("span", { class: "meter", attrs: { "aria-hidden": "true" } }, [meterFill]);
       const amount = el("b", { text: b.budget.b || "" });
+      const budgetLbl = tr(b.budgetLabel) || (lang === "en" ? "token budget" : "бюджет токенов");
       const budget = el("div", { class: "budget" }, [
-        (b.budgetLabel || "бюджет токенов") + " ",
+        budgetLbl + " ",
         meter,
         amount,
-        " " + (b.budgetUnit || ""),
+        " " + tr(b.budgetUnit),
       ]);
       wrap.appendChild(budget);
     }
@@ -214,23 +237,23 @@ export function init(rootEl, config) {
   }
 
   function elAnswer(b) {
-    return el("div", { class: "answer", html: b.html || "" });
+    return el("div", { class: "answer", html: tr(b.html) || "" });
   }
 
   function renderBlocks(parent, blocks) {
     (blocks || []).forEach((b) => {
       switch (b.kind) {
         case "tag":
-          parent.appendChild(el("p", { class: "tag", text: b.text || "" }));
+          parent.appendChild(el("p", { class: "tag", text: tr(b.text) }));
           break;
         case "p":
-          parent.appendChild(el("p", { text: b.text || "" }));
+          parent.appendChild(el("p", { text: tr(b.text) }));
           break;
         case "note":
-          parent.appendChild(el("p", { class: "note", text: b.text || "" }));
+          parent.appendChild(el("p", { class: "note", text: tr(b.text) }));
           break;
         case "rm":
-          parent.appendChild(el("div", { class: "rm-only", text: b.text || "" }));
+          parent.appendChild(el("div", { class: "rm-only", text: tr(b.text) }));
           break;
         case "readout":
           parent.appendChild(elReadout(b));
@@ -263,25 +286,29 @@ export function init(rootEl, config) {
     if (entry.kind === "node") {
       const n = nodes[entry.id];
       if (!n) return null;
+      const nLabel = tr(n.label) || entry.id;
       const panel = el("div", {
         class: "detail show",
-        attrs: { role: "dialog", "aria-modal": "false", "aria-label": n.label || entry.id },
+        attrs: { role: "group", "aria-label": nLabel },
       });
-      panel.appendChild(el("h2", { text: (n.idx ? n.idx + " - " : "") + (n.label || entry.id) }));
+      panel.appendChild(el("h2", { text: (n.idx ? n.idx + " - " : "") + nLabel }));
       const spec = n.panel || {};
-      if (spec.tag) panel.appendChild(el("p", { class: "tag", text: spec.tag }));
+      if (spec.tag) panel.appendChild(el("p", { class: "tag", text: tr(spec.tag) }));
       renderBlocks(panel, spec.blocks);
       // inline lens-plus drill to level 2 (if this node has deep content)
       if (n.deep && api && typeof api.openDeep === "function") {
+        const deepTag = tr(n.deep.tag) || tr(n.deep.label) || "";
+        const deepCrumb = tr(n.deep.crumb) || tr(MORE_LABEL);
+        const openLabel = lang === "en" ? "Open: " : "Открыть: ";
         const btn = el("button", {
           class: "drill",
-          attrs: { type: "button", "aria-label": "Открыть: " + (n.deep.tag || n.deep.label || "") },
+          attrs: { type: "button", "aria-label": openLabel + deepTag },
           html: LENS_PLUS,
         });
-        btn.appendChild(document.createTextNode(" " + (n.deep.drillLabel || n.deep.crumb || "подробнее")));
+        btn.appendChild(document.createTextNode(" " + (tr(n.deep.drillLabel) || deepCrumb)));
         L.on(btn, "click", (e) => {
           e.preventDefault();
-          api.openDeep({ id: entry.id + ".deep", crumb: n.deep.crumb || "подробнее", data: { parent: entry.id } });
+          api.openDeep({ id: entry.id + ".deep", crumb: deepCrumb, data: { parent: entry.id } });
         });
         panel.appendChild(btn);
       }
@@ -294,12 +321,13 @@ export function init(rootEl, config) {
       const n = parentId ? nodes[parentId] : null;
       const deep = n && n.deep;
       if (!deep) return null;
+      const deepLabel = tr(deep.label) || entry.crumb || "";
       const panel = el("div", {
         class: "detail show",
-        attrs: { role: "dialog", "aria-modal": "false", "aria-label": deep.label || entry.crumb || "" },
+        attrs: { role: "group", "aria-label": deepLabel },
       });
-      panel.appendChild(el("h2", { text: deep.label || entry.crumb || "" }));
-      if (deep.tag) panel.appendChild(el("p", { class: "tag", text: deep.tag }));
+      panel.appendChild(el("h2", { text: deepLabel }));
+      if (deep.tag) panel.appendChild(el("p", { class: "tag", text: tr(deep.tag) }));
       renderBlocks(panel, deep.blocks);
       return panel;
     }
@@ -435,10 +463,30 @@ export function init(rootEl, config) {
     startSpine();
   }
 
+  // ----- locale switch (page glue calls on lang:change) -------------------
+  // Re-labels every node-card in the active language and re-applies earned
+  // states. The OPEN drill panel is owned by the camera; because renderPanel()
+  // reads the live `lang` closure, we update `lang` FIRST and then ask the
+  // camera to re-render the open entry (camera.refresh()) so the open card +
+  // its breadcrumb re-localize without relying on lang:change ordering. The
+  // camera's own lang:change listener may also fire; re-render is idempotent.
+  function setLang(next) {
+    const n = next === "en" || next === "ru" ? next : lang;
+    if (n === lang) return lang;
+    lang = n;
+    clearTeachTimers();
+    buildNodes();
+    refreshNodeStates();
+    if (camera && typeof camera.refresh === "function") camera.refresh();
+    return lang;
+  }
+
   return {
     renderPanel,
     markNode,
     refreshNodeStates: refreshAll,
+    setLang,
+    getLang: () => lang,
     destroy() {
       clearTeachTimers();
       if (io) io.disconnect();

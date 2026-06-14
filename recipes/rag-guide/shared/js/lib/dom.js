@@ -109,9 +109,17 @@ export function listeners() {
   };
 }
 
-/** Fetch + parse JSON with a clear error on failure. */
+/**
+ * Fetch + parse JSON with a clear error on failure.
+ *
+ * cache: "no-cache" forces the browser to revalidate with the server on every
+ * load (conditional request); the server returns fresh content when the file
+ * changed and 304 otherwise. This keeps edited data files (nav.json etc.) from
+ * being served stale from the HTTP cache after a normal reload, without any
+ * query-string cache-buster.
+ */
 export async function fetchJson(url) {
-  const res = await fetch(url, { credentials: "same-origin" });
+  const res = await fetch(url, { cache: "no-cache", credentials: "same-origin" });
   if (!res.ok) throw new Error(`fetchJson ${url}: HTTP ${res.status}`);
   return res.json();
 }

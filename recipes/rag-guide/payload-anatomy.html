@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Анатомия payload - один запрос RAG - RAG С НУЛЯ</title>
+<meta name="description" content="Анатомия payload: реальный обмен с Anthropic Messages API из четырех ходов, размеченный по 17 функциональным блокам - функция и роль в конвейере RAG. Нажмите блок, чтобы заглянуть внутрь. Интерактивная глава BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
+     + this section's own structural CSS (linked only here, never base.css). -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/payload-anatomy.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К payload" data-en="Skip to the payload">К payload</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <div class="site-header__brand">
+      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+          <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+          <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+          <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+        </svg>
+      </a>
+      <div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Разрез - Анатомия payload" data-en="Cross-section - Payload anatomy">Разрез - Анатомия payload</div>
+      </div>
+    </div>
+    <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+  <!-- ===================== the framed atlas plate (payload drill) ===================== -->
+  <!-- drilldown-host: stage + crumbs + zoomout + panel slots (AtlasMD 3.6).
+       Stage holds the annotated <pre> payload (collapses/scales on zoom);
+       panel mounts the level-1 annotation card. openNode ONLY: 2 levels total
+       (zoom 0 = whole payload, zoom 1 = one block). -->
+  <section class="plate" data-component="plate drilldown-host" aria-labelledby="plateTitle">
+    <span class="corner tl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner tr"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner bl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner br"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+
+    <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
+    <div class="plate-head">
+      <div class="title-block">
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Анатомия payload" data-en="Payload anatomy">Анатомия payload</h1>
+        <p data-i18n="plateSub" data-ru="Один реальный обмен с моделью из четырех ходов: запрос, tool_use, tool_result, ответ. Каждый функциональный блок размечен. Нажмите блок, чтобы увидеть его функцию и роль в RAG." data-en="One real four-turn exchange with the model: request, tool_use, tool_result, answer. Every functional block is annotated. Tap a block to see its function and role in RAG.">Один реальный обмен с моделью из четырех ходов: запрос, tool_use, tool_result, ответ. Каждый функциональный блок размечен. Нажмите блок, чтобы увидеть его функцию и роль в RAG.</p>
+      </div>
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Trebuchet MS, sans-serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- controls row: breadcrumb + zoom-out (NO compass here) -->
+    <div class="payload-controls js-only">
+      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+      <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- the zoom camera stage: holds the annotated payload (level 0) and grows
+         to fit the active block card. Turns are built into .pl-camera by JS. -->
+    <div class="stage pl-stage js-only" data-slot="stage">
+      <div class="pl-camera">
+        <!-- annotated <pre> turns are injected here by payload-anatomy.js -->
+      </div>
+    </div>
+
+    <!-- the inline-grow detail panel mount (drilldown-zoom renders the card here) -->
+    <div class="detail-wrap js-only" data-slot="panel" aria-live="polite"></div>
+
+    <!-- NO-JS fallback: the full static payload + the 17-block explanation list,
+         so the chapter teaches with JS off (AtlasMD section 5). -->
+    <div class="no-js-only">
+      <p class="pl-nojs__intro">Размеченный payload работает и без JavaScript: ниже - тот же обмен из четырех ходов как статический JSON, а под ним - список всех 17 функциональных блоков с их функцией и ролью в конвейере RAG. Включите JavaScript, чтобы нажимать блоки прямо в JSON и зумировать внутрь каждого.</p>
+
+      <figure class="pl-turn">
+        <figcaption class="pl-turn__cap"><span class="pl-turn__dir pl-turn__dir--request">&gt;&gt;</span><span class="pl-turn__title">Ход 1. Запрос: вопрос + описание инструмента поиска</span></figcaption>
+        <pre class="pl-code"><code>{
+  "model": "claude-sonnet-4-5",
+  "max_tokens": 1024,
+  "thinking": { "type": "enabled", "budget_tokens": 2048 },
+  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
+  "tools": [
+    {
+      "name": "search_docs",
+      "description": "Semanticheskij poisk top-k chunkov po vektornoj baze znanij.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Poiskovyj zapros polzovatelya" },
+          "top_k": { "type": "integer", "description": "Skol'ko blizhajshih chunkov vernut'", "default": 4 }
+        },
+        "required": ["query"]
+      }
+    }
+  ],
+  "tool_choice": { "type": "auto" },
+  "messages": [
+    { "role": "user", "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?" }
+  ]
+}</code></pre>
+      </figure>
+
+      <figure class="pl-turn">
+        <figcaption class="pl-turn__cap"><span class="pl-turn__dir pl-turn__dir--response">&lt;&lt;</span><span class="pl-turn__title">Ход 2. Ответ: модель рассуждает и просит вызвать поиск</span></figcaption>
+        <pre class="pl-code"><code>{
+  "id": "msg_01XAbcRequestDemo",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-4-5",
+  "content": [
+    { "type": "thinking", "thinking": "Vopros pro dni otpuska posle treh let stazha...", "signature": "EqoBCkgDEMODEMOsignaturePLACEHOLDER==" },
+    { "type": "tool_use", "id": "toolu_01A09q90qwDEMO", "name": "search_docs", "input": { "query": "dni otpuska stazh tri goda politika", "top_k": 4 } }
+  ],
+  "stop_reason": "tool_use",
+  "stop_sequence": null,
+  "usage": { "input_tokens": 412, "output_tokens": 76 }
+}</code></pre>
+      </figure>
+
+      <figure class="pl-turn">
+        <figcaption class="pl-turn__cap"><span class="pl-turn__dir pl-turn__dir--request">&gt;&gt;</span><span class="pl-turn__title">Ход 3. Запрос с tool_result: возвращаем найденные чанки</span></figcaption>
+        <pre class="pl-code"><code>{
+  "model": "claude-sonnet-4-5",
+  "max_tokens": 1024,
+  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs...",
+  "messages": [
+    { "role": "user", "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?" },
+    {
+      "role": "assistant",
+      "content": [
+        { "type": "thinking", "thinking": "...", "signature": "EqoBCkgDEMODEMOsignaturePLACEHOLDER==" },
+        { "type": "tool_use", "id": "toolu_01A09q90qwDEMO", "name": "search_docs", "input": { "query": "dni otpuska stazh tri goda politika", "top_k": 4 } }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "toolu_01A09q90qwDEMO",
+          "content": [
+            { "type": "text", "text": "[chunk c-118 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.83 | rank=1] Posle 3 polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god." },
+            { "type": "text", "text": "[chunk c-119 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.71 | rank=2] Bazovyj otpusk pri stazhe do 3 let sostavlyaet 24 kalendarnyh dnya." }
+          ]
+        }
+      ]
+    }
+  ]
+}</code></pre>
+      </figure>
+
+      <figure class="pl-turn">
+        <figcaption class="pl-turn__cap"><span class="pl-turn__dir pl-turn__dir--response">&lt;&lt;</span><span class="pl-turn__title">Ход 4. Заземленный ответ модели</span></figcaption>
+        <pre class="pl-code"><code>{
+  "id": "msg_01YDefResponseDemo",
+  "type": "message",
+  "role": "assistant",
+  "model": "claude-sonnet-4-5",
+  "content": [
+    { "type": "text", "text": "Posle treh polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god (istochnik: hr-policy.md, razdel Otpuska)." }
+  ],
+  "stop_reason": "end_turn",
+  "stop_sequence": null,
+  "usage": { "input_tokens": 638, "output_tokens": 41 }
+}</code></pre>
+      </figure>
+
+      <ol class="pl-blocklist">
+        <li><p class="blk">model <code>model</code></p><p class="fn"><span class="lbl">Function</span>Какую модель вызвать; сервер эхом возвращает этот id в каждом ответе.</p><p class="role"><span class="lbl">Role in RAG</span>Выбор генератора стадии Generation; задает предел длины контекста и стоимость.</p><p class="chap"><a href="generation.html">generation.html</a></p></li>
+        <li><p class="blk">budget <code>max_tokens</code></p><p class="fn"><span class="lbl">Function</span>Потолок длины ответа в токенах.</p><p class="role"><span class="lbl">Role in RAG</span>Контроль стоимости и задержки стадии Generation.</p><p class="chap"><a href="generation.html">generation.html</a></p></li>
+        <li><p class="blk">thinking-config <code>thinking.type, thinking.budget_tokens</code></p><p class="fn"><span class="lbl">Function</span>Включает расширенное рассуждение и задает его бюджет токенов.</p><p class="role"><span class="lbl">Role in RAG</span>Бюджет на рассуждение стадий retrieve и generation.</p><p class="chap"><a href="generation.html">generation.html</a></p></li>
+        <li><p class="blk">system <code>system</code></p><p class="fn"><span class="lbl">Function</span>Системная инструкция: отвечать только по найденному и честно признавать пробел.</p><p class="role"><span class="lbl">Role in RAG</span>Grounding: правила отвечать по контексту и цитировать источник - инструкция стадии Generation.</p><p class="chap"><a href="generation.html">generation.html</a></p></li>
+        <li><p class="blk">tools <code>tools[].name, description, input_schema</code></p><p class="fn"><span class="lbl">Function</span>Описывает доступные инструменты: имя, описание и input_schema функции search_docs.</p><p class="role"><span class="lbl">Role in RAG</span>Объявление шага Retrieve как вызываемой функции (Lewis et al., 2020).</p><p class="chap"><a href="search.html">search.html</a></p></li>
+        <li><p class="blk">tool-choice <code>tool_choice.type</code></p><p class="fn"><span class="lbl">Function</span>Управляет вызовом инструмента: auto отдает решение модели.</p><p class="role"><span class="lbl">Role in RAG</span>Управление тем, запускать ли Retrieve.</p><p class="chap"><a href="search.html">search.html</a></p></li>
+        <li><p class="blk">messages-user <code>messages[].role=user, content</code></p><p class="fn"><span class="lbl">Function</span>Реплика пользователя: вопрос или массив content-блоков (например tool_result).</p><p class="role"><span class="lbl">Role in RAG</span>Вопрос - вход всего конвейера: он становится вектором запроса на стадии retrieve.</p><p class="chap"><a href="search.html">search.html</a></p></li>
+        <li><p class="blk">messages-assistant <code>messages[].role=assistant, content[]</code></p><p class="fn"><span class="lbl">Function</span>Реплика модели, вставленная обратно в messages: сохраненные thinking и tool_use.</p><p class="role"><span class="lbl">Role in RAG</span>Без сохраненного запроса поиска следующий tool_result не с чем связать.</p></li>
+        <li><p class="blk">response-id <code>id, type, role, model</code></p><p class="fn"><span class="lbl">Function</span>Идентификатор и тип сообщения-ответа.</p><p class="role"><span class="lbl">Role in RAG</span>Привязка хода диалога и трассировка запроса в логах.</p></li>
+        <li><p class="blk">thinking-block <code>content[].type=thinking, thinking, signature</code></p><p class="fn"><span class="lbl">Function</span>Видимое рассуждение модели перед действием плюс криптографическая signature.</p><p class="role"><span class="lbl">Role in RAG</span>Reasoning: план стадии retrieve, а не финальный ответ.</p></li>
+        <li><p class="blk">tool-use <code>content[].type=tool_use, id, name, input</code></p><p class="fn"><span class="lbl">Function</span>Запрос модели вызвать инструмент: name search_docs, input с query и top_k.</p><p class="role"><span class="lbl">Role in RAG</span>Retrieve-вызов: query и top_k уходят в стадию поиска.</p><p class="chap"><a href="search.html">search.html</a></p></li>
+        <li><p class="blk">tool-result <code>content[].type=tool_result, tool_use_id, content[]</code></p><p class="fn"><span class="lbl">Function</span>Возврат результата инструмента в диалог: связан по tool_use_id, несет чанки как текст.</p><p class="role"><span class="lbl">Role in RAG</span>Augmented-шаг (Lewis et al., 2020): найденные top-k чанки подкладываются в контекст.</p><p class="chap"><a href="assemble-context.html">assemble-context.html</a></p></li>
+        <li><p class="blk">chunk-meta <code>source, section, date</code></p><p class="fn"><span class="lbl">Function</span>Метаданные чанка внутри tool_result, приклеенные к тексту куска.</p><p class="role"><span class="lbl">Role in RAG</span>Происхождение чанка: source/section/date задаются на стадии chunking.</p><p class="chap"><a href="chunking.html">chunking.html</a></p></li>
+        <li><p class="blk">retrieval-score <code>cosine, rank</code></p><p class="fn"><span class="lbl">Function</span>Оценка близости и позиция в top-k: cosine (0..1) и rank каждого чанка.</p><p class="role"><span class="lbl">Role in RAG</span>Качество retrieve: cosine - смысловая близость к запросу, rank - порядок в top-k.</p><p class="chap"><a href="search.html">search.html</a></p></li>
+        <li><p class="blk">text-answer <code>content[].type=text, text</code></p><p class="fn"><span class="lbl">Function</span>Финальный текст ответа: один блок content type text со ссылкой на source.</p><p class="role"><span class="lbl">Role in RAG</span>Generation: заземленный ответ из найденных чанков с явной ссылкой на источник.</p><p class="chap"><a href="generation.html">generation.html</a></p></li>
+        <li><p class="blk">stop-reason <code>stop_reason, stop_sequence</code></p><p class="fn"><span class="lbl">Function</span>Почему модель остановилась: tool_use - ждет результат; end_turn - закончила сама.</p><p class="role"><span class="lbl">Role in RAG</span>Управляющий сигнал: tool_use -&gt; ваш код выполняет поиск; end_turn -&gt; ответ готов.</p></li>
+        <li><p class="blk">usage <code>usage.input_tokens, usage.output_tokens</code></p><p class="fn"><span class="lbl">Function</span>Расход токенов за ход. В примере input растет с 412 (ход 2) до 638 (ход 4).</p><p class="role"><span class="lbl">Role in RAG</span>Сигнал стоимости и бюджета: рост input_tokens после tool_result - цена подложенного контекста.</p><p class="chap"><a href="assemble-context.html">assemble-context.html</a></p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/payload-anatomy.md (strategy A: md-as-source, hand-ported).
+       Always visible: reads fully with JS on or off. The interactive .js-only host
+       above only ENHANCES; this prose is the chapter text. -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
+      <p>Вы прошли весь маршрут - чанки, эмбеддинги, поиск, сборка контекста, генерация. Каждая глава показывала свою стадию отдельно. Но в живой системе все они сходятся в одну вещь: HTTP-запрос к LLM и ответ от нее. Это обычный JSON. И пока вы не увидите этот JSON целиком, с каждым полем на своем месте, RAG остается набором отдельных идей, а не одним механизмом.</p>
+      <p>Здесь мы разбираем один реальный обмен с моделью: запрос, который вы шлете, и ответ, который приходит. Поля настоящие - это формат Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). Каждый функциональный блок размечен дважды: что он делает технически и какую роль играет в конвейере RAG. Это та самая сборка retrieve-augment-generate из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), но уже не на схеме, а в байтах, которые уходят по проводу.</p>
+    </section>
+
+    <section aria-labelledby="pr-pipeline">
+      <h2 id="pr-pipeline">Один payload сквозь весь конвейер</h2>
+      <p>RAG-запрос к Anthropic Messages API устроен так: вы кладете инструкции-заземление в <code>system</code>, собранный контекст и вопрос - в <code>messages</code>, а сам поиск выражаете как вызов инструмента (<code>tools</code> плюс <code>tool_choice</code>) (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). Модель отвечает не одним текстом, а массивом блоков <code>content</code>: рассуждение (<code>thinking</code>), запрос на поиск (<code>tool_use</code>) и финальный текст. Поле <code>stop_reason</code> говорит, почему модель остановилась, а <code>usage</code> - сколько токенов это стоило (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).</p>
+      <p>Выше - реальный обмен из четырех ходов: вы шлете вопрос с описанием инструмента поиска, модель просит вызвать поиск (<code>tool_use</code>), вы возвращаете найденные чанки (<code>tool_result</code>), модель пишет заземленный ответ.</p>
+      <h3>Ход 1. Запрос: вопрос плюс описание инструмента поиска</h3>
+      <p><code>system</code> - это слой заземления (grounding): жесткая инструкция отвечать только по найденному и честно признавать пробел (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). В терминах RAG это и есть инструкция стадии generation из главы generation.html. <code>tools</code> описывает поиск как функцию, которую модель может вызвать - это объявление шага retrieve из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), выраженное в схеме tool use (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>tool_choice: auto</code> отдает модели решение, нужен ли поиск (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>thinking</code> включает расширенное рассуждение с бюджетом токенов (<a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a>).</p>
+      <h3>Ход 2. Ответ: модель рассуждает и просит вызвать поиск</h3>
+      <p>Блок <code>thinking</code> - это рассуждение модели перед действием; в RAG это видимый план стадии retrieve, а не финальный ответ (<a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a>). Блок <code>tool_use</code> - это и есть запрос на поиск: модель просит вызвать <code>search_docs</code> с конкретным <code>query</code> и <code>top_k</code> (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>stop_reason: tool_use</code> - управляющий сигнал: модель остановилась не потому, что закончила, а потому, что ждет результат инструмента; ваш код обязан выполнить поиск и вернуть результат (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). <code>usage</code> - сигнал бюджета и стоимости: <code>input_tokens</code> и <code>output_tokens</code> за этот ход (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>); в RAG раздутый <code>input_tokens</code> - первый признак, что собранный контекст слишком велик (см. assemble-context.html).</p>
+      <h3>Ход 3. Запрос с tool_result: возвращаем найденные чанки</h3>
+      <p>Ваш код запускает поиск (стадия retrieve: запрос -&gt; вектор -&gt; top-k по косинусу, как в search.html), затем продолжает тот же разговор, добавляя ответ ассистента и блок <code>tool_result</code> с найденными чанками. Форма вектора и метрика косинуса - из OpenAI Embeddings guide (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>).</p>
+      <p><code>tool_result</code> - это возврат стадии retrieve в разговор: связан с запросом по <code>tool_use_id</code>, несет найденные чанки как текст (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). Внутри каждого чанка - метаданные стадий конвейера: <code>source</code>/<code>section</code>/<code>date</code> приходят из чанкинга (chunking.html), а <code>cosine</code>/<code>rank</code> - из поиска (search.html, метрика косинуса по OpenAI Embeddings guide, <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>). Этот блок и есть Augmented-шаг из Lewis et al., 2020: найденное подкладывается в контекст модели перед генерацией (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>).</p>
+      <h3>Ход 4. Заземленный ответ модели</h3>
+      <p>Здесь <code>content</code> - один блок <code>text</code>: финальный заземленный ответ со ссылкой на <code>source</code>, как требовала инструкция в <code>system</code>. Это стадия Generation из Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>); связь с конкретными полями описана в generation.html. <code>stop_reason: end_turn</code> - управляющий сигнал, что модель закончила сама, а не из-за лимита (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). <code>usage.input_tokens</code> вырос с 412 до 638 - это цена подложенного контекста: тот самый бюджетный сигнал, по которому в assemble-context.html решают, что обрезать.</p>
+    </section>
+
+    <section aria-labelledby="pr-map">
+      <h2 id="pr-map">Карта блоков: функция и роль в RAG</h2>
+      <p>Greppable-таблица: каждый функциональный блок payload, его поля, техническая функция и доменная роль в конвейере RAG. Это и есть карта блоков для drill-взаимодействия выше; без JS она же служит статическим списком под payload.</p>
+      <ul>
+        <li><strong>model</strong> (<code>model</code>) - какую модель вызвать; выбор генератора стадии Generation, влияет на лимит длины и стоимость.</li>
+        <li><strong>budget</strong> (<code>max_tokens</code>) - потолок длины ответа; контроль стоимости и задержки стадии Generation.</li>
+        <li><strong>thinking-config</strong> (<code>thinking.type</code>, <code>thinking.budget_tokens</code>) - включить расширенное рассуждение и его бюджет; бюджет на рассуждение стадий retrieve и generation.</li>
+        <li><strong>system</strong> (<code>system</code>) - системная инструкция модели; grounding: отвечать только по контексту плюс цитировать источник (generation.html).</li>
+        <li><strong>tools</strong> (<code>tools[].name</code>, <code>description</code>, <code>input_schema</code>) - описание доступных инструментов; объявление шага Retrieve как вызываемой функции (Lewis et al., 2020).</li>
+        <li><strong>tool-choice</strong> (<code>tool_choice.type</code>) - разрешить или заставить вызов; управление тем, запускать ли retrieve.</li>
+        <li><strong>messages-user</strong> (<code>messages[].role=user</code>, <code>content</code>) - реплика пользователя; вопрос - вход всего конвейера.</li>
+        <li><strong>messages-assistant</strong> (<code>messages[].role=assistant</code>, <code>content[]</code>) - реплика модели в истории; сохраненные рассуждение и запрос поиска для продолжения диалога.</li>
+        <li><strong>response-id</strong> (<code>id</code>, <code>type</code>, <code>role</code>, <code>model</code>) - идентификатор и тип ответа; привязка хода диалога, трассировка запроса.</li>
+        <li><strong>thinking-block</strong> (<code>content[].type=thinking</code>, <code>thinking</code>, <code>signature</code>) - видимое рассуждение модели; reasoning: план стадии retrieve, не финальный ответ.</li>
+        <li><strong>tool-use</strong> (<code>content[].type=tool_use</code>, <code>id</code>, <code>name</code>, <code>input</code>) - запрос модели вызвать инструмент; retrieve-вызов: query и top_k уходят в поиск (search.html).</li>
+        <li><strong>tool-result</strong> (<code>tool_result.tool_use_id</code>, <code>content[]</code>) - возврат результата инструмента; Augmented: найденные top-k чанки подкладываются в контекст (assemble-context.html).</li>
+        <li><strong>chunk-meta</strong> (<code>source</code>, <code>section</code>, <code>date</code>) - метаданные чанка; происхождение: задаются на стадии chunking (chunking.html).</li>
+        <li><strong>retrieval-score</strong> (<code>cosine</code>, <code>rank</code>) - оценка близости и позиция в top-k; качество retrieve: cosine 0..1, ранжирование (search.html).</li>
+        <li><strong>text-answer</strong> (<code>content[].type=text</code>, <code>text</code>) - финальный текст ответа; Generation: заземленный ответ со ссылкой на source.</li>
+        <li><strong>stop-reason</strong> (<code>stop_reason</code>, <code>stop_sequence</code>) - почему модель остановилась; управляющий сигнал: tool_use -&gt; выполнить поиск; end_turn -&gt; готово.</li>
+        <li><strong>usage</strong> (<code>usage.input_tokens</code>, <code>usage.output_tokens</code>) - расход токенов за ход; сигнал стоимости и бюджета: рост input_tokens = раздутый контекст (assemble-context.html).</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-drill">
+      <h2 id="pr-drill">Взаимодействие: drill по блокам payload</h2>
+      <p>Отрисованный payload - не картинка, а карта. На верхнем уровне (zoom 0) вы видите весь обмен из четырех ходов: запрос, tool_use, tool_result, ответ. Каждый функциональный блок из таблицы выше подсвечивается при наведении. Один клик или Enter по блоку - семантический зум внутрь него (zoom 1): рядом разворачивается его карточка-аннотация с двумя строками - что делает технически и какую роль играет в RAG, плюс ссылка на главу-владельца (например, <code>tool_use</code> -&gt; search.html, <code>usage</code> -&gt; assemble-context.html). Это ровно два уровня зума: весь payload -&gt; один блок крупно. Возврат (Esc или кнопка назад) выводит камеру обратно к полному payload.</p>
+      <p>Без JS блок-карта работает как статичный размеченный JSON выше плюс список всех 17 блоков - читатель ничего не теряет.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
+        <li>Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a></li>
+        <li>Anthropic. Extended thinking (thinking blocks, budget_tokens). <a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a></li>
+        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li>OpenAI. Embeddings guide (vector shape, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>Откройте drill по блоку <code>tool_use</code> (zoom 1) и проследите, как <code>input.query</code> и <code>top_k</code> уходят в стадию retrieve; сверьте с search.html.</li>
+        <li>Раскройте блок <code>tool_result</code> и найдите внутри чанка поля <code>source</code>/<code>section</code>/<code>date</code> (из чанкинга) и <code>cosine</code>/<code>rank</code> (из поиска) - один блок несет следы сразу двух стадий конвейера.</li>
+        <li>Сравните <code>usage.input_tokens</code> в ходе 2 (412) и в ходе 4 (638): раскройте блок <code>usage</code> и убедитесь, что рост - это цена подложенного контекста, тот самый бюджетный сигнал из assemble-context.html.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Этот payload - не отдельная глава маршрута, а сквозной разрез всего конвейера: на него ссылаются <strong>generation.html</strong> (как поля <code>system</code>/<code>content</code>/<code>stop_reason</code> дают заземленный ответ) и <strong>assemble-context.html</strong> (как <code>usage</code> и <code>tool_result</code> показывают бюджет контекста). Вернитесь к любой из них, чтобы увидеть свою стадию уже в байтах живого запроса.</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/payload-anatomy.js"></script>
+</body>
+</html>

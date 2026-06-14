@@ -188,7 +188,10 @@
   transition: opacity 0.3s var(--ease-1);
 }
 .tokrow { display: flex; flex-wrap: wrap; gap: var(--sp-0); margin: 0 0 var(--sp-1); }
-.tok {
+/* query-token chips for the vector-map animation. Scoped under .tokrow so this
+   .tok never collides with base.css syntax-highlight .tok spans inside a
+   .code-block figure (equal-specificity, later-loading override = bug). -- W6-FIX */
+.tokrow .tok {
   font-family: var(--font-mono);
   font-size: 10.5px;
   background: var(--c-bg);
@@ -200,13 +203,63 @@
   transform: translateY(3px);
   transition: opacity 0.25s var(--ease-1), transform 0.25s var(--ease-1);
 }
-.tok.on { opacity: 1; transform: translateY(0); }
+.tokrow .tok.on { opacity: 1; transform: translateY(0); }
 .qvec { caret-color: transparent; }
 .qvec.computing::after { content: "\258c"; color: var(--c-accent-2); animation: vmapCurs 0.8s steps(1) infinite; }
 @keyframes vmapCurs { 50% { opacity: 0; } }
 
 .vmap-rail .meta { font-family: var(--font-ui); font-size: 11.5px; color: var(--c-heading); margin: var(--sp-1) 0 0; line-height: 1.55; }
 .vmap-rail .meta b { color: var(--c-text); }
+
+/* ---- plate-head eyebrow label (token-driven; replaces the duplicated inline
+   style on .eyebrow so the HTML agent can drop style="..."). ASCII only. ---- */
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0 0 4px;
+}
+
+/* ---- no-JS static fallback cards (.no-js-only schematic). Mirror the rail
+   .card look but live OUTSIDE .vmap-rail, so they get their own token-driven
+   rules; the HTML agent removes the inline style="..." blobs once these land. */
+.no-js-only .card {
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) 13px;
+  box-shadow: var(--shadow-1);
+  max-width: 760px;
+  margin: var(--sp-3) auto 0;
+}
+.no-js-only .card + .card { margin-top: var(--sp-2); }
+.no-js-only .card h2 {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  border-bottom: var(--bw-1) solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 0 0 var(--sp-1);
+}
+.no-js-only .card .qline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--fs-2);
+  color: var(--c-text);
+  margin: 0;
+}
+.no-js-only .card .meta {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-heading);
+  margin-top: var(--sp-1);
+  line-height: 1.55;
+}
 .kbadge {
   display: inline-block;
   font-family: var(--font-mono);
@@ -238,6 +291,44 @@
 .ranklist li.near .rcos { color: var(--green-text); font-weight: 700; }
 .ranklist li.far .rcos { color: var(--c-text-muted); }
 .ranklist li.far .rtxt { color: var(--c-text-muted); }
+
+/* ---- explicit no-JS class hooks (replace removed inline styles). Token-driven
+   and tag/structure-agnostic so they survive heading-tag changes. The static
+   card markup carries class="card static-card"; these key off the new classes
+   so the styling no longer depends on the .no-js-only .card descendant chain.
+   .ranklist--static is LOAD-BEARING: the live .ranklist li starts at opacity:0
+   (revealed by JS adding .shown); without JS the static list must force its
+   rows visible. ---- */
+.static-card {
+  max-width: 760px;
+  margin: var(--sp-3) auto 0;
+}
+.static-card__head {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  border-bottom: var(--bw-1) solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 0 0 var(--sp-1);
+}
+.qline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--fs-2);
+  color: var(--c-text);
+  margin: 0;
+}
+.static-card__meta {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-heading);
+  margin-top: var(--sp-1);
+  line-height: 1.55;
+}
+.ranklist--static li { opacity: 1; transform: none; }
 .cut {
   font-family: var(--font-ui);
   font-size: 10px;
@@ -408,6 +499,10 @@
   .plot .pt-cos { font-size: 12px; }
   .plot .ring-label { font-size: 10px; }
   .plot .axis-cap { font-size: 11px; }
+  /* the kNN hit circle r is baked in SVG units (~22..26) on a 520-wide viewBox;
+     at ~0.55x phone render that is < 44px. Bump the in-SVG hit r so every point
+     tap target stays >= 44px rendered (mirrors vector-store.css). */
+  .plot .pt-hit { r: 40px; }      /* ~44px+ rendered at phone scale */
   .vmap-rail { order: 2; }
   .vmap-legend { margin-left: 0; width: 100%; }
   .vmap-toolbar { gap: var(--sp-1); }
@@ -418,12 +513,14 @@
   .plot .pt-cos { font-size: 13px; }
   .plot .ring-label { font-size: 11px; }
   .plot .axis-cap { font-size: 12px; }
+  .plot .pt-hit { r: 46px; }      /* 320..420: keep >= 44px rendered */
   .detail-panel.vmap-card { padding: var(--sp-3) 13px; }
 }
 
 @media (max-width: 360px) {
   .plot .pt-lbl { font-size: 16px; }
   .plot .pt-cos { font-size: 14px; }
+  .plot .pt-hit { r: 52px; }
 }
 
 /* reduced-motion: snap to the settled end state over the SAME DOM */
@@ -432,12 +529,104 @@
   .plot .dot,
   .plot .pt.doc,
   .plot .pt.query,
-  .tok,
+  .tokrow .tok,
   .ranklist li,
   .embed-step,
   .detail-panel.vmap-card { transition: none; }
   .plot .pt.doc { opacity: 1; transform: translate(0, 0); }
   .plot .pt.query { opacity: 1; }
-  .tok, .ranklist li { opacity: 1; transform: none; }
+  .tokrow .tok, .ranklist li { opacity: 1; transform: none; }
   .qvec.computing::after { animation: none; content: ""; }
+}
+
+/* ===========================================================
+   CHAPTER PROSE  (ported manuscript -- S-SB-REPORT3)
+   Full chapter text rendered as semantic article content.
+   Structure + spacing only; color/space/motion via var(--...).
+   Lives here (section file), never in base.css. ASCII only.
+   The same block is mirrored inside .no-js-only so the chapter
+   reads complete with JavaScript off.
+   =========================================================== */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+@media (max-width: 560px) {
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
 }

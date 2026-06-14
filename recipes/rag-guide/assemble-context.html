@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сборка контекста - упаковка top-k в промпт - RAG С НУЛЯ</title>
+<meta name="description" content="Сборка контекста: шаблон промпта, token budget, порядок кусков по краям (lost-in-the-middle) и удаление дублей. Откройте узел сборки и подвигайте бюджет токенов. Интерактивная глава BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
+     + this section's own structural CSS (linked only here, never base.css). -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/assemble-context.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К сборке контекста" data-en="Skip to context assembly">К сборке контекста</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <div class="site-header__brand">
+      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+          <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+          <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+          <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+        </svg>
+      </a>
+      <div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава V - Сборка контекста" data-en="Plate V - Assemble context">Глава V - Сборка контекста</div>
+      </div>
+    </div>
+    <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+  <!-- ===================== the framed atlas plate (assemble stage) ===================== -->
+  <!-- drilldown-host: stage + crumbs + zoomout + panel slots (AtlasMD 3.6).
+       Level-0 stage = the single assemble node; level-1 panel = context-assembly.js. -->
+  <section class="plate" data-component="drilldown-host" aria-labelledby="plateTitle">
+    <span class="corner tl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner tr"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner bl"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+    <span class="corner br"><svg width="16" height="16" aria-hidden="true"><path d="M0 0 H10 M0 0 V10" stroke="#5c4a32" stroke-width="1.4" fill="none"/></svg></span>
+
+    <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
+    <div class="plate-head">
+      <div class="title-block">
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Сборка контекста" data-en="Assemble context">Сборка контекста</h1>
+        <p data-i18n="plateSub" data-ru="Не все найденное в кучу, а инженерная сборка: шаблон, бюджет токенов, порядок кусков и удаление дублей. Откройте узел сборки, чтобы упаковать top-k в промпт по шагам." data-en="Not a heap of everything found - an engineered build: template, token budget, chunk order and dedup. Open the assemble node to pack top-k into a prompt step by step.">Не все найденное в кучу, а инженерная сборка: шаблон, бюджет токенов, порядок кусков и удаление дублей. Откройте узел сборки, чтобы упаковать top-k в промпт по шагам.</p>
+      </div>
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- controls row: breadcrumb + zoom-out (own row, NOT the compass row) -->
+    <div class="drill-controls js-only">
+      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+      <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- the zoom camera stage: the single assemble node (level 0); grows to fit
+         the active detail pane (the context-assembly.js panel mount). -->
+    <div class="stage js-only" data-slot="stage">
+      <div class="camera">
+        <div class="ca-overview">
+          <button type="button" class="node ca-node" data-node="assemble" data-crumb="Сборка"
+                  aria-label="Открыть сборку контекста: упаковать top-k в промпт">
+            <span class="idx">05</span>
+            <span class="name" data-i18n="nodeName" data-ru="Сборка контекста" data-en="Assemble context">Сборка контекста</span>
+            <span class="hint" data-i18n="nodeHint" data-ru="top-k -> шаблон промпта под бюджет токенов" data-en="top-k -> prompt template under a token budget">top-k -> шаблон промпта под бюджет токенов</span>
+            <span class="ca-open" data-i18n="nodeOpen" data-ru="нажмите, чтобы заглянуть внутрь" data-en="tap to look inside">нажмите, чтобы заглянуть внутрь</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- the inline-grow detail panel mount (drilldown-zoom renders the module here) -->
+    <div class="js-only" data-slot="panel" aria-live="polite"></div>
+
+    <!-- NO-JS fallback: a meaningful static schematic of the assembled prompt +
+         the four steps, so the chapter teaches with JS off (AtlasMD section 5). -->
+    <div class="no-js-only">
+      <ol class="ca-steps-static">
+        <li><b>Шаг 1 - дубли.</b> Убираем точные повторы: один и тот же абзац из двух кусков не добавляет смысла, но ест бюджет токенов.</li>
+        <li><b>Шаг 2 - порядок.</b> Сильные куски ставим по краям окна, слабые - в середину (lost-in-the-middle).</li>
+        <li><b>Шаг 3 - бюджет.</b> Считаем токены настоящим токенизатором и набираем куски, пока влезаем в лимит.</li>
+        <li><b>Шаг 4 - шаблон.</b> Заполняем промпт отобранными кусками, каждый с подписью источника.</li>
+      </ol>
+      <pre class="ca-prompt-static"><code>Отвечай только на основе контекста ниже.
+Если ответа в контексте нет, скажи об этом честно.
+
+Контекст:
+[1] policy.md: "Сотруднику предоставляется ежегодный оплачиваемый отдых - 28 календарных дней."
+[2] policy.md: "Неиспользованные дни можно перенести на следующий год по согласованию с руководителем."
+[3] hr-faq.md: "Отпуск оформляется заявлением за 2 недели до начала."
+
+Вопрос: Сколько дней отпуска в году?
+Ответ:
+... остальное обрезано по бюджету</code></pre>
+      <p class="legend-hint">Дубль policy.md (копия) выброшен на шаге удаления дублей; кусок handbook.md про выслугу лет не влез в бюджет токенов и обрезан. Включите JavaScript, чтобы подвигать бюджет и порядок кусков и увидеть сборку по шагам.</p>
+    </div>
+  </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/assemble-context.md (strategy A: md-as-source). -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
+      <p>Этап retrieve вернул вам top-k фрагментов - скажем, 8 кусков, отсортированных по косинусной близости. Вы радостно склеиваете их в один текст, добавляете вопрос пользователя и отправляете в модель. Ответ приходит - и он хуже, чем мог бы быть: модель проигнорировала самый важный фрагмент, потому что вы поставили его в середину, а половина кусков - это дубли одного и того же абзаца, которые съели весь бюджет токенов.</p>
+      <p>Это и есть стадия сборки контекста (assemble-context): не "все найденное в кучу", а инженерная сборка. Качество ответа определяют три решения: по какому шаблону собрать промпт, сколько контекста влезет в лимит модели и в каком порядке разложить куски. Ниже - рабочий путь от сырого top-k к готовому промпту.</p>
+      <p>Это шаг augment из исходной работы по RAG: извлеченные документы подмешиваются во вход генератора (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a>). Размеченный вид самого запроса и ответа разобран в главе <a href="payload-anatomy.html">Анатомия запроса</a> - там подписано каждое поле промпта.</p>
+    </section>
+
+    <section aria-labelledby="pr-solution">
+      <h2 id="pr-solution">Решение: сборщик контекста целиком</h2>
+      <p>Вот рабочая функция на Python, которая берет результаты top-k от retrieve и собирает из них промпт под бюджет токенов. Она делает сразу все четыре вещи: шаблон, бюджет, порядок, удаление дублей.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="assemble-context-assembler">
+        <figcaption class="code-block__cap" data-i18n data-ru="Sborshchik konteksta celikom: dedup, porjadok po krajam, bjudzhet tokenov i shablon prompta v odnoj funkcii." data-en="The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function.">Sborshchik konteksta celikom: dedup, porjadok po krajam, bjudzhet tokenov i shablon prompta v odnoj funkcii.</figcaption>
+        <pre><code># pip install tiktoken
+import tiktoken
+
+ENC = tiktoken.get_encoding("cl100k_base")  # tokenizer semejstva GPT-4/3.5
+
+def count_tokens(text: str) -&gt; int:
+    return len(ENC.encode(text))
+
+PROMPT_TEMPLATE = """Otvechaj tol'ko na osnove konteksta nizhe.
+Esli otveta v kontekste net, skazhi ob etom chestno.
+
+Kontekst:
+{context}
+
+Vopros: {question}
+Otvet:"""
+
+def assemble_context(question, retrieved, max_context_tokens=3000):
+    """
+    retrieved: spisok dict {id, text, score, source}, otsortirovannyj
+               po ubyvaniyu score (samyj relevantnyj pervym).
+    """
+    # 1. Dedup: vybrasyvaem povtory po tekstu, sohranyaya luchshij score.
+    seen, unique = set(), []
+    for chunk in retrieved:
+        key = chunk["text"].strip()
+        if key not in seen:
+            seen.add(key)
+            unique.append(chunk)
+
+    # 2. Poryadok: samoe vazhnoe - po krayam, ne v seredine (lost-in-the-middle).
+    ranked = order_for_attention(unique)
+
+    # 3. Token budget: nabiraem kuski, poka vlezaem v limit.
+    picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)
+    for chunk in ranked:
+        cost = count_tokens(chunk["text"]) + 8  # +razdelitel'/podpis' istochnika
+        if used + cost &gt; max_context_tokens:
+            break  # ostal'noe ne vlezaet - obrezaem
+        picked.append(chunk)
+        used += cost
+
+    # 4. Shablon: skleivaem s podpis'yu istochnika dlya posleduyushchih citat.
+    context = "\n\n".join(f"[{c['source']}] {c['text']}" for c in picked)
+    return PROMPT_TEMPLATE.format(context=context, question=question), picked</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Schet tokenov</strong> -- Berem nastojashchij tokenizer tiktoken (semejstvo GPT-4/3.5) i schitaem tokeny, a ne simvoly - bjudzhet modeli merjaetsja v tokenah.</li>
+          <li><strong>Shablon prompta</strong> -- Tri chasti v fiksirovannom porjadke: instrukcija, plejsholder konteksta i vopros. Tekst shablona - strokovyj literal, odinakovyj v oboih variantah.</li>
+          <li><strong>Udalenie dublej</strong> -- Vybrasyvaem tochnye povtory teksta, sohranjaja pervyj (luchshij po score) ekzempljar - dubli edjat bjudzhet, no ne nesut novoj informacii.</li>
+          <li><strong>Porjadok po krajam</strong> -- Raskladyvaem kuski tak, chtoby samye vazhnye stojali po krajam okna, a ne v seredine - smjagchenie effekta lost-in-the-middle.</li>
+          <li><strong>Bjudzhet tokenov</strong> -- Nabiraem kuski po ocheredi, poka summa tokenov vlezaet v limit; kak tolko sledujushchij ne vlezaet - ostanavlivaemsja i obrezaem ostatok.</li>
+          <li><strong>Zapolnenie shablona</strong> -- Skleivaem otobrannye kuski s podpisju istochnika [source] i podstavljaem v shablon vmeste s voprosom - gotovyj prompt dlja generacii.</li>
+        </ol>
+      </figure>
+      <p>Функция <code>order_for_attention</code> раскладывает лучшие куски по краям окна, а слабые - в середину. Почему именно так, разберем ниже.</p>
+    </section>
+
+    <section aria-labelledby="pr-template">
+      <h2 id="pr-template">Шаблон промпта</h2>
+      <p>Промпт RAG - это не просто "вопрос". Это три части в фиксированном порядке: <strong>инструкция</strong> (как отвечать), <strong>контекст</strong> (найденные куски) и <strong>вопрос</strong> пользователя. Именно объединение извлеченного с запросом и есть определение RAG по <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a>: генератор видит не только вопрос, но и извлеченные документы как часть входа.</p>
+      <p>Инструкцию задавайте явно и жестко: "отвечай только по контексту, если данных нет - скажи об этом". Без нее модель достроит пробелы из собственной памяти - а это прямая дорога к выдумкам, с которыми борется глава про генерацию. Каждый кусок подписывайте источником (<code>[source]</code>), чтобы на шаге генерации модель могла сослаться на конкретный фрагмент.</p>
+    </section>
+
+    <section aria-labelledby="pr-budget">
+      <h2 id="pr-budget">Сколько контекста влезает</h2>
+      <p>У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Например, семейство Claude работает с окном в 200 000 токенов (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic, Models overview</a>). Это кажется огромным, но бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.</p>
+      <p>Токен - это не слово и не символ; это единица, на которые токенизатор режет текст (части слов, знаки). Считать надо именно токены, а не символы - поэтому в коде выше <code>count_tokens</code> использует настоящий токенизатор <code>tiktoken</code> (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI tiktoken</a>), а не <code>len(text)</code>. Большое окно не бесплатно: каждый лишний токен контекста - это деньги и задержка в каждом запросе (об этом - глава про продакшен).</p>
+    </section>
+
+    <section aria-labelledby="pr-order">
+      <h2 id="pr-order">Порядок и приоритет кусков</h2>
+      <p>Главный контринтуитивный факт этой главы: порядок кусков внутри промпта меняет ответ. Модели хуже всего используют информацию, попавшую в <strong>середину</strong> длинного контекста, и лучше всего - то, что стоит в <strong>начале или конце</strong>. Это эффект "lost in the middle": точность падает, когда нужный факт лежит посередине окна (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023</a>).</p>
+      <p>Практический вывод прямой: ставьте самые релевантные куски по краям, а менее важные - в середину. Именно это делает <code>order_for_attention</code>:</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="assemble-context-order">
+        <figcaption class="code-block__cap" data-i18n data-ru="Raskladka po krajam: silnye kuski uezzhajut k nachalu i koncu okna, slabye - v seredinu." data-en="Edge layout: strong pieces move to the start and end of the window, weak ones to the middle.">Raskladka po krajam: silnye kuski uezzhajut k nachalu i koncu okna, slabye - v seredinu.</figcaption>
+        <pre><code>def order_for_attention(ranked):
+    """Luchshie kuski - po krayam okna, slabye - v seredinu.
+    ranked uzhe otsortirovan po ubyvaniyu relevantnosti."""
+    head, tail = [], []
+    for i, chunk in enumerate(ranked):
+        (head if i % 2 == 0 else tail).append(chunk)
+    return head + tail[::-1]   # ...silnye...slabye...silnye</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Vhod funkcii</strong> -- Na vhod prihodit ranked - kuski, uzhe otsortirovannye po ubyvaniju relevantnosti; zadacha - perestavit ih pod vnimanie modeli.</li>
+          <li><strong>Razvodim na kraja</strong> -- Cheredkem: chetnye po indeksu kuski idut v head, nechetnye - v tail; tak silnejshie raspredeljajutsja k oboim krajam okna.</li>
+          <li><strong>Sborka kraja-seredina-kraja</strong> -- Skleivaem head s razvernutym tail, poluchaja raskladku silnye...slabye...silnye - seredina okna dostaetsja naimenee vazhnym kuskam.</li>
+        </ol>
+      </figure>
+    </section>
+
+    <section aria-labelledby="pr-dedup">
+      <h2 id="pr-dedup">Чистим дубли и обрезаем лишнее</h2>
+      <p>Retrieve часто возвращает почти-дубли: один и тот же абзац, попавший в два соседних куска с перекрытием (см. главу про чанкинг), или тот же факт из двух версий документа. Дубли не добавляют информации, но едят бюджет токенов и выталкивают из окна полезные куски. Шаг удаления дублей выше убирает точные повторы; для почти-дублей его расширяют сравнением по косинусной близости между кусками.</p>
+      <p>Когда все, что влезает, отобрано, остаток просто обрезается - это нормально. Цель сборки контекста не "вложить все", а вложить нужное в правильном порядке под бюджет. Выше - интерактивный сборщик: откройте узел сборки, подвигайте слайдер <code>max_context_tokens</code> и переключите порядок кусков - счетчик токенов покажет, что влезает, а что обрезается. Без JS страница показывает уже собранный промпт статической схемой и полный текст.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li>Anthropic. Models overview (context window). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
+        <li>OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>Откройте drill context-assembly и сдвиньте слайдер <code>max_context_tokens</code> вниз до 800: посмотрите, как нижние по score куски заметно обрезаются, когда счетчик токенов упирается в лимит.</li>
+        <li>Переключите тумблер порядка с "по score" на "по краям" и сравните раскладку: самые релевантные куски уезжают к началу и концу окна - это смягчение эффекта lost-in-the-middle.</li>
+        <li>Найдите в списке два почти одинаковых куска и проследите, как шаг удаления дублей выбрасывает повтор, освобождая бюджет под следующий кусок.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Собранный промпт уходит в модель. Следующая остановка - глава <strong><a href="generation.html">generation</a></strong>: как модель читает этот контекст и пишет заземленный ответ с цитатами. Полный вид запроса поле за полем - в главе <strong><a href="payload-anatomy.html">payload-anatomy</a></strong>.</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/assemble-context.js"></script>
+</body>
+</html>

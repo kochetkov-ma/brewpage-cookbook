@@ -1,0 +1,359 @@
+/* ===========================================================
+   evaluation.css -- section CSS for the "Оценка" chapter.
+
+   Linked ONLY from evaluation.html (never base.css). Structure +
+   this section's component hooks; every color/space/motion value
+   comes via var(--...) from the active theme. base.css is never
+   forked. Animate transform/opacity ONLY, EXCEPT the bar WIDTH
+   (the allowed progress/bar exception, mirrored from the
+   .progress-strip .pfill width-transition pattern in base.css).
+   reduced-motion is handled globally in base.css (transition:none).
+   =========================================================== */
+
+/* --- the calculator host shell --------------------------------------- */
+.evalc-host { margin-top: var(--sp-4); }
+
+.evalc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* --- controls: before/after toggle + k slider ----------------------- */
+.evalc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-ring), var(--shadow-1);
+}
+
+.evalc-runtoggle {
+  display: inline-flex;
+  gap: var(--sp-0);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.evalc-runbtn {
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  color: var(--c-text);
+  background: var(--c-surface-2);
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--dur-1) var(--ease-1);
+}
+.evalc-runbtn + .evalc-runbtn { border-left: var(--bw-1) solid var(--c-border); }
+.evalc-runbtn:hover { opacity: 0.82; }
+.evalc-runbtn.is-active,
+.evalc-runbtn[aria-pressed="true"] {
+  color: var(--c-bg);
+  background: var(--c-accent-1);
+}
+.evalc-runbtn:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+.evalc-klabel {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  color: var(--c-heading);
+}
+.evalc-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.evalc-step {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: var(--fs-3);
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  color: var(--c-text);
+  background: var(--c-surface-2);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: opacity var(--dur-1) var(--ease-1);
+}
+.evalc-step:hover { opacity: 0.82; }
+.evalc-step:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+.evalc-range {
+  min-height: 44px;
+  width: clamp(120px, 32vw, 240px);
+  accent-color: var(--c-accent-1);
+  cursor: pointer;
+}
+.evalc-range:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 3px;
+}
+.evalc-kval {
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  color: var(--c-accent-2);
+  min-width: 5ch;
+}
+
+/* --- the two metric bars (precision / recall) ----------------------- */
+.evalc-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.evalc-bar {
+  display: grid;
+  grid-template-columns: minmax(8ch, 14ch) 1fr minmax(4ch, auto);
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+.evalc-bar-name {
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  color: var(--c-heading);
+}
+.evalc-bar-track {
+  position: relative;
+  height: 14px;
+  background: var(--c-surface-3);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: var(--shadow-track);
+}
+/* WIDTH is the ONLY animated property on bars (allowed exception),
+   mirroring .progress-strip .pfill. reduced-motion snaps it (base.css). */
+.evalc-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--c-accent-3), var(--c-accent-2));
+  transition: width var(--dur-2) var(--ease-1);
+}
+.evalc-bar[data-metric="recall"] .evalc-bar-fill {
+  background: linear-gradient(90deg, var(--c-accent-1), var(--c-accent-4));
+}
+.evalc-bar-val {
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-bold);
+  color: var(--c-accent-2);
+  text-align: right;
+}
+
+/* --- per-question hit/miss detail strip ----------------------------- */
+.evalc-detail { display: flex; flex-direction: column; gap: var(--sp-2); }
+.evalc-detail-head {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0;
+}
+.evalc-q {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+}
+.evalc-q-text { margin: 0 0 var(--sp-1); font-size: var(--fs-1); color: var(--c-text); }
+.evalc-q-tag { font-weight: var(--fw-bold); color: var(--c-heading); }
+.evalc-q-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-0);
+  margin: 0 0 var(--sp-1);
+  padding: 0;
+  list-style: none;
+}
+.evalc-chip {
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  padding: var(--sp-0) var(--sp-1);
+  border-radius: var(--radius-sm);
+  border: var(--bw-1) solid var(--c-border);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+}
+/* green = a real hit in top-k (earned by interaction, never pre-lit by CSS
+   alone -- the module only marks .is-hit on retrieved ids that land in
+   relevant_ids at the current k). */
+.evalc-chip.is-hit {
+  color: var(--green-text);
+  background: var(--c-accent-1-soft);
+  border-color: var(--c-progress);
+  font-weight: var(--fw-bold);
+}
+.evalc-chip.is-miss {
+  color: var(--c-text-muted);
+}
+.evalc-q-meta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+}
+
+/* static (no-JS) golden table ---------------------------------------- */
+.eval-static {
+  width: 100%;
+  margin: var(--sp-3) 0;
+  border-collapse: collapse;
+  font-size: var(--fs-1);
+}
+.eval-static th,
+.eval-static td {
+  padding: var(--sp-1) var(--sp-2);
+  border: var(--bw-1) solid var(--c-border);
+  text-align: left;
+  vertical-align: top;
+}
+.eval-static th {
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+  color: var(--c-heading);
+  background: var(--c-surface-2);
+}
+.eval-static .chip {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  padding: var(--sp-0) var(--sp-1);
+  margin: 1px;
+  border-radius: var(--radius-sm);
+  border: var(--bw-1) solid var(--c-border);
+}
+.eval-static .chip.is-hit {
+  color: var(--green-text);
+  background: var(--c-accent-1-soft);
+  border-color: var(--c-progress);
+  font-weight: var(--fw-bold);
+}
+.eval-static .chip.is-miss {
+  color: var(--c-text-muted);
+  background: var(--c-surface-2);
+}
+
+.legend-hint {
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+  margin: var(--sp-2) 0;
+}
+
+/* mobile: bars + controls stack ------------------------------------- */
+@media (max-width: 560px) {
+  .evalc-bar { grid-template-columns: 1fr; gap: var(--sp-0); }
+  .evalc-bar-val { text-align: left; }
+  .evalc-controls { flex-direction: column; align-items: stretch; }
+  .evalc-slider { justify-content: space-between; }
+  .evalc-range { width: 100%; }
+  .eval-static { font-size: var(--fs-0); }
+}
+
+/* ===========================================================
+   chapter prose (md-as-source, hand-ported) -- shared visual
+   contract with the other section pages; the chapter reads
+   complete with JavaScript off.
+   =========================================================== */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+@media (max-width: 560px) {
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
+}

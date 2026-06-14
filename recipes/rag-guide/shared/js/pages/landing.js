@@ -155,6 +155,7 @@ async function boot() {
     i18n.subscribe((loc) => {
       applyToggleState(loc);
       rewriteStaticText(loc);
+      announce(loc === "en" ? "Language: English" : "Язык: русский");
     });
   }
 

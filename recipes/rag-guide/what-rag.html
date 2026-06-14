@@ -12,13 +12,13 @@
 <link rel="stylesheet" href="shared/css/sections/what-rag.css">
 </head>
 <body>
-<a class="skip-link" href="#plateTitle" data-i18n="skip" data-ru="К пайплайну" data-en="Skip to the pipeline">К пайплайну</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К пайплайну" data-en="Skip to the pipeline">К пайплайну</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="К карте маршрута" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,13 +28,26 @@
         </svg>
       </a>
       <div>
-        <h1 data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</h1>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
         <div class="sub" data-i18n="brandSub" data-ru="Глава I - Что такое RAG" data-en="Plate I - What is RAG">Глава I - Что такое RAG</div>
       </div>
     </div>
     <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
       <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Вернуться к карте маршрута" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
         <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
       </a>
@@ -45,7 +58,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="main" tabindex="-1">
   <!-- ===================== the framed atlas plate (pipeline stage) ===================== -->
   <!-- drilldown-host: stage + crumbs + zoomout + panel slots (AtlasMD 3.6) -->
   <section class="plate" data-component="plate drilldown-host" aria-labelledby="plateTitle">
@@ -58,7 +71,7 @@
     <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
     <div class="plate-head">
       <div class="title-block">
-        <h3 id="plateTitle" data-i18n="plateTitle" data-ru="Что такое RAG" data-en="What is RAG">Что такое RAG</h3>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Что такое RAG" data-en="What is RAG">Что такое RAG</h1>
         <p data-i18n="plateSub" data-ru="Конвейер: запрос проходит слева направо через поиск по векторному индексу и сборку контекста, прежде чем модель формирует ответ со ссылками. Нажмите узел, чтобы заглянуть внутрь." data-en="A pipeline: the query runs left to right through vector-index search and context assembly before the model writes a cited answer. Tap a node to look inside.">Конвейер: запрос проходит слева направо через поиск по векторному индексу и сборку контекста, прежде чем модель формирует ответ со ссылками. Нажмите узел, чтобы заглянуть внутрь.</p>
       </div>
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -82,7 +95,7 @@
          The breadcrumb ROOT crumb returns to the pipeline overview; a header
          link (the seal above) returns to the map (index.html). -->
     <div class="pipeline-controls js-only">
-      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Уровень приближения" data-aria-ru="Уровень приближения" data-aria-en="Zoom level"></nav>
       <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
@@ -131,7 +144,7 @@
          full prose, so the chapter teaches with JS off (AtlasMD section 5). -->
     <div class="no-js-only">
       <ol class="legend-list" style="grid-template-columns:1fr">
-        <li><a class="node" href="#nojs-n0"><span class="idx">01</span><span class="name">Запрос</span><span class="hint">вопрос пользователя</span></a></li>
+        <li id="nojs-n0"><span class="node"><span class="idx">01</span><span class="name">Запрос</span><span class="hint">вопрос пользователя</span></span></li>
         <li><span class="node"><span class="idx">02</span><span class="name">Эмбеддинг запроса</span><span class="hint">текст -> вектор (1536 чисел)</span></span></li>
         <li><span class="node"><span class="idx">03</span><span class="name">Векторный индекс (ANN)</span><span class="hint">поиск ближайших соседей по косинусу</span></span></li>
         <li><span class="node"><span class="idx">04</span><span class="name">Топ-k фрагментов</span><span class="hint">k = 3 лучших по сходству</span></span></li>
@@ -142,6 +155,138 @@
       <p class="legend-hint">RAG отвечает на вопрос не по памяти модели: запрос кодируется в вектор, по нему ищутся ближайшие фрагменты ваших документов, top-k фрагментов собираются в промпт, и модель пишет ответ со ссылками строго по этому контексту. Включите JavaScript, чтобы пройти конвейер по шагам и заглянуть внутрь каждого узла.</p>
     </div>
   </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/what-rag.md (strategy A: md-as-source, hand-ported).
+       Always visible: reads fully with JS on or off. The interactive .js-only
+       hosts above only ENHANCE; this prose is the chapter text. -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема: модель не знает ваших данных</h2>
+      <p>Вы спрашиваете обычную LLM: "Сколько дней отпуска у сотрудника на испытательном сроке по нашей политике?" Модель отвечает уверенно - и мимо. Вашей внутренней политики она никогда не видела, поэтому просто генерирует правдоподобный текст. Решение не в том, чтобы "лучше спросить", а в том, чтобы ПЕРЕД ответом дать модели именно ваш документ.</p>
+      <p>Именно это делает RAG: находит релевантные фрагменты ваших данных и подмешивает их в запрос, после чего модель отвечает по ним. Архитектуру ввели Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Вот тот же вызов, но уже с retrieval - минимальный рабочий RAG на реальных API:</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="what-rag-minimal-rag">
+      <figcaption class="code-block__cap" data-i18n data-ru="Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation." data-en="A minimal working RAG on real APIs: retrieval -> augmented -> generation.">Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation.</figcaption>
+      <pre><code># Minimalnyj RAG: snachala retrieval, potom generaciya po najdennomu.
+from anthropic import Anthropic
+from openai import OpenAI
+import numpy as np
+
+oa = OpenAI()        # OPENAI_API_KEY: schitaem embeddingi
+anthropic = Anthropic()  # ANTHROPIC_API_KEY: generaciya
+
+# Korpus = vashi chunki (zdes' uproshchen do spiska strok).
+chunks = [
+    "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.",
+    "Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.",
+    "Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.",
+]
+
+def embed(texts):
+    r = oa.embeddings.create(model="text-embedding-3-small", input=texts)
+    return np.array([d.embedding for d in r.data])  # dim = 1536
+
+chunk_vecs = embed(chunks)
+query = "Skolko dnej otpuska na ispytatelnom sroke?"
+q_vec = embed([query])[0]
+
+# Cosine similarity -> top-1 chunk (RETRIEVAL).
+cos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))
+top = chunks[int(np.argmax(cos))]
+
+# AUGMENTED + GENERATION: podkladyvaem najdennoe v prompt.
+resp = anthropic.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=300,
+    messages=[{
+        "role": "user",
+        "content": f"Otvechaj tolko po kontekstu. Kontekst:\n{top}\n\nVopros: {query}",
+    }],
+)
+print(resp.content[0].text)  # otvet opiraetsya na VASH chunk</code></pre>
+      <ol class="code-annot-list no-js-only">
+        <li><strong>Klienty API</strong> -- Dva klienta: OpenAI schitaet embeddingi, Anthropic generiruet otvet. Kljuchi berutsya iz peremennyh okruzhenija, ne iz koda.</li>
+        <li><strong>Korpus chunkov</strong> -- Vasha baza znanij, uproshchennaja do spiska strok. V realnom RAG eto chunki dokumentov iz vektornogo indeksa.</li>
+        <li><strong>Funkcija embed</strong> -- Kazhdyj tekst prevrashchaetsja v vektor fiksirovannoj dliny (dim 1536 dlja text-embedding-3-small). Formy vyzova realnye (OpenAI Embeddings, platform.openai.com/docs/guides/embeddings).</li>
+        <li><strong>Vektor zaprosa</strong> -- Vopros polzovatelja vstraivaetsja tem zhe embedderom, chto i chunki - inache vektory ne sravnimy v odnom prostranstve.</li>
+        <li><strong>Retrieval: cosine</strong> -- Cosine similarity mezhdu vektorom zaprosa i kazhdym chunkom; argmax daet samyj blizkij chunk. Eto shag RETRIEVAL.</li>
+        <li><strong>Augmented + generation</strong> -- Najdennyj chunk podkladyvaetsja v prompt (augmented), i model otvechaet tolko po nemu (generation). Forma vyzova - realnyj Anthropic Messages API (docs.anthropic.com/en/api/messages).</li>
+      </ol>
+      </figure>
+      <p>Тут видны все три шага: retrieval (cosine -&gt; top chunk), augmented (chunk в промпте), generation (ответ модели). Формы вызовов реальные: OpenAI Embeddings (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>) и Anthropic Messages (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).</p>
+    </section>
+
+    <section aria-labelledby="pr-three">
+      <h2 id="pr-three">Что такое RAG: три слова</h2>
+      <p>RAG = <strong>R</strong>etrieval-<strong>A</strong>ugmented <strong>G</strong>eneration. Три слова - три шага:</p>
+      <ul>
+        <li><strong>Retrieval</strong> - найти нужные куски текста в ваших данных (в примере выше - cosine по векторам чанков).</li>
+        <li><strong>Augmented</strong> - добавить найденное прямо в запрос к модели (вставили <code>top</code> в <code>content</code>).</li>
+        <li><strong>Generation</strong> - модель формулирует ответ на основе этих кусков, а не памяти.</li>
+      </ul>
+      <p>Это и есть определение из исходной работы: retriever выбирает документы, generator обуславливает ответ на них (Lewis et al., 2020, <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>).</p>
+    </section>
+
+    <section aria-labelledby="pr-not">
+      <h2 id="pr-not">Чего RAG не делает</h2>
+      <p>RAG часто путают с соседними вещами. Четкие границы:</p>
+      <ul>
+        <li><strong>Это не дообучение (fine-tuning).</strong> Fine-tuning меняет веса модели на ваших примерах; RAG веса не трогает вообще - он лишь подает данные во время запроса. Fine-tuning учит модель ФОРМЕ и стилю, RAG дает ей ФАКТЫ (см. разграничение в руководстве OpenAI по fine-tuning, <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). Чтобы добавить новый документ, в RAG достаточно его заиндексировать, а не переобучать модель.</li>
+        <li><strong>Это не просто большое контекстное окно.</strong> "Запихнем все документы в prompt" не масштабируется и вредит: модели хуже используют информацию в середине длинного контекста - эффект "lost in the middle" (Liu et al., 2023, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>). RAG подает модели только небольшой top-k релевантных кусков.</li>
+        <li><strong>Это не память модели.</strong> Между запросами модель ничего не запоминает; "память" в RAG живет в вашем внешнем индексе, а не внутри модели.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-anatomy">
+      <h2 id="pr-anatomy">Анатомия конвейера</h2>
+      <p>Те три слова разворачиваются в конвейер из нескольких стадий. Это карта всего рецепта; каждая стадия - отдельная глава маршрута:</p>
+      <ol>
+        <li><strong>chunking</strong> - режем документы на чанки retrieval-размера.</li>
+        <li><strong>embedding</strong> - каждый чанк -&gt; вектор фиксированной длины (dim 1536).</li>
+        <li><strong>vector-store</strong> - векторы в индекс, готовый к поиску ближайших соседей.</li>
+        <li><strong>search</strong> - запрос -&gt; вектор запроса -&gt; top-k ближайших чанков.</li>
+        <li><strong>assemble-context</strong> - собираем top-k в один prompt в рамках token-бюджета.</li>
+        <li><strong>generation</strong> - модель пишет заземленный ответ по собранному контексту.</li>
+      </ol>
+      <p>Выше - интерактивная диаграмма этого конвейера: горизонтальный ряд узлов-стадий слева направо. Спина маршрута (spine) один раз прорисовывается при входе в экран; каждый узел можно открыть семантическим зумом (C4-style камера въезжает внутрь стадии), где раскрывается ее состав. Полоса прогресса зарабатывается по мере прохода по основному пути. Без JS страница показывает ту же цепочку стадий статической inline-SVG-схемой и полный текст.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li>OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li>OpenAI. Fine-tuning guide (RAG vs fine-tuning contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a></li>
+        <li>Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>Откройте (drill, semantic zoom) узел <strong>embedding</strong> на диаграмме конвейера и посмотрите, во что он раскрывается - это та же стадия, что и глава embedding.</li>
+        <li>Пройдите основной путь от узла <strong>chunking</strong> до <strong>generation</strong> и доведите полосу прогресса до конца - порядок узлов совпадает с порядком глав маршрута.</li>
+        <li>Сравните стадии <strong>search</strong> и <strong>assemble-context</strong> дриллом: первая находит top-k, вторая пакует его в один prompt.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Следующая остановка - <strong>why-rag</strong>: почему обычная модель не справляется (training cutoff, нет приватных данных) и почему RAG дешевле и свежее, чем дообучение.</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
   </main>
 
   <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->

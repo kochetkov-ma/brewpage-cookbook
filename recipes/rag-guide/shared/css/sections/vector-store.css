@@ -1,0 +1,539 @@
+/* ===========================================================
+   vector-store.css -- SECTION CSS for "Векторное хранилище"
+   (element=ann-topk-drill: a small ANN index map + top-k drill).
+
+   Scope: the index plot (reused vector-map.js DOM) + side rail + drill-card
+   blocks that base.css does not ship as shared shells. Mirrors search.css's
+   plot/point/card patterns because vector-map.js is REUSED unchanged; each page
+   loads ONLY its own section file, so the needed subset is restated here (not
+   imported from search.css). Metadata blocks are NET-NEW for this chapter.
+
+   base.css is NEVER edited or forked. Every color/space/motion value comes from
+   a theme token (var(--...)); selection/focus uses the themed sepia/rust ring
+   (--c-focus), NEVER blue. Motion is transform/opacity + gated stroke-dashoffset
+   only, no infinite loops (V5-safe). Tokens live in themes/atlas.css.
+   =========================================================== */
+
+/* ---- toolbar row: breadcrumb + zoom-out (own row) ---- */
+.vmap-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin: var(--sp-2) 0 var(--sp-3);
+  position: relative;
+  z-index: 2;
+}
+.vmap-toolbar .zoomout { margin-left: auto; }
+
+/* ---- layout: plot + side rail ---- */
+.vmap-grid {
+  display: grid;
+  grid-template-columns: 1fr 268px;
+  gap: var(--sp-3);
+  align-items: start;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- the plot frame (drilldown stage) ---- */
+.plot-frame {
+  position: relative;
+  background: var(--c-bg);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 30px rgba(60, 46, 26, 0.1);
+}
+.plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+  border-radius: var(--radius-md);
+}
+
+/* graticule + cosine rings (decoration) */
+.plot .graticule { stroke: var(--c-border); stroke-width: 0.5; opacity: 0.5; fill: none; }
+.plot .ring { fill: none; stroke: var(--c-text-muted); stroke-width: 0.8; opacity: 0.55; stroke-dasharray: 3 4; }
+.plot .ring-label { font-family: var(--font-mono); font-size: 8px; fill: var(--c-text-muted); opacity: 0.85; }
+.plot .axis-line { stroke: var(--c-border); stroke-width: 0.7; opacity: 0.6; }
+.plot .axis-cap { font-family: var(--font-ui); font-size: 9px; fill: var(--c-text-muted); letter-spacing: 0.08em; }
+
+/* query -> top-k links (draw on highlight) */
+.plot .vlink {
+  stroke: var(--c-progress);
+  stroke-width: 1.4;
+  fill: none;
+  opacity: 0;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  transition: stroke-dashoffset 0.6s var(--ease-1), opacity var(--dur-2) var(--ease-1);
+}
+.plot .vlink.on { opacity: 0.55; stroke-dashoffset: 0; }
+
+/* ---- points ---- */
+.plot .pt { cursor: pointer; }
+.plot .pt-hit { fill: transparent; }
+.plot .dot { transition: opacity var(--dur-2) var(--ease-1), transform var(--dur-2) var(--ease-1); transform-origin: center; transform-box: fill-box; }
+.plot .pt-lbl { font-family: var(--font-ui); font-size: 9.5px; fill: var(--c-text); pointer-events: none; }
+.plot .pt-cos { font-family: var(--font-mono); font-size: 8.5px; pointer-events: none; }
+
+/* DIDACTIC settle: index points pre-placed at the query origin, move out to
+   their cosine-determined position. Transform/opacity only. */
+.plot .pt.doc {
+  opacity: 0;
+  transform: translate(var(--dx, 0), var(--dy, 0));
+  transition: transform 0.9s var(--ease-1), opacity 0.5s var(--ease-1);
+}
+.plot .pt.doc.settled { opacity: 1; transform: translate(0, 0); }
+.plot .pt.query { opacity: 0; transition: opacity 0.5s var(--ease-1); }
+.plot .pt.query.settled { opacity: 1; }
+
+/* point colors -- near = earned green (top-k), far = sand (still drillable) */
+.plot .pt.query .dot { fill: var(--c-progress); stroke: var(--green-text); stroke-width: 1.5; }
+.plot .pt.near .dot { fill: var(--c-progress); stroke: var(--green-text); stroke-width: 1.2; opacity: 0; }
+.plot .pt.near.lit .dot { opacity: 1; }
+.plot .pt.near .pt-cos { fill: var(--green-text); }
+.plot .pt.query .pt-cos { fill: var(--green-text); }
+.plot .pt.far .dot { fill: var(--c-surface-2); stroke: var(--c-text-muted); stroke-width: 1; }
+.plot .pt.far .pt-lbl { fill: var(--c-text-muted); }
+.plot .pt.far .pt-cos { fill: var(--c-text-muted); }
+
+/* THEMED focus + selection ring (sepia/rust, NEVER blue) */
+.plot .pt:focus { outline: none; }
+.plot .pt:focus-visible { outline: none; }
+.plot .pt:focus-visible .dot { stroke: var(--c-focus); stroke-width: 2.6; }
+.plot .pt:focus-visible .pt-focus { opacity: 1; }
+.plot .pt.selected .dot { stroke: var(--c-focus); stroke-width: 2.6; }
+.plot .pt.selected .pt-focus { opacity: 1; }
+.plot .pt-focus { fill: none; stroke: var(--c-focus); stroke-width: 1.4; opacity: 0; stroke-dasharray: 2 3; }
+
+/* ---- side rail (index facts + top-k list + metadata-filter callout) ---- */
+.vmap-rail { display: flex; flex-direction: column; gap: var(--sp-2); }
+.vmap-rail .card {
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) 13px;
+  box-shadow: var(--shadow-1);
+}
+.vmap-rail .card h2 {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  border-bottom: var(--bw-1) solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 0 0 var(--sp-1);
+}
+.vmap-rail .qline { font-family: var(--font-body); font-size: var(--fs-2); font-style: italic; color: var(--c-text); margin: 0 0 var(--sp-1); }
+.vmap-rail .meta { font-family: var(--font-ui); font-size: 11.5px; color: var(--c-heading); margin: var(--sp-1) 0 0; line-height: 1.55; }
+.vmap-rail .meta b { color: var(--c-text); }
+
+/* ---- plate-head eyebrow label (token-driven; replaces the duplicated inline
+   style on .eyebrow so the HTML agent can drop style="..."). All values from
+   theme tokens; ASCII only. ---- */
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0 0 4px;
+}
+
+/* ---- no-JS static fallback cards (the .no-js-only schematic). These mirror the
+   rail .card look but are NOT inside .vmap-rail, so they need their own token-
+   driven rules; the HTML agent removes the inline style="..." blobs once these
+   land. ---- */
+.no-js-only .card {
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) 13px;
+  box-shadow: var(--shadow-1);
+  max-width: 760px;
+  margin: var(--sp-3) auto 0;
+}
+.no-js-only .card + .card { margin-top: var(--sp-2); }
+.no-js-only .card h2 {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  border-bottom: var(--bw-1) solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 0 0 var(--sp-1);
+}
+.no-js-only .card .qline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--fs-2);
+  color: var(--c-text);
+  margin: 0;
+}
+.no-js-only .card .meta {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-heading);
+  margin-top: var(--sp-1);
+  line-height: 1.55;
+}
+.kbadge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--c-progress);
+  color: var(--c-bg);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  margin-left: 2px;
+}
+
+/* top-k ranked list (shared list class) */
+.ranklist { list-style: none; margin: var(--sp-1) 0 0; padding: 0; font-family: var(--font-ui); font-size: 11.5px; }
+.ranklist li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  padding: 5px 0;
+  border-bottom: var(--bw-1) dotted var(--c-border);
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.35s var(--ease-1), transform 0.35s var(--ease-1);
+}
+.ranklist li.shown { opacity: 1; transform: translateX(0); }
+.ranklist li:last-child { border-bottom: none; }
+.rk { font-family: var(--font-mono); font-size: 10px; color: var(--c-text-muted); flex: 0 0 auto; width: 18px; }
+.rtxt { flex: 1 1 auto; color: var(--c-text); overflow-wrap: anywhere; }
+.rcos { font-family: var(--font-mono); font-size: 11px; flex: 0 0 auto; }
+.ranklist li.near .rcos { color: var(--green-text); font-weight: 700; }
+.ranklist li.far .rcos { color: var(--c-text-muted); }
+.ranklist li.far .rtxt { color: var(--c-text-muted); }
+
+/* ---- explicit no-JS class hooks (replace removed inline styles). Token-driven
+   and tag/structure-agnostic so they survive heading-tag changes. The static
+   card markup carries class="card static-card"; these key off the new classes
+   so the styling no longer depends on the .no-js-only .card descendant chain.
+   .ranklist--static is LOAD-BEARING: the live .ranklist li starts at opacity:0
+   (revealed by JS adding .shown); without JS the static list must force its
+   rows visible. ---- */
+.static-card {
+  max-width: 760px;
+  margin: var(--sp-3) auto 0;
+}
+.static-card__head {
+  font-family: var(--font-ui);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  border-bottom: var(--bw-1) solid var(--c-border);
+  padding-bottom: 6px;
+  margin: 0 0 var(--sp-1);
+}
+.qline {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--fs-2);
+  color: var(--c-text);
+  margin: 0;
+}
+.static-card__meta {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-heading);
+  margin-top: var(--sp-1);
+  line-height: 1.55;
+}
+.ranklist--static li { opacity: 1; transform: none; }
+.cut {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--c-accent-2);
+  text-align: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 2px 0;
+  position: relative;
+}
+.cut::before, .cut::after { content: ""; position: absolute; top: 50%; width: 24%; height: 1px; background: var(--c-accent-2); opacity: 0.5; }
+.cut::before { left: 0; }
+.cut::after { right: 0; }
+
+/* metadata-filter callout */
+.callout {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0.012)), var(--c-surface);
+  border: var(--bw-1) solid var(--c-accent-2);
+  border-left: 4px solid var(--c-accent-2);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  box-shadow: var(--shadow-1);
+}
+.callout .ctag { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-accent-2); font-weight: 700; margin: 0 0 5px; }
+.callout p { margin: 0; font-size: 13px; color: var(--c-text); font-style: italic; }
+.callout code { font-family: var(--font-mono); font-size: 11px; font-style: normal; background: var(--c-surface-2); border: var(--bw-1) solid var(--c-border); border-radius: var(--radius-sm); padding: 0 4px; }
+
+/* ---- scale bar + legend under the plot ---- */
+.scalebar { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-family: var(--font-ui); font-size: 10px; color: var(--c-text-muted); flex-wrap: wrap; }
+.sb-track { display: flex; align-items: stretch; height: 9px; border: var(--bw-1) solid var(--c-heading); border-radius: 2px; overflow: hidden; }
+.sb-seg { width: 30px; }
+.sb-seg.a { background: var(--c-progress); }
+.sb-seg.b { background: var(--c-surface-2); }
+.sb-seg.c { background: var(--c-text-muted); }
+.sb-seg.d { background: var(--c-heading); }
+.sb-cap { letter-spacing: 0.06em; }
+.vmap-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-left: auto; }
+.lg { display: inline-flex; align-items: center; gap: 5px; }
+.lg .sw { width: 11px; height: 11px; border-radius: 50%; border: var(--bw-1) solid var(--c-heading); }
+.lg .sw.g { background: var(--c-progress); }
+.lg .sw.r { background: var(--c-surface-2); }
+
+/* ===========================================================
+   DRILL CARD blocks (rendered into the base.css .detail-panel shell).
+   =========================================================== */
+.detail-panel.vmap-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  z-index: 4;
+  max-width: none;
+  margin: 0;
+  padding: var(--sp-3) 18px;
+}
+.plot.zoomed { visibility: hidden; }
+
+.vmap-card__head { margin: 0 0 var(--sp-2); }
+.vmap-card__kicker { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--c-text-muted); margin: 0 0 4px; }
+.vmap-card__title { font-family: var(--font-body); font-size: var(--fs-3); margin: 0 0 4px; color: var(--c-heading); font-weight: var(--fw-bold); }
+.vmap-card__title:focus, .vmap-card__title:focus-visible { outline: none; }
+.vmap-card__src { font-family: var(--font-mono); font-size: 11px; color: var(--c-accent-1); margin: 0 0 var(--sp-2); }
+.vmap-card__note { font-family: var(--font-ui); font-size: 12px; color: var(--c-heading); margin: var(--sp-1) 0 0; line-height: 1.55; }
+.vmap-card__note b { color: var(--c-text); }
+
+.vmap-card .chunk-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: 1.6;
+  color: var(--c-text);
+  background: var(--c-bg);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  margin: 0 0 var(--sp-2);
+  overflow-wrap: anywhere;
+}
+.vmap-card .chunk-text mark { background: rgba(23, 166, 115, 0.22); color: var(--green-text); padding: 0 2px; border-radius: 2px; }
+
+.vmap-card .vread {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-accent-1);
+  background: var(--c-surface-2);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  margin: 0 0 var(--sp-2);
+}
+.vmap-card .vread .vlbl { color: var(--c-text-muted); }
+
+/* metadata grid (source / section / date / access stored beside the vector) */
+.vmap-card .metarow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0 0 var(--sp-2);
+}
+.vmap-card .metacell { display: flex; flex-direction: column; gap: 1px; }
+.vmap-card .metacell dt { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-text-muted); margin: 0; }
+.vmap-card .metacell dd { font-family: var(--font-mono); font-size: 12px; color: var(--c-text); margin: 0; }
+
+.vmap-card .factrow { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 var(--sp-2); font-family: var(--font-ui); font-size: 12px; }
+.vmap-card .fact { display: flex; flex-direction: column; gap: 1px; }
+.vmap-card .fact .fl { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-text-muted); }
+.vmap-card .fact .fv { font-family: var(--font-mono); font-size: var(--fs-2); color: var(--c-text); font-weight: 700; }
+.vmap-card .fact .fv.g { color: var(--green-text); }
+.vmap-card .fact .fv.r { color: var(--c-accent-2); }
+
+.topk-flag { display: inline-block; font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; border-radius: var(--radius-sm); padding: 2px 8px; margin: 0 0 10px; }
+.topk-flag.in { background: var(--c-progress); color: var(--c-bg); }
+.topk-flag.out { background: var(--c-surface-2); color: var(--c-accent-2); border: var(--bw-1) solid var(--c-accent-2); }
+
+.whyout {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--c-text);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0.012)), var(--c-surface);
+  border: var(--bw-1) solid var(--c-accent-2);
+  border-left: 4px solid var(--c-accent-2);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin: 0 0 var(--sp-2);
+}
+.whyout .wlbl { display: block; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--c-accent-2); font-weight: 700; margin: 0 0 4px; }
+.whyout b { font-family: var(--font-mono); font-size: 11px; color: var(--c-accent-2); }
+
+/* deeper (level-2) lens-plus target */
+.vmap-card .deeper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: var(--sp-2);
+  border: var(--bw-1) dashed var(--c-border);
+  border-radius: 4px;
+  padding: 11px 12px;
+  min-height: 44px;
+  background: var(--c-bg);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.vmap-card .deeper:hover { background: var(--c-surface-2); border-color: var(--c-accent-3); }
+.vmap-card .deeper:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.vmap-card .deeper .dlbl { font-family: var(--font-ui); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-accent-2); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.vmap-card .deeper .dlbl .lens-plus { flex: 0 0 auto; display: block; }
+.vmap-card .deeper .dprev { font-family: var(--font-mono); font-size: 10.5px; color: var(--c-heading); overflow-wrap: anywhere; line-height: 1.5; }
+
+/* ---- footnote strip ---- */
+.vmap-foot { margin-top: 14px; padding: 10px var(--sp-1) 2px; border-top: var(--bw-1) solid var(--c-border); font-family: var(--font-ui); font-size: 11.5px; color: var(--c-heading); line-height: 1.6; }
+.vmap-foot b { color: var(--c-text); }
+.vmap-foot code { font-family: var(--font-mono); font-size: 11px; background: var(--c-surface-2); border: var(--bw-1) solid var(--c-border); border-radius: var(--radius-sm); padding: 0 4px; }
+
+/* ===========================================================
+   RESPONSIVE -- must hold at 390 AND 320.
+   vector-map.js bakes the hit circle r in SVG units (22..26) on a 520-wide
+   viewBox. On a ~320px phone the SVG renders ~0.55x, so 22 units ~= 28px < 44px.
+   Bump the in-SVG hit radius (CSS-settable SVG geometry `r`) on small screens so
+   every tap target stays >= 44px. Labels also scaled up for legibility.
+   =========================================================== */
+@media (max-width: 760px) {
+  .vmap-grid { grid-template-columns: 1fr; }
+  .plot .pt-lbl { font-size: 13px; }
+  .plot .pt-cos { font-size: 12px; }
+  .plot .ring-label { font-size: 10px; }
+  .plot .axis-cap { font-size: 11px; }
+  .plot .pt-hit { r: 40px; }      /* ~44px+ rendered at phone scale */
+  .vmap-rail { order: 2; }
+  .vmap-legend { margin-left: 0; width: 100%; }
+  .vmap-toolbar { gap: var(--sp-1); }
+  .vmap-card .metarow { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 420px) {
+  .plot .pt-lbl { font-size: 15px; }
+  .plot .pt-cos { font-size: 13px; }
+  .plot .ring-label { font-size: 11px; }
+  .plot .axis-cap { font-size: 12px; }
+  .plot .pt-hit { r: 46px; }      /* 320..420: keep >= 44px rendered */
+  .detail-panel.vmap-card { padding: var(--sp-3) 13px; }
+}
+
+@media (max-width: 360px) {
+  .plot .pt-lbl { font-size: 16px; }
+  .plot .pt-cos { font-size: 14px; }
+  .plot .pt-hit { r: 52px; }
+  .vmap-card .metarow { grid-template-columns: 1fr; }
+}
+
+/* reduced-motion: snap to the settled end state over the SAME DOM */
+@media (prefers-reduced-motion: reduce) {
+  .plot .vlink,
+  .plot .dot,
+  .plot .pt.doc,
+  .plot .pt.query,
+  .ranklist li,
+  .detail-panel.vmap-card { transition: none; }
+  .plot .pt.doc { opacity: 1; transform: translate(0, 0); }
+  .plot .pt.query { opacity: 1; }
+  .ranklist li { opacity: 1; transform: none; }
+}
+
+/* ===========================================================
+   CHAPTER PROSE (ported manuscript from content/ru/vector-store.md).
+   Structure + spacing only; color/space/motion via var(--...). Mirrored inside
+   .no-js-only so the chapter reads complete with JavaScript off.
+   =========================================================== */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a { color: var(--c-link); text-decoration: underline; text-underline-offset: 2px; }
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+.legend-hint { font-family: var(--font-ui); font-size: 12px; color: var(--c-text-muted); text-align: center; margin: var(--sp-2) 0; }
+
+@media (max-width: 560px) {
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
+}

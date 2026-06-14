@@ -1,0 +1,330 @@
+/* ===========================================================
+   assemble-context.css -- SECTION CSS for "Сборка контекста"
+   (the template-fill + token-budget drill -- AtlasMD).
+
+   Scope: ONLY the assemble-context drill blocks that base.css does not ship as
+   shared shells: the level-0 overview node, the context-assembly.js panel
+   (.ca-root + controls + pool + prompt + counter), the timeline controls
+   (rendered by timeline.js as .timeline*/.btn), and the no-JS static schematic.
+   It reuses base.css shells where they exist: .plate / .plate-head / .compass,
+   .breadcrumb, .zoomout, .node, .stage / .camera, .progress-strip,
+   .site-header / .site-footer, .chapter-prose.
+
+   base.css is NEVER edited or forked. Every color/space/motion value here comes
+   from a theme token (var(--...)); selection/focus uses the themed rust ring
+   (--c-focus), NEVER the default blue.
+
+   MOTION RULE (do-not #5, HARD): animate transform + opacity ONLY. The trim
+   collapse on .ca-chunk[data-trimmed="true"] SNAPS - there is NO height /
+   max-height transition anywhere in this file. Trim is shown via opacity only.
+   =========================================================== */
+
+/* ---- controls row: breadcrumb + zoom-out (own row, NOT the compass row) ---- */
+.drill-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-0) var(--sp-1);
+  margin-bottom: 2px;
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.drill-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
+.drill-controls .zoomout { margin-left: auto; }
+
+/* ---- the camera stage + level-0 overview node ---- */
+.stage { position: relative; border-radius: var(--radius-md); }
+.camera {
+  position: relative;
+  transition: transform var(--dur-zoom) var(--ease-zoom);
+  transform-origin: 0 0;
+}
+/* when the panel is open, collapse the level-0 overview out of flow so the stage
+   grows to fit the active pane (no frozen short height, no clip). */
+.stage.zoomed .camera {
+  position: absolute;
+  inset: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ca-overview {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-3) 0;
+}
+.ca-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  max-width: 360px;
+  cursor: pointer;
+}
+.ca-node .idx {
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  color: var(--c-accent-2);
+  letter-spacing: 0.1em;
+}
+.ca-node .name { font-weight: var(--fw-bold); font-size: var(--fs-2); color: var(--c-text); }
+.ca-node .hint { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); }
+.ca-node .ca-open {
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  color: var(--c-link);
+  border-top: var(--bw-1) dashed var(--c-accent-1);
+  padding-top: 6px;
+}
+
+/* ===========================================================
+   context-assembly.js panel content (.ca-root)
+   =========================================================== */
+.ca-root { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ca-title {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  margin: 0;
+  color: var(--c-text);
+}
+.ca-title:focus, .ca-title:focus-visible { outline: none; }
+
+/* ---- controls (budget slider + order toggle) ---- */
+.ca-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: flex-end;
+  padding: var(--sp-1) 0;
+  border-bottom: var(--bw-1) solid var(--c-border-soft);
+}
+.ca-budget { display: flex; flex-direction: column; gap: 4px; }
+.ca-ctl-label {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+}
+.ca-slider { width: 180px; max-width: 100%; accent-color: var(--c-accent-1); cursor: pointer; }
+.ca-slider:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 3px; }
+.ca-slider-val { font-family: var(--font-mono); font-size: var(--fs-1); color: var(--c-accent-1); font-weight: var(--fw-bold); }
+
+.ca-order { display: flex; flex-direction: column; gap: 4px; }
+.ca-order-btn {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  padding: 5px 11px;
+  border: var(--bw-1) solid var(--c-accent-3);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.ca-order .ca-ctl-label + .ca-order-btn { margin-top: 2px; }
+.ca-order-btn + .ca-order-btn { margin-top: 4px; }
+.ca-order-btn:hover { border-color: var(--c-accent-2); color: var(--c-accent-2); }
+.ca-order-btn:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.ca-order-btn[aria-pressed="true"] { background: var(--c-accent-2); border-color: var(--c-accent-2); color: var(--c-bg); }
+
+/* ---- stage: pool of ranked chunks + the prompt template ---- */
+.ca-stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+.ca-pool { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+
+/* chunk rows -- the trimmed collapse SNAPS (NO height/max-height transition). */
+.ca-chunk {
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-left: 3px solid var(--c-accent-1);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  /* IE sets inline transition for opacity/transform ONLY; we add none here. */
+}
+.ca-chunk[data-state="kept"] { border-left-color: var(--c-progress); }
+.ca-chunk[data-state="over"] { border-left-color: var(--c-text-muted); }
+/* TRIM: collapse via opacity; height SNAPS instantly - no height transition. */
+.ca-chunk[data-trimmed="true"] {
+  opacity: 0;
+  height: 0;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  border-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* deliberately NO transition on height/padding/border -- instant snap. */
+}
+.ca-chunk-head { display: flex; flex-wrap: wrap; gap: var(--sp-1); align-items: baseline; }
+.ca-chunk-src { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-2); }
+.ca-chunk-score { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-1); }
+.ca-chunk-tok { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-text-muted); margin-left: auto; }
+.ca-chunk-text { font-family: var(--font-body); font-size: var(--fs-1); line-height: var(--lh-body); color: var(--c-text); margin: 4px 0 0; }
+.ca-dup-badge {
+  display: inline-block;
+  margin-top: 5px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  color: var(--c-accent-2);
+  border: var(--bw-1) solid var(--c-accent-2);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+.ca-chunk[data-dup="true"] { border-left-color: var(--c-accent-2); }
+
+/* ---- the prompt template being filled (dark plate; frozen literals - no token) ---- */
+.ca-prompt {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.ca-line { margin: 0 0 4px; }
+.ca-line--sys { color: var(--c-accent-3); }
+.ca-line--ctx-label { color: var(--c-code-ctx); margin-top: 6px; }
+.ca-ctx-lines { display: block; }
+.ca-line--ctx {
+  color: var(--c-code-ctx);
+  display: block;
+  margin: 0 0 4px;
+  /* IE sets opacity/transform transition inline; default hidden until filled. */
+}
+.ca-line--ctx[data-filled="false"] { opacity: 0; }
+.ca-line--ctx[data-filled="true"] { opacity: 1; }
+.ca-line--q { color: var(--c-code-q); margin-top: 6px; }
+.ca-line--a { color: var(--c-code-plate-fg); }
+.ca-trimmed { color: var(--c-accent-3); font-style: italic; margin: 6px 0 0; }
+
+/* ---- live token counter (mono readout) ---- */
+.ca-counter {
+  font-family: var(--font-mono);
+  font-size: var(--fs-1);
+  color: var(--c-text);
+  background: var(--c-accent-1-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 7px 11px;
+}
+
+/* ===========================================================
+   timeline controls (timeline.js builds .timeline + children)
+   =========================================================== */
+.timeline { display: flex; flex-direction: column; gap: var(--sp-1); margin-top: var(--sp-1); }
+.timeline__controls { display: flex; align-items: center; gap: var(--sp-1); flex-wrap: wrap; }
+.timeline .btn {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  padding: 4px 12px;
+  border: var(--bw-1) solid var(--c-accent-3);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.timeline .btn:hover { border-color: var(--c-accent-2); color: var(--c-accent-2); }
+.timeline .btn:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.timeline .btn[aria-pressed="true"] { background: var(--c-accent-2); border-color: var(--c-accent-2); color: var(--c-bg); }
+.timeline__scrub { flex: 1 1 120px; min-width: 90px; accent-color: var(--c-accent-1); cursor: pointer; }
+.timeline__scrub:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 3px; }
+.timeline__track { flex: 1 1 100%; height: 5px; background: var(--c-surface-3); border-radius: 3px; overflow: hidden; }
+.timeline__progress { display: block; block-size: 100%; inline-size: 0; background: linear-gradient(90deg, var(--c-accent-3), var(--c-accent-2)); transition: inline-size var(--dur-2) var(--ease-1); }
+.timeline__caption { font-family: var(--font-ui); font-size: var(--fs-1); color: var(--c-text-muted); margin: 0; }
+
+/* ===========================================================
+   NO-JS static schematic
+   =========================================================== */
+.ca-steps-static {
+  margin: 0 0 var(--sp-3);
+  padding-left: 1.3em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.ca-steps-static li { margin-bottom: 6px; }
+.ca-steps-static b { color: var(--c-accent-2); }
+.ca-prompt-static {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  overflow: auto;
+}
+
+/* ===========================================================
+   responsive: stack the stage columns on narrow viewports (390/320)
+   =========================================================== */
+@media (max-width: 640px) {
+  .ca-stage { grid-template-columns: 1fr; }
+  .ca-slider { width: 100%; }
+}
+@media (max-width: 360px) {
+  .ca-controls { gap: var(--sp-2); }
+  .ca-chunk-tok { margin-left: 0; }
+}
+
+/* in-prose links get the themed focus ring -- never the UA blue default
+   (AtlasMD do-not: focus ring is always themed --c-focus). */
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+
+/* ===========================================================
+   CHAPTER PROSE -- inline-code + pre x-overflow guard (390/320)
+   Long unbroken inline <code> (file paths, dotted identifiers, URLs) must
+   wrap instead of forcing the page wider than the viewport; <pre> code
+   blocks scroll inside their own box. Color/space/motion via var(--...);
+   the dark code-plate hex is the AtlasMD-2.1 frozen exemption. ASCII only.
+   =========================================================== */
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.chapter-prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chapter-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* reduced-motion: timeline.js snaps to the end state over the SAME DOM; nothing
+   extra needed here (no height tween exists). Keep transitions inert anyway. */
+@media (prefers-reduced-motion: reduce) {
+  .camera,
+  .timeline__progress { transition: none !important; }
+}

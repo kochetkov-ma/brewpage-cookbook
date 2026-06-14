@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Оценка - precision@k и recall@k - RAG С НУЛЯ</title>
+<meta name="description" content="Оценка RAG: измеряем точность поиска (precision@k, recall@k) и качество ответа на фиксированном золотом наборе. Подвигайте слайдер k и сравните before/after. Интерактивная глава BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
+     + this section's own CSS. Swapping the theme <link> is the only reskin. -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/evaluation.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К оценке" data-en="Skip to the evaluation">К оценке</a>
+<div class="wrap">
+
+  <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
+  <header class="site-header" data-component="header">
+    <div class="site-header__brand">
+      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+          <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+          <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+          <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+        </svg>
+      </a>
+      <div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Оценка" data-en="Plate - Evaluation">Глава - Оценка</div>
+      </div>
+    </div>
+    <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+  <!-- ===================== metric plate (Оценка) ===================== -->
+  <section class="plate" aria-labelledby="evalTitle">
+    <div class="plate-head">
+      <div class="title-block">
+        <nav class="back-to-map" aria-label="Хлебные крошки">
+          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Маршрут</a>
+          <span class="sep" aria-hidden="true">&rsaquo;</span>
+          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Оценка" data-en="Evaluation">Оценка</span>
+        </nav>
+        <h1 id="evalTitle" data-i18n="evalTitle" data-ru="Оценка: точность поиска и качество ответа" data-en="Evaluation: retrieval accuracy and answer quality">Оценка: точность поиска и качество ответа</h1>
+        <p data-i18n="evalSub" data-ru="Подвигайте слайдер k и переключите before/after: precision@k и recall@k пересчитываются на одном фиксированном золотом наборе. Сравнение честно только на одном наборе." data-en="Move the k slider and toggle before/after: precision@k and recall@k recompute on one fixed golden set. The comparison is honest only on the same set.">Подвигайте слайдер k и переключите before/after: precision@k и recall@k пересчитываются на одном фиксированном золотом наборе. Сравнение честно только на одном наборе.</p>
+      </div>
+      <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- live precision@k / recall@k calculator (built by eval-calculator.js).
+         Empty host: the module auto-creates [data-slot=controls|bars|detail]. -->
+    <div class="evalc-host js-only" data-component="metric-eval-calculator"></div>
+
+    <!-- ===== NO-JS fallback: the worked golden table at a couple of k values,
+         so the chapter still teaches precision@k / recall@k with JS off. ===== -->
+    <div class="no-js-only">
+      <p class="legend-hint">Каркас прогоняет retrieve на фиксированном золотом наборе и считает precision@k = попаданий в top-k / k и recall@k = попаданий в top-k / всех нужных кусков. Зеленым отмечено попадание в нужные куски, серым - лишнее. Включите JavaScript, чтобы подвигать слайдер k и переключить before/after.</p>
+      <table class="eval-static" aria-label="Золотой набор: top-k и метрики">
+        <thead>
+          <tr>
+            <th scope="col">Вопрос</th>
+            <th scope="col">Нужные куски</th>
+            <th scope="col">Выдано (after, top-5)</th>
+            <th scope="col">precision@5</th>
+            <th scope="col">recall@5</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Как вернуть товар?</td>
+            <td><span class="chip is-hit">policy-12</span> <span class="chip is-hit">policy-13</span></td>
+            <td><span class="chip is-hit">policy-12</span> <span class="chip is-hit">policy-13</span> <span class="chip is-miss">faq-07</span> <span class="chip is-miss">policy-12b</span> <span class="chip is-miss">promo-02</span></td>
+            <td>2/5 = 0.40</td>
+            <td>2/2 = 1.00</td>
+          </tr>
+          <tr>
+            <td>Сколько дней на возврат?</td>
+            <td><span class="chip is-hit">policy-13</span></td>
+            <td><span class="chip is-hit">policy-13</span> <span class="chip is-miss">policy-12</span> <span class="chip is-miss">faq-31</span> <span class="chip is-miss">ship-04</span> <span class="chip is-miss">promo-02</span></td>
+            <td>1/5 = 0.20</td>
+            <td>1/1 = 1.00</td>
+          </tr>
+          <tr>
+            <td>Можно ли вернуть без чека?</td>
+            <td><span class="chip is-hit">policy-13</span> <span class="chip is-hit">policy-44</span> <span class="chip is-hit">faq-31</span></td>
+            <td><span class="chip is-hit">policy-13</span> <span class="chip is-hit">faq-31</span> <span class="chip is-hit">policy-44</span> <span class="chip is-miss">policy-12</span> <span class="chip is-miss">promo-02</span></td>
+            <td>3/5 = 0.60</td>
+            <td>3/3 = 1.00</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="legend-hint">Высокий precision@5, но низкий recall@5: что выдали - по делу, но часть нужного не дотянулась до top-5. Высокий recall, но низкий precision: нужное есть, но тонет в мусоре, который съедает бюджет токенов на сборке контекста. Поэтому метрики считают парой.</p>
+    </div>
+  </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/evaluation.md (strategy A: md-as-source, hand-ported).
+       Always visible: reads fully with JS on or off. The .js-only calculator
+       above only ENHANCES; this prose is the chapter text. -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
+      <p>Вы поменяли размер куска, добавили реранкинг и "чувствуете", что стало лучше. Но на следующей неделе другой вопрос стал отвечаться хуже - а вы этого не заметили, потому что проверяли на паре вопросов вручную. Без измерения вы не можете отличить улучшение от регрессии: каждая правка - это ставка вслепую.</p>
+      <p>Это стадия оценки (evaluation): превратить "кажется лучше" в число. Измеряем две вещи отдельно - <strong>нашелся ли нужный кусок</strong> (точность поиска) и <strong>хорош ли ответ</strong> (качество генерации) - и прогоняем их на фиксированном наборе вопросов до и после каждой правки. Ниже - рабочий каркас оценки (eval-harness) над золотым набором.</p>
+    </section>
+
+    <section aria-labelledby="pr-harness">
+      <h2 id="pr-harness">Решение: каркас оценки над золотым набором</h2>
+      <p>Вот рабочий каркас на Python. Золотой набор - это список вопросов, для каждого из которых заранее известны id релевантных кусков. Каркас прогоняет retrieve и считает precision@k и recall@k.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-harness">
+        <figcaption class="code-block__cap" data-i18n data-ru="Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore." data-en="Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set.">Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore.</figcaption>
+        <pre><code>golden = [
+    {
+        "q": "Kak vernut' tovar?",
+        "relevant": {"policy-12", "policy-13"},   # id chunkov s otvetom
+    },
+    {
+        "q": "Skolko dney na vozvrat?",
+        "relevant": {"policy-13"},
+    },
+    # ...50+ voprosov: chem bolshe, tem ustojchivee metrika
+]
+
+def precision_recall_at_k(retrieved_ids, relevant, k):
+    """retrieved_ids: top-k id ot retrieve, po ubyvaniyu score.
+       relevant: mnozhestvo id dejstvitelno nuzhnyh chunkov."""
+    top_k = retrieved_ids[:k]
+    hits = sum(1 for cid in top_k if cid in relevant)
+    precision = hits / k                      # dolya popadanij sredi vydannyh k
+    recall = hits / len(relevant)             # dolya najdennyh iz vseh nuzhnyh
+    return precision, recall
+
+def evaluate(retriever, golden, k=5):
+    p_sum = r_sum = 0.0
+    for item in golden:
+        ids = retriever(item["q"])            # vash retrieve -&gt; spisok id
+        p, r = precision_recall_at_k(ids, item["relevant"], k)
+        p_sum += p
+        r_sum += r
+    n = len(golden)
+    return {"precision@k": p_sum / n, "recall@k": r_sum / n, "k": k, "n": n}
+
+# Sravnenie do/posle pravki na odnom i tom zhe nabore:
+before = evaluate(retriever_v1, golden, k=5)
+after  = evaluate(retriever_v2, golden, k=5)
+print(before, after)</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Zolotoj nabor</strong> -- Spisok voprosov, dlja kazhdogo zaranee razmecheny id relevantnyh chunkov - fundament ocenki.</li>
+          <li><strong>precision@k i recall@k</strong> -- Schitaem popadanija v pervyh k: precision - dolja sredi vydannyh, recall - dolja iz vseh nuzhnyh.</li>
+          <li><strong>Progon po naboru</strong> -- Proganjaem retriever po vsem voprosam i usrednjaem precision@k i recall@k po naboru.</li>
+          <li><strong>Sravnenie do/posle</strong> -- Obe versii retrievera proganjajutsja na ODNOM fiksirovannom nabore - tolko tak sravnenie chestnoe.</li>
+        </ol>
+      </figure>
+      <p>Главное правило: набор <code>golden</code> фиксирован, и обе версии (<code>v1</code>, <code>v2</code>) прогоняются на нем одном. Только так сравнение честное.</p>
+    </section>
+
+    <section aria-labelledby="pr-retrieval">
+      <h2 id="pr-retrieval">Точность поиска</h2>
+      <p>Retrieve - это задача информационного поиска (information retrieval), и метрики у нее стандартные. <strong>Precision@k</strong> = доля действительно релевантных среди первых k выданных; <strong>recall@k</strong> = доля найденных из всех существующих релевантных. Оба определены в классическом IR (<a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">Manning, Raghavan, Schutze, Introduction to Information Retrieval, гл. 8</a>).</p>
+      <p>Различие важно на практике. Высокий precision@5, но низкий recall@5 значит: что выдали - то по делу, но часть нужных кусков не дотянулась до top-5 (увеличьте k или улучшите эмбеддинг). Высокий recall, но низкий precision: нужное есть, но тонет в мусоре, который съедает бюджет токенов на стадии сборки контекста. Именно поэтому метрики считают парой, а не одной.</p>
+    </section>
+
+    <section aria-labelledby="pr-quality">
+      <h2 id="pr-quality">Качество ответа</h2>
+      <p>Точный retrieve еще не гарантирует хороший ответ: модель может правильно найти куски, но ответить неполно, не по делу или добавив выдумку. Качество ответа меряет другая группа метрик.</p>
+      <p>Для RAG их формализует фреймворк <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS (Es et al., 2023)</a>: он предлагает <strong>faithfulness</strong> (насколько ответ заземлен на выданном контексте - мера против галлюцинаций из главы про генерацию), <strong>answer relevance</strong> (отвечает ли ответ именно на вопрос) и <strong>context relevance/precision</strong> (насколько выданный контекст относится к вопросу). RAGAS оценивает эти аспекты автоматически, без ручной разметки каждого ответа.</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-ragas">
+        <figcaption class="code-block__cap" data-i18n data-ru="RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision." data-en="RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.">RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision.</figcaption>
+        <pre><code># pip install ragas datasets
+from ragas import evaluate as ragas_evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+from datasets import Dataset
+
+ds = Dataset.from_dict({
+    "question":     [it["q"] for it in samples],
+    "answer":       [it["answer"] for it in samples],     # vyhod generation
+    "contexts":     [it["contexts"] for it in samples],   # chunki, vidannye modeli
+    "ground_truth": [it["truth"] for it in samples],      # etalon iz golden
+})
+report = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])
+print(report)</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Metriki RAGAS</strong> -- Stavim ragas i podkljuchaem tri metriki kachestva: faithfulness, answer_relevancy, context_precision.</li>
+          <li><strong>Datset ocenki</strong> -- Sobiraem dataset iz voprosov, otvetov generacii, vydannyh chunkov i etalona iz golden.</li>
+          <li><strong>Zapusk ocenki</strong> -- Proganjaem RAGAS po datasetu - on schitaet metriki avtomaticheski, bez ruchnoj razmetki kazhdogo otveta.</li>
+        </ol>
+      </figure>
+    </section>
+
+    <section aria-labelledby="pr-golden">
+      <h2 id="pr-golden">Золотой набор вопросов</h2>
+      <p>Золотой набор - это фундамент всей оценки: список реальных вопросов с размеченными ответами/релевантными кусками. Правила: берите вопросы из реального трафика (а не придуманные), покрывайте разные темы и форматы и не меняйте набор между замерами - иначе <code>before</code> и <code>after</code> несравнимы. Размер - от нескольких десятков; чем больше, тем меньше шума в среднем.</p>
+    </section>
+
+    <section aria-labelledby="pr-feedback">
+      <h2 id="pr-feedback">Обратная связь -&gt; метрики</h2>
+      <p>Оценки пользователей (палец вверх/вниз, "не помогло") - это сырой сигнал. Превратите его в метрику: помеченные как плохие ответы разбирайте и добавляйте их вопросы в золотой набор с правильной разметкой. Так набор растет именно на тех случаях, где система ошибается, и следующая правка проверяется уже на них.</p>
+    </section>
+
+    <section aria-labelledby="pr-failures">
+      <h2 id="pr-failures">Типичные отказы и их следы</h2>
+      <p>Когда метрика просела, причину видно по тому, какая именно упала:</p>
+      <ul>
+        <li><strong>Низкий recall@k</strong> - нужный кусок вообще не вернулся. След: проблема в retrieve (эмбеддинг, чанкинг, маленький k). См. главы про эмбеддинг/чанкинг.</li>
+        <li><strong>Высокий recall, низкая faithfulness</strong> - кусок был, но ответ не заземлен (выдумка). След: слабая инструкция генерации. См. главу про генерацию.</li>
+        <li><strong>Нужный кусок в контексте, но проигнорирован</strong> - часто он оказался в середине окна (lost-in-the-middle, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023</a>). След: порядок на стадии сборки контекста.</li>
+      </ul>
+      <p>Выше - интерактивный калькулятор precision@k / recall@k над золотым набором. Слайдер k пересчитывает обе метрики, тумблер before/after сравнивает две дорожки на одном фиксированном наборе, а попадания в top-k подсвечиваются зеленым по мере того, как вы их находите. Без JS страница показывает разобранную золотую таблицу с теми же расчетами.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>Manning, Raghavan, Schutze, 2008. Introduction to Information Retrieval, гл. 8 (precision/recall@k). <a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">nlp.stanford.edu/IR-book</a></li>
+        <li>Es et al., 2023. RAGAS: Automated Evaluation of Retrieval Augmented Generation. <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">arxiv.org/abs/2309.15217</a></li>
+        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>В калькуляторе подвигайте слайдер k от 1 до 10 на одном вопросе и проследите, как recall@k растет (попадает больше нужных кусков), а precision@k чаще падает - это и есть компромисс.</li>
+        <li>Переключите тумблер before/after и сравните две дорожки на одном и том же золотом наборе: только фиксированный набор делает сравнение честным.</li>
+        <li>Найдите вопрос с высоким recall, но низким precision, и подумайте, как лишние куски ударят по бюджету токенов на стадии сборки контекста.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Система измерена и улучшается. Последняя остановка - глава <strong>production</strong>: как связать все звенья в живой сервис и держать его в форме - скорость, стоимость, мониторинг, доступ.</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/evaluation.js"></script>
+</body>
+</html>

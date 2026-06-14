@@ -29,10 +29,10 @@ body {
   color: var(--c-text);
   background-color: var(--c-bg);
   background-image:
-    radial-gradient(circle at 20% 15%, rgba(176,138,62,0.08) 0, rgba(176,138,62,0) 40%),
-    radial-gradient(circle at 80% 70%, rgba(74,111,106,0.07) 0, rgba(74,111,106,0) 45%),
-    repeating-linear-gradient(0deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px),
-    repeating-linear-gradient(90deg, rgba(120,96,60,0.035) 0, rgba(120,96,60,0.035) 1px, transparent 1px, transparent 26px);
+    radial-gradient(circle at 20% 15%, var(--c-paper-grain-gold) 0, var(--c-paper-grain-gold-0) 40%),
+    radial-gradient(circle at 80% 70%, var(--c-paper-grain-teal) 0, var(--c-paper-grain-teal-0) 45%),
+    repeating-linear-gradient(0deg, var(--c-paper-grain-line) 0, var(--c-paper-grain-line) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, var(--c-paper-grain-line) 0, var(--c-paper-grain-line) 1px, transparent 1px, transparent 26px);
   line-height: var(--lh-body);
   min-height: 100vh;
 }
@@ -70,10 +70,22 @@ body {
   transition: top var(--dur-1) var(--ease-1);
 }
 .skip-link:focus { top: var(--sp-1); }
+/* themed focus ring -- the skip-link is the first Tab stop; without this it
+   shows the UA blue ring (AtlasMD: NO blue focus anywhere). */
+.skip-link:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
 
-/* visibility toggles: .has-js on <html> flips these */
-.js-only { display: none; }
-.has-js .js-only { display: revert; }
+/* visibility toggles: page glue adds .has-js on <html>; its ABSENCE is the
+   no-JS state. The hides must beat component display rules (e.g. .progress-strip
+   / .pipeline-controls declare display:flex at specificity 0,1,0 LATER in this
+   file and would otherwise win the cascade). Scoping each hide to a root state
+   class raises its specificity to 0,2,0 so it stays authoritative without
+   per-component patches. We only FORCE the hidden side per JS state; the shown
+   side carries no forced display, so each component keeps its own display value
+   (flex/grid/block) instead of being reverted to the UA default. */
+html:not(.has-js) .js-only { display: none; }
 .has-js .no-js-only { display: none; }
 
 a { color: var(--c-link); }
@@ -107,9 +119,9 @@ a { color: var(--c-link); }
 .site-header__brand .seal {
   width: 56px; height: 56px;
   flex: 0 0 auto;
-  filter: drop-shadow(0 1px 2px rgba(60,46,26,0.18));
+  filter: drop-shadow(0 1px 2px var(--c-drop-shadow));
 }
-.site-header__brand h1 {
+.site-header__brand .brand-title {
   font-size: 1.6rem;
   letter-spacing: 0.14em;
   margin: 0;
@@ -124,6 +136,24 @@ a { color: var(--c-link); }
   color: var(--c-text-muted);
   margin-top: var(--sp-0);
   letter-spacing: 0.03em;
+}
+/* GLOBAL themed link-focus fallback -- guarantees NO link can ever surface the
+   UA blue default (AtlasMD do-not: focus ring is always themed --c-focus).
+   Specific component :focus-visible rules have higher specificity and still win;
+   this only catches otherwise-unstyled links. */
+a:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* when the brand is itself a back-to-home link (map pages: a.site-header__brand)
+   OR wraps an inner anchor (chapter pages: div.site-header__brand > a), give it
+   the themed focus ring -- never the UA blue default (AtlasMD: no blue focus). */
+a.site-header__brand:focus-visible,
+.site-header__brand a:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
 /* ---------- back-to-map control (sections only; always visible) ----------
@@ -146,7 +176,7 @@ a { color: var(--c-link); }
   text-decoration: none;
   color: var(--c-heading);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(0,0,0,0.015)),
+    linear-gradient(180deg, var(--c-sheen-top), var(--c-tint-deep)),
     var(--c-surface);
   border: var(--bw-1) solid var(--c-accent-3);
   border-radius: var(--radius-sm);
@@ -180,7 +210,7 @@ a { color: var(--c-link); }
   border-radius: var(--radius-sm);
   overflow: hidden;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.02)),
+    linear-gradient(180deg, var(--c-sheen-top-strong), var(--c-tint-deep-2)),
     var(--c-surface);
   box-shadow: var(--shadow-sheen), var(--shadow-1);
 }
@@ -214,6 +244,130 @@ a { color: var(--c-link); }
 }
 
 /* ===========================================================
+   SITE SEARCH  (header affordance; client-side full-text)
+   Shared component shell -- tokens only, never a literal color.
+   combobox input + listbox overlay; themed focus (rust/gold, never blue);
+   >=44px target; overlay clamped so it never causes x-overflow at 320/390.
+   =========================================================== */
+.search-box {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.search-box__input {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  min-height: 44px;
+  width: 13.5rem;
+  max-width: 46vw;
+  padding: 8px 13px;
+  color: var(--c-text);
+  background:
+    linear-gradient(180deg, var(--c-sheen-top), var(--c-tint-deep)),
+    var(--c-surface);
+  border: var(--bw-1) solid var(--c-accent-3);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sheen), var(--shadow-1);
+  transition: border-color var(--dur-1) var(--ease-1),
+              box-shadow var(--dur-1) var(--ease-1);
+}
+.search-box__input::placeholder {
+  color: var(--c-text-muted);
+  opacity: 1;
+}
+.search-box__input:hover {
+  border-color: var(--c-accent-2);
+}
+.search-box__input:focus-visible,
+.search-box__input:focus {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 1px;
+  border-color: var(--c-accent-2);
+}
+.search-box__results {
+  list-style: none;
+  margin: var(--sp-1) 0 0;
+  padding: var(--sp-0);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 30;
+  width: 24rem;
+  max-width: min(92vw, 24rem);
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-accent-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+}
+.search-box__results[hidden] { display: none; }
+.search-box__result {
+  border-radius: var(--radius-sm);
+}
+.search-box__result + .search-box__result {
+  border-top: var(--bw-1) solid var(--c-border-soft);
+}
+.search-box__result--empty {
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--c-text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+}
+.search-box__link {
+  display: block;
+  padding: var(--sp-2) var(--sp-3);
+  text-decoration: none;
+  color: var(--c-text);
+}
+.search-box__result.is-active,
+.search-box__result:hover {
+  background: var(--c-surface-3);
+}
+.search-box__result.is-active .search-box__link {
+  color: var(--c-heading);
+}
+.search-box__r-head {
+  display: block;
+  font-family: var(--font-ui);
+  font-weight: var(--fw-bold);
+  font-size: 0.86rem;
+  color: var(--c-heading);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+}
+.search-box__r-meta {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+.search-box__r-snip {
+  display: block;
+  font-size: var(--fs-1);
+  color: var(--c-text-muted);
+  margin-top: 3px;
+  line-height: var(--lh-body);
+  overflow-wrap: anywhere;
+}
+.search-box__hit {
+  background: var(--c-accent-4-soft);
+  color: var(--c-heading);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+@media (max-width: 600px) {
+  .search-box { width: 100%; }
+  .search-box__input { width: 100%; max-width: 100%; }
+  .search-box__results { right: auto; left: 0; width: 100%; max-width: 100%; }
+}
+
+/* ===========================================================
    HERO  (landing only)
    =========================================================== */
 .hero {
@@ -239,7 +393,7 @@ a { color: var(--c-link); }
   width: 34px; height: 1px;
   background: var(--c-border);
 }
-.hero h2 {
+.hero h1 {
   font-size: var(--fs-4);
   line-height: var(--lh-tight);
   letter-spacing: 0.005em;
@@ -274,7 +428,7 @@ a { color: var(--c-link); }
   border: var(--bw-2) solid var(--c-text-muted);
   border-radius: var(--radius-lg);
   background:
-    linear-gradient(135deg, rgba(255,255,255,0.25), rgba(0,0,0,0.02)),
+    linear-gradient(135deg, var(--c-sheen-plate), var(--c-tint-deep-2)),
     var(--c-surface-2);
   box-shadow: var(--shadow-plate);
   padding: var(--sp-5) var(--sp-4) var(--sp-5);
@@ -289,7 +443,7 @@ a { color: var(--c-link); }
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(120% 90% at 50% 45%, transparent 62%, rgba(92,74,50,0.10) 100%);
+    radial-gradient(120% 90% at 50% 45%, transparent 62%, var(--c-vignette) 100%);
   opacity: 0.85;
 }
 /* corner L-ticks at the four inner corners */
@@ -331,8 +485,12 @@ a { color: var(--c-link); }
   z-index: 2;
   flex-wrap: wrap;
 }
-.plate-head .title-block h3,
-.atlas-head .title-block h3 {
+/* The chapter title is now an <h1> (was <h3>) but must keep its title-block
+   size, NOT the document-level h1 size. base.css declares no bare h1 rule, so
+   this scoped rule (specificity 0,2,1) is the sole source of the title size;
+   the explicit font-size: var(--fs-3) below keeps it identical to the old h3. */
+.plate-head .title-block h1,
+.atlas-head .title-block h1 {
   margin: 0;
   font-size: var(--fs-3);
   letter-spacing: 0.1em;
@@ -557,7 +715,7 @@ a { color: var(--c-link); }
   letter-spacing: 0.02em;
   color: var(--c-text);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    linear-gradient(180deg, var(--c-sheen-top-soft), var(--c-tint-deep-soft)),
     var(--c-surface);
   border: var(--bw-1) solid var(--c-border);
   border-radius: var(--radius-sm);
@@ -624,7 +782,7 @@ a { color: var(--c-link); }
 .lnum {
   width: 30px; height: 30px;
   font-size: 0.66rem; letter-spacing: 0;
-  box-shadow: inset 0 0 0 1px rgba(243,234,212,0.6);
+  box-shadow: inset 0 0 0 1px var(--c-plate-ring);
 }
 .legend-list li.is-start .lnum,
 .mobile-route li.is-start .mnum { background: var(--c-accent-3); border-color: var(--gold-deep); color: var(--c-bg); }
@@ -662,7 +820,7 @@ a { color: var(--c-link); }
   white-space: nowrap;
   color: var(--c-text-muted);
 }
-.cs-status.started { color: var(--c-accent-3); }
+.cs-status.started { color: var(--c-accent-3-text); }
 .cs-status.done { color: var(--green-text); }
 .cs-status .cs-check {
   flex: 0 0 auto;
@@ -695,7 +853,7 @@ a { color: var(--c-link); }
   width: 34px; height: 34px;
   margin-left: -27px;
   font-size: 0.66rem;
-  box-shadow: 0 1px 3px rgba(60,46,26,0.18), inset 0 0 0 1px rgba(243,234,212,0.6);
+  box-shadow: 0 1px 3px var(--c-drop-shadow), inset 0 0 0 1px var(--c-plate-ring);
 }
 
 /* one-time pan affordance (mobile) */
@@ -730,7 +888,7 @@ a { color: var(--c-link); }
   border: var(--bw-1) solid var(--c-text-muted);
   border-radius: var(--radius-md);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.4), rgba(0,0,0,0.015)),
+    linear-gradient(180deg, var(--c-sheen-top-strong), var(--c-tint-deep)),
     var(--c-surface);
   box-shadow: var(--shadow-ring), var(--shadow-2);
   padding: 0;
@@ -774,7 +932,7 @@ a { color: var(--c-link); }
   align-items: center;
   gap: 14px;
   padding: var(--sp-3) var(--sp-4) 14px;
-  background: linear-gradient(90deg, rgba(92,74,50,0.12), rgba(92,74,50,0));
+  background: linear-gradient(90deg, var(--c-fn-head-tint), var(--c-fn-head-tint-0));
   border-bottom: var(--bw-1) dashed var(--c-border);
 }
 .field-note .badge {
@@ -786,7 +944,7 @@ a { color: var(--c-link); }
   background: linear-gradient(180deg, var(--c-accent-1), var(--c-accent-4));
   border: var(--bw-1) solid var(--c-accent-4);
   border-radius: var(--radius-sm);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+  box-shadow: inset 0 1px 0 var(--c-sheen-inset);
   padding: 7px 11px;
   min-width: 52px;
   text-align: center;
@@ -846,7 +1004,7 @@ a { color: var(--c-link); }
   border-radius: var(--radius-sm);
 }
 .field-note .fn-progress .cs-status.started {
-  color: var(--c-accent-3);
+  color: var(--c-accent-3-text);
   border-color: var(--c-accent-3);
   background: var(--c-accent-3-soft);
 }
@@ -931,7 +1089,7 @@ a { color: var(--c-link); }
   padding: 10px 14px;
   min-height: 44px;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    linear-gradient(180deg, var(--c-sheen-top-soft), var(--c-tint-deep-soft)),
     var(--c-surface);
   transition: background-color var(--dur-1) var(--ease-1),
               border-color var(--dur-1) var(--ease-1),
@@ -1025,7 +1183,7 @@ a { color: var(--c-link); }
   cursor: pointer;
   padding: var(--sp-2) var(--sp-3);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.28), rgba(0,0,0,0.012)),
+    linear-gradient(180deg, var(--c-sheen-top-soft), var(--c-tint-deep-soft)),
     var(--c-surface);
   border: var(--bw-1) solid var(--c-border);
   border-radius: var(--radius-md);
@@ -1077,7 +1235,7 @@ a { color: var(--c-link); }
   text-transform: uppercase;
   color: var(--c-heading);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(0,0,0,0.015)),
+    linear-gradient(180deg, var(--c-sheen-top), var(--c-tint-deep)),
     var(--c-surface);
   border: var(--bw-1) solid var(--c-text-muted);
   border-radius: var(--radius-md);
@@ -1183,15 +1341,15 @@ a { color: var(--c-link); }
   .site-header { padding: 22px 0 14px; gap: var(--sp-2); }
   .site-header__brand { gap: 13px; }
   .site-header__brand .seal { width: 46px; height: 46px; }
-  .site-header__brand h1 { font-size: 1.18rem; letter-spacing: 0.1em; }
+  .site-header__brand .brand-title { font-size: 1.18rem; letter-spacing: 0.1em; }
   .hero { margin: 30px 0 14px; }
   .hero .kicker { letter-spacing: 0.26em; gap: 10px; }
   .hero .kicker::before, .hero .kicker::after { width: 20px; }
-  .hero h2 { font-size: clamp(1.5rem, 7.6vw, 2rem); max-width: 20ch; }
+  .hero h1 { font-size: clamp(1.5rem, 7.6vw, 2rem); max-width: 20ch; }
   .hero p.promise { font-size: 1rem; }
   .plate, .atlas { padding: var(--sp-4) var(--sp-3) 22px; margin-top: 26px; }
   .plate::after, .atlas::after { inset: 9px; }
-  .plate-head .title-block h3, .atlas-head .title-block h3 { font-size: 1.1rem; }
+  .plate-head .title-block h1, .atlas-head .title-block h1 { font-size: 1.1rem; }
   .compass { width: 56px; height: 56px; }
 
   .desktop-trail { display: block; }
@@ -1203,8 +1361,8 @@ a { color: var(--c-link); }
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
-            mask-image: linear-gradient(90deg, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, var(--c-mask) 26px, var(--c-mask) calc(100% - 26px), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, var(--c-mask) 26px, var(--c-mask) calc(100% - 26px), transparent 100%);
     scrollbar-width: thin;
     scrollbar-color: var(--c-text-muted) transparent;
   }
@@ -1232,6 +1390,165 @@ a { color: var(--c-link); }
   .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
   .field-note .fn-body { padding: var(--sp-3) 18px var(--sp-4); }
   .field-note .blurb::first-letter { font-size: 2.3em; }
+}
+
+/* ============================================================
+   BLOCK CODE -- highlighted code plate + annotation regions
+   ------------------------------------------------------------
+   Structure only; every color via var(--...). Plate bg/fg + the
+   eight syntax tokens live in themes/atlas.css. Inline <code> is
+   NOT touched here (it keeps its gold-soft tint elsewhere); this
+   is BLOCK code only. .js-only/.no-js-only are defined globally
+   above (reused, not redefined). -- W1-CSS
+   ============================================================ */
+
+/* figure wrapper around a code plate + caption.
+   position: relative makes .code-block the offsetParent for the JS-positioned
+   .ca-popover: code-annot.js writes top/left as offsets from this host
+   (wrapRect - hostRect, host = the .code-block root), and the .ca-layer holding
+   the popovers stays position: static so the popover resolves its offsetParent
+   to .code-block exactly as the JS basis expects. -- W6-FIX L5 */
+.code-block {
+  position: relative;
+  margin: var(--sp-3) 0;
+}
+/* popover host layer: must stay static so it is NOT the offsetParent;
+   the JS top/left are relative to .code-block, not to this layer. */
+.ca-layer {
+  position: static;
+}
+.code-block__cap {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  font-style: italic;
+  color: var(--c-text-muted);
+  margin-top: var(--sp-1);
+}
+
+/* the dark plate itself (frozen bg/fg via tokens) */
+.code-block pre,
+pre.code-block__pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: 0;
+  overflow: auto;
+  white-space: pre;
+}
+.code-block pre code,
+pre.code-block__pre code {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* ---- syntax-highlight tokens (code-highlight.js spans) ---- */
+.tok { color: inherit; }
+.tok-kw   { color: var(--c-code-kw); }
+.tok-str  { color: var(--c-code-str); }
+.tok-num  { color: var(--c-code-num); }
+.tok-com  { color: var(--c-code-com); }
+.tok-fn   { color: var(--c-code-fn); }
+.tok-op   { color: var(--c-code-op); }
+.tok-punc { color: var(--c-code-punc); }
+.tok-key  { color: var(--c-code-key); }
+
+/* ---- per-line row (code-highlight.js .cl spans) ----
+   Each source line is one block row so a multi-row .ca-region
+   forms a clean rectangular band; the lone "\n" text node between
+   rows then collapses (does not double the line). The <pre> stays
+   white-space: pre (see .code-block pre above) and .cl inherits it,
+   so intra-line spaces + tabs + code indentation are preserved. */
+.cl {
+  display: block;
+  white-space: inherit;
+}
+
+/* ---- context-annotation (CA) line-range region over code ----
+   hoverable/focusable marker spanning one or more code lines.
+   subtle plate-fg underline + faint wash; >=44px effective hit
+   target via line-height/padding; themed focus ring (never UA).
+   When the region wraps block .cl rows it becomes a block band so
+   the wash + ring cover a contiguous rectangle, not ragged inline
+   fragments. min-height floors the hit area when the band is short
+   (a single-line band still clears it via line-height + padding). */
+.ca-region {
+  cursor: help;
+  border-radius: var(--radius-sm);
+  padding: 2px 3px;
+  margin: 0 -3px;
+  line-height: 1.6;
+  text-decoration: underline dotted var(--c-code-key);
+  text-underline-offset: 3px;
+  background: var(--c-accent-1-soft);
+}
+.ca-region:has(.cl) {
+  display: block;
+  min-height: 44px;
+}
+.ca-region:hover {
+  background: var(--c-accent-4-soft);
+}
+.ca-region:focus-visible {
+  /* Composite focus ring so the indicator clears WCAG 1.4.11 (3:1) on BOTH
+     surfaces it can touch. The rust outline at offset 2px keeps the existing
+     parchment-side look (4.26:1 on parchment). The tight box-shadow ring in
+     --c-focus-code (brighter warm-amber) hugs the region directly on the dark
+     code plate, where it reaches 6.47:1 vs #2f2718 -- the plate-side segment
+     that the rust outline alone (2.89:1) left sub-threshold. -- W6-FIX L4 */
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 var(--bw-2) var(--c-focus-code);
+}
+
+/* ---- non-modal popover (positioned by JS; visual default only) ----
+   position: absolute activates the top/left code-annot.js writes. Those offsets
+   are measured from the .code-block host (wrapRect - hostRect), and .code-block
+   is position: relative while .ca-layer stays static -- so the popover's
+   offsetParent is .code-block, matching the JS coordinate basis exactly. No
+   transition (reduced-motion safe; show/hide is an instant hidden toggle). -- W6-FIX L5 */
+.ca-popover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 320px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  line-height: var(--lh-body);
+  z-index: 60;
+}
+.ca-popover:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* ---- static no-JS region notes (the .no-js-only fallback list) ---- */
+.code-annot-list {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-4);
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  line-height: var(--lh-body);
+  color: var(--c-text-muted);
+}
+.code-annot-list > li {
+  margin-bottom: var(--sp-1);
+}
+.code-annot-list > li:last-child {
+  margin-bottom: 0;
 }
 
 /* reduced-motion: snap to end state over the SAME DOM (AtlasMD 1.5 / 6) */

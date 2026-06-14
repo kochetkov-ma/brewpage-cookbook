@@ -32,17 +32,44 @@
  *   rail?: HTMLElement,                  // side-rail root (embed readout + kNN list)
  *   onActivate?: (point, markerEl) => void,  // called on every point activate
  *   reduce?: boolean,                    // force reduced-motion (default: query the OS)
+ *   lang?: "ru" | "en",                  // initial locale (default: i18n active locale)
  * }
  *
+ * LOCALE: the data contract carries { ru, en } on every user-visible point
+ * field (label, ariaLabel, text, etc.). This module renders the SVG plot in the
+ * active locale and exposes setLang(lang) so the page glue can re-render on the
+ * document `lang:change` event:
+ *
+ *   setLang("en"|"ru") -> string   // re-renders the plot + rail in that lang,
+ *                                  // snaps to the settled end state, restores
+ *                                  // selection + next-step; returns active lang.
+ *
+ * The DRILL CARD is NOT rendered here -- the page glue's renderPanel owns it and
+ * must resolve the same { ru, en } fields (and re-render the open card on
+ * lang:change). The point object handed to onActivate(point) is the RAW data
+ * point, so the glue resolves point.label.ru/.en etc. by the active locale.
+ *
  * export function init(rootEl, config) -> {
- *   markerEl(id), setSelected(id), points(), snap(), play(), destroy()
+ *   markerEl(id), setSelected(id), setNextStep(id), setLang(lang), getLang(),
+ *   points(), snap(), play(), destroy()
  * }
  */
 
 import { svg, el, clear, listeners } from "./dom.js";
 import { prefersReducedMotion } from "./a11y.js";
+import { getLocale } from "./i18n.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+
+// Resolve a value that may be a { ru, en } pair OR a plain lang-neutral string
+// (cosLabel, ids) against the given locale. Falls back ru -> en -> "" so a
+// half-translated field never renders as [object Object].
+function loc(v, lang) {
+  if (v && typeof v === "object" && !Array.isArray(v) && ("ru" in v || "en" in v)) {
+    return v[lang] != null ? v[lang] : v.ru != null ? v.ru : v.en != null ? v.en : "";
+  }
+  return v != null ? v : "";
+}
 
 export function init(rootEl, config) {
   const cfg = config || {};
@@ -50,6 +77,28 @@ export function init(rootEl, config) {
   const L = listeners();
   const reduce =
     typeof cfg.reduce === "boolean" ? cfg.reduce : prefersReducedMotion();
+
+  // Active locale: explicit config.lang wins, else the i18n store. setLang()
+  // updates it and re-renders the plot (page glue calls it on lang:change).
+  let lang = cfg.lang || getLocale();
+  const tr = (v) => loc(v, lang);
+
+  // localised, lang-neutral UI literals the SVG owns (not in the data contract).
+  const AXIS_CAP = {
+    ru: "проекция 2D от 1536 измерений (UMAP)",
+    en: "2D projection of 1536 dimensions (UMAP)",
+  };
+  const RAIL_EMBED = {
+    tokens: { ru: "1. текст -> токены", en: "1. text -> tokens" },
+    vector: { ru: "2. токены -> вектор (dim 1536)", en: "2. tokens -> vector (dim 1536)" },
+    position: { ru: "3. позиция = близость векторов", en: "3. position = vector closeness" },
+    topk: { ru: "ближайшие top-k - по смыслу", en: "nearest top-k - by meaning" },
+    compare: { ru: "сравнение по косинусу", en: "comparison by cosine" },
+  };
+  const QUERY_ARIA_FALLBACK = {
+    ru: "Точка запроса. Откройте, чтобы увидеть вектор и ранжирование kNN",
+    en: "Query point. Open it to see the vector and the kNN ranking",
+  };
 
   const QC = (data.plot && { x: data.plot.cx, y: data.plot.cy }) || { x: 240, y: 210 };
   const points = Array.isArray(data.points) ? data.points : [];
@@ -103,7 +152,7 @@ export function init(rootEl, config) {
     axis.appendChild(svg("line", { class: "axis-line", x1: QC.x, y1: 384, x2: QC.x, y2: 400 }));
     axis.appendChild(
       svg("text", { class: "axis-cap", x: 34, y: 396, "text-anchor": "start" }, [
-        "проекция 2D от 1536 измерений (UMAP)",
+        tr(AXIS_CAP),
       ])
     );
     rootEl.appendChild(axis);
@@ -131,11 +180,9 @@ export function init(rootEl, config) {
           kind: "query",
           cx: query.cx,
           cy: query.cy,
-          label: query.label,
+          label: tr(query.label),
           cosLabel: null,
-          ariaLabel:
-            query.ariaLabel ||
-            "Точка запроса. Откройте, чтобы увидеть вектор и ранжирование kNN",
+          ariaLabel: tr(query.ariaLabel) || tr(QUERY_ARIA_FALLBACK),
         },
         true
       );
@@ -160,12 +207,17 @@ export function init(rootEl, config) {
     const hitR = isQuery ? 26 : p.kind === "near" ? 24 : 22; // >=44px tap target
     const focusR = isQuery ? 17 : p.kind === "near" ? 14 : 12;
 
+    // isQuery already passed a tr()-resolved label/ariaLabel; doc points carry
+    // raw { ru, en } data, so resolve here in the active locale.
+    const labelTxt = isQuery ? String(p.label || "") : tr(p.label);
+    const ariaTxt = isQuery ? (p.ariaLabel || labelTxt || p.id) : (tr(p.ariaLabel) || labelTxt || p.id);
+
     const g = svg("g", {
       class: cls,
       id: p.id,
       tabindex: "0",
       role: "button",
-      "aria-label": p.ariaLabel || p.label || p.id,
+      "aria-label": ariaTxt,
     });
     // invisible >=44px hit circle (incl. far points)
     g.appendChild(svg("circle", { class: "pt-hit", cx: p.cx, cy: p.cy, r: hitR }));
@@ -177,7 +229,7 @@ export function init(rootEl, config) {
     const lblY = isQuery ? p.cy + 22 : p.cy - 16;
     g.appendChild(
       svg("text", { class: "pt-lbl", x: p.cx, y: lblY, "text-anchor": "middle" }, [
-        String(p.label || ""),
+        labelTxt,
       ])
     );
     // cosine caption under the dot (doc points only)
@@ -222,16 +274,23 @@ export function init(rootEl, config) {
   const qFull = railQvec ? railQvec.textContent : "";
 
   // ---------- selection (themed, never blue) ----------
+  // remember the current selection / next-step id so a locale re-render can
+  // restore the visual state after the plot is rebuilt.
+  let selectedId = null;
+  let nextStepId = null;
+
   function setSelected(id) {
+    selectedId = id && markers.has(id) ? id : null;
     markers.forEach((g) => g.classList.remove("selected"));
-    if (id && markers.has(id)) markers.get(id).classList.add("selected");
+    if (selectedId) markers.get(selectedId).classList.add("selected");
   }
 
   // ---------- next-step highlight (the point that opens the next main-path
   // step). Themed glow on the point group (NEVER blue); null clears it. ------
   function setNextStep(id) {
+    nextStepId = id && markers.has(id) ? id : null;
     markers.forEach((g) => g.classList.remove("next-step"));
-    if (id && markers.has(id)) markers.get(id).classList.add("next-step");
+    if (nextStepId) markers.get(nextStepId).classList.add("next-step");
   }
 
   // ---------- end state ----------
@@ -246,7 +305,7 @@ export function init(rootEl, config) {
 
   function snap() {
     // place every doc point + light near + draw links + fill readouts
-    if (railEmbedStep) railEmbedStep.textContent = "сравнение по косинусу";
+    if (railEmbedStep) railEmbedStep.textContent = tr(RAIL_EMBED.compare);
     const qg = markers.get(query && query.id);
     if (qg) qg.classList.add("settled");
     railToks.forEach((t) => t.classList.add("on"));
@@ -275,13 +334,13 @@ export function init(rootEl, config) {
     }, 0);
 
     // step 1: tokenise
-    if (railEmbedStep) railEmbedStep.textContent = "1. текст -> токены";
+    if (railEmbedStep) railEmbedStep.textContent = tr(RAIL_EMBED.tokens);
     railToks.forEach((tok, i) => setT(() => tok.classList.add("on"), 120 + i * 80));
     t = 120 + railToks.length * 80 + 120;
 
     // step 2: compute vector (typewriter reveal)
     setT(() => {
-      if (railEmbedStep) railEmbedStep.textContent = "2. токены -> вектор (dim 1536)";
+      if (railEmbedStep) railEmbedStep.textContent = tr(RAIL_EMBED.vector);
       if (railQvec) {
         railQvec.classList.add("computing");
         let n = 0;
@@ -301,7 +360,7 @@ export function init(rootEl, config) {
 
     // step 3: points settle by cosine proximity (nearest first)
     setT(() => {
-      if (railEmbedStep) railEmbedStep.textContent = "3. позиция = близость векторов";
+      if (railEmbedStep) railEmbedStep.textContent = tr(RAIL_EMBED.position);
     }, t);
     const order = orderByCosine();
     order.forEach((id, i) => {
@@ -312,7 +371,7 @@ export function init(rootEl, config) {
 
     // step 4: highlight top-k (links draw, near light green, list fills by score)
     setT(() => {
-      if (railEmbedStep) railEmbedStep.textContent = "ближайшие top-k - по смыслу";
+      if (railEmbedStep) railEmbedStep.textContent = tr(RAIL_EMBED.topk);
     }, t);
     points
       .filter((p) => p.kind === "near")
@@ -361,21 +420,50 @@ export function init(rootEl, config) {
   void SVG_NS;
   void el;
 
+  function clearTimers() {
+    timers.forEach((id) => {
+      if (id && typeof id === "object" && typeof id.clear === "function") id.clear();
+      else clearTimeout(id);
+    });
+    timers.length = 0;
+  }
+
+  // ----- locale switch (page glue calls on lang:change) -------------------
+  // Re-renders the SVG plot (point labels, aria, axis caption, rail readout)
+  // in the new language and snaps to the settled end state so labels update
+  // without replaying the one-shot animation. Selection + next-step are
+  // restored. The DRILL CARD is owned by the page glue's renderPanel, not this
+  // module -- after setLang() the glue should re-render the open card too.
+  function setLang(next) {
+    const n = next === "en" || next === "ru" ? next : lang;
+    if (n === lang) return lang;
+    lang = n;
+    clearTimers();
+    // reset the per-plot registries that buildPlot repopulates
+    markers.clear();
+    docGroups.length = 0;
+    linkPaths.length = 0;
+    if (rootEl) buildPlot();
+    // settle to the end state in the new language, then restore highlights
+    snap();
+    if (selectedId) setSelected(selectedId);
+    if (nextStepId) setNextStep(nextStepId);
+    return lang;
+  }
+
   return {
     markerEl: (id) => markers.get(id) || null,
     setSelected,
     setNextStep,
+    setLang,
+    getLang: () => lang,
     points: () => points.slice(),
     snap,
     play,
     destroy() {
       L.off();
       if (io) io.disconnect();
-      timers.forEach((id) => {
-        if (id && typeof id === "object" && typeof id.clear === "function") id.clear();
-        else clearTimeout(id);
-      });
-      timers.length = 0;
+      clearTimers();
     },
   };
 }

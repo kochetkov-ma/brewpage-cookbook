@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Эмбеддинг: превращаем фрагмент в вектор - RAG С НУЛЯ</title>
+<meta name="description" content="Эмбеддинг: каждый фрагмент один раз превращается в вектор фиксированной длины (dim 1536). Косинусная близость = близость смысла, плотные / разреженные / гибридные векторы, выбор модели. Интерактивная анимация chunk -> вектор - BrewPage Cookbook.">
+<!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file +
+     this section's own CSS. base.css / atlas.css are NEVER forked or edited. -->
+<link rel="stylesheet" href="shared/css/base.css">
+<link rel="stylesheet" href="shared/css/themes/atlas.css">
+<link rel="stylesheet" href="shared/css/sections/embedding.css">
+</head>
+<body>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К анимации chunk -&gt; вектор" data-en="Skip to the chunk -&gt; vector animation">К анимации chunk -&gt; вектор</a>
+<div class="wrap">
+
+  <!-- ===================== header ===================== -->
+  <header class="site-header" data-component="header">
+    <a class="site-header__brand" href="index.html" aria-label="К карте маршрута RAG С НУЛЯ" style="text-decoration:none">
+      <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
+        <polygon points="50,14 56,50 50,86 44,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+        <polygon points="14,50 50,44 86,50 50,56" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+        <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+      <div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Эмбеддинг" data-en="Plate - Embedding">Глава - Эмбеддинг</div>
+      </div>
+    </a>
+    <div class="site-header__nav">
+      <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+      <div class="search-box js-only" data-component="search-box"
+           data-index-src="shared/data/search-index.json">
+        <label class="visually-hidden" for="rag-search"
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+        <input id="rag-search" class="search-box__input" type="search"
+               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+               role="combobox" aria-autocomplete="list" aria-expanded="false"
+               aria-controls="rag-search-results" />
+        <ul id="rag-search-results" class="search-box__results"
+            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      </div>
+      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+        <span class="bm-arrow" aria-hidden="true">&larr;</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+      </a>
+      <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+  <!-- ===================== drilldown-host: plate + camera + process-anim scene ===================== -->
+  <section class="plate" data-component="drilldown-host" aria-labelledby="plateTitle">
+
+    <div class="plate-head">
+      <div class="title-block">
+        <p class="eyebrow" data-i18n="eyebrow" data-ru="Эмбеддинг" data-en="Embedding">Эмбеддинг</p>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Эмбеддинг: превращаем фрагмент в вектор" data-en="Embedding: turning a fragment into a vector">Эмбеддинг: превращаем фрагмент в вектор</h1>
+        <p data-i18n="plateSub" data-ru="Каждый фрагмент один раз становится вектором (dim 1536) - меняется представление, а не текст" data-en="Each fragment becomes a vector once (dim 1536) - the representation changes, not the text">Каждый фрагмент один раз становится вектором (dim 1536) - меняется представление, а не текст</p>
+      </div>
+      <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#7a6446" stroke-width="0.8" stroke-dasharray="2 3"/>
+        <g font-family="Georgia, serif" font-size="9" fill="#5c4a32" text-anchor="middle">
+          <text x="50" y="16">N</text>
+          <text x="86" y="53">E</text>
+          <text x="50" y="92">S</text>
+          <text x="14" y="53">W</text>
+        </g>
+        <polygon points="50,22 56,50 50,50" fill="#a55a35"/>
+        <polygon points="50,22 44,50 50,50" fill="#c47a55"/>
+        <polygon points="50,78 56,50 50,50" fill="#4a6f6a"/>
+        <polygon points="50,78 44,50 50,50" fill="#6a8d88"/>
+        <circle cx="50" cy="50" r="4" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
+      </svg>
+    </div>
+
+    <!-- toolbar row: breadcrumb + zoom-out (camera into the Embedding node) -->
+    <div class="vmap-toolbar" style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-2) 0 var(--sp-3)">
+      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень масштаба">
+        <span class="crumb-current" aria-current="step">Эмбеддинг</span>
+      </nav>
+      <button type="button" class="zoomout" data-slot="zoomout" aria-label="Отдалить на уровень выше" disabled style="margin-left:auto">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5"/>
+          <line x1="15.2" y1="15.2" x2="21" y2="21"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- the camera stage = the process-anim scene. The plate grows it to fit the
+         drill panel; the Embedding node opens the semantic-zoom card. -->
+    <div class="embed-stage" data-component="plate" data-slot="stage">
+
+      <!-- clickable Embedding node -> opens the semantic-zoom card (drilldown-zoom) -->
+      <div class="embed-node" data-embed-node tabindex="0" role="button"
+           aria-label="Открыть узел Embedding: семантический зум в шаг chunk -> вектор">
+        <svg class="en-lens" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.2" y1="15.2" x2="21" y2="21"/>
+          <line x1="7" y1="10.5" x2="14" y2="10.5"/><line x1="10.5" y1="7" x2="10.5" y2="14"/>
+        </svg>
+        <span class="en-txt"><b data-i18n="enNodeName" data-ru="Узел Embedding" data-en="Embedding node">Узел Embedding</b> <span data-i18n="enTeaserA" data-ru="- заглянуть внутрь шага: как один фрагмент c1 превращается в вектор v1 (" data-en="- look inside the step: how one fragment c1 turns into vector v1 (">- заглянуть внутрь шага: как один фрагмент c1 превращается в вектор v1 (</span><code>dim 1536</code><span data-i18n="enTeaserB" data-ru="), строго один-к-одному." data-en="), strictly one-to-one.">), строго один-к-одному.</span></span>
+      </div>
+
+      <!-- process-anim host: doc -> chunks -> vectors, embed step is the centerpiece.
+           process-anim.js mounts its own timeline into the .timeline child here. -->
+      <div class="js-only" data-component="embedding-materialize">
+        <div data-slot="anim">
+          <!-- process-anim.js renders the doc / chunks / vectors columns + timeline here. -->
+        </div>
+      </div>
+
+      <!-- drill detail panel mount (grows the stage to its content) -->
+      <div data-slot="panel" aria-live="polite"></div>
+
+      <!-- ============ NO-JS fallback: static flat schematic doc -> chunks -> vectors ============ -->
+      <div class="no-js-only">
+        <p class="legend-hint">Включите JavaScript, чтобы посмотреть анимацию: как текст фрагмента разбивается на токены и оседает в вектор. Ниже - тот же шаг статично.</p>
+        <div class="embed-static">
+          <div class="es-col">
+            <h2>Фрагменты (chunks)</h2>
+            <p>c1: Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.</p>
+            <p>c2: Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.</p>
+            <p>c3: Dostavka po gorodu zanimaet odin rabochij den'.</p>
+          </div>
+          <div class="es-arrow" aria-hidden="true">-&gt;</div>
+          <div class="es-col">
+            <h2>Шаг embed (dim 1536)</h2>
+            <p>Каждый фрагмент один раз превращается в вектор фиксированной длины. Меняется представление, не текст.</p>
+          </div>
+          <div class="es-arrow" aria-hidden="true">-&gt;</div>
+          <div class="es-col">
+            <h2>Векторы (1:1)</h2>
+            <p class="es-vec">v1 (dim 1536) [0.018, -0.047, 0.091, ...]</p>
+            <p class="es-vec">v2 (dim 1536) [-0.029, 0.063, 0.012, ...]</p>
+            <p class="es-vec">v3 (dim 1536) [0.074, 0.021, -0.055, ...]</p>
+          </div>
+        </div>
+        <p class="legend-hint">Связь строго один-к-одному: v1 -&gt; c1, v2 -&gt; c2, v3 -&gt; c3. Значения - короткие заглушки для макета, а не настоящий эмбеддинг (настоящий имеет все 1536 компонент).</p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ===================== chapter prose (full manuscript, always visible) =====================
+       Ported from content/ru/embedding.md (strategy A: md-as-source, hand-ported).
+       Always visible: reads fully with JS on or off. The .js-only animation above
+       only ENHANCES; this prose is the chapter text. -->
+  <article class="chapter-prose" lang="ru">
+
+    <section aria-labelledby="pr-problem">
+      <h2 id="pr-problem">Проблема</h2>
+      <p>У вас есть фрагменты - куски текста из прошлой главы. Вопрос пользователя тоже текст, но другими словами: "как вернуть деньги" против фрагмента "политика возврата средств". Сравнение строк здесь не работает: общих слов почти нет, а смысл один и тот же. Нужен способ искать по смыслу, а не по буквам.</p>
+      <p>Решение - эмбеддинг (embedding): каждый фрагмент превращаем в вектор, числовой код его смысла, где близость векторов отражает близость смысла (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это второй шаг конвейера: после того как документ нарезан на фрагменты, каждый фрагмент один раз превращается в вектор, и дальше эти векторы идут в индекс.</p>
+      <p>Вот весь шаг целиком - реальный вызов API, который превращает список фрагментов в список векторов:</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-embed-call">
+        <figcaption class="code-block__cap" data-i18n data-ru="Realnyj vyzov API embeddingov: spisok chankov -&gt; spisok vektorov, strogo odin-k-odnomu." data-en="A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.">Realnyj vyzov API embeddingov: spisok chankov -&gt; spisok vektorov, strogo odin-k-odnomu.</figcaption>
+        <pre><code># pip install openai
+from openai import OpenAI
+
+client = OpenAI()
+
+chunks = [
+    "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.",
+    "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.",
+    "Dostavka po gorodu zanimaet odin rabochij den'.",
+]
+
+resp = client.embeddings.create(
+    model="text-embedding-3-small",
+    input=chunks,
+)
+
+# odin vektor na kazhdyj chunk, strogo odin-k-odnomu
+vectors = [item.embedding for item in resp.data]
+print(len(vectors), "vektorov")        # 3
+print(len(vectors[0]), "komponent")    # 1536</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Ustanovka paketa</strong> -- Kommentarij s komandoj ustanovki oficialnogo klienta OpenAI; v samom kode ne ispolnjaetsja.</li>
+          <li><strong>Klient OpenAI</strong> -- Importiruem klient i sozdaem ekzempljar; kljuch API on beret iz okruzhenija.</li>
+          <li><strong>Vhodnye chanki</strong> -- Spisok iz treh tekstovyh fragmentov - eto vhod embeddera; stroki dany v translite, chtoby ostatsja ASCII.</li>
+          <li><strong>Vyzov embeddinga</strong> -- Odin vyzov create s modelju text-embedding-3-small i srazu vsem spiskom chankov na vhode.</li>
+          <li><strong>Sbor vektorov</strong> -- Dostaem po vektoru na kazhdyj element otveta - svjaz chank-vektor strogo odin-k-odnomu. Na vyhode tri vektora po 1536 komponent.</li>
+        </ol>
+      </figure>
+      <p>После этого у вас три вектора длины 1536 - по одному на фрагмент. Сам текст напрямую сравнивать больше не нужно: вся дальнейшая работа идет с числами.</p>
+    </section>
+
+    <section aria-labelledby="pr-what">
+      <h2 id="pr-what">Что такое вектор здесь</h2>
+      <p>Вектор - это упорядоченный список чисел фиксированной длины <code>dim</code>. Модель-эмбеддер отображает текст в точку в <code>dim</code>-мерном пространстве так, чтобы тексты похожего смысла оказывались рядом. Например, OpenAI <code>text-embedding-3-small</code> выдает векторы длины 1536 (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Именно поэтому у каждого вектора стоит <code>dim: 1536</code>.</p>
+      <p>Размерность - это не случайное число: ее задает модель, и она одинакова для всех векторов одной модели. Смешивать векторы разных моделей нельзя - они живут в разных пространствах, и сравнивать их бессмысленно.</p>
+      <p>Важно: числа в поле <code>values</code> в живом примере - это короткие заглушки для макета (по три значения на вектор), а не настоящий эмбеддинг. Настоящий вектор имеет все 1536 компонент; показывать их целиком бессмысленно, поэтому анимация показывает только сам факт "фрагмент -&gt; вектор", а не сырые числа.</p>
+    </section>
+
+    <section aria-labelledby="pr-cos">
+      <h2 id="pr-cos">Почему близость векторов = близость смысла</h2>
+      <p>После того как фрагменты стали векторами, "похожесть" измеряют геометрически - чаще всего через косинусную близость (cosine similarity), косинус угла между векторами (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Чем меньше угол, тем ближе смысл. Значение косинуса лежит в диапазоне от -1 до 1; для текстовых эмбеддингов на практике работает диапазон примерно 0..1, где 1 - совпадение смысла, а около 0 - тексты про разное.</p>
+      <p>Почему именно 0..1, а не весь диапазон от -1 до 1: текстовые эмбеддинги обычно нормируют по длине (L2-нормализация) - каждый вектор приводят к единичной длине (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). У нормированных векторов косинус совпадает со скалярным произведением (dot product), поэтому ранжировать по скалярному произведению - то же самое, что по косинусу, но дешевле: не нужно делить на нормы, которые и так равны единице.</p>
+      <p>Вот как косинусная близость двух векторов считается вручную - без библиотек, чтобы была видна формула:</p>
+      <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-cosine">
+        <figcaption class="code-block__cap" data-i18n data-ru="Kosinusnaja blizost vruchnuju, bez bibliotek: chem blizhe vektor zaprosa k vektoru chanka, tem blizhe smysl." data-en="Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.">Kosinusnaja blizost vruchnuju, bez bibliotek: chem blizhe vektor zaprosa k vektoru chanka, tem blizhe smysl.</figcaption>
+        <pre><code>import math
+
+def cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(y * y for y in b))
+    return dot / (na * nb)
+
+query_vec = client.embeddings.create(
+    model="text-embedding-3-small",
+    input="kak vernut' den'gi za pokupku",
+).data[0].embedding
+
+# blizost' zaprosa k kazhdomu chunku
+scores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]
+scores.sort(key=lambda t: t[1], reverse=True)
+print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij</code></pre>
+        <ol class="code-annot-list no-js-only">
+          <li><strong>Formula kosinusa</strong> -- Skaljarnoe proizvedenie, delennoe na proizvedenie dlin (norm) dvuh vektorov; tak vidna sama formula bez zavisimostej.</li>
+          <li><strong>Vektor zaprosa</strong> -- Tot zhe embedder kodiruet zapros polzovatelja v vektor - toj zhe modelju, chto i chanki, inache sravnenie bessmyslenno.</li>
+          <li><strong>Ranzhirovanie po blizosti</strong> -- Schitaem blizost zaprosa k kazhdomu chanku i sortiruem po ubyvaniju; samyj blizkij po smyslu chank vyhodit pervym, dazhe bez obshchih slov.</li>
+        </ol>
+      </figure>
+      <p>Фрагмент про возврат средств окажется ближе всего к запросу "как вернуть деньги", хотя ни одного общего ключевого слова между ними почти нет. Именно эта близость и позволяет на шаге retrieve достать top-k фрагментов, ближайших к вектору запроса, не сравнивая тексты побуквенно.</p>
+      <p>Модели, которые учат такие представления предложений, описаны в работе <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>: они специально обучают encoder так, чтобы косинусная близость векторов соответствовала смысловой близости предложений. Это отличает современный трансформерный (transformer) подход на базе Sentence-BERT от классических методов вроде мешка слов или TF-IDF: классика считает совпадение слов, а трансформер кодирует смысл целого предложения в один вектор.</p>
+    </section>
+
+    <section aria-labelledby="pr-metrics">
+      <h2 id="pr-metrics">Метрики близости: не только косинус</h2>
+      <p>Косинус - не единственная мера. На практике встречаются три:</p>
+      <ul>
+        <li><strong>Косинусная близость</strong> (cosine) - косинус угла, игнорирует длину векторов.</li>
+        <li><strong>Скалярное произведение</strong> (dot product) - сумма покомпонентных произведений; учитывает и угол, и длину.</li>
+        <li><strong>Евклидово расстояние</strong> (Euclidean / L2, часто в квадрате - squared L2) - геометрическое расстояние между точками; меньше значит ближе.</li>
+      </ul>
+      <p>Важный факт: для векторов, нормированных к единичной длине, все три метрики ранжируют соседей одинаково - порядок top-k не меняется, отличается только числовое значение. Векторные базы обычно дают выбрать любую из этих метрик при создании индекса (<a href="https://github.com/facebookresearch/faiss/wiki" target="_blank" rel="noopener">FAISS metric types</a>, <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a>), и это уже мостик к следующей главе про векторное хранилище, где метрика задается на уровне индекса.</p>
+    </section>
+
+    <section aria-labelledby="pr-dense">
+      <h2 id="pr-dense">Разреженные, плотные и гибридные векторы</h2>
+      <p>Эмбеддинги из трансформера - <strong>плотные</strong> (dense) векторы: все 1536 компонент заполнены числами, и каждая кодирует часть смысла (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>). Им противопоставлены <strong>разреженные</strong> (sparse) представления вроде TF-IDF или BM25, где вектор - это веса по словарю и почти все компоненты равны нулю. Разреженный поиск по-прежнему выигрывает на точном совпадении терминов и редких токенах (артикулы, имена, коды), где важна именно буква слова (<a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">Robertson &amp; Zaragoza, 2009, BM25</a>). Поэтому на практике часто применяют <strong>гибридный поиск</strong> (hybrid retrieval): разреженный (BM25) и плотный (dense) объединяют, чтобы поймать и точные термины, и смысл.</p>
+    </section>
+
+    <section aria-labelledby="pr-more">
+      <h2 id="pr-more">Дополнительно: что еще умеют эмбеддинги</h2>
+      <ul>
+        <li><strong>Усечение размерности (Matryoshka, MRL).</strong> Некоторые модели обучены так, что вектор можно обрезать до меньшей длины почти без потери качества; у OpenAI это параметр <code>dimensions</code> у <code>text-embedding-3</code> (<a href="https://arxiv.org/abs/2205.13147" target="_blank" rel="noopener">Kusupati et al., 2022, Matryoshka Representation Learning</a>).</li>
+        <li><strong>Асимметричные эмбеддинги запроса и документа.</strong> Модели с инструкциями (E5, GTE) кодируют запрос и документ по-разному - например, дописывают префиксы <code>query:</code> и <code>passage:</code> (<a href="https://arxiv.org/abs/2212.03533" target="_blank" rel="noopener">Wang et al., 2022, E5</a>).</li>
+        <li><strong>Многоязычные эмбеддинги.</strong> Один и тот же смысл на разных языках попадает в близкие точки одного пространства - запрос на русском находит документ на английском (<a href="https://arxiv.org/abs/2004.09813" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2020, Multilingual Sentence-BERT</a>).</li>
+        <li><strong>Квантизация.</strong> Векторы можно хранить в int8 или даже в бинарном виде - это резко уменьшает индекс ценой небольшой потери полноты (recall); подробнее в главе про векторное хранилище.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-model">
+      <h2 id="pr-model">Выбор модели, размерность, дрейф</h2>
+      <p>Модель эмбеддингов - это выбор, который напрямую определяет качество поиска:</p>
+      <ul>
+        <li><strong>Размерность.</strong> Больше <code>dim</code> - обычно больше точности, но дороже хранение и медленнее поиск. <code>text-embedding-3-small</code> дает 1536 компонент; некоторые модели позволяют урезать размерность ради экономии (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>).</li>
+        <li><strong>Язык и домен.</strong> Модель должна понимать язык и терминологию ваших документов. Общие модели хороши широко; узкий домен иногда требует специально обученной модели.</li>
+        <li><strong>Дрейф модели (drift).</strong> Если вы сменили модель эмбеддингов, все старые векторы в индексе становятся несовместимы с новыми - их нужно пересчитать целиком. Векторы разных моделей нельзя сравнивать между собой.</li>
+      </ul>
+      <p>Главное правило: один раз выбрал модель - и фрагменты, и запросы превращай в векторы одной и той же моделью. Иначе запрос и фрагменты окажутся в разных пространствах, и их близость перестанет что-либо значить (это же правило про повторное использование одной модели: один выбор - один индекс).</p>
+    </section>
+
+    <section aria-labelledby="pr-link">
+      <h2 id="pr-link">Связь с живым примером</h2>
+      <p>Шаг <code>s2</code> (kind=embed) берет те же три фрагмента c1..c3 из стадии нарезки и производит три вектора v1..v3. Связь явная: у каждого вектора есть поле <code>chunkId</code>, которое указывает на его фрагмент (v1 -&gt; c1, v2 -&gt; c2, v3 -&gt; c3). Это и есть отображение один-к-одному: один фрагмент дает ровно один вектор.</p>
+      <p>После шага <code>s3</code> (store) векторы уходят в индекс - это следующая стадия конвейера (vector-store), которую следующая глава раскрывает отдельно.</p>
+    </section>
+
+    <section class="sources" aria-labelledby="pr-sources">
+      <h2 id="pr-sources">Источники</h2>
+      <ul>
+        <li>OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2-нормализация к единичной длине, параметр dimensions). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li>Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a></li>
+        <li>Robertson &amp; Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">nowpublishers.com/article/Details/INR-019</a></li>
+        <li>Kusupati et al., 2022. Matryoshka Representation Learning. <a href="https://arxiv.org/abs/2205.13147" target="_blank" rel="noopener">arxiv.org/abs/2205.13147</a></li>
+        <li>Wang et al., 2022. Text Embeddings by Weakly-Supervised Contrastive Pre-training (E5). <a href="https://arxiv.org/abs/2212.03533" target="_blank" rel="noopener">arxiv.org/abs/2212.03533</a></li>
+        <li>Reimers &amp; Gurevych, 2020. Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation. <a href="https://arxiv.org/abs/2004.09813" target="_blank" rel="noopener">arxiv.org/abs/2004.09813</a></li>
+        <li>FAISS. Metric types and indexes wiki. <a href="https://github.com/facebookresearch/faiss/wiki" target="_blank" rel="noopener">github.com/facebookresearch/faiss/wiki</a></li>
+        <li>pgvector. Open-source vector similarity search for PostgreSQL (cosine / inner product / L2). <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">github.com/pgvector/pgvector</a></li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-try">
+      <h2 id="pr-try">Попробуйте сами</h2>
+      <ul>
+        <li>Откройте интерактив embedding-materialize на узле Embedding (semantic zoom внутрь) и прогоните анимацию шага: смотрите, как текст фрагмента c1 разбивается на токены, а затем оседает в вектор v1. Обратите внимание: меняется представление (текст -&gt; вектор), а не сам текст.</li>
+        <li>Пройдите по векторам v1..v3 и сопоставьте каждый с фрагментом по полю <code>chunkId</code>. Убедитесь, что отображение строго один-к-одному (v1 -&gt; c1, v2 -&gt; c2, v3 -&gt; c3).</li>
+        <li>Возьмите код cosine выше и посчитайте близость одного запроса к каждому из трех фрагментов; проверьте, что самый близкий по смыслу фрагмент получает наибольший балл, даже без общих слов.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pr-next">
+      <h2 id="pr-next">Что дальше</h2>
+      <p class="next-stop">Векторы готовы - дальше их нужно где-то хранить и быстро искать по ним ближайших. Следующая остановка: <strong>vector-store</strong> (векторная база и поиск ближайших соседей).</p>
+    </section>
+
+    <section class="about-recipe" aria-labelledby="pr-about">
+      <h2 id="pr-about">Об этом рецепте</h2>
+      <ul>
+        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+      </ul>
+    </section>
+
+  </article>
+  </main>
+
+  <!-- ===================== footer colophon (MANDATORY cross-links) ===================== -->
+  <footer class="site-footer" data-component="footer">
+    <svg class="colophon-rule" viewBox="0 0 260 14" aria-hidden="true" focusable="false">
+      <line x1="0" y1="7" x2="110" y2="7" stroke="#bda878" stroke-width="1"/>
+      <line x1="150" y1="7" x2="260" y2="7" stroke="#bda878" stroke-width="1"/>
+      <circle cx="120" cy="7" r="1.6" fill="#a55a35"/>
+      <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
+      <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
+    </svg>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="links">
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- page glue: ES module, sets .has-js, wires lib onto hosts -->
+<script type="module" src="shared/js/pages/embedding.js"></script>
+</body>
+</html>

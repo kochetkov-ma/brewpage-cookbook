@@ -7,7 +7,7 @@
       "stopCount": "number of flags = stops.length (start 0% .. terminal 100%).",
       "id": "stable kebab id for the stop (used for earned-progress tracking).",
       "slug": "kebab section slug (matches a built section page id where one exists).",
-      "href": "OPTIONAL relative link to a built section page; flags with an href get a 'go to chapter' link in the field note. Only the 3 built chapters carry one this phase.",
+      "href": "OPTIONAL relative link to a built section page; flags with an href get a 'go to chapter' link in the field note. Every stop with a built section page carries one; only 'start' has no separate page (it is the landing itself).",
       "ru / en": "per-language copy block: { label, blurb, pts:[...], ex }.",
       "ui": "per-language UI strings: { close, exampleLabel, goLabel, hint }."
     },
@@ -104,6 +104,7 @@
     {
       "id": "chunking",
       "slug": "chunking",
+      "href": "chunking.html",
       "ru": {
         "label": "Разбиваем текст на чанки",
         "blurb": "Большие документы режем на небольшие фрагменты удобного размера - их называют чанки. Так поиск точнее, а в запрос помещается только нужное.",
@@ -120,6 +121,7 @@
     {
       "id": "embedding",
       "slug": "embedding",
+      "href": "embedding.html",
       "ru": {
         "label": "Эмбеддинги: текст в векторы",
         "blurb": "Каждый чанк превращаем в числовой вектор - это координаты его смысла. Близкие по смыслу тексты получают близкие векторы.",
@@ -136,6 +138,7 @@
     {
       "id": "vector-store",
       "slug": "vector-store",
+      "href": "vector-store.html",
       "ru": {
         "label": "Векторная база и поиск",
         "blurb": "Векторы храним в специальной базе и ищем в ней ближайшие по смыслу. Это и есть быстрый смысловой поиск по всему архиву.",
@@ -152,6 +155,7 @@
     {
       "id": "assemble-context",
       "slug": "assemble-context",
+      "href": "assemble-context.html",
       "ru": {
         "label": "Собираем контекст для модели",
         "blurb": "Найденные куски аккуратно складываем в один запрос к модели. От того, как собран этот контекст, сильно зависит ответ.",
@@ -168,6 +172,7 @@
     {
       "id": "generation",
       "slug": "generation",
+      "href": "generation.html",
       "ru": {
         "label": "Генерация ответа",
         "blurb": "Модель читает собранный контекст и пишет ответ, опираясь на ваши данные. Здесь важно направить ее инструкциями.",
@@ -184,6 +189,7 @@
     {
       "id": "evaluation",
       "slug": "evaluation",
+      "href": "evaluation.html",
       "ru": {
         "label": "Оценка качества",
         "blurb": "Проверяем, насколько ответы точны и полезны, и системно их улучшаем. Без измерений нельзя понять, стало ли лучше.",
@@ -200,6 +206,7 @@
     {
       "id": "production",
       "slug": "production",
+      "href": "production.html",
       "ru": {
         "label": "Вывод в продакшн",
         "blurb": "Вершина маршрута. Собираем все звенья в работающий сервис для реальных пользователей и держим его в форме.",

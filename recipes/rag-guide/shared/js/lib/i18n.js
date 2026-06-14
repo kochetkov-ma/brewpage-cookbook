@@ -1,7 +1,8 @@
 /**
  * i18n.js -- active-language store + localised lookup for the RAG Guide.
  *
- * RESPONSIBILITY: hold the active locale (default RU, read from <html lang>),
+ * RESPONSIBILITY: hold the active locale (restored from localStorage if a prior
+ * choice exists, else read from <html lang>; default RU),
  * resolve a localised string by key from a flat {ru,en} dictionary (e.g.
  * glossary.json), expose subscribe(), and fire a `lang:change` event on the
  * document when the locale changes. Prototype ships RU-first but stays
@@ -14,6 +15,7 @@
 
 const SUPPORTED = ["ru", "en"];
 const DEFAULT_LOCALE = "ru";
+const STORAGE_KEY = "ragguide:lang";
 
 function readHtmlLang() {
   const raw = (document.documentElement.getAttribute("lang") || "").toLowerCase();
@@ -21,8 +23,50 @@ function readHtmlLang() {
   return SUPPORTED.includes(base) ? base : DEFAULT_LOCALE;
 }
 
+// Guarded localStorage probe (mirrors chapter-state.js): null when unavailable
+// -> persistence degrades to a no-op and the page still works.
+function safeStorage() {
+  try {
+    const s = window.localStorage;
+    const probe = "ragguide:__probe__";
+    s.setItem(probe, "1");
+    s.removeItem(probe);
+    return s;
+  } catch (_) {
+    return null;
+  }
+}
+const store = safeStorage();
+
+/** Read a previously persisted locale, or null. Guarded. */
+function readStored() {
+  if (!store) return null;
+  try {
+    const v = store.getItem(STORAGE_KEY);
+    return SUPPORTED.includes(v) ? v : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Persist the active locale. Guarded; never throws. */
+function writeStored(locale) {
+  if (!store) return;
+  try {
+    store.setItem(STORAGE_KEY, locale);
+  } catch (_) {
+    /* degrade gracefully (private mode / quota) */
+  }
+}
+
 const subscribers = new Set();
-let active = readHtmlLang();
+// Restore a persisted choice across pages/reloads; fall back to <html lang>.
+let active = readStored() || readHtmlLang();
+// Reflect the restored locale onto the document so CSS/[lang] + a11y match it
+// before any subscriber wires up (no notification: nothing is subscribed yet).
+if (typeof document !== "undefined" && document.documentElement) {
+  document.documentElement.setAttribute("lang", active);
+}
 
 /** Current active locale ('ru' | 'en'). */
 export function getLocale() {
@@ -35,6 +79,7 @@ export function setLocale(locale) {
   if (next === active) return active;
   active = next;
   document.documentElement.setAttribute("lang", active);
+  writeStored(active);
   for (const fn of subscribers) {
     try {
       fn(active);

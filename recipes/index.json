@@ -1,0 +1,27 @@
+{
+  "_schema": {
+    "purpose": "Recipe index for the BrewPage Cookbook. One row per recipe; consumed by the repo README and (future) cookbook landing.",
+    "shape": "recipes[]: { slug, title, status, lang[], dir, liveUrl, description, crossLinks{ platform, ecosystem } }",
+    "rules": [
+      "liveUrl is a placeholder until a recipe is published; the real short URL is assigned by BrewPage at publish and pasted back here.",
+      "crossLinks are mandatory on every recipe (mandatory cross-link rule): both platform and ecosystem must be present.",
+      "Consumers must skip every _-prefixed key.",
+      "status in { scaffold, staged, live }."
+    ]
+  },
+  "recipes": [
+    {
+      "slug": "rag-guide",
+      "title": "RAG Guide",
+      "status": "staged",
+      "lang": ["ru", "en"],
+      "dir": "recipes/rag-guide",
+      "liveUrl": "https://brewpage.app/REPLACE_AT_PUBLISH",
+      "description": "Long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (RU default, EN-ready); RU prose is the authored manuscript. Doubles as the production dogfood for the publish pipeline.",
+      "crossLinks": {
+        "platform": "https://brewpage.app",
+        "ecosystem": "https://github.com/kochetkov-ma/brewpage-openapi"
+      }
+    }
+  ]
+}

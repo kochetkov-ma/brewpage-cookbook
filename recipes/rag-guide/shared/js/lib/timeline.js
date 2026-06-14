@@ -83,7 +83,6 @@ export function init(rootEl, config) {
     position = Math.max(0, Math.min(steps.length, pos));
     const idx = Math.min(steps.length - 1, Math.floor(position));
     const frac = position - Math.floor(position);
-    const atEnd = reduced || position >= steps.length || frac === 0 ? frac === 0 ? false : true : false;
 
     // progress bar across the whole sequence
     const pct = steps.length ? (position / steps.length) * 100 : 0;

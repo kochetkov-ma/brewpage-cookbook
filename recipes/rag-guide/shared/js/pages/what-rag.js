@@ -33,11 +33,13 @@
 import { qs, qsa } from "../lib/dom.js";
 import * as a11y from "../lib/a11y.js";
 import * as i18n from "../lib/i18n.js";
+import { init as initSiteSearch } from "../lib/site-search.js";
 import { init as initCompass } from "../lib/compass.js";
 import { init as initPlate } from "../lib/plate.js";
 import { init as initProgress } from "../lib/progress.js";
 import { init as initCamera } from "../lib/drilldown-zoom.js";
 import { init as initPipeline } from "../lib/pipeline.js";
+import { init as initCodeBlocks } from "../lib/code-blocks.js";
 import * as chapterState from "../lib/chapter-state.js";
 import PIPELINE_DATA from "../../data/what-rag.js";
 
@@ -53,6 +55,14 @@ function track(inst) {
 }
 
 function boot() {
+  // header full-text site search (client-side, zero external requests) --------
+  track(initSiteSearch(document, {}));
+
+  // annotated code blocks: highlight + hover/focus region popovers + caption +
+  // no-JS list. code-blocks.js finds every [data-component="code-block"] and
+  // re-renders itself on i18n lang:change (it subscribes internally).
+  track(initCodeBlocks(document, {}));
+
   const order = Array.isArray(PIPELINE_DATA.order) ? PIPELINE_DATA.order : [];
 
   // a11y live-region announcer (scoped) -----------------------------------
@@ -103,6 +113,13 @@ function boot() {
   // but the camera needs the pipeline's renderPanel -- bridge via a late ref.
   let pipeline = null;
 
+  // localized breadcrumb / zoom-out chrome for the drill camera ------------
+  const cameraLabels = {
+    ru: { topCrumb: "Пайплайн", level1: "Узел", zoomOut: "Выйти на уровень выше" },
+    en: { topCrumb: "Pipeline", level1: "Node", zoomOut: "Zoom out one level" },
+  };
+  const labelsFor = (l) => cameraLabels[l] || cameraLabels.ru;
+
   // the drill/zoom camera --------------------------------------------------
   const cameraHost = qs('[data-component~="drilldown-host"]');
   let camera = null;
@@ -112,7 +129,7 @@ function boot() {
         plate,
         progress,
         announce,
-        labels: { topCrumb: "Пайплайн", level1: "Узел", zoomOut: "Выйти на уровень выше" },
+        labels: labelsFor(i18n.getLocale()),
         renderPanel: (entry, api) => (pipeline ? pipeline.renderPanel(entry, api) : null),
         onSelect: () => {
           if (pipeline) pipeline.refreshNodeStates();
@@ -152,6 +169,16 @@ function boot() {
     i18n.subscribe((loc) => {
       applyToggleState(loc);
       rewriteStaticText(loc);
+      // re-localize the breadcrumb / zoom-out chrome on the drill camera so the
+      // crumb stack switches language too (not just the page-load language).
+      if (camera && typeof camera.setLabels === "function") {
+        camera.setLabels(labelsFor(loc));
+      }
+      // re-localize the pipeline node-cards + the currently open drill panel.
+      if (pipeline && typeof pipeline.setLang === "function") {
+        pipeline.setLang(loc);
+      }
+      announce(loc === "en" ? "Language: English" : "Язык: русский");
     });
   }
 
@@ -163,6 +190,11 @@ function rewriteStaticText(loc) {
   qsa("[data-i18n]").forEach((node) => {
     const val = node.getAttribute("data-" + loc);
     if (val != null) node.textContent = val;
+  });
+  // aria-label localization: [data-i18n-aria] carries data-aria-ru / data-aria-en.
+  qsa("[data-i18n-aria]").forEach((node) => {
+    const val = node.getAttribute("data-aria-" + loc);
+    if (val != null) node.setAttribute("aria-label", val);
   });
 }
 

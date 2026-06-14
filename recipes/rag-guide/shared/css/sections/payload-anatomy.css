@@ -1,0 +1,360 @@
+/*
+ * sections/payload-anatomy.css -- section-specific structural CSS for the
+ * "Анатомия payload" showcase page. Linked ONLY by payload-anatomy.html.
+ *
+ * base.css owns the shared shells (.plate, .breadcrumb, .zoomout, .detail-wrap,
+ * .detail-panel, .node, .compass, .chapter-prose is in what-rag.css scope but
+ * its rules are reused only via class). This file adds ONLY what the payload
+ * showcase needs beyond those shells and NEVER forks base.css:
+ *   - the annotated <pre>/<code> payload turns (.pl-turn / .pl-code)
+ *   - the focusable per-block hook spans (.pl-hook) + themed focus (--c-focus)
+ *   - the camera stage collapse on zoom (.stage.zoomed) + the level-1 card
+ *     (.pl-card) Function / Role-in-RAG / chapter rows
+ *   - the chapter prose (ported manuscript), mirrored in .no-js-only
+ *
+ * Color/space/motion come via var(--...) from themes/atlas.css. The only literal
+ * hex are the AtlasMD-2.1 FROZEN dark-code-plate values that have no token (the
+ * payload <pre> bg/ink, matching what-rag.css .prompt/.chapter-prose pre). These
+ * are section-local, never added to base.css. ASCII only. Animate transform +
+ * opacity ONLY; the <pre> scale on zoom is transform.
+ */
+
+/* ---- the annotated payload turns (level 0 stage content) --------------- */
+.pl-stage { position: relative; }
+.pl-turn { margin: 0 0 var(--sp-3); }
+.pl-turn:last-child { margin-bottom: 0; }
+
+.pl-turn__cap {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  margin: 0 0 var(--sp-1);
+}
+.pl-turn__dir {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.06em;
+  flex: 0 0 auto;
+}
+.pl-turn__dir--request { color: var(--c-accent-2); }
+.pl-turn__dir--response { color: var(--c-accent-1); }
+.pl-turn__title {
+  color: var(--c-text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* the payload code plate: dark frozen literals (AtlasMD-2.1, no token exists),
+   same plate as what-rag.css .prompt / .chapter-prose pre */
+.pl-code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  white-space: pre;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: 0;
+  overflow: auto;
+}
+.pl-code code {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+/* ---- the focusable per-block hook spans ------------------------------- */
+.pl-hook {
+  display: inline;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  /* a quiet underline cue + transparent tint, lit on hover/focus */
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(232, 220, 192, 0.45);
+  text-underline-offset: 3px;
+  background: transparent;
+  transition: background var(--dur-1) var(--ease-1), text-decoration-color var(--dur-1) var(--ease-1);
+}
+.pl-hook:hover {
+  background: rgba(176, 138, 62, 0.22);
+  text-decoration-color: var(--c-accent-2);
+}
+/* themed focus ring (rust via --c-focus), NEVER blue UA outline */
+.pl-hook:focus { outline: none; }
+.pl-hook:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+  background: rgba(176, 138, 62, 0.22);
+}
+.pl-hook.selected {
+  background: rgba(176, 138, 62, 0.3);
+  text-decoration-color: var(--c-focus);
+}
+
+/* ---- the camera stage (drilldown-zoom toggles .zoomed on the stage) ---- */
+.stage { position: relative; border-radius: var(--radius-md); }
+.pl-camera {
+  position: relative;
+  transition: transform var(--dur-zoom) var(--ease-zoom), opacity var(--dur-zoom) var(--ease-zoom);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* when a block card opens, the whole-payload view collapses out of flow so the
+   stage grows to fit the active card (no frozen height, no clip) */
+.stage.zoomed .pl-camera {
+  position: absolute;
+  inset: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.96);
+  opacity: 0;
+}
+
+/* ---- controls row: breadcrumb + zoom-out share a row ------------------ */
+.payload-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-0) var(--sp-1);
+  margin-bottom: 2px;
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.payload-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
+
+/* ---- the level-1 annotation card (Function + Role in RAG + chapter) ---- */
+.pl-card { padding: var(--sp-3) var(--sp-3) 14px; }
+.pl-card__head { margin-bottom: var(--sp-2); }
+.pl-card__kicker {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-accent-2);
+  margin: 0 0 2px;
+}
+.pl-card__title {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: 18px;
+  margin: 0;
+  color: var(--c-heading);
+}
+.pl-card__title:focus,
+.pl-card__title:focus-visible { outline: none; }
+.pl-card__fields {
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  color: var(--c-text-muted);
+  margin: var(--sp-1) 0 0;
+}
+.pl-card__fields .pl-card__flbl {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 9.5px;
+}
+.pl-card__fields code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+  color: var(--c-text);
+}
+.pl-card__row {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--c-text);
+  margin: var(--sp-2) 0 0;
+}
+.pl-card__row--role { color: var(--c-heading); }
+.pl-card__lbl {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-bottom: 2px;
+}
+.pl-card__chap {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  margin: var(--sp-2) 0 0;
+  padding-top: var(--sp-2);
+  border-top: var(--bw-1) solid var(--c-border);
+}
+.pl-card__chap a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-family: var(--font-mono);
+}
+.pl-card__chap a:hover { color: var(--c-link-hover); }
+.pl-card__chap a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+
+/* ---- no-JS fallback: static payload + 17-block explanation list -------- */
+.pl-nojs__intro {
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  color: var(--c-text-muted);
+  margin: 0 0 var(--sp-2);
+}
+.pl-blocklist {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.pl-blocklist > li {
+  border: var(--bw-1) solid var(--c-border);
+  border-left: 3px solid var(--c-accent-1);
+  border-radius: var(--radius-md);
+  background: var(--c-accent-3-soft);
+  padding: 8px 11px;
+}
+.pl-blocklist .blk {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  font-size: 12.5px;
+  color: var(--c-heading);
+}
+.pl-blocklist .blk code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-accent-2);
+  font-weight: var(--fw-normal);
+  margin-left: var(--sp-1);
+}
+.pl-blocklist .fn,
+.pl-blocklist .role {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--c-text);
+  margin: 4px 0 0;
+}
+.pl-blocklist .role { color: var(--c-text-muted); }
+.pl-blocklist .lbl {
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin-right: 5px;
+}
+.pl-blocklist .chap a {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---- chapter prose (ported manuscript) -------------------------------- *
+ * Reuse the .chapter-prose shell defined in sections/what-rag.css? No -- each
+ * section file is self-contained. Re-declare here so this page never depends on
+ * another section's CSS being linked. Structure + spacing only; var(--...) for
+ * color/space/motion. ASCII only. Same block is mirrored in .no-js-only.
+ */
+.chapter-prose {
+  max-width: 72ch;
+  margin: var(--sp-4) auto 0;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-body);
+  font-size: var(--fs-2);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+}
+.chapter-prose > section { margin-top: var(--sp-4); }
+.chapter-prose > section:first-child { margin-top: 0; }
+.chapter-prose h2 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-3);
+  line-height: var(--lh-tight);
+  color: var(--c-heading);
+  margin: 0 0 var(--sp-2);
+  padding-bottom: var(--sp-1);
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.chapter-prose h3 {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  color: var(--c-heading);
+  margin: var(--sp-3) 0 var(--sp-1);
+}
+.chapter-prose p { margin: var(--sp-2) 0; }
+.chapter-prose ul,
+.chapter-prose ol { margin: var(--sp-2) 0; padding-left: 1.4em; }
+.chapter-prose li { margin: var(--sp-1) 0; }
+.chapter-prose a {
+  color: var(--c-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.chapter-prose a:hover { color: var(--c-link-hover); }
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.chapter-prose strong,
+.chapter-prose b { font-weight: var(--fw-bold); color: var(--c-heading); }
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+}
+.chapter-prose pre {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--c-code-plate-bg);
+  color: var(--c-code-plate-fg);
+  border: var(--bw-1) solid var(--c-heading);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin: var(--sp-2) 0;
+  overflow: auto;
+  white-space: pre;
+}
+.chapter-prose pre code { background: none; border: none; padding: 0; font-size: inherit; color: inherit; }
+.chapter-prose .sources,
+.chapter-prose .about-recipe { font-size: var(--fs-1); }
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a { word-break: break-word; overflow-wrap: anywhere; }
+.chapter-prose .next-stop {
+  border-left: 3px solid var(--c-accent-1);
+  background: var(--c-accent-1-soft);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+/* ---- responsive: hold at 390 / 320 ----------------------------------- */
+@media (max-width: 560px) {
+  .pl-code { font-size: 11px; }
+  .pl-card { padding: var(--sp-3) 14px 14px; }
+  .pl-card__title { font-size: 1.04rem; }
+  .pl-card__row { font-size: 12.5px; }
+  .chapter-prose { font-size: var(--fs-1); }
+  .chapter-prose pre { font-size: 11.5px; }
+}
+
+/* ---- reduced-motion: snap to end state over the SAME DOM -------------- */
+@media (prefers-reduced-motion: reduce) {
+  .pl-camera,
+  .pl-hook { transition: none !important; }
+  .stage.zoomed .pl-camera { transform: none !important; }
+}

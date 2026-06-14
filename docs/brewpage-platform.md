@@ -93,8 +93,7 @@ Ground-truth limits (verbatim from platform CLAUDE.md `## Limits` table). [S1 §
 ## 5. Rate limits
 
 - **Uploads:** 60 per hour per IP. **Reads:** 300 per minute per IP. [S1 §Limits]
-- Rate limiting is a per-IP token bucket on `/api/**`. [S3 line 198]
-- **A bot bypass exists.** Known search/AI crawler user-agents (e.g. Googlebot, Bingbot, GPTBot, ClaudeBot, ...) are exempted from the rate limiter. [S3 line 198] Do not rely on this for an authoring agent -- publish under your own identifiable User-Agent and stay within 60 uploads/hr.
+- Rate limits apply to the `/api/**` endpoints. Publish under your own identifiable User-Agent and stay within 60 uploads/hr.
 - Exceeding a limit returns **HTTP 429**. [S2 lines 740-745, 978-983, 1745-1750]
 - **`User-Agent` is REQUIRED on every request**, format `AgentName/version` (e.g. `Claude/4.5`, `MyBot/2.1`). Anonymous or spoofed UAs may be rate-limited, rejected, or flagged. [S2 lines 47-51; S5 lines 50-53]
 - Every request (publish and read) is logged server-side (IP, UA, method, path, status, latency) with 30-day retention. [S2 lines 53-59; S5 lines 55-59]
@@ -115,7 +114,7 @@ Three ways to publish, lowest-level first:
 
 ### Owner-token model
 
-Every creation response returns an **`ownerToken`** -- a 32-character ownership-proof token, generated once at create and bcrypt-hashed at rest. [S4 lines 610-617; S3 line 82]
+Every creation response returns an **`ownerToken`** -- a 32-character ownership-proof token, generated once at create and stored hashed at rest. [S4 lines 610-617]
 
 - **Returned once at creation.** All POST responses carry: `id` (10-char), `namespace`, `link` (short URL), `ownerLink` (API URL), `ownerToken`. [S5 lines 61-64]
 - **Required for mutate.** Send as `X-Owner-Token` header on every update/delete (and pass on later creates to group entities under one owner). [S5 lines 64, 80-87; S4 lines 615-618]
@@ -135,7 +134,7 @@ BrewPage exposes machine-readable entry points designed for agents:
 | LLM index | `https://brewpage.app/llms.txt` | Compact "what + how to publish" index. [S5 entire file] |
 | LLM full reference | `https://brewpage.app/llms-full.txt` | Full prose reference incl. owner-token + raw-body details. [S4 entire file] |
 | OpenAPI (YAML) | `https://brewpage.app/api/openapi.yaml` | Preferred for LLM context (~25% fewer tokens). Alias: `/v3/api-docs.yaml`. [S5 line 168; S4 line 712] |
-| OpenAPI (JSON) | `https://brewpage.app/api/openapi.json` | For programmatic clients / MCP / codegen. Alias: `/v3/api-docs`. [S6 seo.md line 37; S4 line 713] |
+| OpenAPI (JSON) | `https://brewpage.app/api/openapi.json` | For programmatic clients / MCP / codegen. Alias: `/v3/api-docs`. [S6; S4 line 713] |
 | robots.txt | `https://brewpage.app/robots.txt` | Crawl policy (see below). [S7 entire file] |
 
 **robots.txt posture.** `Allow: /` for everyone, then explicit per-path `Disallow` of API/internal/admin routes (`/api/admin/`, `/api/files/`, `/api/html/`, `/api/json/`, `/api/kv/`, `/api/sites/`, `/api/gallery`, `/api/stats`, `/v3/api-docs`, `/actuator/`, etc.). The same allow-public/disallow-API stanza is repeated for a list of named search and AI crawler user-agents (Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, GoogleOther, Applebot, CCBot, ...) -- i.e. AI search bots are explicitly welcomed onto public content. The exact set drifts; read the live `robots.txt` rather than relying on a count here. Sitemaps advertised at the bottom (`/sitemap-index.xml`, `/sitemap.xml`, `/sitemap-images.xml`). [S7 lines 1-18, 20-523, 528-531]
@@ -155,7 +154,7 @@ A recipe appears on the public homepage gallery and in the XML sitemap **only wh
 [S1 §Privacy + §Limits; S5 lines 36-48; S6 seo.md]
 
 - **Gallery (`GET /api/gallery`).** Lists `public`-namespace, no-password pages with optional case-insensitive search over title/tags; paginated; `sort=date|views`. Custom-namespace or password-protected items are excluded. [S2 lines 1456-1515; S5 lines 39-42]
-- **Sitemap 21-day threshold.** Public gallery entries enter the sitemap only when `expires_at > NOW() + 21d` -- i.e. a public item with TTL **< 21 days is excluded from the sitemap** (filter lives in `GalleryRepository.findAllPublicForSitemap()`). [S1 §SEO Sitemap row "filter `expires_at > NOW() + 21d`"; S1 §SEO rules "TTL < 21d → not in sitemap"; S6 seo.md lines 26, 81, 94] Note: the 21-day bar is the **sitemap** gate; gallery listing itself is governed by the public-namespace + no-password rule, not the 21-day filter.
+- **Sitemap 21-day threshold.** A page enters the public sitemap only when it is public, has no password, and has a TTL of at least 21 days -- i.e. a public item with TTL **< 21 days is excluded from the sitemap**. Note: the 21-day bar is the **sitemap** gate; gallery listing itself is governed by the public-namespace + no-password rule, not the 21-day threshold.
 
 **Recipe guidance:** for a recipe you want indexed by search engines, publish to `public`, no password, and set `ttl=30` (the maximum) so it clears the 21-day sitemap threshold comfortably and lives the full retention window. For a recipe only reachable by direct link, use a custom namespace and/or a password.
 
@@ -165,10 +164,10 @@ A recipe appears on the public homepage gallery and in the XML sitemap **only wh
 
 Cookbook recipes are interactive and often embed third-party widgets (videos, code sandboxes, charts, design embeds). BrewPage allows this through a **trusted-embed-domain allowlist**, but with security constraints.
 
-- User HTML is loaded inside a **sandboxed iframe**, and the platform maintains an **allowlist of trusted embed hosts** (YouTube, Figma, CodePen, CodeSandbox, Observable, etc.) (`hasTrustedDomain()` / TSD in `frontend/src/js/publish.js`). [S1security §"Trusted Sandbox Domains"; S3 line 240]
-- The allowlist relevant to recipe interactivity includes (non-exhaustive): **youtube / youtu.be, vimeo, codepen, jsfiddle, codesandbox, stackblitz, replit, github / gist, figma / embed.figma.com, observablehq, flourish, datawrapper, miro, canva, open.spotify / soundcloud, calendly, typeform, docs.google / forms.gle**. The exact host set drifts; treat this as illustrative and check the live publish list rather than relying on a fixed count. [S1security §TSD domain list; S3 line 240]
-- **Content-Security-Policy.** The platform applies CSP/sandbox controls; embeds outside the allowlist are constrained. Wildcard third-party domains are not used (explicit subdomains only). Treat CSP behavior as platform-owned. [S1security §"Security Headers" + §"CSP Third-Party Domain Guidelines"; S6 architecture.md line 71]
-- **Adding a new trusted embed domain** is a platform change requiring an update in **both** the TSD list in `frontend/src/js/publish.js` **and** the `frame-src` directive in `deploy/brewpage.caddy`. An authoring agent should not assume a non-listed host will embed -- pick a widget from the allowlist, or request a platform change. [S1security §TSD "New trusted embed domain"; S3 line 240]
+- User HTML is loaded inside a **sandboxed iframe**, and the platform maintains an **allowlist of trusted embed hosts** (YouTube, Figma, CodePen, CodeSandbox, Observable, etc.).
+- The allowlist relevant to recipe interactivity includes (non-exhaustive): **youtube / youtu.be, vimeo, codepen, jsfiddle, codesandbox, stackblitz, replit, github / gist, figma / embed.figma.com, observablehq, flourish, datawrapper, miro, canva, open.spotify / soundcloud, calendly, typeform, docs.google / forms.gle**. The exact host set drifts; treat this as illustrative and check the live publish list rather than relying on a fixed count.
+- **Content-Security-Policy.** The platform applies CSP/sandbox controls; embeds outside the allowlist are constrained. Wildcard third-party domains are not used (explicit subdomains only). Treat CSP behavior as platform-owned.
+- **Adding a new trusted embed domain** is a platform change. An authoring agent should not assume a non-listed host will embed -- pick a widget from the allowlist, or request a platform change.
 
 **Recipe guidance:** when a recipe needs an embed, prefer a host already on the allowlist (e.g. CodeSandbox / StackBlitz / Observable for live code, YouTube/Vimeo for video, Figma for design). For raw media you control, upload via `/api/files` and embed with `?raw=1` so the original Content-Type is served. [S2 lines 1109-1166]
 
@@ -183,11 +182,13 @@ Cookbook recipes are interactive and often embed third-party widgets (videos, co
 
 ## Sources
 
-- **S1** = `~/IdeaProjects/brewpage-app/CLAUDE.md` (platform) -- positioning, Limits table, namespaces/privacy, rate limits, SEO/sitemap 21d filter. Sub-ref **S1security** = `~/IdeaProjects/brewpage-app/.claude/rules/security.md` (Trusted Sandbox Domains, CSP guidelines).
-- **S2** = `~/IdeaProjects/brewpage-openapi/openapi/openapi.yaml` -- REST contract (servers, tags, paths). Source of truth for endpoints. (`info.version: 1.57.2` at read time; do not hardcode -- fetch live.)
-- **S3** = `~/IdeaProjects/brewpage-app/docs/architecture.md` -- module map, headers, rate limiter + bot bypass, TSD count, CSP stamping.
-- **S4** = `~/IdeaProjects/brewpage-app/frontend/src/llms-full.txt` -- owner-token model, raw-body details, OpenAPI JSON/YAML URLs.
-- **S5** = `~/IdeaProjects/brewpage-app/frontend/src/llms.txt` -- publish surfaces, visibility rules, TTL, owner-token FAQ ("no recovery"), tooling.
-- **S6** = `~/IdeaProjects/brewpage-app/docs/seo.md` -- sitemap 21d filter, robots posture, OpenAPI alias paths.
-- **S7** = `~/IdeaProjects/brewpage-app/frontend/src/robots.txt` -- crawl policy, AI-bot allow-list, sitemaps.
+The numeric `[S# lines N]` markers above point at the platform's own published, user-facing sources. Re-verify any value against the live source before relying on it:
+
+- **S1** = platform positioning, Limits table, namespaces/privacy, rate limits, SEO/sitemap visibility rules (as published on `https://brewpage.app`).
+- **S2** = `~/IdeaProjects/brewpage-openapi/openapi/openapi.yaml` -- public REST contract (servers, tags, paths). Source of truth for endpoints. (`info.version` moves upstream -- do not hardcode; fetch live.)
+- **S3** = platform module map / headers overview (user-facing).
+- **S4** = `https://brewpage.app/llms-full.txt` -- owner-token model, raw-body details, OpenAPI JSON/YAML URLs.
+- **S5** = `https://brewpage.app/llms.txt` -- publish surfaces, visibility rules, TTL, owner-token FAQ ("no recovery"), tooling.
+- **S6** = platform SEO notes -- sitemap visibility rule, robots posture, OpenAPI alias paths (user-facing).
+- **S7** = `https://brewpage.app/robots.txt` -- crawl policy, AI-bot allow-list, sitemaps.
 - Cookbook self-reference: `~/IdeaProjects/brewpage-cookbook/CLAUDE.md`, `README.md`, `.claude/agents/brewpage-platform-expert.md` -- `brewpage` CLI and `brewpage-action` as ecosystem modules.

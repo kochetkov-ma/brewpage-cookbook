@@ -1,0 +1,341 @@
+/* ===========================================================
+   generation.css -- SECTION CSS for "Генерация"
+   (the grounded-answer claim<->chunk reveal -- AtlasMD).
+
+   Scope: ONLY the generation drill blocks that base.css does not ship as shared
+   shells: the level-0 overview node, the grounded-answer.js panel (.ga-root +
+   toggle + chunks/links/answer stage + no-context case), the timeline controls
+   (rendered by timeline.js as .timeline*/.btn), and the no-JS static end-state.
+   It reuses base.css shells where they exist: .plate / .plate-head / .compass,
+   .breadcrumb, .zoomout, .node, .stage / .camera, .site-header / .site-footer,
+   .chapter-prose.
+
+   base.css is NEVER edited or forked. Every color/space/motion value here comes
+   from a theme token (var(--...)); selection/focus uses the themed rust ring
+   (--c-focus), NEVER the default blue. Green = matched-citation (grounded)
+   accent ONLY (--c-progress / --green-text).
+
+   MOTION RULE (do-not #5): transform + opacity only; the claim<->chunk link is a
+   one-shot gated stroke-dashoffset (IE sets that transition inline). No height /
+   max-height tween anywhere in this file.
+   =========================================================== */
+
+/* ---- controls row: breadcrumb + zoom-out (own row, NOT the compass row) ---- */
+.drill-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0 var(--sp-0) var(--sp-1);
+  margin-bottom: 2px;
+  border-bottom: var(--bw-1) solid var(--c-border);
+}
+.drill-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
+.drill-controls .zoomout { margin-left: auto; }
+
+/* ---- the camera stage + level-0 overview node ---- */
+.stage { position: relative; border-radius: var(--radius-md); }
+.camera {
+  position: relative;
+  transition: transform var(--dur-zoom) var(--ease-zoom);
+  transform-origin: 0 0;
+}
+.stage.zoomed .camera {
+  position: absolute;
+  inset: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ga-overview {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-3) 0;
+}
+.ga-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  max-width: 360px;
+  cursor: pointer;
+}
+.ga-node .idx {
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  color: var(--c-accent-2);
+  letter-spacing: 0.1em;
+}
+.ga-node .name { font-weight: var(--fw-bold); font-size: var(--fs-2); color: var(--c-text); }
+.ga-node .hint { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); }
+.ga-node .ga-open {
+  margin-top: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  color: var(--c-link);
+  border-top: var(--bw-1) dashed var(--c-accent-1);
+  padding-top: 6px;
+}
+
+/* ===========================================================
+   grounded-answer.js panel content (.ga-root)
+   =========================================================== */
+.ga-root { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ga-title {
+  font-family: var(--font-body);
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-2);
+  margin: 0;
+  color: var(--c-text);
+}
+.ga-title:focus, .ga-title:focus-visible { outline: none; }
+.ga-model {
+  font-family: var(--font-mono);
+  font-size: var(--fs-0);
+  color: var(--c-text-muted);
+  margin: 0;
+}
+.ga-hint { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); margin: 0; font-style: italic; }
+
+/* ---- mode toggle (cited answer / no-context) ---- */
+.ga-toggle { display: flex; gap: var(--sp-1); flex-wrap: wrap; }
+.ga-toggle-btn {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  padding: 5px 11px;
+  border: var(--bw-1) solid var(--c-accent-3);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.ga-toggle-btn:hover { border-color: var(--c-accent-2); color: var(--c-accent-2); }
+.ga-toggle-btn:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.ga-toggle-btn[aria-pressed="true"] { background: var(--c-accent-2); border-color: var(--c-accent-2); color: var(--c-bg); }
+
+/* ---- stage: source chunks | overlay links | answer claims ---- */
+.ga-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+}
+.ga-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  overflow: visible;
+}
+.ga-link {
+  stroke: var(--c-progress);
+  stroke-width: 1.6;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  /* IE sets stroke-dashoffset/opacity transition inline (one-shot gated draw). */
+}
+
+.ga-col-title {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0 0 6px;
+}
+.ga-chunks, .ga-answer { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
+
+/* source chunk rows */
+.ga-chunk {
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-left: 3px solid var(--c-accent-1);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  /* IE sets opacity/transform transition inline. */
+}
+.ga-chunk[data-active="true"],
+.ga-chunk[data-revealed="true"] { border-left-color: var(--c-progress); background: var(--c-visited-bg-1); }
+.ga-chunk-src { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-2); display: block; margin-bottom: 3px; }
+.ga-chunk-text { font-family: var(--font-body); font-size: var(--fs-1); line-height: var(--lh-body); color: var(--c-text); margin: 0; }
+
+/* answer claim rows */
+.ga-claim {
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-md);
+  padding: 8px 11px;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-1);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+  cursor: pointer;
+  /* IE sets opacity/transform transition inline. */
+}
+.ga-claim:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.ga-claim[data-hover="true"] { border-color: var(--c-accent-2); }
+.ga-claim[data-grounded="true"][data-revealed="true"] { border-left: 3px solid var(--c-progress); }
+.ga-claim[data-grounded="false"][data-revealed="true"] { border-left: 3px solid var(--c-accent-2); }
+.ga-claim-text { color: var(--c-text); }
+.ga-cite { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-1); }
+
+/* grounding / reject badges -- green is grounded ONLY */
+.ga-badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  border-radius: var(--radius-sm);
+  padding: 1px 7px;
+}
+.ga-badge[data-kind="grounded"] { color: var(--green-text); border: var(--bw-1) solid var(--c-progress); background: var(--c-visited-bg-1); }
+.ga-badge[data-kind="rejected"] { color: var(--c-accent-2); border: var(--bw-1) solid var(--c-accent-2); background: var(--c-accent-2-soft); }
+
+/* ---- no-context fallback case (honest refusal, NO green) ---- */
+.ga-nocontext {
+  background: var(--c-accent-2-soft);
+  border: var(--bw-1) solid var(--c-accent-2);
+  border-left: 3px solid var(--c-accent-2);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+.ga-nc-q { font-family: var(--font-body); font-size: var(--fs-1); color: var(--c-text); font-style: italic; margin: 0 0 var(--sp-1); }
+.ga-nc-fallback { font-family: var(--font-body); font-size: var(--fs-2); font-weight: var(--fw-bold); color: var(--c-accent-2); margin: 0 0 var(--sp-1); }
+.ga-nc-note { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); margin: 0; }
+
+/* ===========================================================
+   timeline controls (timeline.js builds .timeline + children)
+   =========================================================== */
+.timeline { display: flex; flex-direction: column; gap: var(--sp-1); margin-top: var(--sp-1); }
+.timeline__controls { display: flex; align-items: center; gap: var(--sp-1); flex-wrap: wrap; }
+.timeline .btn {
+  font-family: var(--font-ui);
+  font-size: var(--fs-1);
+  padding: 4px 12px;
+  border: var(--bw-1) solid var(--c-accent-3);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-1), color var(--dur-1) var(--ease-1), border-color var(--dur-1) var(--ease-1);
+}
+.timeline .btn:hover { border-color: var(--c-accent-2); color: var(--c-accent-2); }
+.timeline .btn:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+.timeline .btn[aria-pressed="true"] { background: var(--c-accent-2); border-color: var(--c-accent-2); color: var(--c-bg); }
+.timeline__scrub { flex: 1 1 120px; min-width: 90px; accent-color: var(--c-accent-1); cursor: pointer; }
+.timeline__scrub:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 3px; }
+.timeline__track { flex: 1 1 100%; height: 5px; background: var(--c-surface-3); border-radius: 3px; overflow: hidden; }
+.timeline__progress { display: block; block-size: 100%; inline-size: 0; background: linear-gradient(90deg, var(--c-accent-3), var(--c-accent-2)); transition: inline-size var(--dur-2) var(--ease-1); }
+.timeline__caption { font-family: var(--font-ui); font-size: var(--fs-1); color: var(--c-text-muted); margin: 0; }
+
+/* ===========================================================
+   NO-JS static end-state
+   =========================================================== */
+.ga-model-static { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-text-muted); margin: 0 0 var(--sp-2); }
+.ga-model-static .lbl { text-transform: uppercase; letter-spacing: 0.12em; }
+.ga-cols-static { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); align-items: start; }
+.ga-col-static h2 {
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-text-muted);
+  margin: 0 0 6px;
+}
+.ga-col-static .src { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-2); margin: var(--sp-1) 0 2px; }
+.ga-col-static .txt { font-family: var(--font-body); font-size: var(--fs-1); line-height: var(--lh-body); color: var(--c-text); margin: 0 0 var(--sp-1); }
+.ga-col-static .claim {
+  font-family: var(--font-body);
+  font-size: var(--fs-1);
+  line-height: var(--lh-body);
+  color: var(--c-text);
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-left: 3px solid var(--c-progress);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  margin: 0 0 var(--sp-1);
+}
+.ga-col-static .claim.bad { border-left-color: var(--c-accent-2); }
+.ga-col-static .cite { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--c-accent-1); }
+.ga-col-static .badge {
+  display: inline-block;
+  margin-left: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  border-radius: var(--radius-sm);
+  padding: 1px 7px;
+}
+.ga-col-static .badge.good { color: var(--green-text); border: var(--bw-1) solid var(--c-progress); background: var(--c-visited-bg-1); }
+.ga-col-static .badge.reject { color: var(--c-accent-2); border: var(--bw-1) solid var(--c-accent-2); background: var(--c-accent-2-soft); }
+.ga-nocontext-static {
+  margin-top: var(--sp-3);
+  background: var(--c-accent-2-soft);
+  border: var(--bw-1) solid var(--c-accent-2);
+  border-left: 3px solid var(--c-accent-2);
+  border-radius: var(--radius-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+.ga-nocontext-static h2 { font-family: var(--font-ui); font-size: var(--fs-0); letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-text-muted); margin: 0 0 6px; }
+.ga-nocontext-static .nc-q { font-style: italic; color: var(--c-text); margin: 0 0 var(--sp-1); }
+.ga-nocontext-static .nc-fallback { font-weight: var(--fw-bold); color: var(--c-accent-2); margin: 0 0 var(--sp-1); }
+.ga-nocontext-static .nc-note { font-family: var(--font-ui); font-size: var(--fs-0); color: var(--c-text-muted); margin: 0; }
+
+/* ===========================================================
+   responsive: stack the stage columns on narrow viewports (390/320)
+   =========================================================== */
+@media (max-width: 640px) {
+  .ga-stage { grid-template-columns: 1fr; }
+  .ga-cols-static { grid-template-columns: 1fr; }
+  /* links overlay is layout-dependent; hide it when columns stack (IE
+     recomputes endpoints on resize, but a single column has no cross-links). */
+  .ga-links { display: none; }
+}
+
+/* in-prose links get the themed focus ring -- never the UA blue default
+   (AtlasMD do-not: focus ring is always themed --c-focus). */
+.chapter-prose a:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 2px; }
+
+/* ===========================================================
+   CHAPTER PROSE -- inline-code + pre x-overflow guard (390/320)
+   Long unbroken inline <code> wraps instead of forcing page width; <pre>
+   code blocks scroll inside their own box. Color/space/motion via var(--...);
+   the dark code-plate hex is the AtlasMD-2.1 frozen exemption. ASCII only.
+   =========================================================== */
+.chapter-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--c-accent-3-soft);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  padding: 0.05em 0.34em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.chapter-prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chapter-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* reduced-motion: timeline.js snaps to end over the SAME DOM (links drawn).
+   Keep transitions inert; no height tween exists. */
+@media (prefers-reduced-motion: reduce) {
+  .camera,
+  .timeline__progress { transition: none !important; }
+}

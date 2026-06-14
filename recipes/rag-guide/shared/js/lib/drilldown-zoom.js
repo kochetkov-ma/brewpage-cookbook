@@ -35,8 +35,11 @@
  *
  * export function init(rootEl, config) -> {
  *   openNode({id,crumb,anchor,data}), openDeep({id,crumb,data}),
- *   zoomOut(), zoomToLevel(depth), close(), currentDepth(), destroy()
+ *   zoomOut(), zoomToLevel(depth), close(), setLabels(next), refresh(),
+ *   currentDepth(), destroy()
  * }
+ * refresh() re-renders the open panel/crumb/camera in place (consumer calls it
+ * after a language switch so the open card re-localizes via renderPanel).
  */
 
 import { qs, el, clear, listeners } from "./dom.js";
@@ -188,6 +191,15 @@ export function init(rootEl, config) {
     update();
   }
 
+  // re-localize the breadcrumb / zoom-out chrome in place. Page glue calls this
+  // on a language toggle; the existing lang:change listener (or this call's own
+  // update) re-renders the crumb trail with the new labels.
+  function setLabels(next) {
+    Object.assign(labels, next || {});
+    if (zoomoutBtn) zoomoutBtn.setAttribute("aria-label", labels.zoomOut);
+    update();
+  }
+
   if (zoomoutBtn) L.on(zoomoutBtn, "click", () => zoomOut());
   L.on(document, "lang:change", () => update());
   const offEsc = onEscape(rootEl || document, () => zoomOut());
@@ -201,6 +213,12 @@ export function init(rootEl, config) {
     zoomOut,
     zoomToLevel,
     close,
+    setLabels,
+    // re-render the currently open panel (+ crumb/camera) in place. A consumer
+    // that has just changed its own active language (e.g. pipeline.setLang)
+    // calls this AFTER updating its lang so the open card re-localizes via the
+    // consumer's renderPanel(entry) -- no reliance on lang:change ordering.
+    refresh: update,
     currentDepth,
     destroy() {
       L.off();
