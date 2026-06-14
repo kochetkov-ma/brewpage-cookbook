@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Генерация - заземленный ответ с цитатами - RAG С НУЛЯ</title>
-<meta name="description" content="Генерация в RAG: жесткая инструкция отвечать только по контексту, цитаты [source] для проверки заземления, борьба с галлюцинациями и честный отказ. Откройте узел ответа и проследите связь утверждение-источник. Интерактивная глава BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Generation: a grounded, cited answer - RAG Guide</title>
+<meta name="description" content="Generation in RAG: the model reads the assembled context and writes a grounded answer, citing sources and honestly admitting gaps. With working code.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<!-- canonical -> param-less EN URL; ?lang=ru collapses here (L3) -->
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Generation: a grounded, cited answer">
+<meta property="og:description" content="Generation in RAG: the model reads the assembled context and writes a grounded answer, citing sources and honestly admitting gaps. With working code.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Generation: a grounded, cited answer">
+<meta name="twitter:description" content="Generation in RAG: the model reads the assembled context and writes a grounded answer, citing sources and honestly admitting gaps. With working code.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Generation: a grounded, cited answer",
+  "description": "Generation in RAG: the model reads the assembled context and writes a grounded answer, citing sources and honestly admitting gaps. With working code.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Generation",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
      + this section's own structural CSS (linked only here, never base.css). -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,13 +103,13 @@
 <link rel="stylesheet" href="shared/css/sections/generation.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К генерации" data-en="Skip to generation">К генерации</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К генерации" data-en="Skip to generation">Skip to generation</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,8 +119,8 @@
         </svg>
       </a>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава VI - Генерация" data-en="Plate VI - Generation">Глава VI - Генерация</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава VI - Генерация" data-en="Plate VI - Generation">Plate VI - Generation</div>
       </div>
     </div>
     <div class="site-header__nav">
@@ -37,22 +128,24 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
                aria-controls="rag-search-results" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results"
+            aria-label="Search results" hidden></ul>
       </div>
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
@@ -70,8 +163,8 @@
     <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
     <div class="plate-head">
       <div class="title-block">
-        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Генерация" data-en="Generation">Генерация</h1>
-        <p data-i18n="plateSub" data-ru="Модель читает собранный контекст и пишет ответ. Заземление задается инструкцией и проверяется цитатами. Откройте узел ответа: каждое утверждение строится из конкретного куска, а цитата не из контекста - сигнал отклонить ответ." data-en="The model reads the assembled context and writes an answer. Grounding is set by the instruction and verified by citations. Open the answer node: each statement is built from a specific chunk, and a citation not in the context is a signal to reject the answer.">Модель читает собранный контекст и пишет ответ. Заземление задается инструкцией и проверяется цитатами. Откройте узел ответа: каждое утверждение строится из конкретного куска, а цитата не из контекста - сигнал отклонить ответ.</p>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Генерация" data-en="Generation">Generation</h1>
+        <p data-i18n="plateSub" data-ru="Модель читает собранный контекст и пишет ответ. Заземление задается инструкцией и проверяется цитатами. Откройте узел ответа: каждое утверждение строится из конкретного куска, а цитата не из контекста - сигнал отклонить ответ." data-en="The model reads the assembled context and writes an answer. Grounding is set by the instruction and verified by citations. Open the answer node: each statement is built from a specific chunk, and a citation not in the context is a signal to reject the answer.">The model reads the assembled context and writes an answer. Grounding is set by the instruction and verified by citations. Open the answer node: each statement is built from a specific chunk, and a citation not in the context is a signal to reject the answer.</p>
       </div>
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
@@ -92,8 +185,8 @@
 
     <!-- controls row: breadcrumb + zoom-out (own row, NOT the compass row) -->
     <div class="drill-controls js-only">
-      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
-      <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень приближения" data-aria-en="Zoom level"></nav>
+      <button class="zoomout" data-slot="zoomout" type="button" disabled data-i18n-aria aria-label="Zoom out one level" data-aria-ru="Выйти на уровень выше" data-aria-en="Zoom out one level">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
           <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -107,12 +200,12 @@
     <div class="stage js-only" data-slot="stage">
       <div class="camera">
         <div class="ga-overview">
-          <button type="button" class="node ga-node" data-node="generate" data-crumb="Генерация"
-                  aria-label="Открыть генерацию: проследить связь утверждение-источник">
+          <button type="button" class="node ga-node" data-node="generate" data-crumb="Generation" data-crumb-ru="Генерация" data-crumb-en="Generation"
+                  data-i18n-aria aria-label="Open generation: trace the statement-to-source link" data-aria-ru="Открыть генерацию: проследить связь утверждение-источник" data-aria-en="Open generation: trace the statement-to-source link">
             <span class="idx">06</span>
-            <span class="name" data-i18n="nodeName" data-ru="Заземленный ответ" data-en="Grounded answer">Заземленный ответ</span>
-            <span class="hint" data-i18n="nodeHint" data-ru="каждое утверждение - из конкретного куска, с цитатой" data-en="each statement is from a specific chunk, with a citation">каждое утверждение - из конкретного куска, с цитатой</span>
-            <span class="ga-open" data-i18n="nodeOpen" data-ru="нажмите, чтобы заглянуть внутрь" data-en="tap to look inside">нажмите, чтобы заглянуть внутрь</span>
+            <span class="name" data-i18n="nodeName" data-ru="Заземленный ответ" data-en="Grounded answer">Grounded answer</span>
+            <span class="hint" data-i18n="nodeHint" data-ru="каждое утверждение - из конкретного куска, с цитатой" data-en="each statement is from a specific chunk, with a citation">each statement is from a specific chunk, with a citation</span>
+            <span class="ga-open" data-i18n="nodeOpen" data-ru="нажмите, чтобы заглянуть внутрь" data-en="tap to look inside">tap to look inside</span>
           </button>
         </div>
       </div>
@@ -155,18 +248,18 @@
 
   <!-- ===================== chapter prose (full manuscript, always visible) =====================
        Ported from content/ru/generation.md (strategy A: md-as-source). -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="generation">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
-      <p>Вы собрали идеальный контекст (глава про сборку контекста), отправили в модель - а она все равно выдумала деталь, которой в документах нет. Или ответила правильно, но без ссылки на источник, и пользователь не может это проверить. Или на вопрос, ответа на который в данных просто нет, уверенно выдала выдумку вместо честного "не знаю".</p>
-      <p>Это стадия генерации (generation): модель читает собранный контекст и пишет ответ. Сам факт, что контекст хороший, не гарантирует, что ответ будет на нем основан. Заземление (grounding) задается инструкциями и проверяется цитатами. Ниже - рабочий путь к ответу, который отвечает только по контексту, ссылается на фрагменты и честно признает пробелы.</p>
-      <p>Полный вид запроса и ответа поле за полем - в главе <a href="payload-anatomy.html">Анатомия запроса</a>; здесь мы работаем с выходом генерации.</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem you came with</h2>
+      <p data-pk="problem.p1">You assembled the perfect context (the context-assembly chapter), sent it to the model - and it still invented a detail that is not in the documents. Or it answered correctly but without a link to the source, and the user cannot verify it. Or, for a question whose answer simply is not in the data, it confidently produced a fabrication instead of an honest "I do not know".</p>
+      <p data-pk="problem.p2">This is the generation stage: the model reads the assembled context and writes the answer. The mere fact that the context is good does not guarantee that the answer will be based on it. Grounding is set by instructions and verified by citations. Below is the working path to an answer that responds only from the context, cites the fragments, and honestly admits gaps.</p>
+      <p data-pk="problem.p3">The full field-by-field view of the request and the answer is in the <a href="payload-anatomy.html">Payload anatomy</a> chapter; here we work with the generation output.</p>
     </section>
 
     <section aria-labelledby="pr-solution">
-      <h2 id="pr-solution">Решение: вызов генерации с заземлением</h2>
-      <p>Вот рабочий вызов на Python через Anthropic SDK. Промпт собран на предыдущей стадии; здесь важны три вещи: жесткая системная инструкция, подписанные источники в контексте и разбор цитат из ответа.</p>
+      <h2 id="pr-solution" data-pk="solution.h2">The solution: a generation call with grounding</h2>
+      <p data-pk="solution.p1">Here is a working call in Python via the Anthropic SDK. The prompt was assembled at the previous stage; what matters here are three things: a firm system instruction, signed sources in the context, and parsing the citations from the answer.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="generation-grounded-call">
         <figcaption class="code-block__cap" data-i18n data-ru="Vyzov generacii s zazemleniem: zhestkij system, razbor [source]-citat i streaming-variant." data-en="Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant.">Vyzov generacii s zazemleniem: zhestkij system, razbor [source]-citat i streaming-variant.</figcaption>
         <pre><code># pip install anthropic
@@ -205,70 +298,70 @@ def generate_stream(prompt: str):
         for text in stream.text_stream:
             yield text</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Klient Anthropic</strong> -- Stavim SDK i sozdaem klient - kljuch beriotsja iz peremennoj ANTHROPIC_API_KEY.</li>
-          <li><strong>Instrukcija zazemlenija</strong> -- System delaet tri veshchi: tolko po kontekstu, citaty [source] i chestnyj zapasnoj otvet pri probele.</li>
-          <li><strong>Vyzov i razbor citat</strong> -- Vyzyvaem model i vytaskivaem vse [source] iz otveta - proverka, chto otvet zazemlen na kontekste.</li>
-          <li><strong>Streaming-variant</strong> -- To zhe, no tokeny otdajutsja po mere generacii cherez stream - polzovatel vidit tekst srazu.</li>
+          <li><strong>Anthropic client</strong> -- Install the SDK and create the client - the key is read from ANTHROPIC_API_KEY.</li>
+          <li><strong>Grounding instruction</strong> -- The system instruction does three things: only-from-context, [source] citations, and an honest fallback on a gap.</li>
+          <li><strong>Call and parse citations</strong> -- Call the model and pull every [source] out of the answer - a check that the answer is grounded on the context.</li>
+          <li><strong>Streaming variant</strong> -- The same call, but tokens are yielded as they are generated via stream - the user sees text right away.</li>
         </ol>
       </figure>
-      <p>Модель и форма вызова - по <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; имя модели при запуске сверьте с <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.</p>
+      <p data-pk="solution.p2">The model and the call shape follow the <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; check the model name at launch against the <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Any vendor with a chat API will do - what matters is not the names but the three techniques below.</p>
     </section>
 
     <section aria-labelledby="pr-instructions">
-      <h2 id="pr-instructions">Инструкции: отвечай только по контексту</h2>
-      <p>Генерация в RAG управляется системной инструкцией. Без явного "отвечай только по контексту" модель свободно добавляет то, что "знает" из обучения - и именно тут рождаются правдоподобные, но ложные факты. Сам смысл RAG по <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a> в том, чтобы ответ опирался на извлеченные документы, а не только на параметрическую память модели.</p>
-      <p>Инструкция в <code>SYSTEM</code> выше делает три вещи: ограничивает источник (только контекст), требует цитаты (<code>[source]</code>) и задает запасной вариант для пробела ("Этого нет в документах"). Это каркас заземления.</p>
+      <h2 id="pr-instructions" data-pk="instructions.h2">Instructions: answer only from the context</h2>
+      <p data-pk="instructions.p1">Generation in RAG is governed by the system instruction. Without an explicit "answer only from the context", the model freely adds what it "knows" from training - and that is exactly where plausible but false facts are born. The very meaning of RAG by <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a> is that the answer rests on the retrieved documents, not on the model's parametric memory alone.</p>
+      <p data-pk="instructions.p2">The instruction in <code>SYSTEM</code> above does three things: it limits the source (only the context), requires citations (<code>[source]</code>), and sets a fallback for a gap ("This is not in the documents"). This is the skeleton of grounding.</p>
     </section>
 
     <section aria-labelledby="pr-cite">
-      <h2 id="pr-cite">Цитирование источников в ответе</h2>
-      <p>Цитата - это не украшение, а механизм проверки. Когда каждое утверждение помечено <code>[source]</code>, вы можете сопоставить его с конкретным куском и убедиться, что ответ действительно опирается на данные, а не на выдумку. Именно поэтому на стадии сборки контекста каждый кусок подписывался источником: подпись в контексте -&gt; ссылка в ответе -&gt; проверка заземления.</p>
-      <p>Функция <code>generate</code> выше вытаскивает все <code>[source]</code> из ответа. Если модель упомянула источник, которого не было в переданном контексте, это сигнал галлюцинации цитаты - такой ответ надо отклонять или перезапрашивать.</p>
+      <h2 id="pr-cite" data-pk="cite.h2">Citing sources in the answer</h2>
+      <p data-pk="cite.p1">A citation is not decoration but a verification mechanism. When every claim is marked with <code>[source]</code>, you can match it against a concrete piece and confirm that the answer really rests on the data, not on a fabrication. That is exactly why, at the context-assembly stage, every piece was signed with its source: a signature in the context -&gt; a link in the answer -&gt; a grounding check.</p>
+      <p data-pk="cite.p2">The <code>generate</code> function above pulls out all <code>[source]</code> from the answer. If the model mentioned a source that was not in the supplied context, that is a signal of a citation hallucination - such an answer must be rejected or re-requested.</p>
     </section>
 
     <section aria-labelledby="pr-ground">
-      <h2 id="pr-ground">Борьба с выдумками (grounding/hallucination)</h2>
-      <p>Галлюцинация - это уверенное, бегло сформулированное утверждение, не подкрепленное источником. Это известная и устойчивая проблема генеративных моделей: обзор <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">Ji et al., 2023, "Survey of Hallucination in Natural Language Generation"</a> систематизирует виды галлюцинаций и отмечает, что модели склонны порождать текст, не заземленный на входных данных.</p>
-      <p>RAG снижает галлюцинации, подкладывая проверяемый контекст, но сам по себе их не убирает. Три меры в связке: (1) жесткая инструкция "только по контексту"; (2) обязательные цитаты <code>[source]</code> с проверкой, что источник действительно был в контексте; (3) явный запасной вариант. Если в контексте нет ответа, правильный результат - честное "Этого нет в документах", а не правдоподобная выдумка. Этот отказ - фича, а не баг.</p>
+      <h2 id="pr-ground" data-pk="ground.h2">Fighting fabrications (grounding/hallucination)</h2>
+      <p data-pk="ground.p1">A hallucination is a confident, fluently phrased claim not backed by a source. This is a known and persistent problem of generative models: the survey <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">Ji et al., 2023, "Survey of Hallucination in Natural Language Generation"</a> systematizes the kinds of hallucinations and notes that models tend to produce text not grounded on the input data.</p>
+      <p data-pk="ground.p2">RAG reduces hallucinations by slipping in verifiable context, but it does not remove them by itself. Three measures together: (1) a firm "only from the context" instruction; (2) mandatory <code>[source]</code> citations with a check that the source was really in the context; (3) an explicit fallback. If there is no answer in the context, the correct result is an honest "This is not in the documents", not a plausible fabrication. This refusal is a feature, not a bug.</p>
     </section>
 
     <section aria-labelledby="pr-stream">
-      <h2 id="pr-stream">Тон, формат и стриминг</h2>
-      <p>Тон и формат задаются в той же инструкции: "отвечай кратко списком", "верни JSON с полями answer и sources". Формат - часть контракта с вашим UI.</p>
-      <p>Стриминг улучшает восприятие: вместо ожидания целого ответа токены прибывают по мере генерации, и пользователь видит текст сразу. Anthropic Messages API отдает поток через server-sent events (<a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); функция <code>generate_stream</code> выше именно это и делает. Важно для заземления: зеленый "готовый" ответ в UI не показываем как финальный, пока генерация не завершилась и цитаты не проверили - частичный текст может еще дописать источник. Выше - интерактивный разбор: откройте узел ответа, наведитесь на утверждение и проследите связь до его куска-источника. Без JS страница показывает ответ с цитатами, список источников и случай честного отказа.</p>
+      <h2 id="pr-stream" data-pk="stream.h2">Tone, format, and streaming</h2>
+      <p data-pk="stream.p1">Tone and format are set in the same instruction: "answer briefly as a list", "return JSON with the fields answer and sources". Format is part of the contract with your UI.</p>
+      <p data-pk="stream.p2">Streaming improves perception: instead of waiting for the whole answer, tokens arrive as they are generated, and the user sees text right away. The Anthropic Messages API delivers the stream via server-sent events (<a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); the <code>generate_stream</code> function above does exactly this. Important for grounding: do not show the green "ready" answer in the UI as final until generation has finished and the citations are verified - partial text may still append a source.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
-        <li>Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">arxiv.org/abs/2202.03629</a></li>
-        <li>Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
-        <li>Anthropic. Streaming Messages. <a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages-streaming</a></li>
-        <li>Anthropic. Models overview. <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
+        <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li data-pk="sources.li2">Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">arxiv.org/abs/2202.03629</a></li>
+        <li data-pk="sources.li3">Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
+        <li data-pk="sources.li4">Anthropic. Streaming Messages. <a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages-streaming</a></li>
+        <li data-pk="sources.li5">Anthropic. Models overview. <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>В grounded-answer-reveal наведитесь на любое утверждение ответа и проследите линию связи до его куска-источника: зеленый акцент загорается только когда цитата сопоставлена с реальным куском.</li>
-        <li>Включите случай "нет контекста" и посмотрите, что правильный ответ - это запасной вариант "Этого нет в документах", а не правдоподобная выдумка.</li>
-        <li>Найдите в ответе <code>[source]</code>, которого нет среди кусков контекста (галлюцинация цитаты), и обратите внимание, почему такой ответ надо отклонять.</li>
+        <li data-pk="try.li1">In grounded-answer-reveal hover over any claim of the answer and trace the link line to its source piece: the green accent lights up only when the citation is matched to a real piece.</li>
+        <li data-pk="try.li2">Turn on the "no context" case and see that the correct answer is the fallback "This is not in the documents", not a plausible fabrication.</li>
+        <li data-pk="try.li3">Find a <code>[source]</code> in the answer that is not among the context pieces (a citation hallucination), and note why such an answer must be rejected.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Ответ есть - но хорош ли он? Следующая остановка - глава <strong><a href="evaluation.html">evaluation</a></strong>: как системно измерить точность поиска и качество ответа на золотом наборе вопросов.</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next1">There is an answer - but is it good? The next stop is the <strong><a href="evaluation.html">evaluation</a></strong> chapter: how to systematically measure retrieval accuracy and answer quality on a golden set of questions.</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -284,14 +377,15 @@ def generate_stream(prompt: str):
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

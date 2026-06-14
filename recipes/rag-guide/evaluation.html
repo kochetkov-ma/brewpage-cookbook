@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Оценка - precision@k и recall@k - RAG С НУЛЯ</title>
-<meta name="description" content="Оценка RAG: измеряем точность поиска (precision@k, recall@k) и качество ответа на фиксированном золотом наборе. Подвигайте слайдер k и сравните before/after. Интерактивная глава BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Evaluation: measure RAG quality - RAG Guide</title>
+<meta name="description" content="Evaluation for RAG: measure retrieval accuracy and answer quality on a golden set, with precision@k and recall@k, to tell improvement from regression.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<!-- canonical -> param-less EN URL; ?lang=ru collapses here (L3) -->
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Evaluation: measure RAG quality">
+<meta property="og:description" content="Evaluation for RAG: measure retrieval accuracy and answer quality on a golden set, with precision@k and recall@k, to tell improvement from regression.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Evaluation: measure RAG quality">
+<meta name="twitter:description" content="Evaluation for RAG: measure retrieval accuracy and answer quality on a golden set, with precision@k and recall@k, to tell improvement from regression.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Evaluation: measure RAG quality",
+  "description": "Evaluation for RAG: measure retrieval accuracy and answer quality on a golden set, with precision@k and recall@k, to tell improvement from regression.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Evaluation",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
      + this section's own CSS. Swapping the theme <link> is the only reskin. -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,13 +103,13 @@
 <link rel="stylesheet" href="shared/css/sections/evaluation.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К оценке" data-en="Skip to the evaluation">К оценке</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К оценке" data-en="Skip to the evaluation">Skip to the evaluation</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,8 +119,8 @@
         </svg>
       </a>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава - Оценка" data-en="Plate - Evaluation">Глава - Оценка</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Оценка" data-en="Plate - Evaluation">Plate - Evaluation</div>
       </div>
     </div>
     <div class="site-header__nav">
@@ -37,38 +128,40 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
                aria-controls="rag-search-results" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results"
+            aria-label="Search results" hidden></ul>
       </div>
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
 
   <main id="main" tabindex="-1">
-  <!-- ===================== metric plate (Оценка) ===================== -->
+  <!-- ===================== metric plate (Evaluation) ===================== -->
   <section class="plate" aria-labelledby="evalTitle">
     <div class="plate-head">
       <div class="title-block">
-        <nav class="back-to-map" aria-label="Хлебные крошки">
-          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Маршрут</a>
+        <nav class="back-to-map" data-i18n-aria aria-label="Breadcrumbs" data-aria-ru="Хлебные крошки" data-aria-en="Breadcrumbs">
+          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Route</a>
           <span class="sep" aria-hidden="true">&rsaquo;</span>
-          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Оценка" data-en="Evaluation">Оценка</span>
+          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Оценка" data-en="Evaluation">Evaluation</span>
         </nav>
-        <h1 id="evalTitle" data-i18n="evalTitle" data-ru="Оценка: точность поиска и качество ответа" data-en="Evaluation: retrieval accuracy and answer quality">Оценка: точность поиска и качество ответа</h1>
-        <p data-i18n="evalSub" data-ru="Подвигайте слайдер k и переключите before/after: precision@k и recall@k пересчитываются на одном фиксированном золотом наборе. Сравнение честно только на одном наборе." data-en="Move the k slider and toggle before/after: precision@k and recall@k recompute on one fixed golden set. The comparison is honest only on the same set.">Подвигайте слайдер k и переключите before/after: precision@k и recall@k пересчитываются на одном фиксированном золотом наборе. Сравнение честно только на одном наборе.</p>
+        <h1 id="evalTitle" data-i18n="evalTitle" data-ru="Оценка: точность поиска и качество ответа" data-en="Evaluation: retrieval accuracy and answer quality">Evaluation: retrieval accuracy and answer quality</h1>
+        <p data-i18n="evalSub" data-ru="Подвигайте слайдер k и переключите before/after: precision@k и recall@k пересчитываются на одном фиксированном золотом наборе. Сравнение честно только на одном наборе." data-en="Move the k slider and toggle before/after: precision@k and recall@k recompute on one fixed golden set. The comparison is honest only on the same set.">Move the k slider and toggle before/after: precision@k and recall@k recompute on one fixed golden set. The comparison is honest only on the same set.</p>
       </div>
       <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -138,17 +231,17 @@
        Ported from content/ru/evaluation.md (strategy A: md-as-source, hand-ported).
        Always visible: reads fully with JS on or off. The .js-only calculator
        above only ENHANCES; this prose is the chapter text. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="evaluation">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
-      <p>Вы поменяли размер куска, добавили реранкинг и "чувствуете", что стало лучше. Но на следующей неделе другой вопрос стал отвечаться хуже - а вы этого не заметили, потому что проверяли на паре вопросов вручную. Без измерения вы не можете отличить улучшение от регрессии: каждая правка - это ставка вслепую.</p>
-      <p>Это стадия оценки (evaluation): превратить "кажется лучше" в число. Измеряем две вещи отдельно - <strong>нашелся ли нужный кусок</strong> (точность поиска) и <strong>хорош ли ответ</strong> (качество генерации) - и прогоняем их на фиксированном наборе вопросов до и после каждой правки. Ниже - рабочий каркас оценки (eval-harness) над золотым набором.</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem you came with</h2>
+      <p data-pk="problem.p1">You changed the chunk size, added reranking, and "feel" that it got better. But next week another question started being answered worse - and you did not notice, because you checked a couple of questions by hand. Without measurement you cannot tell an improvement from a regression: every edit is a blind bet.</p>
+      <p data-pk="problem.p2">This is the evaluation stage: turning "seems better" into a number. We measure two things separately - <strong>was the needed piece found</strong> (retrieval accuracy) and <strong>is the answer good</strong> (generation quality) - and run them on a fixed set of questions before and after each edit. Below is a working eval-harness over a golden set.</p>
     </section>
 
     <section aria-labelledby="pr-harness">
-      <h2 id="pr-harness">Решение: каркас оценки над золотым набором</h2>
-      <p>Вот рабочий каркас на Python. Золотой набор - это список вопросов, для каждого из которых заранее известны id релевантных кусков. Каркас прогоняет retrieve и считает precision@k и recall@k.</p>
+      <h2 id="pr-harness" data-pk="harness.h2">The solution: an eval harness over a golden set</h2>
+      <p data-pk="harness.p1">Here is a working harness in Python. The golden set is a list of questions, for each of which the ids of the relevant pieces are known in advance. The harness runs retrieve and computes precision@k and recall@k.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-harness">
         <figcaption class="code-block__cap" data-i18n data-ru="Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore." data-en="Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set.">Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore.</figcaption>
         <pre><code>golden = [
@@ -187,25 +280,25 @@ before = evaluate(retriever_v1, golden, k=5)
 after  = evaluate(retriever_v2, golden, k=5)
 print(before, after)</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Zolotoj nabor</strong> -- Spisok voprosov, dlja kazhdogo zaranee razmecheny id relevantnyh chunkov - fundament ocenki.</li>
-          <li><strong>precision@k i recall@k</strong> -- Schitaem popadanija v pervyh k: precision - dolja sredi vydannyh, recall - dolja iz vseh nuzhnyh.</li>
-          <li><strong>Progon po naboru</strong> -- Proganjaem retriever po vsem voprosam i usrednjaem precision@k i recall@k po naboru.</li>
-          <li><strong>Sravnenie do/posle</strong> -- Obe versii retrievera proganjajutsja na ODNOM fiksirovannom nabore - tolko tak sravnenie chestnoe.</li>
+          <li><strong>Golden set</strong> -- A list of questions, each pre-labelled with the ids of its relevant chunks - the foundation of evaluation.</li>
+          <li><strong>precision@k and recall@k</strong> -- Count hits in the first k: precision is the share among the returned, recall is the share of all needed.</li>
+          <li><strong>Run over the set</strong> -- Run the retriever over every question and average precision@k and recall@k across the set.</li>
+          <li><strong>Before/after compare</strong> -- Both retriever versions run on the SAME fixed set - only that way is the comparison honest.</li>
         </ol>
       </figure>
-      <p>Главное правило: набор <code>golden</code> фиксирован, и обе версии (<code>v1</code>, <code>v2</code>) прогоняются на нем одном. Только так сравнение честное.</p>
+      <p data-pk="harness.p2">The main rule: the <code>golden</code> set is fixed, and both versions (<code>v1</code>, <code>v2</code>) are run on the same one. Only that way is the comparison honest.</p>
     </section>
 
     <section aria-labelledby="pr-retrieval">
-      <h2 id="pr-retrieval">Точность поиска</h2>
-      <p>Retrieve - это задача информационного поиска (information retrieval), и метрики у нее стандартные. <strong>Precision@k</strong> = доля действительно релевантных среди первых k выданных; <strong>recall@k</strong> = доля найденных из всех существующих релевантных. Оба определены в классическом IR (<a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">Manning, Raghavan, Schutze, Introduction to Information Retrieval, гл. 8</a>).</p>
-      <p>Различие важно на практике. Высокий precision@5, но низкий recall@5 значит: что выдали - то по делу, но часть нужных кусков не дотянулась до top-5 (увеличьте k или улучшите эмбеддинг). Высокий recall, но низкий precision: нужное есть, но тонет в мусоре, который съедает бюджет токенов на стадии сборки контекста. Именно поэтому метрики считают парой, а не одной.</p>
+      <h2 id="pr-retrieval" data-pk="retrieval.h2">Retrieval accuracy</h2>
+      <p data-pk="retrieval.p1">Retrieve is an information-retrieval task, and its metrics are standard. <strong>Precision@k</strong> = the fraction of genuinely relevant among the first k returned; <strong>recall@k</strong> = the fraction found out of all existing relevant ones. Both are defined in classic IR (<a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">Manning, Raghavan, Schutze, Introduction to Information Retrieval, ch. 8</a>).</p>
+      <p data-pk="retrieval.p2">The distinction matters in practice. High precision@5 but low recall@5 means: what you returned was on point, but some needed pieces did not reach the top-5 (increase k or improve the embedding). High recall but low precision: the needed is present but drowns in junk, which eats the token budget at the context-assembly stage. That is exactly why the metrics are computed as a pair, not as one.</p>
     </section>
 
     <section aria-labelledby="pr-quality">
-      <h2 id="pr-quality">Качество ответа</h2>
-      <p>Точный retrieve еще не гарантирует хороший ответ: модель может правильно найти куски, но ответить неполно, не по делу или добавив выдумку. Качество ответа меряет другая группа метрик.</p>
-      <p>Для RAG их формализует фреймворк <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS (Es et al., 2023)</a>: он предлагает <strong>faithfulness</strong> (насколько ответ заземлен на выданном контексте - мера против галлюцинаций из главы про генерацию), <strong>answer relevance</strong> (отвечает ли ответ именно на вопрос) и <strong>context relevance/precision</strong> (насколько выданный контекст относится к вопросу). RAGAS оценивает эти аспекты автоматически, без ручной разметки каждого ответа.</p>
+      <h2 id="pr-quality" data-pk="quality.h2">Answer quality</h2>
+      <p data-pk="quality.p1">Accurate retrieve does not yet guarantee a good answer: the model may correctly find pieces but answer incompletely, off-topic, or with an added fabrication. Answer quality is measured by another group of metrics.</p>
+      <p data-pk="quality.p2">For RAG, the <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS framework (Es et al., 2023)</a> formalizes them: it proposes <strong>faithfulness</strong> (how grounded the answer is on the returned context - a measure against the hallucinations from the generation chapter), <strong>answer relevance</strong> (whether the answer responds to the actual question), and <strong>context relevance/precision</strong> (how much the returned context relates to the question). RAGAS evaluates these aspects automatically, without manually labelling every answer.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-ragas">
         <figcaption class="code-block__cap" data-i18n data-ru="RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision." data-en="RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.">RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision.</figcaption>
         <pre><code># pip install ragas datasets
@@ -222,63 +315,63 @@ ds = Dataset.from_dict({
 report = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])
 print(report)</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Metriki RAGAS</strong> -- Stavim ragas i podkljuchaem tri metriki kachestva: faithfulness, answer_relevancy, context_precision.</li>
-          <li><strong>Datset ocenki</strong> -- Sobiraem dataset iz voprosov, otvetov generacii, vydannyh chunkov i etalona iz golden.</li>
-          <li><strong>Zapusk ocenki</strong> -- Proganjaem RAGAS po datasetu - on schitaet metriki avtomaticheski, bez ruchnoj razmetki kazhdogo otveta.</li>
+          <li><strong>RAGAS metrics</strong> -- Install ragas and import the three quality metrics: faithfulness, answer_relevancy, context_precision.</li>
+          <li><strong>Eval dataset</strong> -- Assemble the dataset from questions, generation answers, the returned chunks and the golden reference.</li>
+          <li><strong>Run evaluation</strong> -- Run RAGAS over the dataset - it scores the metrics automatically, with no manual labelling of each answer.</li>
         </ol>
       </figure>
     </section>
 
     <section aria-labelledby="pr-golden">
-      <h2 id="pr-golden">Золотой набор вопросов</h2>
-      <p>Золотой набор - это фундамент всей оценки: список реальных вопросов с размеченными ответами/релевантными кусками. Правила: берите вопросы из реального трафика (а не придуманные), покрывайте разные темы и форматы и не меняйте набор между замерами - иначе <code>before</code> и <code>after</code> несравнимы. Размер - от нескольких десятков; чем больше, тем меньше шума в среднем.</p>
+      <h2 id="pr-golden" data-pk="golden.h2">The golden set of questions</h2>
+      <p data-pk="golden.p1">The golden set is the foundation of all evaluation: a list of real questions with labelled answers/relevant pieces. The rules: take questions from real traffic (not made-up ones), cover different topics and formats, and do not change the set between measurements - otherwise <code>before</code> and <code>after</code> are not comparable. The size - from several dozen; the larger, the less noise in the average.</p>
     </section>
 
     <section aria-labelledby="pr-feedback">
-      <h2 id="pr-feedback">Обратная связь -&gt; метрики</h2>
-      <p>Оценки пользователей (палец вверх/вниз, "не помогло") - это сырой сигнал. Превратите его в метрику: помеченные как плохие ответы разбирайте и добавляйте их вопросы в золотой набор с правильной разметкой. Так набор растет именно на тех случаях, где система ошибается, и следующая правка проверяется уже на них.</p>
+      <h2 id="pr-feedback" data-pk="feedback.h2">Feedback -&gt; metrics</h2>
+      <p data-pk="feedback.p1">User ratings (thumbs up/down, "did not help") are a raw signal. Turn it into a metric: review the answers marked as bad and add their questions to the golden set with the correct labelling. That way the set grows precisely on the cases where the system errs, and the next edit is checked on them.</p>
     </section>
 
     <section aria-labelledby="pr-failures">
-      <h2 id="pr-failures">Типичные отказы и их следы</h2>
-      <p>Когда метрика просела, причину видно по тому, какая именно упала:</p>
+      <h2 id="pr-failures" data-pk="failures.h2">Typical failures and their traces</h2>
+      <p data-pk="failures.p1">When a metric drops, the cause is visible by which one fell:</p>
       <ul>
-        <li><strong>Низкий recall@k</strong> - нужный кусок вообще не вернулся. След: проблема в retrieve (эмбеддинг, чанкинг, маленький k). См. главы про эмбеддинг/чанкинг.</li>
-        <li><strong>Высокий recall, низкая faithfulness</strong> - кусок был, но ответ не заземлен (выдумка). След: слабая инструкция генерации. См. главу про генерацию.</li>
-        <li><strong>Нужный кусок в контексте, но проигнорирован</strong> - часто он оказался в середине окна (lost-in-the-middle, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023</a>). След: порядок на стадии сборки контекста.</li>
+        <li data-pk="failures.li1"><strong>Low recall@k</strong> - the needed piece was not returned at all. Trace: the problem is in retrieve (embedding, chunking, a small k). See the embedding/chunking chapters.</li>
+        <li data-pk="failures.li2"><strong>High recall, low faithfulness</strong> - the piece was there, but the answer is not grounded (a fabrication). Trace: a weak generation instruction. See the generation chapter.</li>
+        <li data-pk="failures.li3"><strong>The needed piece is in the context but ignored</strong> - often it ended up in the middle of the window (lost-in-the-middle, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023</a>). Trace: the order at the context-assembly stage.</li>
       </ul>
-      <p>Выше - интерактивный калькулятор precision@k / recall@k над золотым набором. Слайдер k пересчитывает обе метрики, тумблер before/after сравнивает две дорожки на одном фиксированном наборе, а попадания в top-k подсвечиваются зеленым по мере того, как вы их находите. Без JS страница показывает разобранную золотую таблицу с теми же расчетами.</p>
+      <p data-pk="failures.p2">In the static (no-JS) view, the host shows the parsed golden table: the question, its relevant ids, the returned top-k, and the computed precision@k/recall@k for several values of k.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Manning, Raghavan, Schutze, 2008. Introduction to Information Retrieval, гл. 8 (precision/recall@k). <a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">nlp.stanford.edu/IR-book</a></li>
-        <li>Es et al., 2023. RAGAS: Automated Evaluation of Retrieval Augmented Generation. <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">arxiv.org/abs/2309.15217</a></li>
-        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li data-pk="sources.li1">Manning, Raghavan, Schutze, 2008. Introduction to Information Retrieval, ch. 8 (precision/recall@k). <a href="https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-ranked-retrieval-results-1.html" target="_blank" rel="noopener">nlp.stanford.edu/IR-book</a></li>
+        <li data-pk="sources.li2">Es et al., 2023. RAGAS: Automated Evaluation of Retrieval Augmented Generation. <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">arxiv.org/abs/2309.15217</a></li>
+        <li data-pk="sources.li3">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>В калькуляторе подвигайте слайдер k от 1 до 10 на одном вопросе и проследите, как recall@k растет (попадает больше нужных кусков), а precision@k чаще падает - это и есть компромисс.</li>
-        <li>Переключите тумблер before/after и сравните две дорожки на одном и том же золотом наборе: только фиксированный набор делает сравнение честным.</li>
-        <li>Найдите вопрос с высоким recall, но низким precision, и подумайте, как лишние куски ударят по бюджету токенов на стадии сборки контекста.</li>
+        <li data-pk="try.li1">In metric-eval-calculator move the k slider from 1 to 10 on one question and watch how recall@k grows (more needed pieces are caught) while precision@k more often falls - this is exactly the trade-off.</li>
+        <li data-pk="try.li2">Switch the before/after toggle and compare the two tracks on the same golden set: only a fixed set makes the comparison honest.</li>
+        <li data-pk="try.li3">Find a question with high recall but low precision, and think about how the extra pieces will hit the token budget at the context-assembly stage.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Система измерена и улучшается. Последняя остановка - глава <strong>production</strong>: как связать все звенья в живой сервис и держать его в форме - скорость, стоимость, мониторинг, доступ.</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next1">The system is measured and improving. The last stop is the <strong>production</strong> chapter: how to wire all the links into a live service and keep it in shape - speed, cost, monitoring, access.</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -294,14 +387,15 @@ print(report)</code></pre>
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

@@ -1,10 +1,100 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Чанкинг - где резать документ - RAG С НУЛЯ</title>
-<meta name="description" content="Чанкинг: каталог из 9 стратегий реза с рейтингами сложности и стоимости, рабочим Python и обучающими анимациями. Нажмите строку, чтобы раскрыть стратегию. Интерактивная глава BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Chunking: where to cut a document - RAG Guide</title>
+<meta name="description" content="Chunking strategies for RAG: where to cut a document and how large, with overlap, boundary quality, cost trade-offs, and working Python you can run.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; entry kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Chunking: where to cut a document">
+<meta property="og:description" content="Chunking strategies for RAG: where to cut a document and how large, with overlap, boundary quality, cost trade-offs, and working Python you can run.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Chunking: where to cut a document">
+<meta name="twitter:description" content="Chunking strategies for RAG: where to cut a document and how large, with overlap, boundary quality, cost trade-offs, and working Python you can run.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Chunking: where to cut a document",
+  "description": "Chunking strategies for RAG: where to cut a document and how large, with overlap, boundary quality, cost trade-offs, and working Python you can run.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Chunking",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
      + this section's own structural CSS (linked only here, never base.css). -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,13 +102,13 @@
 <link rel="stylesheet" href="shared/css/sections/chunking.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К каталогу стратегий" data-en="Skip to the strategy catalog">К каталогу стратегий</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К каталогу стратегий" data-en="Skip to the strategy catalog">Skip to the strategy catalog</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,8 +118,8 @@
         </svg>
       </a>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава - Чанкинг" data-en="Plate - Chunking">Глава - Чанкинг</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Чанкинг" data-en="Plate - Chunking">Plate - Chunking</div>
       </div>
     </div>
     <div class="site-header__nav">
@@ -37,23 +127,25 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
+               data-i18n-aria aria-label="Search chapters" data-aria-ru="Поиск по главам" data-aria-en="Search chapters"
                aria-controls="rag-search-results" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            data-i18n-aria aria-label="Search results" data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
       </div>
       <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
@@ -71,8 +163,8 @@
     <!-- title row: carries the compass ONLY (AtlasMD 3.1 HARD RULE) -->
     <div class="plate-head">
       <div class="title-block">
-        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Стратегии реза: каталог" data-en="Cut strategies: the catalog">Стратегии реза: каталог</h1>
-        <p data-i18n="plateSub" data-ru="Девять стратегий от самой простой к самой умной. Сравните строчки по сложности и трем осям стоимости, затем нажмите строку, чтобы раскрыть алгоритм и анимацию реза." data-en="Nine strategies from simplest to smartest. Compare the rows by complexity and the three cost axes, then open a row to drill into its algorithm and cut animation.">Девять стратегий от самой простой к самой умной. Сравните строчки по сложности и трем осям стоимости, затем нажмите строку, чтобы раскрыть алгоритм и анимацию реза.</p>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Стратегии реза: каталог" data-en="Cut strategies: the catalog">Cut strategies: the catalog</h1>
+        <p data-i18n="plateSub" data-ru="Девять стратегий от самой простой к самой умной. Сравните строчки по сложности и трем осям стоимости, затем нажмите строку, чтобы раскрыть алгоритм и анимацию реза." data-en="Nine strategies from simplest to smartest. Compare the rows by complexity and the three cost axes, then open a row to drill into its algorithm and cut animation.">Nine strategies from simplest to smartest. Compare the rows by complexity and the three cost axes, then open a row to drill into its algorithm and cut animation.</p>
       </div>
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
@@ -95,8 +187,8 @@
          The breadcrumb ROOT crumb returns to the catalog overview; a header
          link (the seal above) returns to the map (index.html). -->
     <div class="cat-controls js-only">
-      <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
-      <button class="zoomout" data-slot="zoomout" type="button" disabled aria-label="Выйти на уровень выше">
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень приближения" data-aria-en="Zoom level"></nav>
+      <button class="zoomout" data-slot="zoomout" type="button" disabled data-i18n-aria aria-label="Zoom out one level" data-aria-ru="Выйти на уровень выше" data-aria-en="Zoom out one level">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
           <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -143,7 +235,7 @@
           </tbody>
         </table>
         </div>
-        <p class="cat-hint">Каждая стратегия раскрыта ниже в полном тексте главы: как работает, когда применять, пошаговый алгоритм и (для основных) рабочий Python. Включите JavaScript, чтобы открыть строку каталога и пройти обучающую анимацию реза.</p>
+        <p class="cat-hint">Each strategy is unfolded below in the full chapter text: how it works, when to apply it, a step-by-step algorithm, and (for the main ones) working Python. Enable JavaScript to open a catalog row and walk its teaching cut animation.</p>
       </div>
     </div>
 
@@ -157,34 +249,34 @@
        drill table above only ENHANCES; this prose is the chapter text. The
        per-strategy detail (how / when / algorithm / Python) is mirrored here so
        the catalog is fully readable as a static chapter with JavaScript off. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="chunking">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема: где резать документ и насколько крупно</h2>
-      <p>Отдать ретриверу весь документ целиком не получится. Первая причина чисто техническая: модель эмбеддингов принимает текст ограниченной длины, и один гигантский фрагмент в нее просто не влезет. Вторая причина тоньше и важнее: даже когда длинный контекст помещается, модель хуже использует информацию в его середине - эффект "lost in the middle", измеренный на нескольких моделях: точность выше, когда нужный факт стоит в начале или в конце контекста, и заметно проседает в центре (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Поэтому большой документ режут на чанки - фрагменты retrieval-размера, которые дальше превращают в эмбеддинги, хранят в индексе и извлекают по одному.</p>
-      <p>Вопрос не в том, резать или нет, а в том, где резать и насколько крупно. Это и есть стадия чанкинга - одна из остановок на верхнеуровневой карте маршрута. Ключевая мысль главы: выбор стратегии реза - это измеряемый компромисс между простотой, ценой и качеством границ, а не одна правильная константа.</p>
-      <p>RAG как метод - "найти, дополнить, сгенерировать" - введен в <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020, arXiv:2005.11401</a>; чанкинг - это первый шаг стадии поиска: без нарезки нечего превращать в эмбеддинги и нечего искать.</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem</h2>
+      <p data-pk="problem.p1">You cannot hand the retriever the whole document at once. The first reason is purely technical: the embedding model accepts text of limited length, and one giant fragment simply will not fit. The second reason is subtler and more important: even when a long context fits, the model uses information in its middle worse - the "lost in the middle" effect, measured on several models: accuracy is higher when the needed fact stands at the beginning or the end of the context, and noticeably sags in the center (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). So a large document is cut into chunks - retrieval-sized fragments that are then turned into embeddings, stored in the index, and retrieved one at a time.</p>
+      <p data-pk="problem.p2">The question is not whether to cut but where to cut and how large. This is the chunking stage - one of the stops on the high-level route map. The key idea of the chapter: the choice of cutting strategy is a measurable trade-off between simplicity, cost, and boundary quality, not a single correct constant.</p>
+      <p data-pk="problem.p3">RAG as a method - "find, augment, generate" - was introduced in <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020, arXiv:2005.11401</a>; chunking is the first step of the retrieval stage: without cutting there is nothing to turn into embeddings and nothing to search.</p>
     </section>
 
     <section aria-labelledby="pr-parts">
-      <h2 id="pr-parts">Из чего состоит чанкинг</h2>
-      <p>При детализации стадия чанкинга распадается на три части. Это общий каркас любой стратегии - меняется только сплиттер.</p>
+      <h2 id="pr-parts" data-pk="parts.h2">What chunking consists of</h2>
+      <p data-pk="parts.p1">When detailed, the chunking stage breaks into three parts. This is the general frame of any strategy - only the splitter changes.</p>
       <ul>
-        <li><strong>Splitter</strong> - решает, ГДЕ резать. От этого зависит, попадет ли связанный смысл в один чанк или рез разорвет предложение пополам. Весь каталог ниже - это разные сплиттеры.</li>
-        <li><strong>Overlap</strong> - общий хвост текста, который повторяется в конце одного чанка и в начале следующего. Без перекрытия факт, попавший на границу реза, не найдется целиком ни в одном чанке; небольшое перекрытие сохраняет контекст на стыке (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</li>
-        <li><strong>Metadata</strong> - источник, позиция (<code>fromChar</code>/<code>toChar</code>) и теги, прикрепленные к чанку. Позже они нужны, чтобы фильтровать кандидатов в векторной базе и вернуть точную цитату в ответе генерации.</li>
+        <li data-pk="parts.li1"><strong>Splitter</strong> - decides WHERE to cut. On this depends whether related meaning lands in one chunk or a cut tears a sentence in half. The whole catalog below is different splitters.</li>
+        <li data-pk="parts.li2"><strong>Overlap</strong> - the shared tail of text that repeats at the end of one chunk and the start of the next. Without overlap, a fact that landed on a cut boundary will not be found in full in any one chunk; a small overlap preserves context at the seam (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</li>
+        <li data-pk="parts.li3"><strong>Metadata</strong> - the source, position (<code>fromChar</code>/<code>toChar</code>), and tags attached to the chunk. Later they are needed to filter candidates in the vector database and to return an exact citation in the generation answer.</li>
       </ul>
-      <p>Размер чанка и перекрытие - это компромисс, а не константа: мелкие чанки точнее попадают в запрос, но теряют окружающий контекст; крупные несут контекст, но размывают релевантность и упираются в "lost in the middle" (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Правильное значение зависит от ваших документов, поэтому его подбирают измерением на золотом наборе вопросов, а не угадыванием (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p data-pk="parts.p2">Chunk size and overlap are a trade-off, not a constant: small chunks hit the query more precisely but lose surrounding context; large ones carry context but blur relevance and run into "lost in the middle" (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). The right value depends on your documents, so it is chosen by measuring on a golden set of questions, not by guessing (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
 
-      <h3>В чем мерить размер: символы или токены</h3>
-      <p>Размер чанка можно считать в символах, а можно - в токенах, и это не косметическая разница. Символьный счет прост: длина строки в Python - это <code>len(text)</code>, никаких зависимостей. Но настоящий бюджет, в который упирается RAG, измеряется не в символах, а в токенах: и окно контекста модели, и счет за вызов считаются в токенах. Один токен - это в среднем кусок слова, и для разных языков соотношение символов к токенам разное (кириллица обычно дает больше токенов на тот же текст, чем латиница). Поэтому чанк в 1000 символов может неожиданно не влезть в токен-бюджет шага сборки контекста.</p>
-      <p>Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует <code>tiktoken</code> - токенизатор ее моделей (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI, tiktoken</a>; <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>); LangChain оборачивает его в <code>TokenTextSplitter</code>, который режет по токенам, а не по символам (<a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">LangChain, split by token</a>). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.</p>
+      <h3 data-pk="parts.h3a">What to measure size in: characters or tokens</h3>
+      <p data-pk="parts.p3">Chunk size can be counted in characters or in tokens, and this is not a cosmetic difference. The character count is simple: a string's length in Python is <code>len(text)</code>, no dependencies. But the real budget that RAG runs into is measured not in characters but in tokens: both the model's context window and the bill for a call are counted in tokens, not characters. One token is on average a piece of a word, and the character-to-token ratio differs for different languages and alphabets (Cyrillic usually yields more tokens for the same text than Latin). So a chunk of 1000 characters may unexpectedly fail to fit into the token budget of the context-assembly step.</p>
+      <p data-pk="parts.p4">That is why production splitters count tokens specifically, with the same tokenizer as the target model. OpenAI publishes <code>tiktoken</code> - the tokenizer of its models (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI, tiktoken</a>; <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>); LangChain wraps it in <code>TokenTextSplitter</code>, which cuts by tokens rather than characters (<a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">LangChain, split by token</a>). Any strategy from the catalog below can be implemented as character-based (simple and dependency-free) or token-based (more accurate to the model's budget); the unit of counting is an orthogonal knob to the choice of splitter. In the examples below the count is character-based for clarity, but in production the same logic is run by tokens.</p>
     </section>
 
     <section aria-labelledby="pr-catalog">
-      <h2 id="pr-catalog">Стратегии реза: каталог</h2>
-      <p>Девять стратегий - от самой простой к самой умной. Сначала обзорная таблица с рейтингами - ее можно читать как шпаргалку и сравнивать строчки глазами. Под таблицей каждая стратегия раскрыта: как работает, когда применять, пошаговый алгоритм и (для основных) рабочий Python.</p>
-      <p>Стоимость разбита на три оси, потому что они растут неравномерно: <strong>Token cost</strong> - сколько дополнительных токенов порождает стратегия; <strong>Time cost</strong> - задержка нарезки одного документа; <strong>Compute cost</strong> - вычислительная нагрузка. Рейтинги относительные (low / medium / high), а не абсолютные числа: они показывают порядок стратегий между собой, а не бенчмарк на вашем железе.</p>
+      <h2 id="pr-catalog" data-pk="catalog.h2">Cutting strategies: the catalog</h2>
+      <p data-pk="catalog.p1">Nine strategies - from the simplest to the smartest. First an overview table with ratings - you can read it as a cheat sheet and compare rows by eye. Under the table each strategy is unfolded: how it works, when to apply it, a step-by-step algorithm, and (for the main ones) working Python.</p>
+      <p data-pk="catalog.p2">Cost is broken into three axes because they grow unevenly: <strong>Token cost</strong> - how many extra tokens the strategy produces; <strong>Time cost</strong> - the latency of cutting one document; <strong>Compute cost</strong> - the computational load. The ratings are relative (low / medium / high), not absolute numbers: they show the order of strategies relative to one another, not a benchmark on your hardware.</p>
 
       <div class="cat-scroll">
       <table class="cat-table">
@@ -213,12 +305,12 @@
       </table>
       </div>
 
-      <h3 id="pr-fixed">fixed-size: режем каждые N единиц</h3>
-      <p><strong>Как работает.</strong> Самая простая стратегия: идем по тексту и отрезаем ровно N единиц (символов или токенов) подряд, игнорируя смысловые границы. Размер каждого чанка предсказуем; границы могут попадать посередине слова или предложения.</p>
-      <p><strong>Когда применять.</strong> Быстрый прототип; однородный текст без явной структуры; когда вам важна именно предсказуемость размера. Это базовая линия, от которой отталкиваются остальные стратегии (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
-      <p><strong>Алгоритм.</strong> Задайте размер окна <code>size</code>; поставьте курсор <code>i = 0</code>; отрежьте подстроку <code>text[i : i + size]</code>; сдвиньте курсор <code>i = i + size</code>; повторяйте, пока <code>i &lt; len(text)</code>; последний чанк может быть короче <code>size</code> - это нормально.</p>
+      <h3 id="pr-fixed" data-pk="catalog.h3fixed">fixed-size: cut every N units</h3>
+      <p data-pk="catalog.fixed.p1"><strong>How it works.</strong> The simplest strategy: walk through the text and cut off exactly N units (characters or tokens) in a row, ignoring semantic boundaries. The size of each chunk is predictable; boundaries may land in the middle of a word or sentence.</p>
+      <p data-pk="catalog.fixed.p2"><strong>When to apply.</strong> A quick prototype; uniform text without explicit structure; when you specifically care about size predictability. This is the baseline from which the other strategies push off (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p data-pk="catalog.fixed.p3"><strong>Algorithm.</strong> Set the window size <code>size</code>; place the cursor <code>i = 0</code>; cut the substring <code>text[i : i + size]</code>; move the cursor <code>i = i + size</code>; repeat while <code>i &lt; len(text)</code>; the last chunk may be shorter than <code>size</code> - that is fine.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-fixed-size">
-        <figcaption class="code-block__cap" data-i18n data-ru="fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy." data-en="fixed-size: cut exactly N units in a row, ignoring meaning boundaries.">fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy." data-en="fixed-size: cut exactly N units in a row, ignoring meaning boundaries.">fixed-size: cut exactly N units in a row, ignoring meaning boundaries.</figcaption>
         <pre><code>def fixed_size_chunks(text: str, size: int) -&gt; list[str]:
     if size &lt;= 0:
         raise ValueError("size must be positive")
@@ -232,19 +324,19 @@ if __name__ == "__main__":
     for n, chunk in enumerate(fixed_size_chunks(doc, 60)):
         print(n, repr(chunk))</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Proverka razmera</strong> -- Signatura funkcii i zashchita ot nepozitivnogo razmera okna - inache rez ne imeet smysla.</li>
-          <li><strong>Narezka po shagu size</strong> -- Odin prohod srezami text[i:i+size] s shagom size - rezy padajut cherez ravnye intervaly, ignoriruja slova.</li>
-          <li><strong>Demonstracija</strong> -- Primer na transliterirovannom dokumente s size=60; pechataet kazhdyj chank - vidno, chto granicy mogut past poseredine slova.</li>
+          <li><strong>Size guard</strong> -- The function signature and a guard against a non-positive window size - otherwise the cut makes no sense.</li>
+          <li><strong>Slice by step size</strong> -- A single pass of text[i:i+size] slices stepping by size - cuts fall at equal intervals, ignoring words.</li>
+          <li><strong>Demo run</strong> -- An example over a transliterated document with size=60; prints each chunk - boundaries can land mid-word.</li>
         </ol>
       </figure>
-      <p class="strat-schematic">Анимация: резы падают через равные интервалы независимо от границ слов - рез может пасть посередине слова.</p>
+      <p class="strat-schematic" data-pk="catalog.fixed.p4">Animation: the cuts land at equal intervals regardless of word boundaries - a cut can fall in the middle of a word.</p>
 
-      <h3 id="pr-sliding">sliding-window (overlap): окно с перекрытием</h3>
-      <p><strong>Как работает.</strong> То же fixed-size окно, но соседние чанки перекрываются на <code>overlap</code> единиц: каждый следующий чанк начинается не там, где кончился предыдущий, а на <code>overlap</code> раньше. Так факт, разорванный границей, целиком попадает хотя бы в один чанк.</p>
-      <p><strong>Когда применять.</strong> Когда факты часто ложатся на границы и потеря пограничного смысла недопустима. Цена - дублирование текста: часть токенов идет в индекс дважды (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
-      <p><strong>Алгоритм.</strong> Задайте <code>size</code> и <code>overlap</code> (<code>0 &lt;= overlap &lt; size</code>); вычислите шаг <code>step = size - overlap</code>; режьте <code>text[i : i + size]</code> и сдвигайте курсор на <code>step</code>; хвост <code>overlap</code> предыдущего чанка повторяется в начале следующего.</p>
+      <h3 id="pr-sliding" data-pk="catalog.h3sliding">sliding-window (overlap): a window with overlap</h3>
+      <p data-pk="catalog.sliding.p1"><strong>How it works.</strong> The same fixed-size window, but adjacent chunks overlap by <code>overlap</code> units: each next chunk begins not where the previous one ended but <code>overlap</code> earlier. This way a fact torn by a boundary lands in full in at least one chunk.</p>
+      <p data-pk="catalog.sliding.p2"><strong>When to apply.</strong> When facts often fall on boundaries and losing boundary meaning is unacceptable. The price is text duplication: some tokens go into the index twice (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p data-pk="catalog.sliding.p3"><strong>Algorithm.</strong> Set <code>size</code> and <code>overlap</code> (<code>0 &lt;= overlap &lt; size</code>); compute the step <code>step = size - overlap</code>; cut <code>text[i : i + size]</code> and move the cursor by <code>step</code>; the <code>overlap</code> tail of the previous chunk repeats at the start of the next.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-sliding-window">
-        <figcaption class="code-block__cap" data-i18n data-ru="sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic." data-en="sliding-window: the same window, but neighbouring chunks overlap by overlap units.">sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic." data-en="sliding-window: the same window, but neighbouring chunks overlap by overlap units.">sliding-window: the same window, but neighbouring chunks overlap by overlap units.</figcaption>
         <pre><code>def sliding_window_chunks(text: str, size: int, overlap: int) -&gt; list[str]:
     if size &lt;= 0:
         raise ValueError("size must be positive")
@@ -265,19 +357,19 @@ if __name__ == "__main__":
     for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):
         print(n, repr(chunk))</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Proverki size i overlap</strong> -- Signatura i dve zashchity: polozhitelnyj size i 0 &lt;= overlap &lt; size, inache okno ne sdvigaetsja vpered.</li>
-          <li><strong>Shag s perekrytiem</strong> -- Shag step = size - overlap menshe okna, poetomu sosednie chanki nakladyvajutsja na overlap edinic.</li>
-          <li><strong>Cikl narezki</strong> -- Rezhem text[i:i+size] i dvigaem kursor na step; hvost overlap predydushchego chanka povtorjaetsja v nachale sledujushchego.</li>
-          <li><strong>Demonstracija</strong> -- Primer s size=50, overlap=15; pechat chankov pokazyvaet povtorjajushchijsja pogranichnyj hvost.</li>
+          <li><strong>Size and overlap guards</strong> -- The signature and two guards: a positive size and 0 &lt;= overlap &lt; size, otherwise the window does not move forward.</li>
+          <li><strong>Overlapping step</strong> -- The step step = size - overlap is smaller than the window, so neighbouring chunks overlap by overlap units.</li>
+          <li><strong>Cutting loop</strong> -- Cut text[i:i+size] and advance the cursor by step; the overlap tail of the previous chunk repeats at the start of the next.</li>
+          <li><strong>Demo run</strong> -- An example with size=50, overlap=15; printing the chunks shows the repeated boundary tail.</li>
         </ol>
       </figure>
-      <p class="strat-schematic">Анимация: окно едет по тексту с шагом step = size - overlap; зона перекрытия повторяется в соседнем чанке.</p>
+      <p class="strat-schematic" data-pk="catalog.sliding.p4">Animation: the window moves along the text with step step = size - overlap; the overlap zone repeats in the adjacent chunk.</p>
 
-      <h3 id="pr-recursive">recursive (separator hierarchy): рез по приоритету разделителей</h3>
-      <p><strong>Как работает.</strong> Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит <code>size</code>. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель. Это стратегия по умолчанию в LangChain <code>RecursiveCharacterTextSplitter</code> (<a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">LangChain, RecursiveCharacterTextSplitter</a>).</p>
-      <p><strong>Когда применять.</strong> Универсальный выбор по умолчанию для прозы: аккуратные границы по абзацам и предложениям, но ни один чанк не превышает лимит. Почти всегда лучше голого fixed-size при той же низкой цене.</p>
+      <h3 id="pr-recursive" data-pk="catalog.h3recursive">recursive (separator hierarchy): cut by separator priority</h3>
+      <p data-pk="catalog.recursive.p1"><strong>How it works.</strong> Cut by a prioritized list of separators - first by the largest (a double newline = a paragraph), then by smaller ones (a newline, a sentence, a space), until each piece fits the limit <code>size</code>. If a piece is still larger than the limit, the next separator is applied to it recursively. This is the default strategy in LangChain <code>RecursiveCharacterTextSplitter</code> (<a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">LangChain, RecursiveCharacterTextSplitter</a>).</p>
+      <p data-pk="catalog.recursive.p2"><strong>When to apply.</strong> The universal default for prose: neat boundaries by paragraphs and sentences, but no chunk exceeds the limit. Almost always better than bare fixed-size at the same low price.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-recursive">
-        <figcaption class="code-block__cap" data-i18n data-ru="recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size." data-en="recursive: descend the separator priority until a piece fits the size limit.">recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size." data-en="recursive: descend the separator priority until a piece fits the size limit.">recursive: descend the separator priority until a piece fits the size limit.</figcaption>
         <pre><code>def recursive_chunks(text: str, size: int,
                      separators: list[str] | None = None) -&gt; list[str]:
     if separators is None:
@@ -318,21 +410,21 @@ if __name__ == "__main__":
     for n, chunk in enumerate(recursive_chunks(doc, 70)):
         print(n, repr(chunk))</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Baza rekursii</strong> -- Spisok razdelitelej po umolchaniju ot krupnogo k melkomu; esli tekst uzhe vlezaet v size, on vozvrashchaetsja kak est.</li>
-          <li><strong>Rez tekushchim razdelitelem</strong> -- Berem pervyj razdelitel urovnja i rezhem im; pustoj razdelitel oznachaet rez po simvolam.</li>
-          <li><strong>Sklejka melkih kuskov</strong> -- Kopim chasti v bufer, poka summa vlezaet v size - chtoby ne plodit slishkom melkie chanki.</li>
-          <li><strong>Spusk na sledujushchij uroven</strong> -- Esli chast vse eshche bolshe size, rekursivno primenjaem SLEDUJUSHCHIJ razdelitel; kogda razdeliteli konchilis - zhestkij fixed-size rez.</li>
-          <li><strong>Demonstracija</strong> -- Dokument s abzacami cherez dvojnoj perevod stroki i size=70; vidno spusk ot abzacev k predlozhenijam i slovam.</li>
+          <li><strong>Recursion base</strong> -- A default separator list from coarse to fine; if the text already fits size, it is returned as is.</li>
+          <li><strong>Split by current separator</strong> -- Take the first separator of the level and split by it; an empty separator means a per-character cut.</li>
+          <li><strong>Glue small pieces</strong> -- Accumulate parts in a buffer while the sum fits size - so as not to breed overly small chunks.</li>
+          <li><strong>Descend a level</strong> -- If a part is still larger than size, recursively apply the NEXT separator; when separators run out, a hard fixed-size cut.</li>
+          <li><strong>Demo run</strong> -- A document with paragraphs via blank lines and size=70; you see the descent from paragraphs to sentences and words.</li>
         </ol>
       </figure>
-      <blockquote>Это упрощенная, но рабочая реализация той же идеи, что в LangChain <code>RecursiveCharacterTextSplitter</code>. Продакшен-сплиттер добавляет счет по токенам и перекрытие; логика спуска по разделителям - та же.</blockquote>
-      <p class="strat-schematic">Анимация: сначала рез по абзацам; куски, не влезшие в size, режутся по предложениям, потом по словам - спуск по дереву.</p>
+      <blockquote data-pk="catalog.recursive.bq1">This is a simplified but working implementation of the same idea as in LangChain <code>RecursiveCharacterTextSplitter</code>. A production splitter adds token counting and overlap; the logic of descending through the separators is the same.</blockquote>
+      <p class="strat-schematic" data-pk="catalog.recursive.p3">Animation: first a cut by paragraphs; the pieces that did not fit by size are cut by sentences, then by words - a descent down the tree.</p>
 
-      <h3 id="pr-structure">structure-aware: рез по границам предложений и структуре</h3>
-      <p><strong>Как работает.</strong> Режем не по счету символов, а по естественным границам: концам предложений, заголовкам Markdown, элементам AST кода. Это лучше всего сохраняет смысл - чанк совпадает с законченной мыслью - но зависит от формата входа: нужны надежные границы.</p>
-      <p><strong>Когда применять.</strong> Есть явная структура, которую ценно сохранить: документация с заголовками, код, транскрипты с репликами. Time cost выше fixed-size из-за этапа сегментации или разбора (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <h3 id="pr-structure" data-pk="catalog.h3structure">structure-aware: cut by sentence boundaries and structure</h3>
+      <p data-pk="catalog.structure.p1"><strong>How it works.</strong> Cut not by a character count but by natural boundaries: sentence ends, Markdown headings, code AST elements. This best preserves meaning - a chunk coincides with a finished thought - but depends on the input format: you need reliable boundaries.</p>
+      <p data-pk="catalog.structure.p2"><strong>When to apply.</strong> There is explicit structure worth preserving: documentation with headings, code, transcripts with turns. Time cost is higher than fixed-size due to the segmentation or parsing stage (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="chunking-markdown-header">
-        <figcaption class="code-block__cap" data-i18n data-ru="structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka." data-en="structure-aware (markdown): cut by headings, put the heading level into the chunk metadata.">structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka." data-en="structure-aware (markdown): cut by headings, put the heading level into the chunk metadata.">structure-aware (markdown): cut by headings, put the heading level into the chunk metadata.</figcaption>
         <pre><code>import re
 
 
@@ -375,102 +467,102 @@ if __name__ == "__main__":
     for n, chunk in enumerate(markdown_header_chunks(doc, 200)):
         print(n, chunk["heading"], repr(chunk["text"]))</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Sostojanie razbora</strong> -- Zavodim spisok sekcij, tekushchij zagolovok i bufer tela - prostoj potokovyj parser po strokam.</li>
-          <li><strong>Zakrytie sekcii</strong> -- flush sbrasyvaet nakoplennoe telo v sekciju vmeste s ee zagolovkom, esli telo nepustoe.</li>
-          <li><strong>Poisk zagolovkov</strong> -- Reguljarka lovit stroki # .. ###### ; na kazhdom zagolovke zakryvaem proshluju sekciju i zapominaem novyj zagolovok.</li>
-          <li><strong>Sekcii v chanki</strong> -- Kazhdaja sekcija stanovitsja chankom s metadannymi zagolovka; slishkom dlinnuju sekciju rezhem zapasnym fixed-size.</li>
-          <li><strong>Demonstracija</strong> -- Markdown-dokument s # i ## ; pechat pokazyvaet zagolovok rjadom s telom kazhdogo chanka.</li>
+          <li><strong>Parse state</strong> -- Set up a sections list, the current heading, and a body buffer - a simple line-by-line streaming parser.</li>
+          <li><strong>Flush a section</strong> -- flush dumps the accumulated body into a section together with its heading, if the body is non-empty.</li>
+          <li><strong>Scan headings</strong> -- The regex catches # .. ###### lines; on each heading we close the previous section and remember the new heading.</li>
+          <li><strong>Sections to chunks</strong> -- Each section becomes a chunk with heading metadata; an over-long section is cut with a fallback fixed-size pass.</li>
+          <li><strong>Demo run</strong> -- A Markdown document with # and ##; printing shows the heading next to each chunk body.</li>
         </ol>
       </figure>
-      <blockquote>Это упрощенная версия идеи LangChain <code>MarkdownHeaderTextSplitter</code>: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Для предложений и AST кода обертка та же, меняется только парсер.</blockquote>
-      <p class="strat-schematic">Анимация: резы ложатся только на концы предложений и после заголовка, никогда внутри фразы.</p>
+      <blockquote data-pk="catalog.structure.bq1">This is a simplified version of the idea of LangChain <code>MarkdownHeaderTextSplitter</code>: cut by headings and put the heading level/text into the chunk metadata (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). For sentences and code AST the wrapper is the same, only the parser changes.</blockquote>
+      <p class="strat-schematic" data-pk="catalog.structure.p3">Animation: the cuts land only at sentence ends and after a heading, never inside a phrase.</p>
 
-      <h3 id="pr-markdown">markdown / document-structure: рез по заголовкам документа</h3>
-      <p><strong>Как работает.</strong> Частный, но очень частый случай structure-aware: документ уже размечен заголовками Markdown (<code>#</code>, <code>##</code>, ...). Режем по заголовкам, каждую секцию делаем чанком, а уровень и текст заголовка кладем в метаданные. Так чанк всегда совпадает с логической секцией, а в метаданных видно его место в иерархии документа.</p>
-      <p><strong>Когда применять.</strong> Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Рабочий Python для этой стратегии дан выше, в разделе structure-aware (функция <code>markdown_header_chunks</code>).</p>
-      <p class="strat-schematic">Схема: каждая секция между заголовками # становится отдельным чанком; уровень заголовка едет в метаданные.</p>
+      <h3 id="pr-markdown" data-pk="catalog.h3markdown">markdown / document-structure: cut by document headings</h3>
+      <p data-pk="catalog.markdown.p1"><strong>How it works.</strong> A particular but very common case of structure-aware: the document is already marked up with Markdown headings (<code>#</code>, <code>##</code>, ...). Cut by headings, make each section a chunk, and put the heading level and text into the metadata. This way a chunk always coincides with a logical section, and the metadata shows its place in the document hierarchy.</p>
+      <p data-pk="catalog.markdown.p2"><strong>When to apply.</strong> Documentation, READMEs, knowledge bases in Markdown - anything where the author already laid out the structure (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). The working Python for this strategy is given above, in the structure-aware section (the <code>markdown_header_chunks</code> function).</p>
+      <p class="strat-schematic" data-pk="catalog.markdown.p3">Schematic: each section between # headings becomes its own chunk; the heading level rides into the metadata.</p>
 
-      <h3 id="pr-parent">parent-document (small-to-big): индексируем мелкое, возвращаем крупное</h3>
-      <p><strong>Как работает.</strong> Разводим единицу поиска и единицу контекста. Документ режется дважды: на мелкие дочерние чанки (точное попадание в запрос) и на крупные родительские (широкий контекст). В векторный индекс кладутся только мелкие чанки, но у каждого хранится ссылка на родителя. На поиске вы находите мелкий чанк, а в контекст модели подкладываете его крупного родителя.</p>
-      <p><strong>Когда применять.</strong> Когда мелкие чанки выигрывают на поиске, но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска (<a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">LangChain, ParentDocumentRetriever</a>).</p>
-      <p class="strat-schematic">Схема: мелкие дочерние чанки в индексе ссылаются на крупного родителя; на попадание возвращается родитель (small-to-big).</p>
+      <h3 id="pr-parent" data-pk="catalog.h3parent">parent-document (small-to-big): index small, return large</h3>
+      <p data-pk="catalog.parent.p1"><strong>How it works.</strong> Separate the unit of search from the unit of context. The document is cut twice: into small child chunks (precise hit on the query) and into large parent ones (broad context). Only the small chunks go into the vector index, but each stores a reference to its parent. At search time you find a small chunk, and into the model's context you slip its large parent.</p>
+      <p data-pk="catalog.parent.p2"><strong>When to apply.</strong> When small chunks win at search but the answer needs a wider piece than was found. This removes the main downside of small chunking - narrow context - without losing search precision (<a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">LangChain, ParentDocumentRetriever</a>).</p>
+      <p class="strat-schematic" data-pk="catalog.parent.p3">Schematic: small child chunks in the index reference a large parent; on a hit the parent is returned (small-to-big).</p>
 
-      <h3 id="pr-late">late chunking: эмбеддинг целого документа, потом пулинг по чанкам</h3>
-      <p><strong>Как работает.</strong> Обычный конвейер сначала режет, потом эмбеддит каждый чанк изолированно - и чанк не знает ничего о соседях. Late chunking меняет порядок: сначала прогоняем весь документ через long-context модель эмбеддингов и получаем токенные представления, уже видевшие весь текст; и только потом пулим (усредняем) эти токенные векторы по границам чанков. Каждый итоговый вектор чанка несет контекст всего документа (<a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">Gunther et al., 2024, "Late Chunking", arXiv:2409.04701</a>).</p>
-      <p><strong>Когда применять.</strong> Есть long-context модель эмбеддингов и важно, чтобы мелкий чанк не терял разрешение кореференций ("компания", "она", "этот продукт") за пределами своего фрагмента. Цена - один проход тяжелой модели по всему документу.</p>
-      <p class="strat-schematic">Схема: весь документ эмбеддится одним проходом; токенные векторы потом усредняются по границам чанков (embed-whole-then-pool).</p>
+      <h3 id="pr-late" data-pk="catalog.h3late">late chunking: embed the whole document, then pool by chunks</h3>
+      <p data-pk="catalog.late.p1"><strong>How it works.</strong> The ordinary pipeline first cuts, then embeds each chunk in isolation - and the chunk knows nothing about its neighbours. Late chunking reverses the order: first run the whole document through a long-context embedding model and get token representations that have already seen the whole text; and only then pool (average) these token vectors by the chunk boundaries. Each resulting chunk vector carries the context of the whole document (<a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">Gunther et al., 2024, "Late Chunking", arXiv:2409.04701</a>).</p>
+      <p data-pk="catalog.late.p2"><strong>When to apply.</strong> There is a long-context embedding model and it matters that a small chunk does not lose the resolution of coreferences ("the company", "it", "this product") beyond its fragment. The price is one pass of a heavy model over the whole document.</p>
+      <p class="strat-schematic" data-pk="catalog.late.p3">Schematic: the whole document is embedded in one pass; the token vectors are then averaged by the chunk boundaries (embed-whole-then-pool).</p>
 
-      <h3 id="pr-contextual">contextual retrieval: дописываем контекст перед эмбеддингом</h3>
-      <p><strong>Как работает.</strong> Перед тем как эмбеддить чанк, дописываем ему короткое поясняющее предложение, которое ставит фрагмент в контекст всего документа. Это пояснение генерирует LLM по паре "документ + чанк". Эмбеддится и индексируется уже чанк-плюс-контекст, поэтому изолированный фрагмент перестает быть непонятным вне документа (<a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">Anthropic, Contextual Retrieval</a>).</p>
-      <p><strong>Когда применять.</strong> Когда чанки часто оказываются неинформативными в отрыве от документа (таблицы, короткие пункты, местоимения без антецедента), и качество поиска важнее, чем разовая цена LLM на обогащение каждого чанка при индексации.</p>
-      <p class="strat-schematic">Схема: к каждому чанку перед эмбеддингом дописывается LLM-сгенерированный поясняющий контекст (blurb prepended before embed).</p>
+      <h3 id="pr-contextual" data-pk="catalog.h3contextual">contextual retrieval: prepend context before embedding</h3>
+      <p data-pk="catalog.contextual.p1"><strong>How it works.</strong> Before embedding a chunk, prepend a short explanatory sentence that places the fragment in the context of the whole document. This explanation is generated by an LLM from the pair "document + chunk". What is embedded and indexed is the chunk-plus-context, so an isolated fragment stops being incomprehensible outside the document (<a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">Anthropic, Contextual Retrieval</a>).</p>
+      <p data-pk="catalog.contextual.p2"><strong>When to apply.</strong> When chunks often turn out uninformative in isolation from the document (tables, short bullet points, pronouns without an antecedent), and search quality matters more than the one-time price of an LLM enriching each chunk at indexing time.</p>
+      <p class="strat-schematic" data-pk="catalog.contextual.p3">Schematic: an LLM-generated explanatory context is prepended to each chunk before embedding (blurb prepended before embed).</p>
 
-      <h3 id="pr-semantic">semantic / LLM-based: рез по смысловым сдвигам</h3>
-      <p><strong>Как работает.</strong> Вместо счета символов или разделителей решение о резе принимается по смыслу. Типичный подход: разбить текст на предложения, посчитать эмбеддинг каждого и ставить границу там, где соседние предложения резко расходятся по смыслу (падает косинусная близость между соседями). Вариант - спросить LLM, где логично разрезать. Границы получаются самыми "смысловыми", но каждый кандидат границы стоит вызова модели - отсюда high по всем трем осям стоимости (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
-      <p><strong>Когда применять.</strong> Когда качество границ критично и оправдывает цену. Для большинства корпусов recursive дает 90% пользы за долю цены; semantic берется, когда измерения показывают, что границы - узкое место.</p>
-      <blockquote>Порог подбирается измерением на золотом наборе, а не угадывается. Косинус как мера близости смысла разбирается в главе Embedding; semantic-чанкинг опирается на тот же принцип, но применяет его к границам реза, а не к поиску.</blockquote>
-      <p class="strat-schematic">Анимация: граница ставится там, где соседние предложения резко расходятся по смыслу (косинус падает ниже порога), а не на равных интервалах.</p>
+      <h3 id="pr-semantic" data-pk="catalog.h3semantic">semantic / LLM-based: cut by semantic shifts</h3>
+      <p data-pk="catalog.semantic.p1"><strong>How it works.</strong> Instead of counting characters or separators, the decision to cut is made by meaning. The typical approach: split the text into sentences, compute the embedding of each, and place a boundary where adjacent sentences diverge sharply in meaning (the cosine closeness between neighbours drops). A variant is to ask an LLM where to cut. The boundaries come out the most "semantic", but each candidate boundary costs a model call - hence high on all three cost axes (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p data-pk="catalog.semantic.p2"><strong>When to apply.</strong> When boundary quality is critical and justifies the price. For most corpora recursive gives 90% of the benefit for a fraction of the price; semantic is taken when measurements show that boundaries are the bottleneck.</p>
+      <blockquote data-pk="catalog.semantic.bq1">The threshold is chosen by measuring on a golden set, not guessed. Cosine as a measure of meaning closeness is taken apart in the Embedding chapter; semantic chunking relies on the same principle but applies it to cut boundaries rather than to search.</blockquote>
+      <p class="strat-schematic" data-pk="catalog.semantic.p3">Animation: a boundary is placed where adjacent sentences diverge sharply in meaning (the cosine drops below a threshold), not at equal intervals.</p>
     </section>
 
     <section aria-labelledby="pr-reveal">
-      <h2 id="pr-reveal">Как каталог раскрывается: прогрессивное раскрытие</h2>
-      <p>Каталог устроен как semantic-zoom drill с двумя уровнями (больше двух нет):</p>
+      <h2 id="pr-reveal" data-pk="reveal.h2">How the catalog unfolds: progressive disclosure</h2>
+      <p data-pk="reveal.p1">The catalog is arranged as a semantic-zoom drill with two levels (there are no more than two):</p>
       <ul>
-        <li><strong>Уровень 0 - обзор.</strong> Видна только обзорная таблица стратегий с рейтингами. Это сравнительный слой: глазами пробегаете строчки и выбираете кандидата. Статичный no-JS вариант - именно эта таблица, полностью читаемая без скриптов.</li>
-        <li><strong>Уровень 1 - одна стратегия.</strong> Клик или drill по строчке стратегии делает semantic zoom в ее панель: развернутое "как работает" плюс "когда применять" плюс пошаговый алгоритм плюс (для базовых) рабочий Python плюс обучающая анимация реза именно этой стратегии. Выход из зума возвращает к таблице.</li>
+        <li data-pk="reveal.li1"><strong>Level 0 - overview.</strong> Only the overview table of strategies with ratings is visible. This is the comparison layer: you run your eyes over the rows and pick a candidate. The static no-JS variant is exactly this table, fully readable without scripts.</li>
+        <li data-pk="reveal.li2"><strong>Level 1 - one strategy.</strong> A click or drill on a strategy row performs a semantic zoom into its panel: an unfolded "how it works" plus "when to apply" plus the step-by-step algorithm plus (for the basic ones) working Python plus a teaching animation of the cut for exactly this strategy. Exiting the zoom returns to the table.</li>
       </ul>
-      <p>Глубже уровня 1 зум не идет. Все анимации запускаются только когда панель на экране (IntersectionObserver) и только при <code>prefers-reduced-motion: no-preference</code>; иначе показывается конечное состояние над тем же DOM.</p>
+      <p data-pk="reveal.p2">The zoom does not go deeper than level 1. All animations run only when the panel is on screen (IntersectionObserver) and only under <code>prefers-reduced-motion: no-preference</code>; otherwise the end state is shown over the same DOM.</p>
     </section>
 
     <section aria-labelledby="pr-tradeoff">
-      <h2 id="pr-tradeoff">Размер и перекрытие: компромисс</h2>
-      <p>Размер чанка и перекрытие - две ручки одного компромисса. Мелкий чанк: точное попадание в запрос, но узкий контекст и риск разорвать факт. Крупный чанк: богатый контекст, но размытая релевантность и "lost in the middle" при сборке промпта (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Перекрытие смягчает главный минус реза по границам - потерю пограничного факта - ценой дублирования токенов (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
-      <p>Правило без магических чисел: не угадывайте. Возьмите золотой набор вопросов (см. главу Evaluation), прогоните две-три конфигурации (size/overlap/стратегия) и сравните recall нужных чанков. Стратегия из каталога выше - это пространство выбора; измерение - способ выбрать точку в нем.</p>
+      <h2 id="pr-tradeoff" data-pk="tradeoff.h2">Size and overlap: the trade-off</h2>
+      <p data-pk="tradeoff.p1">Chunk size and overlap are two knobs of one trade-off. A small chunk: a precise hit on the query, but narrow context and the risk of tearing a fact. A large chunk: rich context, but blurred relevance and "lost in the middle" when assembling the prompt (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, arXiv:2307.03172</a>). Overlap softens the main downside of cutting by boundaries - the loss of a boundary fact - at the price of token duplication (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).</p>
+      <p data-pk="tradeoff.p2">The rule with no magic numbers: do not guess. Take a golden set of questions (see the Evaluation chapter), run two or three configurations (size/overlap/strategy), and compare the recall of the needed chunks. The strategy from the catalog above is the space of choices; measurement is the way to pick a point in it.</p>
     </section>
 
     <section aria-labelledby="pr-live">
-      <h2 id="pr-live">Связь с живым примером</h2>
-      <p>В живом примере из обзора исходный документ <code>doc.text</code> режется на три чанка по границам предложений - это фактически structure-aware рез по знаку конца предложения. Поля <code>fromChar</code>/<code>toChar</code> индексируют именно <code>doc.text</code>: каждый чанк - это точный срез исходного текста, а не его пересказ. Это и есть Metadata-позиция из drill-down в действии: по ней всегда можно восстановить, откуда взят чанк, и вернуть цитату в ответе.</p>
-      <p>В этом примере чанки не пересекаются (overlap = 0) ради наглядности - это чистый structure-aware без sliding-window. Мысленно добавьте перекрытие: пусть второй чанк начинается на несколько слов раньше, захватывая хвост первого - так факт на границе предложений не потеряется. Это ровно переход от structure-aware к sliding-window из каталога выше.</p>
+      <h2 id="pr-live" data-pk="live.h2">Link to the live example</h2>
+      <p data-pk="live.p1">In the live example from the overview, the source document <code>doc.text</code> is cut into three chunks by sentence boundaries - this is effectively a structure-aware cut by the end-of-sentence mark. The <code>fromChar</code>/<code>toChar</code> fields index exactly <code>doc.text</code>: each chunk is a precise slice of the source text, not a retelling of it. This is the Metadata-position from the drill-down in action: by it you can always reconstruct where the chunk came from and return a citation in the answer.</p>
+      <p data-pk="live.p2">In this example the chunks do not overlap (overlap = 0) for clarity - this is pure structure-aware without sliding-window. Mentally add overlap: let the second chunk begin a few words earlier, capturing the tail of the first - that way a fact on the sentence boundary is not lost. This is exactly the transition from structure-aware to sliding-window from the catalog above.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
-        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
-        <li>Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">arxiv.org/abs/2409.04701</a></li>
-        <li>LangChain. RecursiveCharacterTextSplitter. <a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">recursive_text_splitter</a></li>
-        <li>LangChain. Split by token. <a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">split_by_token</a></li>
-        <li>LangChain. MarkdownHeaderTextSplitter. <a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">markdown_header_metadata_splitter</a></li>
-        <li>LangChain. ParentDocumentRetriever. <a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">parent_document_retriever</a></li>
-        <li>OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a></li>
-        <li>OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
-        <li>Anthropic. Contextual Retrieval. <a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">anthropic.com/news/contextual-retrieval</a></li>
-        <li>Pinecone. Chunking strategies (vendor explainer). <a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">pinecone.io/learn/chunking-strategies</a></li>
+        <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li data-pk="sources.li2">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li data-pk="sources.li3">Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">arxiv.org/abs/2409.04701</a></li>
+        <li data-pk="sources.li4">LangChain. RecursiveCharacterTextSplitter. <a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">recursive_text_splitter</a></li>
+        <li data-pk="sources.li5">LangChain. Split by token. <a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">split_by_token</a></li>
+        <li data-pk="sources.li6">LangChain. MarkdownHeaderTextSplitter. <a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">markdown_header_metadata_splitter</a></li>
+        <li data-pk="sources.li7">LangChain. ParentDocumentRetriever. <a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">parent_document_retriever</a></li>
+        <li data-pk="sources.li8">OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a></li>
+        <li data-pk="sources.li9">OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li data-pk="sources.li10">Anthropic. Contextual Retrieval. <a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">anthropic.com/news/contextual-retrieval</a></li>
+        <li data-pk="sources.li11">Pinecone. Chunking strategies (vendor explainer). <a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">pinecone.io/learn/chunking-strategies</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>Откройте каталог на уровне 0 и сравните строчки <code>fixed-size</code> и <code>recursive</code>: при той же низкой цене recursive дает аккуратные границы по разделителям - поэтому он выбор по умолчанию для прозы.</li>
-        <li>Сделайте drill в стратегию <code>sliding-window</code> и запустите ее анимацию: посмотрите, как окно едет с шагом <code>step = size - overlap</code> и зона перекрытия повторяется в соседнем чанке.</li>
-        <li>Сделайте drill в <code>recursive</code> и пройдите анимацию спуска по разделителям <code>["\n\n", "\n", " ", ""]</code>: те куски, что не влезли по абзацам, режутся по предложениям, потом по словам.</li>
+        <li data-pk="try.li1">Open the catalog at level 0 and compare the <code>fixed-size</code> and <code>recursive</code> rows: at the same low price, recursive gives neat boundaries by separators - that is why it is the default for prose.</li>
+        <li data-pk="try.li2">Drill into the <code>sliding-window</code> strategy and run its animation: watch how the window moves with step <code>step = size - overlap</code> and the overlap zone repeats in the adjacent chunk.</li>
+        <li data-pk="try.li3">Drill into <code>recursive</code> and walk the animation of descending through the separators <code>["\n\n", "\n", " ", ""]</code>: the pieces that did not fit by paragraphs are cut by sentences, then by words.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Следующая остановка маршрута - <strong>Embedding</strong>: она берет эти чанки и превращает каждый в числовой вектор, где близость = близость смысла (тот же косинус, на который опирается semantic-чанкинг).</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.p1">The next stop of the route is <strong>Embedding</strong>: it takes these chunks and turns each into a numeric vector, where closeness = closeness of meaning (the same cosine that semantic chunking relies on).</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -486,9 +578,10 @@ if __name__ == "__main__":
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>

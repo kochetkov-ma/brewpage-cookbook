@@ -22,12 +22,14 @@
 <div class="search-box js-only" data-component="search-box"
      data-index-src="shared/data/search-index.json">
   <label class="visually-hidden" for="rag-search"
-         data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+         data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
   <input id="rag-search" class="search-box__input" type="search"
-         placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+         placeholder="Search chapters" autocomplete="off" spellcheck="false"
          data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
          role="combobox" aria-autocomplete="list" aria-expanded="false"
-         aria-controls="rag-search-results" />
+         aria-controls="rag-search-results"
+         aria-label="Search the guide" data-i18n-aria="searchLabel" data-aria-ru="Поиск по руководству" data-aria-en="Search the guide" />
   <ul id="rag-search-results" class="search-box__results"
-      data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+      data-slot="results" role="listbox"
+      aria-label="Search results" data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
 </div>

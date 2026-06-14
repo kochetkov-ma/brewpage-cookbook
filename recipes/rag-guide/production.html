@@ -1,10 +1,100 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Продакшен-запуск - стоимость, кеш, доступ - RAG С НУЛЯ</title>
-<meta name="description" content="Продакшен RAG: связать конвейер в живой сервис - скорость и стоимость запроса, кеш, мониторинг, доступ. Отметьте чеклист вывода в прод и посчитайте стоимость на своих числах. Интерактивная глава BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Going to production with RAG - RAG Guide</title>
+<meta name="description" content="Take RAG to production: control latency and cost per request, monitor errors, refresh data, enforce access, and improve steadily by your metrics.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Going to production with RAG">
+<meta property="og:description" content="Take RAG to production: control latency and cost per request, monitor errors, refresh data, enforce access, and improve steadily by your metrics.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Going to production with RAG">
+<meta name="twitter:description" content="Take RAG to production: control latency and cost per request, monitor errors, refresh data, enforce access, and improve steadily by your metrics.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Going to production with RAG",
+  "description": "Take RAG to production: control latency and cost per request, monitor errors, refresh data, enforce access, and improve steadily by your metrics.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Production",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
      + this section's own CSS. Swapping the theme <link> is the only reskin. -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,13 +102,13 @@
 <link rel="stylesheet" href="shared/css/sections/production.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К запуску" data-en="Skip to the rollout">К запуску</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К запуску" data-en="Skip to the rollout">Skip to the rollout</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,8 +118,8 @@
         </svg>
       </a>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава - Продакшен" data-en="Plate - Production">Глава - Продакшен</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Продакшен" data-en="Plate - Production">Plate - Production</div>
       </div>
     </div>
     <div class="site-header__nav">
@@ -37,38 +127,40 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
-               aria-controls="rag-search-results" />
+               aria-controls="rag-search-results"
+               aria-label="Search the guide" data-i18n-aria="searchLabel" data-aria-ru="Поиск по руководству" data-aria-en="Search the guide" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            aria-label="Search results" data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
       </div>
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
 
   <main id="main" tabindex="-1">
-  <!-- ===================== rollout plate (Продакшен) ===================== -->
+  <!-- ===================== rollout plate (Production) ===================== -->
   <section class="plate" aria-labelledby="prodTitle">
     <div class="plate-head">
       <div class="title-block">
-        <nav class="back-to-map" aria-label="Хлебные крошки">
-          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Маршрут</a>
+        <nav class="back-to-map" data-i18n-aria aria-label="Breadcrumbs" data-aria-ru="Хлебные крошки" data-aria-en="Breadcrumbs">
+          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Route</a>
           <span class="sep" aria-hidden="true">&rsaquo;</span>
-          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Продакшен" data-en="Production">Продакшен</span>
+          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Продакшен" data-en="Production">Production</span>
         </nav>
-        <h1 id="prodTitle" data-i18n="prodTitle" data-ru="Продакшен-запуск: живой сервис" data-en="Production rollout: a live service">Продакшен-запуск: живой сервис</h1>
-        <p data-i18n="prodSub" data-ru="Отметьте пункты чеклиста вывода в прод - полоса прогресса зарабатывается по мере проверки. Введите свои числа в калькулятор и посмотрите стоимость запроса и оценку в месяц." data-en="Check the rollout items - progress is earned as you verify each one. Plug your own numbers into the calculator to see cost per request and a monthly estimate.">Отметьте пункты чеклиста вывода в прод - полоса прогресса зарабатывается по мере проверки. Введите свои числа в калькулятор и посмотрите стоимость запроса и оценку в месяц.</p>
+        <h1 id="prodTitle" data-i18n="prodTitle" data-ru="Продакшен-запуск: живой сервис" data-en="Production rollout: a live service">Production rollout: a live service</h1>
+        <p data-i18n="prodSub" data-ru="Отметьте пункты чеклиста вывода в прод - полоса прогресса зарабатывается по мере проверки. Введите свои числа в калькулятор и посмотрите стоимость запроса и оценку в месяц." data-en="Check the rollout items - progress is earned as you verify each one. Plug your own numbers into the calculator to see cost per request and a monthly estimate.">Check the rollout items - progress is earned as you verify each one. Plug your own numbers into the calculator to see cost per request and a monthly estimate.</p>
       </div>
       <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -99,12 +191,12 @@
     <!-- live rollout affordance: checklist (left) + cost calculator (right) -->
     <div class="rollout-grid js-only">
       <section class="rollout-col" aria-labelledby="rolloutTitle">
-        <h2 id="rolloutTitle" data-i18n="checklistTitle" data-ru="Чеклист вывода в прод" data-en="Production rollout checklist">Чеклист вывода в прод</h2>
+        <h2 id="rolloutTitle" data-i18n="checklistTitle" data-ru="Чеклист вывода в прод" data-en="Production rollout checklist">Production rollout checklist</h2>
         <!-- boxes are built by production.js from production.checklist (un-lit on load) -->
         <ul class="rollout-list" data-component="rollout-checklist"></ul>
       </section>
       <section class="rollout-col" aria-labelledby="calcColTitle">
-        <h2 id="calcColTitle" data-i18n="calcTitle" data-ru="Калькулятор стоимости и задержки" data-en="Cost and latency calculator">Калькулятор стоимости и задержки</h2>
+        <h2 id="calcColTitle" data-i18n="calcTitle" data-ru="Калькулятор стоимости и задержки" data-en="Cost and latency calculator">Cost and latency calculator</h2>
         <!-- empty host: cost-calculator.js auto-creates [data-slot=inputs|readout] -->
         <div class="costc-host" data-component="cost-calculator"></div>
       </section>
@@ -113,26 +205,26 @@
     <!-- ===== NO-JS fallback: the whole checklist as prose + a worked cost
          example with labelled terms, so the chapter teaches with JS off. ===== -->
     <div class="no-js-only">
-      <h2>Чеклист вывода в прод</h2>
+      <h2>Production rollout checklist</h2>
       <ul class="rollout-static">
-        <li>Бюджет токенов ограничен, контекст не раздут (assemble-context).</li>
-        <li>Кеш ответов и эмбеддинга с разумным TTL; сброс кеша при обновлении данных.</li>
-        <li>Логируются задержка, стоимость, число кусков, кеш-хит по каждому запросу.</li>
-        <li>Инкрементальное обновление индекса при изменении документов.</li>
-        <li>Доступ проверяется на шаге retrieve через фильтр по метаданным, а не после.</li>
-        <li>Ключи и токены - в секретах, не в коде, не в логах, не в промпте.</li>
-        <li>Золотой набор и регулярные прогоны оценки до/после правки (evaluation).</li>
-        <li>Запасной вариант "Этого нет в документах" работает для случаев без контекста (generation).</li>
+        <li>The token budget is bounded, the context is not bloated (assemble-context).</li>
+        <li>A cache of answers and embeddings with a reasonable TTL; cache flush on data update.</li>
+        <li>Latency, cost, the number of pieces, and the cache hit are logged per request.</li>
+        <li>Incremental index update when documents change.</li>
+        <li>Access is checked at the retrieve step via a metadata filter, not afterward.</li>
+        <li>Keys and tokens are in secrets, not in code, not in logs, not in the prompt.</li>
+        <li>A golden set and regular evaluation runs before/after each edit (evaluation).</li>
+        <li>The "This is not in the documents" fallback works for cases without context (generation).</li>
       </ul>
-      <h2>Пример расчета стоимости одного запроса</h2>
-      <p class="legend-hint">При 1240 токенах входа и 320 токенах выхода, по тарифу $3.00 за 1M входных и $15.00 за 1M выходных токенов:</p>
+      <h2>A worked cost example for one request</h2>
+      <p class="legend-hint">At 1240 input tokens and 320 output tokens, at a rate of $3.00 per 1M input and $15.00 per 1M output tokens:</p>
       <ul class="cost-static">
-        <li>вход: 1240 / 1 000 000 &times; $3.00 = $0.003720</li>
-        <li>выход: 320 / 1 000 000 &times; $15.00 = $0.004800</li>
-        <li><strong>стоимость запроса = $0.008520</strong></li>
-        <li>при 2 запросах/с и 30% кеш-хитов месячная оценка масштабируется по числу запросов и доле, не покрытой кешем.</li>
+        <li>input: 1240 / 1 000 000 &times; $3.00 = $0.003720</li>
+        <li>output: 320 / 1 000 000 &times; $15.00 = $0.004800</li>
+        <li><strong>cost per request = $0.008520</strong></li>
+        <li>at 2 requests/s and 30% cache hits, the monthly estimate scales by the number of requests and the share not covered by the cache.</li>
       </ul>
-      <p class="legend-hint">Включите JavaScript, чтобы отметить чеклист и посчитать стоимость на своих числах.</p>
+      <p class="legend-hint">Turn on JavaScript to check the checklist and compute the cost on your own numbers.</p>
     </div>
   </section>
 
@@ -141,17 +233,17 @@
        Always visible: reads fully with JS on or off. The .js-only checklist +
        calculator above only ENHANCE; this prose is the chapter text.
        PRIVACY: platform access/security at user-facing level only. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="production">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема, с которой вы пришли</h2>
-      <p>Прототип RAG работает у вас на ноутбуке. Но реальные пользователи приносят то, чего не было в демо: каждый запрос стоит денег и секунд, вопросы идут пачками в пик нагрузки, данные устаревают через неделю, а разным людям положено видеть разные документы. Без контроля над этим "работает на демо" превращается в "дорого, медленно, и утекают чужие данные".</p>
-      <p>Это вершина маршрута - продакшен (production): связать все звенья (chunking -&gt; embedding -&gt; store -&gt; retrieve -&gt; assemble -&gt; generation) в сервис и держать его в форме. Здесь решаются четыре вещи: скорость и стоимость запроса, мониторинг и обновление данных, безопасность и доступ, постепенное улучшение по метрикам. Ниже - рабочий скелет сервиса с этими крючками.</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem you came with</h2>
+      <p data-pk="problem.p1">The RAG prototype works on your laptop. But real users bring what the demo did not: every request costs money and seconds, questions come in bursts at peak load, data goes stale within a week, and different people are supposed to see different documents. Without control over this, "works on the demo" turns into "expensive, slow, and someone else's data is leaking".</p>
+      <p data-pk="problem.p2">This is the top of the route - production: wire all the links (chunking -&gt; embedding -&gt; store -&gt; retrieve -&gt; assemble -&gt; generation) into a service and keep it in shape. Four things are decided here: speed and cost of a request, monitoring and data updates, security and access, gradual improvement by metrics. Below is a working skeleton of a service with these hooks.</p>
     </section>
 
     <section aria-labelledby="pr-endpoint">
-      <h2 id="pr-endpoint">Решение: продакшен-эндпоинт с контролем затрат</h2>
-      <p>Вот рабочий эндпоинт на Python (FastAPI), который собирает весь конвейер и добавляет продакшен-крючки: кеш, измерение задержки, подсчет стоимости, фильтр доступа.</p>
+      <h2 id="pr-endpoint" data-pk="endpoint.h2">The solution: a production endpoint with cost control</h2>
+      <p data-pk="endpoint.p1">Here is a working endpoint in Python (FastAPI) that assembles the whole pipeline and adds production hooks: a cache, latency measurement, cost accounting, an access filter.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="production-fastapi-endpoint">
       <figcaption class="code-block__cap" data-i18n data-ru="Produkshen-endpoint na FastAPI: kesh, podschet stoimosti, latency i filtr dostupa." data-en="A FastAPI production endpoint: cache, cost accounting, latency, and an access filter.">Produkshen-endpoint na FastAPI: kesh, podschet stoimosti, latency i filtr dostupa.</figcaption>
       <pre><code># pip install fastapi uvicorn cachetools
@@ -190,85 +282,85 @@ def ask(question: str, user=Depends(current_user)):
     )
     return {"answer": answer, "cached": False, "latency_ms": round(latency_ms)}</code></pre>
       <ol class="code-annot-list no-js-only">
-        <li><strong>TTL-kesh otvetov</strong> -- Odinakovyj vopros ne platit za generaciju dvazhdy; TTL ne daet kesh otdavat ustarevshee posle obnovlenija dannyh.</li>
-        <li><strong>Raschet stoimosti</strong> -- Otdelnaja cena za vhodnye i vyhodnye tokeny; svetit s pricing vendora (naprimer, Anthropic pricing, anthropic.com/pricing). cost_usd skladyvaet oba slagaemyh.</li>
-        <li><strong>Kesh-kljuch po tenant</strong> -- Kljuch kesha vkljuchaet tenant polzovatelja, chtoby otvety raznyh tenantov ne smeshivalis; pri popadanii vozvrashchaem gotovyj otvet bez generacii.</li>
-        <li><strong>Dostup na retrieve</strong> -- Dostup proverjaetsja na shage retrieve, a ne posle generacii: retrieve poluchaet allowed_filter i fizicheski ne vozvrashchaet zapreshchennye kuski. Esli kusok popal v kontekst, schitajte, chto polzovatel uzhe poluchil k nemu dostup.</li>
-        <li><strong>Sborka i generacija</strong> -- Najdennye chunki pakujutsja v odin prompt v ramkah token-bjudzheta, zatem generacija vozvrashchaet otvet vmeste s uchetom tokenov dlja stoimosti.</li>
-        <li><strong>Metriki i otvet</strong> -- Otvet kladetsja v kesh; latency, stoimost i chislo kuskov logirujutsya v monitoring (ne v otvet polzovatelju). To, chto ne izmerjaeshsja, slomaetsja tiho.</li>
+        <li><strong>TTL answer cache</strong> -- The same question does not pay for generation twice; the TTL keeps the cache from serving stale content after a data update.</li>
+        <li><strong>Cost calculation</strong> -- Separate price for input and output tokens; check the vendor pricing (for example Anthropic pricing, anthropic.com/pricing). cost_usd sums both addends.</li>
+        <li><strong>Tenant-scoped cache key</strong> -- The cache key includes the user tenant so different tenants' answers never mix; on a hit we return the ready answer with no generation.</li>
+        <li><strong>Access at retrieve</strong> -- Access is checked at the retrieve step, not after generation: retrieve takes allowed_filter and physically does not return forbidden chunks. If a chunk made it into the context, assume the user already has access to it.</li>
+        <li><strong>Assemble and generate</strong> -- The found chunks are packed into one prompt within the token budget, then generation returns the answer together with token usage for the cost.</li>
+        <li><strong>Metrics and response</strong> -- The answer is cached; latency, cost, and the number of chunks are logged to monitoring (not into the user's answer). What you do not measure will break silently.</li>
       </ol>
       </figure>
     </section>
 
     <section aria-labelledby="pr-cost">
-      <h2 id="pr-cost">Скорость и стоимость запроса</h2>
-      <p>Каждый запрос платит за токены входа (инструкция + контекст + вопрос) и выхода (ответ). Цена считается по тарифу вендора за токены - например, публичный <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">Anthropic pricing</a> задает отдельную цену за входные и выходные токены. Отсюда два рычага: меньше контекста (бюджет токенов из главы про сборку контекста) и короче ответ.</p>
-      <p>Третий рычаг - <strong>кеш</strong>. Одинаковые вопросы не должны заново платить за генерацию; <code>TTLCache</code> выше отдает готовый ответ, а TTL не дает кешу отдавать устаревшее после обновления данных. Отдельно кеш эмбеддинга запроса снимает повторный вызов эмбеддера на тот же текст.</p>
-      <p>Задержка (latency) складывается из двух частей: поиск по индексу (обычно миллисекунды, см. ANN в главе про векторное хранилище) и генерация (самая долгая часть). Стриминг из главы про генерацию не уменьшает общее время, но резко сокращает воспринимаемое ожидание - пользователь видит первые токены сразу.</p>
+      <h2 id="pr-cost" data-pk="cost.h2">Speed and cost of a request</h2>
+      <p data-pk="cost.p1">Every request pays for input tokens (instruction + context + question) and output tokens (the answer). The price is computed by the vendor's per-token rate - for example, the public <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">Anthropic pricing</a> sets a separate price for input and output tokens. From here come two levers: less context (the token budget from the context-assembly chapter) and a shorter answer.</p>
+      <p data-pk="cost.p2">The third lever is the <strong>cache</strong>. Identical questions should not pay for generation again; the <code>TTLCache</code> above returns a ready answer, while the TTL keeps the cache from serving stale content after a data update. Separately, a cache of the query embedding removes a repeat call to the embedder on the same text.</p>
+      <p data-pk="cost.p3">Latency consists of two parts: the index search (usually milliseconds, see ANN in the vector-store chapter) and generation (the longest part). Streaming from the generation chapter does not reduce the total time, but it sharply cuts the perceived wait - the user sees the first tokens right away.</p>
     </section>
 
     <section aria-labelledby="pr-monitor">
-      <h2 id="pr-monitor">Мониторинг и обновление данных</h2>
-      <p>То, что вы не измеряете в продакшене, сломается тихо. Логируйте по каждому запросу: задержку, стоимость, число выданных кусков, был ли кеш-хит и (где пользователь дал согласие) его оценку ответа. Эти оценки - сырое топливо для золотого набора из главы про оценку: плохие ответы превращаются в новые тест-кейсы.</p>
-      <p>Данные устаревают. Когда документ меняется, его нужно заново разбить на куски, пересчитать эмбеддинг и обновить в индексе - инкрементально, только изменившееся, а не весь корпус. После обновления сбросьте относящийся к нему кеш, иначе пользователь получит старый ответ по новому документу.</p>
+      <h2 id="pr-monitor" data-pk="monitor.h2">Monitoring and data updates</h2>
+      <p data-pk="monitor.p1">What you do not measure in production will break silently. Log per request: latency, cost, the number of returned pieces, whether there was a cache hit, and (where the user consented) their rating of the answer. These ratings are the raw fuel for the golden set from the evaluation chapter: bad answers turn into new test cases.</p>
+      <p data-pk="monitor.p2">Data goes stale. When a document changes, it must be re-chunked, re-embedded, and updated in the index - incrementally, only what changed, not the whole corpus. After an update, flush the cache related to it, otherwise the user gets an old answer for a new document.</p>
     </section>
 
     <section aria-labelledby="pr-access">
-      <h2 id="pr-access">Безопасность и доступ</h2>
-      <p>В многопользовательском сервисе разным людям положено видеть разные документы. Ключевой принцип: доступ проверяется на шаге retrieve, а не после генерации. Если модель увидела кусок в контексте, считайте, что пользователь уже получил к нему доступ - обрезать это в ответе поздно. Поэтому в <code>ask</code> retrieve получает <code>allowed_filter</code> пользователя и физически не возвращает куски, которые ему не положены.</p>
-      <p>Практически это фильтр по метаданным при поиске (см. фильтры по метаданным в главах про чанкинг и векторное хранилище): у каждого куска есть tenant/раздел/уровень доступа, и запрос ограничивается тем, что разрешено. Вендор векторной базы обычно дает для этого фильтрацию по метаданным - см., например, <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone metadata filtering</a> или аналог у вашей базы. Отдельно: ключи API и токены доступа храните в секретах, не в коде и не в логах, и не кладите чувствительные данные в шаблон промпта, который может уйти в логи вендора.</p>
-      <p>Если вы публикуете рецепт или демо на хостинге, соблюдайте правила платформы на пользовательском уровне (что можно размещать, как сообщить о нарушении) - без предположений о ее внутренней работе.</p>
+      <h2 id="pr-access" data-pk="access.h2">Security and access</h2>
+      <p data-pk="access.p1">In a multi-user service, different people are supposed to see different documents. The key principle: access is checked at the retrieve step, not after generation. If the model saw a piece in the context, assume the user has already gained access to it - trimming that in the answer is too late. So in <code>ask</code>, retrieve receives the user's <code>allowed_filter</code> and physically does not return pieces they are not entitled to.</p>
+      <p data-pk="access.p2">In practice this is a metadata filter at search time (see metadata filters in the chunking and vector-store chapters): each piece has a tenant/section/access level, and the query is restricted to what is permitted. The vector-database vendor usually provides metadata filtering for this - see, for example, <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone metadata filtering</a> or the equivalent in your database. Separately: keep API keys and access tokens in secrets, not in code and not in logs, and do not put sensitive data into the prompt template, which may go into the vendor's logs.</p>
+      <p data-pk="access.p3">If you publish a recipe or demo on a hosting service, follow the platform's rules at the user-facing level (what may be posted, how to report a violation) - without assumptions about its internal workings.</p>
     </section>
 
     <section aria-labelledby="pr-checklist">
-      <h2 id="pr-checklist">Чеклист вывода в прод</h2>
-      <p>Выше - интерактивный чеклист с earned-progress: отметьте пункт, и полоса прогресса заполняется зеленым - до конца только когда закрыт каждый пункт. Те же пункты прозой:</p>
+      <h2 id="pr-checklist" data-pk="checklist.h2">Rollout checklist</h2>
+      <p data-pk="checklist.p1">Above is an interactive checklist with earned-progress: check an item and the progress bar fills with green - all the way only when every item is closed. The same items in prose:</p>
       <ul>
-        <li>Бюджет токенов ограничен, контекст не раздут (assemble-context).</li>
-        <li>Кеш ответов и эмбеддинга с разумным TTL; сброс кеша при обновлении данных.</li>
-        <li>Логируются задержка, стоимость, число кусков, кеш-хит по каждому запросу.</li>
-        <li>Инкрементальное обновление индекса при изменении документов.</li>
-        <li>Доступ проверяется на шаге retrieve через фильтр по метаданным, а не после.</li>
-        <li>Ключи и токены - в секретах, не в коде, не в логах, не в промпте.</li>
-        <li>Золотой набор и регулярные прогоны оценки до/после правки (evaluation).</li>
-        <li>Запасной вариант "Этого нет в документах" работает для случаев без контекста (generation).</li>
+        <li data-pk="checklist.li1">The token budget is bounded, the context is not bloated (assemble-context).</li>
+        <li data-pk="checklist.li2">A cache of answers and embeddings with a reasonable TTL; cache flush on data update.</li>
+        <li data-pk="checklist.li3">Latency, cost, the number of pieces, and the cache hit are logged per request.</li>
+        <li data-pk="checklist.li4">Incremental index update when documents change.</li>
+        <li data-pk="checklist.li5">Access is checked at the retrieve step via a metadata filter, not afterward.</li>
+        <li data-pk="checklist.li6">Keys and tokens are in secrets, not in code, not in logs, not in the prompt.</li>
+        <li data-pk="checklist.li7">A golden set and regular evaluation runs before/after each edit (evaluation).</li>
+        <li data-pk="checklist.li8">The "This is not in the documents" fallback works for cases without context (generation).</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-future">
-      <h2 id="pr-future">Куда движется RAG</h2>
-      <p>RAG быстро развивается: гибридный поиск (смысл + ключевые слова), реранкинг кросс-энкодером, агентные схемы с несколькими шагами retrieve и граф-RAG над связными сущностями. Базовый же конвейер - retrieve, augment, generate из <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a> - остается тем же каркасом, на который эти улучшения насаживаются. Освоив этот маршрут, вы можете читать любое новое расширение как вариацию знакомых стадий.</p>
+      <h2 id="pr-future" data-pk="future.h2">Where RAG is heading</h2>
+      <p data-pk="future.p1">RAG is developing fast: hybrid search (meaning + keywords), cross-encoder reranking, agentic schemes with several retrieve steps, and graph-RAG over connected entities. But the basic pipeline - retrieve, augment, generate from <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Lewis et al., 2020</a> - remains the same skeleton onto which these improvements are grafted. Having mastered this route, you can read any new extension as a variation of familiar stages.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
-        <li>Anthropic. Pricing (цена за входные/выходные токены). <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">anthropic.com/pricing</a></li>
-        <li>Pinecone. Metadata filtering (access via metadata). <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">docs.pinecone.io</a></li>
+        <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li data-pk="sources.li2">Anthropic. Pricing (price per input/output tokens). <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">anthropic.com/pricing</a></li>
+        <li data-pk="sources.li3">Pinecone. Metadata filtering (access via metadata). <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">docs.pinecone.io</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>В калькуляторе введите свои tokens_in/tokens_out и тариф вендора: посмотрите цену одного запроса, потом добавьте QPS и получите месячную оценку.</li>
-        <li>Поднимите долю кеш-хитов в калькуляторе и проследите, как падает стоимость - кеш это прямой рычаг экономики.</li>
-        <li>Отмечайте пункты чеклиста по одному и смотрите, как заполняется earned-progress: незакрытый пункт о проверке доступа на шаге retrieve - это блокировщик выхода в прод.</li>
+        <li data-pk="try.li1">In the calculator enter your own tokens_in/tokens_out and the vendor's rate: see the price of one request, then add QPS and get a monthly estimate.</li>
+        <li data-pk="try.li2">Raise the cache-hit rate in the calculator and watch the cost fall - the cache is a direct lever on the economics.</li>
+        <li data-pk="try.li3">Check the checklist items one by one and watch the earned-progress fill: an unclosed item about checking access at the retrieve step is a blocker for going to production.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Это вершина маршрута - вы прошли весь RAG от постановки проблемы до живого сервиса. Вернитесь на карту <strong>start</strong>, чтобы увидеть пройденный путь целиком, или откройте показательный <strong>payload-anatomy</strong>, где один реальный запрос разобран поле за полем сквозь все стадии.</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next">This is the top of the route - you have walked all of RAG from stating the problem to a live service. Go back to the <strong>start</strong> map to see the whole path you covered, or open the illustrative <strong>payload-anatomy</strong>, where one real request is taken apart field by field across all the stages.</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -284,14 +376,15 @@ def ask(question: str, user=Depends(current_user)):
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Векторное хранилище: храним векторы и ищем ближайших - RAG С НУЛЯ</title>
-<meta name="description" content="Векторная база: хранит миллионы векторов и быстро находит ближайших соседей (ANN, HNSW). top-k, фильтры по метаданным, когда база не нужна. Интерактивная карта индекса - BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Vector store: find the nearest vectors - RAG Guide</title>
+<meta name="description" content="A vector store holds your embeddings and finds the nearest neighbours fast, scaling to millions of fragments without scanning the whole archive.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<!-- canonical -> param-less EN URL; ?lang=ru collapses here (L3) -->
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Vector store: find the nearest vectors">
+<meta property="og:description" content="A vector store holds your embeddings and finds the nearest neighbours fast, scaling to millions of fragments without scanning the whole archive.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vector store: find the nearest vectors">
+<meta name="twitter:description" content="A vector store holds your embeddings and finds the nearest neighbours fast, scaling to millions of fragments without scanning the whole archive.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Vector store: find the nearest vectors",
+  "description": "A vector store holds your embeddings and finds the nearest neighbours fast, scaling to millions of fragments without scanning the whole archive.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Vector store",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file +
      this section's own CSS. base.css / atlas.css are NEVER forked or edited. -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,12 +103,12 @@
 <link rel="stylesheet" href="shared/css/sections/vector-store.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте индекса векторов" data-en="Skip to the vector index map">К карте индекса векторов</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте индекса векторов" data-en="Skip to the vector index map">Skip to the vector index map</a>
 <div class="wrap">
 
   <!-- ===================== header ===================== -->
   <header class="site-header" data-component="header">
-    <a class="site-header__brand" href="index.html" data-i18n-aria aria-label="К карте маршрута RAG С НУЛЯ" data-aria-ru="К карте маршрута RAG С НУЛЯ" data-aria-en="To the RAG ATLAS route map" style="text-decoration:none">
+    <a class="site-header__brand" href="index.html" data-i18n-aria aria-label="To the RAG ATLAS route map" data-aria-ru="К карте маршрута RAG С НУЛЯ" data-aria-en="To the RAG ATLAS route map" style="text-decoration:none">
       <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
         <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -26,8 +117,8 @@
         <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
       </svg>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава - Векторное хранилище" data-en="Plate - Vector store">Глава - Векторное хранилище</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Векторное хранилище" data-en="Plate - Vector store">Plate - Vector store</div>
       </div>
     </a>
     <div class="site-header__nav">
@@ -35,22 +126,24 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
                aria-controls="rag-search-results" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results"
+            aria-label="Search results" hidden></ul>
       </div>
-      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Вернуться к карте маршрута" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
@@ -61,9 +154,9 @@
 
     <div class="plate-head">
       <div class="title-block">
-        <p class="eyebrow" data-i18n="eyebrow" data-ru="Карта индекса векторов" data-en="Vector index map">Карта индекса векторов</p>
-        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Векторное хранилище: ищем ближайших" data-en="Vector store: finding the nearest">Векторное хранилище: ищем ближайших</h1>
-        <p data-i18n="plateSub" data-ru="ANN-индекс возвращает top-k ближайших соседей по косинусу - без перебора всего архива" data-en="An ANN index returns the top-k nearest neighbours by cosine - without scanning the whole archive">ANN-индекс возвращает top-k ближайших соседей по косинусу - без перебора всего архива</p>
+        <p class="eyebrow" data-i18n="eyebrow" data-ru="Карта индекса векторов" data-en="Vector index map">Vector index map</p>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Векторное хранилище: ищем ближайших" data-en="Vector store: finding the nearest">Vector store: finding the nearest</h1>
+        <p data-i18n="plateSub" data-ru="ANN-индекс возвращает top-k ближайших соседей по косинусу - без перебора всего архива" data-en="An ANN index returns the top-k nearest neighbours by cosine - without scanning the whole archive">An ANN index returns the top-k nearest neighbours by cosine - without scanning the whole archive</p>
       </div>
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
@@ -84,10 +177,10 @@
 
     <!-- toolbar row: breadcrumb + zoom-out -->
     <div class="vmap-toolbar">
-      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Уровень масштаба" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
-        <span class="crumb-current" aria-current="step">Индекс векторов</span>
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
+        <span class="crumb-current" aria-current="step">Vector index</span>
       </nav>
-      <button type="button" class="zoomout" data-slot="zoomout" aria-label="Отдалить на уровень выше" disabled>
+      <button type="button" class="zoomout" data-slot="zoomout" data-i18n-aria aria-label="Zoom out one level" data-aria-ru="Отдалить на уровень выше" data-aria-en="Zoom out one level" disabled>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="10.5" cy="10.5" r="6.5"/>
@@ -198,12 +291,12 @@
        Ported from content/ru/vector-store.md (strategy A: md-as-source, hand-ported).
        Always visible: reads fully with JS on or off. The .js-only index map above
        only ENHANCES; this prose is the chapter text. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="vector-store">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема</h2>
-      <p>У вас есть векторы - по одному на каждый фрагмент из прошлой главы. Когда приходит запрос, нужно найти несколько фрагментов, ближайших по смыслу к вектору запроса. Можно сравнить запрос со всеми векторами подряд - и при тысяче фрагментов это работает. Но при миллионе фрагментов перебор каждого на каждый запрос становится слишком медленным.</p>
-      <p>Решение - векторная база (vector store): специальное хранилище, которое держит векторы и умеет быстро находить ближайших соседей, не сравнивая запрос со всем архивом. Вот как выглядит шаг store плюс поиск на примере клиента векторной базы:</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem</h2>
+      <p data-pk="problem.p1">You have vectors - one per fragment from the previous chapter. When a query arrives, you need to find a few fragments closest in meaning to the query vector. You could compare the query against every vector in turn - and with a thousand fragments that works. But with a million fragments, scanning each one on every query becomes too slow.</p>
+      <p data-pk="problem.p2">The solution is a vector store: a specialized storage that holds vectors and can quickly find nearest neighbours without comparing the query against the whole archive. Here is what the store step plus search look like using a vector-database client:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="vector-store-upsert-query">
         <figcaption class="code-block__cap" data-i18n data-ru="Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata.</figcaption>
         <pre><code># pip install pinecone-client openai
@@ -237,80 +330,80 @@ res = index.query(
 for m in res["matches"]:
     print(m["id"], round(m["score"], 3), m["metadata"]["section"])</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Klienty i indeks</strong> -- Klient OpenAI dlja embeddingov i indeks docs v Pinecone - hranilishche vektorov.</li>
-          <li><strong>Funkcija embed</strong> -- Vspomogatelnaja funkcija: tekst -> vektor toj zhe modelju dlja store i poiska.</li>
-          <li><strong>Upsert s metadata</strong> -- Kladem v bazu vektor vmeste s metadata (source, section, text) - baza hranit ih rjadom.</li>
-          <li><strong>Poisk s filtrom</strong> -- Ishchem top-3 blizhajshih, no snachala suzhaem poisk filtrom po metadata (section vozvrat).</li>
-          <li><strong>Vyvod sovpadenij</strong> -- Pechataem id, cosine-score i razdel kazhdogo najdennogo sovpadenija.</li>
+          <li><strong>Clients and index</strong> -- The OpenAI client for embeddings and the docs index in Pinecone - the vector store.</li>
+          <li><strong>embed helper</strong> -- A helper: text -> vector with the same model for both store and search.</li>
+          <li><strong>Upsert with metadata</strong> -- Put each vector into the store together with its metadata (source, section, text) - the store keeps them side by side.</li>
+          <li><strong>Filtered search</strong> -- Search for the top-3 nearest, but first narrow the search with a metadata filter (section vozvrat).</li>
+          <li><strong>Print matches</strong> -- Print the id, cosine score and section of each returned match.</li>
         </ol>
       </figure>
-      <p>База сама хранит векторы, сама ищет ближайших и возвращает top-k вместе с их косинусной близостью - вам не нужно писать перебор руками.</p>
+      <p data-pk="problem.p3">The database stores the vectors itself, searches for the nearest itself, and returns the top-k together with their cosine closeness - you do not have to write a scan by hand.</p>
     </section>
 
     <section aria-labelledby="pr-why">
-      <h2 id="pr-why">Зачем отдельная база</h2>
-      <p>Векторная база решает две задачи сразу: <strong>хранит</strong> миллионы векторов и <strong>ищет</strong> среди них ближайшие по смыслу. Обычная база данных ищет по точному равенству или по ключевым словам; векторная - по геометрической близости в <code>dim</code>-мерном пространстве, то есть по смыслу (<a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">Pinecone, vector database basics</a>).</p>
-      <p>Это и есть то, чего не хватало на шаге поиска: быстрый смысловой поиск по всему архиву без побуквенного сравнения.</p>
+      <h2 id="pr-why" data-pk="why.h2">Why a separate database</h2>
+      <p data-pk="why.p1">A vector database solves two tasks at once: it <strong>stores</strong> millions of vectors and <strong>searches</strong> among them for the nearest by meaning. An ordinary database searches by exact equality or by keywords; a vector database searches by geometric closeness in <code>dim</code>-dimensional space, that is, by meaning (<a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">Pinecone, vector database basics</a>).</p>
+      <p data-pk="why.p2">This is exactly what was missing at the search step: fast semantic search over the whole archive without letter-by-letter comparison.</p>
     </section>
 
     <section aria-labelledby="pr-ann">
-      <h2 id="pr-ann">Приближенный поиск ближайших соседей (ANN)</h2>
-      <p>Точный поиск ближайших соседей (kNN) сравнивает запрос со всеми векторами - это гарантирует правильный ответ, но растет линейно с размером архива. При миллионах фрагментов используют <strong>приближенный</strong> поиск (ANN, approximate nearest neighbour): он почти всегда находит тех же соседей, но во много раз быстрее, жертвуя небольшой долей точности ради скорости.</p>
-      <p>Распространенный алгоритм ANN - <strong>HNSW</strong> (Hierarchical Navigable Small World): многослойный граф, по которому поиск "прыгает" от дальних узлов к ближайшим за логарифмическое число шагов вместо перебора всего множества (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>). Другие системы строят индексы поверх библиотек вроде <a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">FAISS</a>, которая специально сделана для быстрого поиска по миллионам векторов.</p>
+      <h2 id="pr-ann" data-pk="ann.h2">Approximate nearest neighbour search (ANN)</h2>
+      <p data-pk="ann.p1">Exact nearest-neighbour search (kNN) compares the query against all vectors - this guarantees the correct answer but grows linearly with the archive size. With millions of fragments people use <strong>approximate</strong> search (ANN, approximate nearest neighbour): it almost always finds the same neighbours but many times faster, sacrificing a small fraction of accuracy for speed.</p>
+      <p data-pk="ann.p2">A common ANN algorithm is <strong>HNSW</strong> (Hierarchical Navigable Small World): a multi-layer graph through which the search "hops" from distant nodes to the nearest in a logarithmic number of steps instead of scanning the whole set (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>). Other systems build indexes on top of libraries like <a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">FAISS</a>, which is purpose-built for fast search over millions of vectors.</p>
     </section>
 
     <section aria-labelledby="pr-topk">
-      <h2 id="pr-topk">Top-k и фильтры по метаданным</h2>
-      <p>При поиске вы просите не один самый близкий вектор, а <strong>top-k</strong> - несколько ближайших (часто k=3..10). Это дает модели немного запасных кусков на случай, если самый ближайший не полностью покрывает вопрос.</p>
-      <p>Вместе с вектором в базе хранятся <strong>метаданные</strong> (metadata) - источник, раздел, дата, права доступа. Фильтры по метаданным сужают поиск до нужного подмножества перед тем, как искать ближайших: например, только документы этого отдела или только то, что свежее определенной даты (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). В коде выше это <code>filter={"section": "vozvrat"}</code>.</p>
+      <h2 id="pr-topk" data-pk="topk.h2">Top-k and metadata filters</h2>
+      <p data-pk="topk.p1">In a search you ask not for the single closest vector but for the <strong>top-k</strong> - several nearest ones (often k=3..10). This gives the model a few spare pieces in case the closest one does not fully cover the question.</p>
+      <p data-pk="topk.p2">Together with the vector, the database stores <strong>metadata</strong> - source, section, date, access rights. Metadata filters narrow the search to the needed subset before searching for the nearest: for example, only documents from this department or only what is fresher than a certain date (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). In the code above this is <code>filter={"section": "vozvrat"}</code>.</p>
     </section>
 
     <section aria-labelledby="pr-scale">
-      <h2 id="pr-scale">Масштаб: миллионы фрагментов без перебора</h2>
-      <p>Именно ANN-индекс делает смысловой поиск практичным на большом архиве. Вместо сравнения запроса с каждым из миллионов векторов граф HNSW приводит к ответу за логарифмическое число шагов (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>). Поэтому из 100000+ фрагментов top-5 ближайших достается за миллисекунды, а не за полный проход по базе.</p>
+      <h2 id="pr-scale" data-pk="scale.h2">Scale: millions of fragments without a scan</h2>
+      <p data-pk="scale.p1">It is exactly the ANN index that makes semantic search practical on a large archive. Instead of comparing the query against each of millions of vectors, the HNSW graph leads to the answer in a logarithmic number of steps (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>). So from 100000+ fragments the top-5 nearest are fetched in milliseconds, not in a full pass over the database.</p>
     </section>
 
     <section aria-labelledby="pr-when">
-      <h2 id="pr-when">Когда векторная база не нужна</h2>
-      <p>Векторная база - не всегда правильный выбор:</p>
+      <h2 id="pr-when" data-pk="when.h2">When you do not need a vector database</h2>
+      <p data-pk="when.p1">A vector database is not always the right choice:</p>
       <ul>
-        <li><strong>Маленький корпус.</strong> При нескольких сотнях или тысяче фрагментов точный перебор (kNN) в памяти прост, достаточно быстр и не требует отдельной инфраструктуры.</li>
-        <li><strong>Точное совпадение важнее смысла.</strong> Если вам нужен поиск по точным кодам, артикулам или ID - обычная база или полнотекстовый индекс точнее и дешевле.</li>
-        <li><strong>Уже есть подходящая база.</strong> Некоторые обычные СУБД поддерживают векторный поиск как расширение (например pgvector для PostgreSQL, <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a>) - тогда отдельная специальная база может быть избыточна.</li>
+        <li data-pk="when.li1"><strong>Small corpus.</strong> With a few hundred or a thousand fragments, an exact in-memory scan (kNN) is simple, fast enough, and needs no separate infrastructure.</li>
+        <li data-pk="when.li2"><strong>Exact match matters more than meaning.</strong> If you need to search by exact codes, SKUs, or IDs - an ordinary database or a full-text index is more precise and cheaper.</li>
+        <li data-pk="when.li3"><strong>You already have a suitable database.</strong> Some ordinary DBMSs support vector search as an extension (for example pgvector for PostgreSQL, <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a>) - then a separate specialized database may be redundant.</li>
       </ul>
-      <p>Правило: берите векторную базу, когда корпус большой И поиск идет именно по смыслу. Иначе она добавляет сложность без выгоды.</p>
+      <p data-pk="when.p2">The rule: take a vector database when the corpus is large AND the search is genuinely by meaning. Otherwise it adds complexity without payoff.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Malkov &amp; Yashunin, 2016. Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs. <a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">arxiv.org/abs/1603.09320</a></li>
-        <li>Johnson, Douze &amp; Jegou, 2017. Billion-scale similarity search with GPUs (FAISS). <a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">arxiv.org/abs/1702.08734</a></li>
-        <li>Pinecone. Database overview + metadata filtering. <a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">docs.pinecone.io/guides/get-started/overview</a></li>
-        <li>pgvector. Open-source vector similarity search for PostgreSQL. <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">github.com/pgvector/pgvector</a></li>
+        <li data-pk="sources.li1">Malkov &amp; Yashunin, 2016. Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs. <a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">arxiv.org/abs/1603.09320</a></li>
+        <li data-pk="sources.li2">Johnson, Douze &amp; Jegou, 2017. Billion-scale similarity search with GPUs (FAISS). <a href="https://arxiv.org/abs/1702.08734" target="_blank" rel="noopener">arxiv.org/abs/1702.08734</a></li>
+        <li data-pk="sources.li3">Pinecone. Database overview + metadata filtering. <a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">docs.pinecone.io/guides/get-started/overview</a></li>
+        <li data-pk="sources.li4">pgvector. Open-source vector similarity search for PostgreSQL. <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">github.com/pgvector/pgvector</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>Откройте интерактив ann-topk-drill: найдите узел-запрос и пройдите по нарисованному query path к его top-k соседям. Сделайте drill (semantic zoom) в одного из выбранных соседей и посмотрите его <code>cosine</code> и <code>metadata</code>.</li>
-        <li>Сравните, что вернется с фильтром по метаданным и без него: в коде выше уберите <code>filter={"section": "vozvrat"}</code> и посмотрите, как меняется набор top-k.</li>
-        <li>Прикиньте, нужна ли векторная база вашему случаю: сколько у вас фрагментов и ищете вы по смыслу или по точному совпадению - сверьтесь с разделом "Когда векторная база не нужна".</li>
+        <li data-pk="try.li1">Open the ann-topk-drill interaction: find the query node and walk the drawn query path to its top-k neighbours. Drill (semantic zoom) into one of the selected neighbours and look at its <code>cosine</code> and <code>metadata</code>.</li>
+        <li data-pk="try.li2">Compare what comes back with and without a metadata filter: in the code above remove <code>filter={"section": "vozvrat"}</code> and see how the top-k set changes.</li>
+        <li data-pk="try.li3">Estimate whether a vector database fits your case: how many fragments do you have, and do you search by meaning or by exact match - check against the section "When you do not need a vector database".</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Векторы в индексе, ближайшие находятся быстро - дальше нужно превратить запрос пользователя в вектор и собрать top-k на живом запросе. Следующая остановка: <strong>search</strong> (поиск по смыслу во время запроса).</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next1">The vectors are in the index and the nearest are found quickly - next you need to turn the user's query into a vector and assemble the top-k on a live request. The next stop: <strong>search</strong> (searching by meaning at query time).</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -326,14 +419,15 @@ for m in res["matches"]:
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

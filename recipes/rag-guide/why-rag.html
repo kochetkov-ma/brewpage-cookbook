@@ -1,10 +1,100 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Зачем нужен RAG - с RAG / без RAG - RAG С НУЛЯ</title>
-<meta name="description" content="Зачем нужен RAG: один вопрос, два тракта - из памяти модели и по найденному источнику. Интерактивное сравнение BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Why you need RAG - fresh, grounded answers - RAG Guide</title>
+<meta name="description" content="Why RAG: a plain model goes stale and never saw your private data. RAG feeds fresh facts at query time, cuts fabrications, and links back to sources.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Why you need RAG - fresh, grounded answers">
+<meta property="og:description" content="Why RAG: a plain model goes stale and never saw your private data. RAG feeds fresh facts at query time, cuts fabrications, and links back to sources.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Why you need RAG - fresh, grounded answers">
+<meta name="twitter:description" content="Why RAG: a plain model goes stale and never saw your private data. RAG feeds fresh facts at query time, cuts fabrications, and links back to sources.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Why you need RAG - fresh, grounded answers",
+  "description": "Why RAG: a plain model goes stale and never saw your private data. RAG feeds fresh facts at query time, cuts fabrications, and links back to sources.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Why you need RAG",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file
      + this section's own CSS. Swapping the theme <link> is the only reskin. -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,13 +102,13 @@
 <link rel="stylesheet" href="shared/css/sections/why-rag.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К сравнению" data-en="Skip to the comparison">К сравнению</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К сравнению" data-en="Skip to the comparison">Skip to the comparison</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" aria-label="К карте маршрута" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -28,8 +118,8 @@
         </svg>
       </a>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">Путеводитель для начинающих</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">A field guide for beginners</div>
       </div>
     </div>
     <div class="site-header__nav">
@@ -37,39 +127,41 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
-               aria-controls="rag-search-results" />
+               aria-controls="rag-search-results"
+               aria-label="Search the guide" data-i18n-aria="searchLabel" data-aria-ru="Поиск по руководству" data-aria-en="Search the guide" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            aria-label="Search results" data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
       </div>
       <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
-      <a class="back-to-map" href="index.html" aria-label="Вернуться к карте маршрута">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
 
   <main id="main" tabindex="-1">
-  <!-- ===================== comparison plate (Зачем нужен RAG) ===================== -->
+  <!-- ===================== comparison plate (Why you need RAG) ===================== -->
   <section class="plate" data-component="comparison" aria-labelledby="whyTitle">
     <div class="plate-head">
       <div class="title-block">
-        <nav class="back-to-map" aria-label="Хлебные крошки">
-          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Маршрут</a>
+        <nav class="back-to-map" data-i18n-aria aria-label="Breadcrumbs" data-aria-ru="Хлебные крошки" data-aria-en="Breadcrumbs">
+          <a href="index.html" class="crumb-link" data-i18n="crumbMap" data-ru="Маршрут" data-en="Route">Route</a>
           <span class="sep" aria-hidden="true">&rsaquo;</span>
-          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Зачем он нужен" data-en="Why you need it">Зачем он нужен</span>
+          <span class="crumb-current" aria-current="page" data-i18n="crumbHere" data-ru="Зачем он нужен" data-en="Why you need it">Why you need it</span>
         </nav>
-        <h1 id="whyTitle" data-i18n="whyTitle" data-ru="Зачем нужен RAG" data-en="Why you need RAG">Зачем нужен RAG</h1>
-        <p data-i18n="whySub" data-ru="Один вопрос, два тракта: слева модель отвечает из памяти, справа - по источнику. Сравнение и есть урок." data-en="One question, two tracks: on the left the model answers from memory, on the right from a source. The comparison is the lesson.">Один вопрос, два тракта: слева модель отвечает из памяти, справа - по источнику. Сравнение и есть урок.</p>
+        <h1 id="whyTitle" data-i18n="whyTitle" data-ru="Зачем нужен RAG" data-en="Why you need RAG">Why you need RAG</h1>
+        <p data-i18n="whySub" data-ru="Один вопрос, два тракта: слева модель отвечает из памяти, справа - по источнику. Сравнение и есть урок." data-en="One question, two tracks: on the left the model answers from memory, on the right from a source. The comparison is the lesson.">One question, two tracks: on the left the model answers from memory, on the right from a source. The comparison is the lesson.</p>
       </div>
       <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -91,12 +183,12 @@
 
     <!-- the shared question both tracks answer -->
     <p class="cmp-question">
-      <span data-i18n="cmpQ" data-ru='Вопрос: "Какой лимит загрузки файлов на тарифе Pro?"' data-en='Question: "What is the file-upload limit on the Pro plan?"'>Вопрос: "Какой лимит загрузки файлов на тарифе Pro?"</span>
-      <span class="note" data-i18n="cmpNote" data-ru="ответ недавно изменился - память модели устарела" data-en="the answer changed recently - the model memory is stale">ответ недавно изменился - память модели устарела</span>
+      <span data-i18n="cmpQ" data-ru='Вопрос: "Какой лимит загрузки файлов на тарифе Pro?"' data-en='Question: "What is the file-upload limit on the Pro plan?"'>Question: "What is the file-upload limit on the Pro plan?"</span>
+      <span class="note" data-i18n="cmpNote" data-ru="ответ недавно изменился - память модели устарела" data-en="the answer changed recently - the model memory is stale">the answer changed recently - the model memory is stale</span>
     </p>
 
-    <!-- earned-progress strip: MAIN PATH = the с-RAG track sequence (Запрос ->
-         Эмбеддинг -> Векторный индекс -> Сборка контекста -> Ответ). The без-RAG
+    <!-- earned-progress strip: MAIN PATH = the with-RAG track sequence (Query ->
+         Embedding -> Vector index -> Context assembly -> Answer). The without-RAG
          track + all level-2 deeps are SIDE (optional, never gate). -->
     <div class="progress-strip js-only" data-component="progress" aria-hidden="true">
       <span class="pcount"></span>
@@ -109,7 +201,7 @@
 
     <!-- why B is better (built by comparison.js) -->
     <section class="cmp-takeaways js-only" aria-labelledby="tkTitle">
-      <h2 id="tkTitle" data-i18n="tkTitle" data-ru="Почему ответ справа лучше" data-en="Why the right-hand answer is better">Почему ответ справа лучше</h2>
+      <h2 id="tkTitle" data-i18n="tkTitle" data-ru="Почему ответ справа лучше" data-en="Why the right-hand answer is better">Why the right-hand answer is better</h2>
       <div data-slot="takeaways"></div>
     </section>
 
@@ -117,14 +209,14 @@
          drilldown-zoom.js mounts on [data-component="drilldown-host"] and finds
          its [data-slot="crumbs"]/[data-slot="zoomout"]/[data-slot="panel"]; the
          .drill-layer / .drill-stage shell + show/scale-in is comparison.js's. -->
-    <div class="drill-layer" data-slot="drill-layer" role="dialog" aria-modal="true" aria-label="Зум в этап">
+    <div class="drill-layer" data-slot="drill-layer" role="dialog" aria-modal="true" data-i18n-aria aria-label="Zoom into a stage" data-aria-ru="Зум в этап" data-aria-en="Zoom into a stage">
       <div class="drill-stage" data-slot="drill-stage">
         <div class="drill-card" data-component="drilldown-host">
           <div class="drill-toolbar">
-            <nav class="breadcrumb" data-slot="crumbs" aria-label="Уровень приближения"></nav>
+            <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень приближения" data-aria-en="Zoom level"></nav>
             <!-- zoom-out (lens-minus) is built by drilldown-zoom.js if absent;
                  we ship it so it sits in this toolbar row. -->
-            <button class="zoomout" type="button" data-slot="zoomout" aria-label="Выйти на уровень выше" disabled>
+            <button class="zoomout" type="button" data-slot="zoomout" data-i18n-aria="zoomOut" aria-label="Zoom out one level" data-aria-ru="Выйти на уровень выше" data-aria-en="Zoom out one level" disabled>
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
                 <line x1="15.2" y1="15.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -142,78 +234,78 @@
     <!-- ===== NO-JS fallback: full static end-state of both tracks ===== -->
     <div class="no-js-only">
       <div class="tracks">
-        <section class="track track--A" aria-label="Без RAG">
-          <span class="track__tag">Без RAG</span>
-          <p class="track__sub">Модель отвечает из памяти - извлечения нет</p>
+        <section class="track track--A" aria-label="Without RAG">
+          <span class="track__tag">Without RAG</span>
+          <p class="track__sub">The model answers from memory - there is no retrieval</p>
           <div class="flow">
             <div class="node cmp-node shown">
-              <span class="cmp-node__k">Запрос</span>
-              <span class="cmp-node__t">Вопрос пользователя</span>
-              <span class="cmp-node__d">"Какой лимит загрузки файлов на тарифе Pro?"</span>
+              <span class="cmp-node__k">Query</span>
+              <span class="cmp-node__t">The user's question</span>
+              <span class="cmp-node__d">"What is the file-upload limit on the Pro plan?"</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#a55a35" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node cmp-node--llmA shown">
-              <span class="cmp-node__k">LLM - только веса</span>
-              <span class="cmp-node__t">Ответ из замороженных знаний</span>
-              <span class="cmp-node__d">training cutoff: <span class="mono">обучение до 2024-06</span>. Свежего источника нет - ответ собран из весов.</span>
-              <span class="freezetag shown">веса заморожены - извлечения нет</span>
+              <span class="cmp-node__k">LLM - weights only</span>
+              <span class="cmp-node__t">An answer from frozen knowledge</span>
+              <span class="cmp-node__d">training cutoff: <span class="mono">trained up to 2024-06</span>. No fresh source - the answer is assembled from the weights.</span>
+              <span class="freezetag shown">weights frozen - no retrieval</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#a55a35" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node cmp-node--out-bad shown">
-              <span class="cmp-node__k">Ответ</span>
-              <span class="cmp-node__t">"Лимит - 100 файлов."</span>
-              <span class="cmp-node__d"><span class="stale">источник не указан - данные могли устареть</span></span>
-              <span class="cmp-flag">возможна галлюцинация</span>
+              <span class="cmp-node__k">Answer</span>
+              <span class="cmp-node__t">"The limit is 100 files."</span>
+              <span class="cmp-node__d"><span class="stale">no source given - the data may be stale</span></span>
+              <span class="cmp-flag">a hallucination is possible</span>
             </div>
           </div>
         </section>
-        <section class="track track--B" aria-label="С RAG">
-          <span class="track__tag">С RAG</span>
-          <p class="track__sub">Модель отвечает по найденному источнику</p>
+        <section class="track track--B" aria-label="With RAG">
+          <span class="track__tag">With RAG</span>
+          <p class="track__sub">The model answers from the source it found</p>
           <div class="flow">
             <div class="node cmp-node shown">
-              <span class="cmp-node__k">Запрос</span>
-              <span class="cmp-node__t">Вопрос пользователя</span>
-              <span class="cmp-node__d">"Какой лимит загрузки файлов на тарифе Pro?"</span>
+              <span class="cmp-node__k">Query</span>
+              <span class="cmp-node__t">The user's question</span>
+              <span class="cmp-node__d">"What is the file-upload limit on the Pro plan?"</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node shown">
-              <span class="cmp-node__k">Эмбеддинг</span>
-              <span class="cmp-node__t">Вопрос -&gt; вектор</span>
-              <span class="cmp-node__d">текст кодируется в вектор размерности <span class="mono">1536</span> для поиска по смыслу</span>
+              <span class="cmp-node__k">Embedding</span>
+              <span class="cmp-node__t">Question -&gt; vector</span>
+              <span class="cmp-node__d">the text is encoded into a vector of dimension <span class="mono">1536</span> for meaning-based search</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node shown">
-              <span class="cmp-node__k">Векторный индекс - топ-k</span>
-              <span class="cmp-node__t">Поиск свежих фрагментов</span>
-              <span class="cmp-node__d">найден чанк <span class="mono">limits.md</span> (обновлён сегодня), cosine <span class="mono">0.94</span></span>
+              <span class="cmp-node__k">Vector index - top-k</span>
+              <span class="cmp-node__t">Search for fresh fragments</span>
+              <span class="cmp-node__d">found chunk <span class="mono">limits.md</span> (updated today), cosine <span class="mono">0.94</span></span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node cmp-node--grounding shown">
-              <span class="cmp-node__k">Сборка контекста</span>
-              <span class="cmp-node__t">Фрагмент -&gt; промпт LLM</span>
-              <span class="cmp-node__d">найденный текст подкладывается в запрос как опора - <span class="mono">grounding</span></span>
+              <span class="cmp-node__k">Context assembly</span>
+              <span class="cmp-node__t">Fragment -&gt; LLM prompt</span>
+              <span class="cmp-node__d">the found text is slotted into the request as support - <span class="mono">grounding</span></span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node cmp-node--out-good shown">
-              <span class="cmp-node__k">Ответ со ссылкой</span>
-              <span class="cmp-node__t">"На Pro - до 500 файлов, суммарно 20 МБ [1]."</span>
-              <span class="cmp-node__d"><span class="cite">[1] limits.md, разд. 2</span> - <span class="fresh">источник обновлён сегодня</span></span>
-              <span class="cmp-flag good">опора на источник - есть цитата</span>
+              <span class="cmp-node__k">Answer with a citation</span>
+              <span class="cmp-node__t">"On Pro - up to 500 files, 20 MB in total [1]."</span>
+              <span class="cmp-node__d"><span class="cite">[1] limits.md, sec. 2</span> - <span class="fresh">source updated today</span></span>
+              <span class="cmp-flag good">grounded on a source - has a citation</span>
             </div>
           </div>
         </section>
       </div>
-      <section class="cmp-takeaways" aria-label="Что даёт RAG">
-        <h2>Почему ответ справа лучше</h2>
+      <section class="cmp-takeaways" aria-label="What RAG gives you">
+        <h2>Why the right-hand answer is better</h2>
         <div class="tk-grid">
-          <div class="tk"><span class="tk__mk" aria-hidden="true">1</span><span class="tk__body"><b>Свежие и приватные данные без переобучения.</b> RAG подкладывает источник в момент ответа.</span></div>
-          <div class="tk"><span class="tk__mk" aria-hidden="true">2</span><span class="tk__body"><b>Меньше выдуманных фактов.</b> Ответ опирается на найденный текст (grounding).</span></div>
-          <div class="tk"><span class="tk__mk" aria-hidden="true">3</span><span class="tk__body"><b>Ссылки на источники.</b> Цитата <span class="cite">[1]</span> ведёт к документу и разделу.</span></div>
-          <div class="tk"><span class="tk__mk" aria-hidden="true">4</span><span class="tk__body"><b>Дешевле дообучения.</b> Обновить документ в индексе - минуты.</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">1</span><span class="tk__body"><b>Fresh and private data without retraining.</b> RAG slots a source in at answer time.</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">2</span><span class="tk__body"><b>Fewer fabricated facts.</b> The answer rests on the found text (grounding).</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">3</span><span class="tk__body"><b>Links to sources.</b> The citation <span class="cite">[1]</span> leads to the document and section.</span></div>
+          <div class="tk"><span class="tk__mk" aria-hidden="true">4</span><span class="tk__body"><b>Cheaper than fine-tuning.</b> Updating a document in the index takes minutes.</span></div>
         </div>
       </section>
-      <p class="legend-hint">Включите JavaScript, чтобы увеличить этапы тракта.</p>
+      <p class="legend-hint">Turn on JavaScript to zoom into the stages of a track.</p>
     </div>
   </section>
 
@@ -221,12 +313,12 @@
        Ported from content/ru/why-rag.md (strategy A: md-as-source, hand-ported).
        Always visible: reads fully with JS on or off. The .js-only comparison
        above only ENHANCES; this prose is the chapter text. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="why-rag">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема: модель устаревает и не знает вашего</h2>
-      <p>Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.</p>
-      <p>RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem: the model goes stale and does not know yours</h2>
+      <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
+      <p data-pk="problem.p2">RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="why-rag-two-track">
       <figcaption class="code-block__cap" data-i18n data-ru="Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku).</figcaption>
       <pre><code># Tot zhe vopros dvumya putyami. Track A: bez konteksta. Track B: s retrieval.
@@ -257,72 +349,72 @@ print("BEZ RAG:", ask())
 retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac."
 print("S RAG: ", ask(context=retrieved))</code></pre>
       <ol class="code-annot-list no-js-only">
-        <li><strong>Klient i vopros</strong> -- Odin Anthropic-klient i odin fiksirovannyj vopros pro vnutrennjuju politiku - tochka, gde obychnaja model ne znaet vashih dannyh.</li>
-        <li><strong>Vetka s kontekstom</strong> -- Kogda kontekst peredan, instrukcija velit otvechat tolko po nemu i chestno skazat 'etogo net v dokumentah', esli otveta net - osnova groundinga.</li>
-        <li><strong>Vetka bez konteksta</strong> -- Bez konteksta prompt - eto golyj vopros; vyzov Messages API odinakov dlja oboih putej, otlichaetsja tolko vhodnoj prompt.</li>
-        <li><strong>Track A: bez RAG</strong> -- Vyzov bez konteksta: otvet idet iz parametricheskoj pamjati i mozhet byt vydumkoj pro imenno vashu politiku.</li>
-        <li><strong>Track B: s RAG</strong> -- Snachala retrieval daet realnyj chunk, potom on idet v kontekst i otvet zazemlen na nem. Otvet nikogda ne pishetsja do podstanovki konteksta.</li>
+        <li><strong>Client and question</strong> -- One Anthropic client and one fixed question about internal policy - the point where an ordinary model does not know your data.</li>
+        <li><strong>With-context branch</strong> -- When context is passed, the instruction tells the model to answer only from it and to say 'etogo net v dokumentah' if there is no answer - the basis of grounding.</li>
+        <li><strong>No-context branch</strong> -- Without context the prompt is the bare question; the Messages API call is identical for both paths, only the input prompt differs.</li>
+        <li><strong>Track A: no RAG</strong> -- Call with no context: the answer comes from parametric memory and may be a fabrication about your specific policy.</li>
+        <li><strong>Track B: with RAG</strong> -- Retrieval supplies a real chunk first, then it goes into the context and the answer is grounded on it. The answer is never written before the context is substituted in.</li>
       </ol>
       </figure>
-      <p>Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).</p>
+      <p data-pk="problem.p3">Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).</p>
     </section>
 
     <section aria-labelledby="pr-fails">
-      <h2 id="pr-fails">Почему обычная модель не справляется</h2>
-      <p>Две причины, обе структурные, а не "плохо спросили":</p>
+      <h2 id="pr-fails" data-pk="fails.h2">Why an ordinary model cannot cope</h2>
+      <p data-pk="fails.p1">Two reasons, both structural rather than "you asked badly":</p>
       <ul>
-        <li><strong>Training cutoff.</strong> После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>).</li>
-        <li><strong>Нет приватных данных.</strong> Ваши внутренние документы не были и не будут в общедоступном обучающем корпусе, поэтому любой ответ о них без retrieval - догадка.</li>
+        <li data-pk="fails.li1"><strong>Training cutoff.</strong> After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>).</li>
+        <li data-pk="fails.li2"><strong>No private data.</strong> Your internal documents were not and will not be in the public training corpus, so any answer about them without retrieval is a guess.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-fresh">
-      <h2 id="pr-fresh">Свежие и приватные данные без переобучения</h2>
-      <p>RAG хранит знания ВНЕ модели - во внешнем индексе, которым вы управляете сами. Добавить или обновить факт = переиндексировать один документ, а не переобучать модель. Именно за этим Lewis et al., 2020 и разделили параметрическую память (веса модели) и непараметрическую (внешний индекс документов): индекс можно менять без переобучения (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Практически: обновили строку в файле - помощник сразу отвечает по новой версии.</p>
+      <h2 id="pr-fresh" data-pk="fresh.h2">Fresh and private data without retraining</h2>
+      <p data-pk="fresh.p1">RAG keeps knowledge OUTSIDE the model - in an external index you manage yourself. Adding or updating a fact = re-indexing one document, not retraining the model. That is exactly why Lewis et al., 2020 separated parametric memory (the model's weights) from non-parametric memory (the external document index): the index can be changed without retraining (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). In practice: you update a line in a file and the assistant immediately answers from the new version.</p>
     </section>
 
     <section aria-labelledby="pr-ground">
-      <h2 id="pr-ground">Меньше выдуманных фактов: grounding + цитаты</h2>
-      <p>Когда модель отвечает по поданному контексту, ответ заземлен (grounded) на конкретных фрагментах, и к каждому утверждению можно приложить ссылку на chunk-источник. Это и было главным результатом исходной работы: RAG дает более конкретные и фактичные ответы, чем чисто параметрическая модель (Lewis et al., 2020, <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Важно только подавать немного самых релевантных кусков и ставить главное ближе к краям prompt: модели хуже используют то, что зарыто в середине длинного контекста (Liu et al., 2023, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>).</p>
+      <h2 id="pr-ground" data-pk="ground.h2">Fewer fabricated facts: grounding + citations</h2>
+      <p data-pk="ground.p1">When the model answers from the supplied context, the answer is grounded on concrete fragments, and you can attach a link to the source chunk for every claim. This was the main result of the original work: RAG gives more specific and factual answers than a purely parametric model (Lewis et al., 2020, <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). The only catch is to supply just a few of the most relevant pieces and put the important ones nearer the edges of the prompt: models use what is buried in the middle of a long context less well (Liu et al., 2023, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>).</p>
     </section>
 
     <section aria-labelledby="pr-cost">
-      <h2 id="pr-cost">Стоимость: RAG против дообучения</h2>
-      <p>Дообучение (fine-tuning) требует собрать dataset, запустить обучение и повторять это при каждом обновлении данных - это отдельный цикл работы и расходов (<a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). RAG же добавляет один шаг retrieval перед обычным вызовом модели и индексирует новые документы инкрементально. Когда задача - дать модели ФАКТЫ, которые часто меняются, RAG обычно дешевле и быстрее в поддержке; fine-tuning остается для задач ФОРМЫ и стиля. (Это инженерный компромисс, а не абсолют: считайте на своих объемах - см. главу production.)</p>
-      <p>Выше - интерактивная двухдорожечная трассировка одного запроса. <strong>Track A (без RAG):</strong> запрос идет прямо в модель -&gt; устаревший или выдуманный ответ. <strong>Track B (с RAG):</strong> запрос сначала наполняет box контекста найденными чанками, и только ПОСЛЕ этого появляется заземленный ответ. Основной путь - Track B; некоторые узлы открываются дриллом (semantic zoom камеры) в подробность. Заземленный зеленый ответ никогда не рисуется до того, как retrieval завершен - это и есть дидактический смысл motion. Без JS обе дорожки показаны статической inline-SVG-схемой с полным текстом.</p>
+      <h2 id="pr-cost" data-pk="cost.h2">Cost: RAG versus fine-tuning</h2>
+      <p data-pk="cost.p1">Fine-tuning requires collecting a dataset, running training, and repeating that at every data update - a separate cycle of work and expense (<a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). RAG, by contrast, adds one retrieval step before an ordinary model call and indexes new documents incrementally. When the task is to give the model FACTS that change often, RAG is usually cheaper and faster to maintain; fine-tuning stays for tasks of FORM and style. (This is an engineering trade-off, not an absolute: do the math on your own volumes - see the production chapter.)</p>
+      <p data-pk="cost.p2">Below is an interactive two-track trace of one request. <strong>Track A (without RAG):</strong> the request goes straight to the model -&gt; a stale or fabricated answer. <strong>Track B (with RAG):</strong> the request first fills the context box with the retrieved chunks, and only AFTER that does the grounded answer appear. The main path is Track B; some nodes open by drill (semantic-zoom camera) into detail. The grounded green answer is never drawn before retrieval is complete - that is the didactic meaning of the motion. With JS off, both tracks are shown as a static inline-SVG schematic with the full text.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
-        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
-        <li>Anthropic. Models overview (model families, training cutoff). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
-        <li>Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
-        <li>OpenAI. Fine-tuning guide (cost/lifecycle contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a></li>
+        <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
+        <li data-pk="sources.li2">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li data-pk="sources.li3">Anthropic. Models overview (model families, training cutoff). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
+        <li data-pk="sources.li4">Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
+        <li data-pk="sources.li5">OpenAI. Fine-tuning guide (cost/lifecycle contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>Запустите Track B и проследите, как узел контекста заполняется чанками ДО того, как появится заземленный ответ.</li>
-        <li>Сравните Track A и Track B на одном вопросе: отметьте, что без retrieval ответ появляется сразу и без ссылки на источник.</li>
-        <li>Откройте дриллом узел контекста в Track B и посмотрите, какие именно чанки попали в prompt и в каком порядке.</li>
+        <li data-pk="try.li1">Run Track B and watch how the context node fills with chunks BEFORE the grounded answer appears.</li>
+        <li data-pk="try.li2">Compare Track A and Track B on one question: note that without retrieval the answer appears immediately and without a link to a source.</li>
+        <li data-pk="try.li3">Drill into the context node in Track B and see exactly which chunks made it into the prompt and in what order.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Следующая остановка - <strong>chunking</strong>: как резать большие документы на чанки retrieval-размера, где именно резать и как выбрать размер и overlap.</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next">The next stop is <strong>chunking</strong>: how to cut large documents into retrieval-sized chunks, where exactly to cut, and how to choose the size and overlap.</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -338,12 +430,13 @@ print("S RAG: ", ask(context=retrieved))</code></pre>
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

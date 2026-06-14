@@ -1,26 +1,101 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RAG С НУЛЯ - Atlas</title>
-<meta name="description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
-<!-- Open Graph / social card. og:url is a placeholder until the live URL is assigned at publish. -->
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>RAG Guide: build retrieval-augmented generation</title>
+<meta name="description" content="Learn RAG from zero in one interactive route: chunking, embeddings, vector search, context assembly, generation, evaluation, and going to production.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH">
+
+<!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BrewPage Cookbook">
-<meta property="og:title" content="RAG С НУЛЯ - Atlas">
-<meta property="og:description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
-<meta property="og:url" content="https://brewpage.app/REPLACE_AT_PUBLISH">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="RAG С НУЛЯ - Atlas">
-<meta name="twitter:description" content="RAG с нуля: одна страница, один маршрут от 0% до 100%. Интерактивный путеводитель BrewPage Cookbook.">
+<meta property="og:title" content="RAG Guide: build retrieval-augmented generation">
+<meta property="og:description" content="Learn RAG from zero in one interactive route: chunking, embeddings, vector search, context assembly, generation, evaluation, and going to production.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RAG Guide: build retrieval-augmented generation">
+<meta name="twitter:description" content="Learn RAG from zero in one interactive route: chunking, embeddings, vector search, context assembly, generation, evaluation, and going to production.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: WebSite + SearchAction, and the route ItemList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "RAG Guide",
+  "alternateName": "BrewPage Cookbook - RAG Guide",
+  "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH",
+  "inLanguage": "en",
+  "description": "Learn RAG from zero in one interactive route: chunking, embeddings, vector search, context assembly, generation, evaluation, and going to production.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "RAG Guide route",
+  "itemListOrder": "https://schema.org/ItemListOrderAscending",
+  "numberOfItems": 10,
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1,  "name": "What RAG is",      "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/what-rag.html" },
+    { "@type": "ListItem", "position": 2,  "name": "Why you need RAG", "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html" },
+    { "@type": "ListItem", "position": 3,  "name": "Chunking",         "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html" },
+    { "@type": "ListItem", "position": 4,  "name": "Embeddings",       "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/embedding.html" },
+    { "@type": "ListItem", "position": 5,  "name": "Vector store",     "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html" },
+    { "@type": "ListItem", "position": 6,  "name": "Search",           "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html" },
+    { "@type": "ListItem", "position": 7,  "name": "Context assembly", "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/assemble-context.html" },
+    { "@type": "ListItem", "position": 8,  "name": "Generation",       "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html" },
+    { "@type": "ListItem", "position": 9,  "name": "Evaluation",       "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html" },
+    { "@type": "ListItem", "position": 10, "name": "Production",       "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html" }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file.
      Swapping the theme <link> below is the ONLY differing line between variants. -->
 <link rel="stylesheet" href="shared/css/base.css">
 <link rel="stylesheet" href="shared/css/themes/atlas.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте маршрута" data-en="Skip to the route map">К карте маршрута</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте маршрута" data-en="Skip to the route map">Skip to the route map</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
@@ -34,21 +109,21 @@
         <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
       </svg>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">Путеводитель для начинающих</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Путеводитель для начинающих" data-en="A field guide for beginners">A field guide for beginners</div>
       </div>
     </div>
     <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-      <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+      <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
     </div>
   </header>
 
   <!-- ===================== hero ===================== -->
   <section class="hero">
-    <div class="kicker" data-i18n="heroKicker" data-ru="Экспедиция 0 -&gt; 100%" data-en="Expedition 0 -&gt; 100%">Экспедиция 0 -&gt; 100%</div>
-    <h1 data-i18n="heroTitle" data-ru="От нуля до RAG без предварительной подготовки" data-en="From zero to RAG with no prerequisites">От нуля до RAG без предварительной подготовки</h1>
-    <p class="promise" data-i18n="heroPromise" data-ru="Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо." data-en="One page, one route. Walk it from the trailhead to the summit and you understand RAG end to end. Nothing required, nowhere to go.">Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо.</p>
+    <div class="kicker" data-i18n="heroKicker" data-ru="Экспедиция 0 -&gt; 100%" data-en="Expedition 0 -&gt; 100%">Expedition 0 -&gt; 100%</div>
+    <h1 data-i18n="heroTitle" data-ru="От нуля до RAG без предварительной подготовки" data-en="From zero to RAG with no prerequisites">From zero to RAG with no prerequisites</h1>
+    <p class="promise" data-i18n="heroPromise" data-ru="Одна страница, один маршрут. Пройдите его от старта до вершины - и вы понимаете RAG целиком. Никаких требований, никуда уходить не надо." data-en="One page, one route. Walk it from the trailhead to the summit and you understand RAG end to end. Nothing required, nowhere to go.">One page, one route. Walk it from the trailhead to the summit and you understand RAG end to end. Nothing required, nowhere to go.</p>
     <svg class="rule" viewBox="0 0 200 18" aria-hidden="true" focusable="false">
       <line x1="0" y1="9" x2="78" y2="9" stroke="#bda878" stroke-width="1.5"/>
       <line x1="122" y1="9" x2="200" y2="9" stroke="#bda878" stroke-width="1.5"/>
@@ -61,8 +136,8 @@
   <section class="atlas" data-component="trail" aria-labelledby="mapTitle">
     <div class="atlas-head">
       <div class="title-block">
-        <h2 id="mapTitle" data-i18n="mapTitle" data-ru="Маршрут экспедиции" data-en="Expedition route">Маршрут экспедиции</h2>
-        <p data-i18n="mapSub" data-ru="Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку" data-en="Tap a flag or a list item to open its field note">Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку</p>
+        <h2 id="mapTitle" data-i18n="mapTitle" data-ru="Маршрут экспедиции" data-en="Expedition route">Expedition route</h2>
+        <p data-i18n="mapSub" data-ru="Нажмите на флажок или пункт в списке, чтобы открыть полевую заметку" data-en="Tap a flag or a list item to open its field note">Tap a flag or a list item to open its field note</p>
       </div>
       <!-- compass: title row ONLY (AtlasMD 3.1 HARD RULE) -->
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -88,7 +163,7 @@
         <polyline points="8,1.5 4,4.5 8,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
         <polyline points="22,1.5 26,4.5 22,7.5" fill="none" stroke="#7a6446" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span data-i18n="mapHint" data-ru="Проведите по карте" data-en="Swipe to pan the map">Проведите по карте</span>
+      <span data-i18n="mapHint" data-ru="Проведите по карте" data-en="Swipe to pan the map">Swipe to pan the map</span>
     </p>
 
     <div class="trail-shell desktop-trail">
@@ -306,7 +381,7 @@
 
     <!-- desktop chapter index -->
     <div class="legend-list-wrap">
-      <h3 class="legend-list-head" data-i18n="legendListHead" data-ru="Главы маршрута" data-en="Route chapters">Главы маршрута</h3>
+      <h3 class="legend-list-head" data-i18n="legendListHead" data-ru="Главы маршрута" data-en="Route chapters">Route chapters</h3>
       <ul class="legend-list" data-slot="legend"></ul>
     </div>
 
@@ -317,7 +392,7 @@
 
     <!-- field note (single-open detail in place) -->
     <div class="legend-wrap">
-      <div class="legend-hint" data-slot="hint" data-i18n="legendHint" data-ru="Выберите пункт маршрута выше." data-en="Pick a stop on the route above.">Выберите пункт маршрута выше.</div>
+      <div class="legend-hint" data-slot="hint" data-i18n="legendHint" data-ru="Выберите пункт маршрута выше." data-en="Pick a stop on the route above.">Pick a stop on the route above.</div>
       <div data-slot="panel" aria-live="polite"></div>
     </div>
 
@@ -325,21 +400,21 @@
          the full chapter list as the meaningful navigation + a note. -->
     <div class="no-js-only">
       <div class="legend-list-wrap">
-        <h3 class="legend-list-head">Главы маршрута</h3>
+        <h3 class="legend-list-head">Route chapters</h3>
         <ul class="legend-list">
-          <li class="is-start"><span class="lnum" style="width:auto;height:auto;border-radius:0;border:none;padding-right:8px;background:none">0%</span><span>С чего начать</span></li>
-          <li><a class="node" href="what-rag.html"><span class="name">Что такое RAG</span><span class="hint">10% - открыть главу</span></a></li>
-          <li><a class="node" href="why-rag.html"><span class="name">Зачем он нужен</span><span class="hint">20% - открыть главу</span></a></li>
-          <li><a class="node" href="search.html"><span class="name">Как работает поиск по документам</span><span class="hint">30% - открыть главу</span></a></li>
-          <li><span class="name">Разбиваем текст на чанки</span></li>
-          <li><span class="name">Эмбеддинги: текст в векторы</span></li>
-          <li><span class="name">Векторная база и поиск</span></li>
-          <li><span class="name">Собираем контекст для модели</span></li>
-          <li><span class="name">Генерация ответа</span></li>
-          <li><span class="name">Оценка качества</span></li>
-          <li class="is-terminal"><span class="name">Вывод в продакшн</span></li>
+          <li class="is-start"><span class="lnum" style="width:auto;height:auto;border-radius:0;border:none;padding-right:8px;background:none">0%</span><span>Where to start</span></li>
+          <li><a class="node" href="what-rag.html"><span class="name">What RAG is</span><span class="hint">10% - open the chapter</span></a></li>
+          <li><a class="node" href="why-rag.html"><span class="name">Why you need it</span><span class="hint">20% - open the chapter</span></a></li>
+          <li><a class="node" href="search.html"><span class="name">How document search works</span><span class="hint">30% - open the chapter</span></a></li>
+          <li><span class="name">Splitting text into chunks</span></li>
+          <li><span class="name">Embeddings: text into vectors</span></li>
+          <li><span class="name">Vector store and search</span></li>
+          <li><span class="name">Assembling context for the model</span></li>
+          <li><span class="name">Generating the answer</span></li>
+          <li><span class="name">Quality evaluation</span></li>
+          <li class="is-terminal"><span class="name">Going to production</span></li>
         </ul>
-        <p class="legend-hint">Включите JavaScript, чтобы открыть интерактивную карту маршрута.</p>
+        <p class="legend-hint">Turn on JavaScript to open the interactive route map.</p>
       </div>
     </div>
 
@@ -361,12 +436,13 @@
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>

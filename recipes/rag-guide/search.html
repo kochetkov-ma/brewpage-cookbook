@@ -1,10 +1,101 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Как работает поиск по документам - RAG С НУЛЯ</title>
-<meta name="description" content="Семантический поиск по документам: запрос становится вектором, kNN возвращает top-k ближайших фрагментов по косинусу. Интерактивная карта векторного пространства - BrewPage Cookbook.">
+
+<!-- ===== SEO: EN primary in source; RU via JS toggle. Locked decisions L1-L5. ===== -->
+<title>Semantic search at query time - RAG Guide</title>
+<meta name="description" content="Semantic search for RAG: turn the query into a vector and fetch the top-k closest fragments by cosine, matching by meaning rather than exact words.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#f3ead4">
+
+<!-- canonical -> param-less EN URL; ?lang=ru collapses here (L3) -->
+<link rel="canonical" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html">
+
+<!-- hreflang trio (L4). Research caveat: ru is JS-delivered, not separately indexable; kept per user lock. -->
+<link rel="alternate" hreflang="en" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html">
+<link rel="alternate" hreflang="ru" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html?lang=ru">
+<link rel="alternate" hreflang="x-default" href="https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="BrewPage Cookbook">
+<meta property="og:title" content="Semantic search at query time">
+<meta property="og:description" content="Semantic search for RAG: turn the query into a vector and fetch the top-k closest fragments by cosine, matching by meaning rather than exact words.">
+<meta property="og:url" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ru_RU">
+<meta property="og:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAG Guide - BrewPage Cookbook">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Semantic search at query time">
+<meta name="twitter:description" content="Semantic search for RAG: turn the query into a vector and fetch the top-k closest fragments by cosine, matching by meaning rather than exact words.">
+<meta name="twitter:image" content="https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1">
+
+<!-- favicons -->
+<link rel="icon" href="shared/og/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="shared/og/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="shared/og/apple-touch-icon.png">
+
+<!-- JSON-LD: TechArticle + BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Semantic search at query time",
+  "description": "Semantic search for RAG: turn the query into a vector and fetch the top-k closest fragments by cosine, matching by meaning rather than exact words.",
+  "image": "https://brewpage.app/public/REPLACE_AT_PUBLISH/shared/og/og-rag-guide.png?raw=1",
+  "inLanguage": "en",
+  "datePublished": "2026-06-14",
+  "dateModified": "2026-06-14",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "BrewPage Cookbook",
+    "url": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Search",
+      "item": "https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html"
+    }
+  ]
+}
+</script>
+
 <!-- shared-lib + theme-as-a-file: base.css (structure) + ONE theme tokens file +
      this section's own CSS. base.css / atlas.css are NEVER forked or edited. -->
 <link rel="stylesheet" href="shared/css/base.css">
@@ -12,12 +103,12 @@
 <link rel="stylesheet" href="shared/css/sections/search.css">
 </head>
 <body>
-<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте векторного пространства" data-en="Skip to the vector space map">К карте векторного пространства</a>
+<a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте векторного пространства" data-en="Skip to the vector space map">Skip to the vector space map</a>
 <div class="wrap">
 
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
-    <a class="site-header__brand" href="index.html" data-i18n-aria aria-label="К карте маршрута RAG С НУЛЯ" data-aria-ru="К карте маршрута RAG С НУЛЯ" data-aria-en="To the RAG ATLAS route map" style="text-decoration:none">
+    <a class="site-header__brand" href="index.html" data-i18n-aria aria-label="To the RAG ATLAS route map" data-aria-ru="К карте маршрута RAG С НУЛЯ" data-aria-en="To the RAG ATLAS route map" style="text-decoration:none">
       <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
         <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -26,8 +117,8 @@
         <circle cx="50" cy="50" r="5" fill="#b08a3e" stroke="#5c4a32" stroke-width="1"/>
       </svg>
       <div>
-        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG С НУЛЯ</p>
-        <div class="sub" data-i18n="brandSub" data-ru="Глава - Поиск по документам" data-en="Plate - Document search">Глава - Поиск по документам</div>
+        <p class="brand-title" data-i18n="brandTitle" data-ru="RAG С НУЛЯ" data-en="RAG ATLAS">RAG ATLAS</p>
+        <div class="sub" data-i18n="brandSub" data-ru="Глава - Поиск по документам" data-en="Plate - Document search">Plate - Document search</div>
       </div>
     </a>
     <div class="site-header__nav">
@@ -35,23 +126,25 @@
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
         <label class="visually-hidden" for="rag-search"
-               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Поиск по руководству</label>
+               data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
         <input id="rag-search" class="search-box__input" type="search"
-               placeholder="Поиск по главам" autocomplete="off" spellcheck="false"
+               placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
                aria-controls="rag-search-results" />
         <ul id="rag-search-results" class="search-box__results"
-            data-slot="results" role="listbox" aria-label="Результаты поиска" hidden></ul>
+            data-slot="results" role="listbox"
+            data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results"
+            aria-label="Search results" hidden></ul>
       </div>
       <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
-      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Вернуться к карте маршрута" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
+      <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
-        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">К карте</span>
+        <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
       </a>
       <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
-        <button type="button" data-lang="ru" class="active" aria-pressed="true">RU</button>
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
       </div>
     </div>
   </header>
@@ -63,9 +156,9 @@
     <!-- title row: compass lives ONLY here (AtlasMD 3.1 HARD RULE) -->
     <div class="plate-head">
       <div class="title-block">
-        <p class="eyebrow" data-i18n="eyebrow" data-ru="Карта векторного пространства" data-en="Vector space map">Карта векторного пространства</p>
-        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Как работает поиск по документам" data-en="How document retrieval works">Как работает поиск по документам</h1>
-        <p data-i18n="plateSub" data-ru="Семантический поиск: близость по смыслу, а не по словам" data-en="Semantic search: proximity by meaning, not by words">Семантический поиск: близость по смыслу, а не по словам</p>
+        <p class="eyebrow" data-i18n="eyebrow" data-ru="Карта векторного пространства" data-en="Vector space map">Vector space map</p>
+        <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Как работает поиск по документам" data-en="How document retrieval works">How document retrieval works</h1>
+        <p data-i18n="plateSub" data-ru="Семантический поиск: близость по смыслу, а не по словам" data-en="Semantic search: proximity by meaning, not by words">Semantic search: proximity by meaning, not by words</p>
       </div>
       <!-- compass: title row only, inert decoration -->
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
@@ -87,10 +180,10 @@
 
     <!-- toolbar row: breadcrumb + zoom-out (SEPARATE row, never the compass row) -->
     <div class="vmap-toolbar">
-      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Уровень масштаба" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
-        <span class="crumb-current" aria-current="step">Карта пространства</span>
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
+        <span class="crumb-current" aria-current="step">Space map</span>
       </nav>
-      <button type="button" class="zoomout" data-slot="zoomout" aria-label="Отдалить на уровень выше" disabled>
+      <button type="button" class="zoomout" data-slot="zoomout" data-i18n-aria aria-label="Zoom out one level" data-aria-ru="Отдалить на уровень выше" data-aria-en="Zoom out one level" disabled>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="10.5" cy="10.5" r="6.5"/>
@@ -213,12 +306,12 @@
        Ported from content/ru/search.md (strategy A: md-as-source, hand-ported).
        Always visible: reads fully with JS on or off. The .js-only vector-map
        above only ENHANCES; this prose is the chapter text. -->
-  <article class="chapter-prose" lang="ru">
+  <article class="chapter-prose" lang="en" data-prose="search">
 
     <section aria-labelledby="pr-problem">
-      <h2 id="pr-problem">Проблема</h2>
-      <p>Пользователь спрашивает: "как вернуть деньги за покупку". А в ваших документах нужный фрагмент называется "политика возврата средств" - ни слова "деньги", ни слова "вернуть" в нем нет. Полнотекстовый поиск по ключевым словам здесь промахнется: общих слов почти нет, а ответ лежит именно в этом фрагменте.</p>
-      <p>Решение - поиск по смыслу (semantic search): запрос превращаем в вектор той же моделью, что и фрагменты, и ищем в индексе top-k фрагментов (top-k - несколько самых близких, обычно 3..10), ближайших к нему по косинусной близости (cosine - косинус угла между векторами, чем он ближе к 1, тем ближе смысл) (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Этот шаг собирает все предыдущие в один живой запрос:</p>
+      <h2 id="pr-problem" data-pk="problem.h2">The problem</h2>
+      <p data-pk="problem.p1">The user asks: "how to get my money back for a purchase". But in your documents the relevant fragment is called "refund policy" - not a single word "money" or "back" appears in it. A full-text keyword search will miss here: there are almost no shared words, yet the answer lies in exactly this fragment.</p>
+      <p data-pk="problem.p2">The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This step gathers all the previous ones into one live request:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="search-retrieve">
         <figcaption class="code-block__cap" data-i18n data-ru="Zhivoj retrieve: zapros -> vektor toj zhe modelju -> top-k blizhajshih po cosine iz indeksa." data-en="Live retrieve: query -> vector with the same model -> top-k nearest by cosine from the index.">Zhivoj retrieve: zapros -&gt; vektor toj zhe modelju -&gt; top-k blizhajshih po cosine iz indeksa.</figcaption>
         <pre><code># pip install pinecone-client openai
@@ -242,77 +335,77 @@ for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
     print(cid, score, text[:40])
 # chunk pro vozvrat sredstv prihodit pervym - bez obshchih slov s zaprosom</code></pre>
         <ol class="code-annot-list no-js-only">
-          <li><strong>Ustanovka klientov</strong> -- Stavim klienty Pinecone i OpenAI - vektornaya baza plyus model embeddingov.</li>
-          <li><strong>Klienty i indeks</strong> -- Sozdaem klient OpenAI i otkryvaem indeks docs v Pinecone.</li>
-          <li><strong>Vektor zaprosa</strong> -- Prevrashchaem tekst zaprosa v vektor TOJ ZHE modelju, chto i chunki - inache prostranstva ne sovpadut.</li>
-          <li><strong>Top-k po cosine</strong> -- Otdaem vektor v indeks i beriom top-k blizhajshih, vozvrashchaja id, score i tekst.</li>
-          <li><strong>Zapusk na zaprose</strong> -- Zapuskaem retrieve na zhivom zaprose: nuzhnyj chunk prihodit pervym bez obshchih slov.</li>
+          <li><strong>Install clients</strong> -- Install the Pinecone and OpenAI clients - the vector store plus the embedding model.</li>
+          <li><strong>Clients and index</strong> -- Create the OpenAI client and open the docs index in Pinecone.</li>
+          <li><strong>Query vector</strong> -- Turn the query text into a vector with the SAME model as the chunks - otherwise the spaces will not match.</li>
+          <li><strong>Top-k by cosine</strong> -- Send the vector to the index and take the top-k nearest, returning id, score and text.</li>
+          <li><strong>Run on a query</strong> -- Run retrieve on a live query: the needed chunk comes back first with no shared words.</li>
         </ol>
       </figure>
-      <p>Фрагмент "политика возврата средств" приходит первым, хотя слов из запроса в нем нет - потому что сравниваются смыслы, а не строки.</p>
+      <p data-pk="problem.p3">The fragment "refund policy" comes back first, even though none of the query's words appear in it - because meanings are compared, not strings.</p>
     </section>
 
     <section aria-labelledby="pr-meaning">
-      <h2 id="pr-meaning">Поиск по смыслу, а не по словам</h2>
-      <p>Классический поиск по ключевым словам находит документы, где встречаются те же слова, что и в запросе. Он промахивается, когда об одном и том же люди пишут разными словами - синонимами, перефразировкой, на другом языке. Поиск по смыслу решает эту проблему: он сравнивает векторы, а близость векторов отражает близость смысла, а не совпадение слов (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>).</p>
+      <h2 id="pr-meaning" data-pk="meaning.h2">Search by meaning, not by words</h2>
+      <p data-pk="meaning.p1">A classic keyword search finds documents where the same words as in the query appear. It misses when people write about the same thing in different words - synonyms, paraphrases, another language. Semantic search solves this problem: it compares vectors, and the closeness of vectors reflects the closeness of meaning, not the overlap of words (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>).</p>
     </section>
 
     <section aria-labelledby="pr-qvec">
-      <h2 id="pr-qvec">Запрос -&gt; вектор запроса</h2>
-      <p>Первый шаг живого поиска - превратить текст запроса в вектор той же моделью эмбеддингов, что использовалась для фрагментов (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это критично: если запрос превратить в вектор одной моделью, а фрагменты - другой, они окажутся в разных пространствах, и косинусная близость между ними ничего не будет значить. В коде выше это шаг 1 в функции <code>retrieve</code>.</p>
+      <h2 id="pr-qvec" data-pk="qvec.h2">Query -&gt; query vector</h2>
+      <p data-pk="qvec.p1">The first step of live search is to turn the query text into a vector with the same embedding model that was used for the fragments (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is critical: if you embed the query with one model and the fragments with another, they end up in different spaces, and the cosine closeness between them means nothing. In the code above this is step 1 in the <code>retrieve</code> function.</p>
     </section>
 
     <section aria-labelledby="pr-topk">
-      <h2 id="pr-topk">Top-k ближайших по косинусу</h2>
-      <p>Вектор запроса идет в индекс, и база возвращает <strong>top-k</strong> фрагментов, ближайших по косинусной близости - обычно k в диапазоне 3..10. Больший k дает больше материала, но и больше шума; меньший k точнее, но рискует пропустить нужный кусок. На большом архиве поиск ближайших опирается на ANN-индекс (HNSW), чтобы не перебирать все векторы подряд (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>).</p>
+      <h2 id="pr-topk" data-pk="topk.h2">Top-k nearest by cosine</h2>
+      <p data-pk="topk.p1">The query vector goes into the index, and the database returns the <strong>top-k</strong> fragments nearest by cosine closeness - usually k in the range 3..10. A larger k gives more material but also more noise; a smaller k is more precise but risks missing the needed piece. On a large archive, nearest-neighbour search relies on an ANN index (HNSW) so as not to scan all vectors in turn (<a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">Malkov &amp; Yashunin, 2016, HNSW</a>).</p>
     </section>
 
     <section aria-labelledby="pr-rerank">
-      <h2 id="pr-rerank">Переранжирование и гибридный поиск</h2>
-      <p>Top-k из векторного поиска - хорошая первая выборка, но ее можно уточнить:</p>
+      <h2 id="pr-rerank" data-pk="rerank.h2">Reranking and hybrid search</h2>
+      <p data-pk="rerank.p1">The top-k from vector search is a good first selection, but it can be refined:</p>
       <ul>
-        <li><strong>Переранжирование (reranking).</strong> Первый проход (bi-encoder) быстро отбирает кандидатов; второй проход cross-encoder'ом точнее переоценивает каждую пару (запрос, фрагмент) и меняет порядок. Cross-encoder дороже, поэтому его применяют только к уже отобранным кандидатам (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>, раздел про bi- против cross-encoder).</li>
-        <li><strong>Гибридный поиск.</strong> Смысловой поиск по векторам комбинируют с классическим поиском по ключевым словам: векторы ловят смысл, а лексический поиск - точные термины, артикулы, имена, где важно совпадение самого слова (<a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">Pinecone, hybrid search</a>).</li>
+        <li data-pk="rerank.li1"><strong>Reranking.</strong> The first pass (bi-encoder) quickly selects candidates; the second pass with a cross-encoder more precisely re-scores each (query, fragment) pair and changes the order. A cross-encoder is more expensive, so it is applied only to already selected candidates (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>, the section on bi- vs cross-encoder).</li>
+        <li data-pk="rerank.li2"><strong>Hybrid search.</strong> Semantic vector search is combined with classic keyword search: vectors catch meaning, while lexical search catches exact terms, SKUs, names, where the match of the word itself matters (<a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">Pinecone, hybrid search</a>).</li>
       </ul>
-      <p>Это уточнения, а не замена: базовый смысловой top-k уже работает, а переранжирование и гибрид улучшают его там, где нужна дополнительная точность.</p>
+      <p data-pk="rerank.p2">These are refinements, not a replacement: the basic semantic top-k already works, and reranking and hybrid improve it where extra precision is needed.</p>
     </section>
 
     <section aria-labelledby="pr-sees">
-      <h2 id="pr-sees">Что видит модель</h2>
-      <p>После поиска модель получает не весь архив, а только top-k найденных кусков. Это и быстрее, и дешевле, но перекладывает ответственность на поиск: если нужный фрагмент не попал в top-k, модель просто не увидит ответа. Поэтому порядок и полнота top-k важны - исследования показывают, что модели хуже используют информацию, закопанную в середине длинного контекста, поэтому самое релевантное лучше ставить ближе к краям (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, Lost in the Middle</a>). Как именно упаковать эти куски в промпт - тема следующих глав.</p>
+      <h2 id="pr-sees" data-pk="sees.h2">What the model sees</h2>
+      <p data-pk="sees.p1">After the search, the model gets not the whole archive but only the top-k found pieces. This is both faster and cheaper, but it shifts the responsibility onto search: if the needed fragment did not make it into the top-k, the model simply will not see the answer. So the order and completeness of the top-k matter - research shows that models use information buried in the middle of a long context less well, so the most relevant should be placed nearer the edges (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023, Lost in the Middle</a>). Exactly how to pack these pieces into the prompt is the topic of the next chapters.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
-      <h2 id="pr-sources">Источники</h2>
+      <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li>OpenAI. Embeddings guide (вектор запроса, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
-        <li>Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- против cross-encoder). <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a></li>
-        <li>Malkov &amp; Yashunin, 2016. Efficient and robust ANN search using Hierarchical Navigable Small World graphs. <a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">arxiv.org/abs/1603.09320</a></li>
-        <li>Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
-        <li>Pinecone. Hybrid search guide. <a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">docs.pinecone.io/guides/search/hybrid-search</a></li>
+        <li data-pk="sources.li1">OpenAI. Embeddings guide (query vector, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li data-pk="sources.li2">Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- vs cross-encoder). <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a></li>
+        <li data-pk="sources.li3">Malkov &amp; Yashunin, 2016. Efficient and robust ANN search using Hierarchical Navigable Small World graphs. <a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">arxiv.org/abs/1603.09320</a></li>
+        <li data-pk="sources.li4">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
+        <li data-pk="sources.li5">Pinecone. Hybrid search guide. <a href="https://docs.pinecone.io/guides/search/hybrid-search" target="_blank" rel="noopener">docs.pinecone.io/guides/search/hybrid-search</a></li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-try">
-      <h2 id="pr-try">Попробуйте сами</h2>
+      <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
-        <li>Откройте интерактив vector-space-map: найдите точку-запрос и пройдите по нарисованным ребрам к top-k. Сделайте drill (semantic zoom) в далекую точку и прочитайте панель "почему не в top-k".</li>
-        <li>Возьмите функцию <code>retrieve</code> выше и поменяйте <code>k</code> с 3 на 1 и на 10: посмотрите, как меняется набор и порядок возвращаемых фрагментов.</li>
-        <li>Задайте запрос синонимами, без слов из нужного фрагмента (например "возмещение средств" вместо "возврат"): проверьте, что смысловой поиск все равно находит правильный фрагмент - это и есть промах по ключевым словам, который он лечит.</li>
+        <li data-pk="try.li1">Open the vector-space-map interaction: find the query point and walk the drawn edges to the top-k. Drill (semantic zoom) into a distant point and read the "why not in top-k" panel.</li>
+        <li data-pk="try.li2">Take the <code>retrieve</code> function above and change <code>k</code> from 3 to 1 and to 10: see how the set and order of returned fragments change.</li>
+        <li data-pk="try.li3">Pose the query in synonyms, without the words from the needed fragment (for example "reimbursement of funds" instead of "refund"): check that semantic search still finds the right fragment - this is exactly the keyword miss it cures.</li>
       </ul>
     </section>
 
     <section aria-labelledby="pr-next">
-      <h2 id="pr-next">Что дальше</h2>
-      <p class="next-stop">Top-k найден - дальше его нужно аккуратно упаковать в один промпт к модели. Следующая остановка: <strong>assemble-context</strong> (сборка контекста: шаблон, бюджет токенов, порядок кусков).</p>
+      <h2 id="pr-next" data-pk="next.h2">What is next</h2>
+      <p class="next-stop" data-pk="next.next1">The top-k is found - next it needs to be carefully packed into a single prompt to the model. The next stop: <strong>assemble-context</strong> (context assembly: the template, the token budget, the order of pieces).</p>
     </section>
 
     <section class="about-recipe" aria-labelledby="pr-about">
-      <h2 id="pr-about">Об этом рецепте</h2>
+      <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li>Часть <a href="../../README.md">BrewPage Cookbook</a>.</li>
-        <li>Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
-        <li>Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
+        <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>
     </section>
 
@@ -328,14 +421,15 @@ for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
       <polygon points="130,2 136,7 130,12 124,7" fill="none" stroke="#a55a35" stroke-width="1"/>
       <circle cx="140" cy="7" r="1.6" fill="#a55a35"/>
     </svg>
-    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Составлено в рамках BrewPage Cookbook.</div>
+    <div class="colophon-note" data-i18n="footNote" data-ru="Составлено в рамках BrewPage Cookbook." data-en="Drawn as part of the BrewPage Cookbook.">Drawn as part of the BrewPage Cookbook.</div>
     <div class="links">
-      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">К карте маршрута</a>
+      <a href="index.html" data-i18n="footMap" data-ru="К карте маршрута" data-en="Back to the route map">Back to the route map</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
     </div>
+    <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.0">v0.1.0</a></div>
   </footer>
 
 </div>
