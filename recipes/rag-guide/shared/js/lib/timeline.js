@@ -180,15 +180,32 @@ export function init(rootEl, config) {
     applyAt(parseFloat(track.value));
   });
 
-  // reduced-motion: hide the play button (it is a no-op), keep stepper.
+  // reduced-motion: neutralise the play button (it is a no-op) WITHOUT removing
+  // it from layout. `hidden` collapses the box and changes page geometry vs the
+  // no-preference path; instead disable it + aria-hide it so its box stays put.
+  // This keeps the reduced-motion end-state DOM/geometry identical to the
+  // completed-animation end state.
   function applyReducedUi() {
-    playBtn.hidden = reduced;
+    if (reduced) {
+      playBtn.disabled = true;
+      playBtn.setAttribute("aria-hidden", "true");
+      playBtn.setAttribute("tabindex", "-1");
+    } else {
+      playBtn.disabled = false;
+      playBtn.removeAttribute("aria-hidden");
+      playBtn.removeAttribute("tabindex");
+    }
   }
   const offRm = onReducedMotionChange((isReduced) => {
     reduced = isReduced;
     applyReducedUi();
-    if (reduced) pause();
-    applyAt(position);
+    if (reduced) {
+      pause();
+      // Snap to the END (same rest state the animation reaches), not position 0.
+      applyAt(steps.length);
+    } else {
+      applyAt(position);
+    }
   });
 
   // ---- visibility gating ----
@@ -214,7 +231,10 @@ export function init(rootEl, config) {
   }
 
   applyReducedUi();
-  applyAt(0);
+  // Reduced motion presents the FINAL state immediately (no clock, no motion):
+  // snap to the end so progress rests at 100% and every step is in its end
+  // state -- geometrically identical to the completed-animation end state.
+  applyAt(reduced ? steps.length : 0);
 
   return {
     play,

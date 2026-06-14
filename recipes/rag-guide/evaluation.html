@@ -243,7 +243,7 @@
       <h2 id="pr-harness" data-pk="harness.h2">The solution: an eval harness over a golden set</h2>
       <p data-pk="harness.p1">Here is a working harness in Python. The golden set is a list of questions, for each of which the ids of the relevant pieces are known in advance. The harness runs retrieve and computes precision@k and recall@k.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-harness">
-        <figcaption class="code-block__cap" data-i18n data-ru="Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore." data-en="Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set.">Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore." data-en="Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set.">Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set.</figcaption>
         <pre><code>golden = [
     {
         "q": "Kak vernut' tovar?",
@@ -300,7 +300,7 @@ print(before, after)</code></pre>
       <p data-pk="quality.p1">Accurate retrieve does not yet guarantee a good answer: the model may correctly find pieces but answer incompletely, off-topic, or with an added fabrication. Answer quality is measured by another group of metrics.</p>
       <p data-pk="quality.p2">For RAG, the <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS framework (Es et al., 2023)</a> formalizes them: it proposes <strong>faithfulness</strong> (how grounded the answer is on the returned context - a measure against the hallucinations from the generation chapter), <strong>answer relevance</strong> (whether the answer responds to the actual question), and <strong>context relevance/precision</strong> (how much the returned context relates to the question). RAGAS evaluates these aspects automatically, without manually labelling every answer.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-ragas">
-        <figcaption class="code-block__cap" data-i18n data-ru="RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision." data-en="RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.">RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision." data-en="RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.">RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.</figcaption>
         <pre><code># pip install ragas datasets
 from ragas import evaluate as ragas_evaluate
 from ragas.metrics import faithfulness, answer_relevancy, context_precision

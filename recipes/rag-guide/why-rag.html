@@ -320,7 +320,7 @@
       <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
       <p data-pk="problem.p2">RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="why-rag-two-track">
-      <figcaption class="code-block__cap" data-i18n data-ru="Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku).</figcaption>
+      <figcaption class="code-block__cap" data-i18n data-ru="Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).</figcaption>
       <pre><code># Tot zhe vopros dvumya putyami. Track A: bez konteksta. Track B: s retrieval.
 from anthropic import Anthropic
 

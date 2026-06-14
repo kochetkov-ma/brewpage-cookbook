@@ -191,26 +191,23 @@ function buildScene(rootEl, data) {
     // whose materialize belongs to an EARLIER phase may never have had --p
     // advanced (the embed branch never ran if the user seeked straight to store
     // under reduced motion). Drive every already-visible card's --p to the end
-    // so its width snaps to the END px instead of computing auto.
+    // value so both the animated and the reduced-motion paths rest at --p: 1.
     if (atEnd) {
       snapVisibleProgress();
     }
   }
 
-  // Reduced-motion / end-state snap. The materialize width must land on a
-  // DETERMINISTIC end px, not the interpolated `auto` it would read when the
-  // user seeks straight to a later step (the --p the CSS width keyed off was
-  // never advanced for the skipped phase). We advance --p to its end value AND,
-  // crucially, pin the END width explicitly inline on each materialized card so
-  // the computed width is a real px regardless of which phases actually ran.
-  // Same DOM, no alternate markup -- we only set an inline width on the cards
-  // already present and visible.
+  // Reduced-motion / end-state snap. The end state is fully described by the
+  // resting data-state classes (which the CSS keys opacity/transform off) plus
+  // --p: 1. Width is NEVER driven here: per the transform/opacity-only motion
+  // policy the card width flows naturally from the grid/flex layout, identical
+  // in both paths. We must NOT measure-and-pin an inline px width: that captured
+  // a transition-in-flight value under one path (or `auto`/0 under another) and
+  // is exactly what made the reduced-motion end state diverge from the animated
+  // end state (335.1px vs 328.4px; auto vs 48.45px). Setting --p to its end
+  // value is the only snap needed -- same DOM, same classes, same geometry.
   function snapCardWidth(card) {
     card.style.setProperty("--p", "1");
-    // Measure the laid-out end width and pin it inline so the snapped state is
-    // a concrete px (not "auto") even when the --p-driven transition was skipped.
-    const w = card.getBoundingClientRect().width;
-    if (w > 0) card.style.width = w + "px";
   }
   function snapVisibleProgress() {
     Object.values(chunkCards).forEach((card) => {

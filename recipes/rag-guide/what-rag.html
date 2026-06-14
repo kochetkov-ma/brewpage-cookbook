@@ -259,7 +259,7 @@
       <p data-pk="problem.p1">You ask an ordinary LLM: "How many vacation days does an employee on probation get under our policy?" The model answers confidently - and wrong. It has never seen your internal policy, so it just generates plausible text. The fix is not to "ask better" but to hand the model your actual document BEFORE it answers.</p>
       <p data-pk="problem.p2">That is exactly what RAG does: it finds the relevant fragments of your data and mixes them into the request, after which the model answers from them. The architecture was introduced by Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Here is the same call, now with retrieval - a minimal working RAG on real APIs:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="what-rag-minimal-rag">
-      <figcaption class="code-block__cap" data-i18n data-ru="Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation." data-en="A minimal working RAG on real APIs: retrieval -> augmented -> generation.">Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation.</figcaption>
+      <figcaption class="code-block__cap" data-i18n data-ru="Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation." data-en="A minimal working RAG on real APIs: retrieval -> augmented -> generation.">A minimal working RAG on real APIs: retrieval -> augmented -> generation.</figcaption>
       <pre><code># Minimalnyj RAG: snachala retrieval, potom generaciya po najdennomu.
 from anthropic import Anthropic
 from openai import OpenAI

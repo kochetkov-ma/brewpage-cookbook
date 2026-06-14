@@ -298,7 +298,7 @@
       <p data-pk="problem.p1">You have vectors - one per fragment from the previous chapter. When a query arrives, you need to find a few fragments closest in meaning to the query vector. You could compare the query against every vector in turn - and with a thousand fragments that works. But with a million fragments, scanning each one on every query becomes too slow.</p>
       <p data-pk="problem.p2">The solution is a vector store: a specialized storage that holds vectors and can quickly find nearest neighbours without comparing the query against the whole archive. Here is what the store step plus search look like using a vector-database client:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="vector-store-upsert-query">
-        <figcaption class="code-block__cap" data-i18n data-ru="Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.</figcaption>
         <pre><code># pip install pinecone-client openai
 from pinecone import Pinecone
 from openai import OpenAI
