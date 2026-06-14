@@ -39,6 +39,9 @@ import { init as initDrill } from "../lib/drilldown-zoom.js";
 import { init as initVectorMap } from "../lib/vector-map.js";
 import { init as initCodeBlocks } from "../lib/code-blocks.js";
 import STORE from "../../data/vector-store.js";
+import { init as initSiteVersion } from "../lib/site-version.js";
+import { init as initProseI18n } from "../lib/prose-i18n.js";
+import PROSE_RU from "../../data/prose-ru.js";
 
 document.documentElement.classList.add("has-js");
 
@@ -110,6 +113,10 @@ function ui(key) {
 }
 
 function boot() {
+  // footer version stamp (progressive enhancement; no-op if slot absent)
+  track(initSiteVersion(document, {}));
+  // RU prose overlay on the chapter article [data-pk] leaves (EN static = source)
+  track(initProseI18n(document, { ruData: PROSE_RU, slug: "vector-store" }));
   // header full-text site search (client-side, zero external requests) --------
   track(initSiteSearch(document, {}));
   // i18n store (restores persisted locale; default RU from <html lang>)

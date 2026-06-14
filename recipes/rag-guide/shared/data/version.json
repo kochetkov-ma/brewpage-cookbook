@@ -1,0 +1,19 @@
+{
+  "version": "0.0.0-dev",
+  "commit": "0000000",
+  "date": "1970-01-01",
+  "_schema": {
+    "purpose": "Site version stamp. Placeholder skeleton; the release stamp script overwrites version/commit/date when a vX.Y.Z tag is cut, and keeps the static no-JS footer fallback in sync. No build step -- this file ships verbatim with the recipe folder.",
+    "fields": {
+      "version": "Released semver WITHOUT a leading 'v' (e.g. '0.1.0'). site-version.js prepends 'v' for display and the releases-tag URL. '0.0.0-dev' marks the unstamped placeholder.",
+      "commit": "Short commit SHA the tag points at (e.g. '0000000'). Informational; not currently rendered, reserved for a tooltip/title.",
+      "date": "ISO 8601 date (YYYY-MM-DD) the version was stamped. Informational; reserved for a tooltip/title."
+    },
+    "rules": [
+      "Consumers MUST skip every '_'-prefixed key (this _schema block).",
+      "version is bare semver -- the 'v' prefix is added by the renderer, never stored here.",
+      "Stamp script is the only writer; do not hand-edit released values.",
+      "Same-origin local file only; no external request."
+    ]
+  }
+}

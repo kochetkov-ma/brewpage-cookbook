@@ -1326,6 +1326,18 @@ a.site-header__brand:focus-visible,
   text-transform: uppercase;
 }
 .site-footer .links .sep { color: var(--c-border); user-select: none; }
+/* site-version slot -- footer release stamp (label + version anchor). Spacing
+   + alignment via tokens only; muted label, themed link. No motion. */
+.site-footer .site-version {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-0);
+  letter-spacing: 0.08em;
+  color: var(--c-text-muted);
+}
+.site-footer .site-version .version-value { color: var(--c-link); }
 
 /* ===========================================================
    RESPONSIVE  (AtlasMD 1.6 -- must hold at 390 / 320)

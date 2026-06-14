@@ -25,6 +25,7 @@ import { init as initCompass } from "../lib/compass.js";
 import { init as initPlate } from "../lib/plate.js";
 import { init as initMapRoute } from "../lib/map-route.js";
 import * as chapterState from "../lib/chapter-state.js";
+import { init as initSiteVersion } from "../lib/site-version.js";
 
 document.documentElement.classList.add("has-js");
 
@@ -37,6 +38,8 @@ function track(inst) {
 }
 
 async function boot() {
+  // footer version stamp (progressive enhancement; no-op if slot absent)
+  track(initSiteVersion(document, {}));
   let data;
   try {
     data = stripMeta(await fetchJson(DATA_SRC));

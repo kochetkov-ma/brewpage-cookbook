@@ -1,0 +1,52 @@
+# .brewpageignore -- publish-scope filter for the RAG Guide static bundle.
+#
+# Purpose: the repo folder carries manuscript + scaffold + dev tooling (~137 files),
+# which blows past the BrewPage site caps (< 100 files / < 20 MB total / < 5 MB per file).
+# This file lists DEV-ONLY paths to exclude so only the live static site is published.
+# It is repo-keeping vs publish-scope: excluded files STAY in git, they just do not ship.
+#
+# Syntax: gitignore-style globs. A leading-and-trailing slash-free name matches at any
+# depth. The CI bundler (direct REST today; brewpage-action / brewpage CLI later) applies
+# this file against recipes/rag-guide/ to produce the upload manifest.
+#
+# DO NOT exclude anything the live site fetches/imports at runtime. Audited 2026-06-14:
+#   - all 12 *.html pages, shared/css/**, shared/js/**, shared/data/** (JSON + JS the
+#     pages import or fetch), shared/og/*.png|ico|svg, sitemap.xml  -> KEPT.
+#   - shared/components/*.html are authoring-time copy-in partials (the markup is inlined
+#     into each page; nothing fetches them at runtime) -> EXCLUDED (see runbook).
+#
+# Verified final published set: 84 files / 1.69 MB / largest 0.16 MB. All caps satisfied.
+
+# --- AI/agent + tooling state (every depth) ---
+.claude/
+*.log
+
+# --- Manuscript source (md-as-source, hand-ported to HTML; not shipped) ---
+content/
+
+# --- Design exploration / mockups ---
+mokups/
+
+# --- All Markdown (design docs, AtlasMD, READMEs) at every depth ---
+*.md
+
+# --- Build scripts / generators (no build step ships) ---
+*.py
+scripts/
+
+# --- Authoring-time HTML partials: inlined into pages, never fetched at runtime ---
+shared/components/
+
+# --- Editor + OS junk and backups ---
+*.bak
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.gitkeep
+
+# --- Design-source SVG whose rasterized counterpart is what the site references.
+#     og-rag-guide.png is the referenced OG image; the SVG is source only.
+#     NOTE: favicon.svg IS referenced by the pages -> intentionally NOT excluded here.
+shared/og/og-rag-guide.svg

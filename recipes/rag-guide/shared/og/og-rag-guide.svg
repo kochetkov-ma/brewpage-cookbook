@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="RAG Guide - BrewPage Cookbook">
+  <title>RAG Guide - BrewPage Cookbook</title>
+
+  <!-- parchment ground -->
+  <rect width="1200" height="630" fill="#f3ead4"/>
+
+  <!-- faint cartographic rhumb lines from a compass point (decorative, edge zone) -->
+  <g stroke="#bda878" stroke-width="1" opacity="0.4">
+    <line x1="1090" y1="86" x2="120" y2="540"/>
+    <line x1="1090" y1="86" x2="40" y2="320"/>
+    <line x1="1090" y1="86" x2="320" y2="600"/>
+    <line x1="1090" y1="86" x2="700" y2="600"/>
+    <line x1="1090" y1="86" x2="120" y2="140"/>
+  </g>
+
+  <!-- faint contour garnish, bottom-left, decorative -->
+  <g fill="none" stroke="#bda878" stroke-width="1.4" opacity="0.35">
+    <path d="M60,560 C160,520 260,560 360,520"/>
+    <path d="M60,590 C180,548 300,592 420,548"/>
+  </g>
+
+  <!-- double hairline plate frame (within safe area) -->
+  <rect x="44" y="44" width="1112" height="542" rx="10" fill="none" stroke="#5c4a32" stroke-width="2"/>
+  <rect x="56" y="56" width="1088" height="518" rx="7" fill="none" stroke="#bda878" stroke-width="1" stroke-dasharray="4 5"/>
+
+  <!-- corner L-ticks -->
+  <g stroke="#5c4a32" stroke-width="2" fill="none">
+    <path d="M84,76 h26 M84,76 v26"/>
+    <path d="M1116,76 h-26 M1116,76 v26"/>
+    <path d="M84,554 h26 M84,554 v-26"/>
+    <path d="M1116,554 h-26 M1116,554 v-26"/>
+  </g>
+
+  <!-- Atlas seal mark (left), large -->
+  <g transform="translate(120,196) scale(2.62)">
+    <circle cx="50" cy="50" r="46" fill="#efe3c8" stroke="#5c4a32" stroke-width="2.4"/>
+    <circle cx="50" cy="50" r="40" fill="none" stroke="#7a6446" stroke-width="1" stroke-dasharray="3 4"/>
+    <polygon points="50,12 57,50 50,88 43,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1"/>
+    <polygon points="12,50 50,43 88,50 50,57" fill="#4a6f6a" stroke="#335551" stroke-width="1"/>
+    <circle cx="50" cy="50" r="6" fill="#b08a3e" stroke="#5c4a32" stroke-width="1.4"/>
+  </g>
+
+  <!-- text block (right of seal) -->
+  <g font-family="Georgia, 'Iowan Old Style', 'Palatino Linotype', Palatino, serif">
+    <!-- kicker -->
+    <text x="500" y="214" font-family="'Trebuchet MS', 'Gill Sans', 'Segoe UI', Verdana, sans-serif"
+          font-size="26" letter-spacing="6" fill="#7a6446">BREWPAGE COOKBOOK</text>
+
+    <!-- wordmark -->
+    <text x="498" y="320" font-size="118" font-weight="600" fill="#5c4a32">RAG Guide</text>
+
+    <!-- accent rule under wordmark -->
+    <line x1="500" y1="356" x2="760" y2="356" stroke="#bda878" stroke-width="2"/>
+    <polygon points="788,348 800,356 788,364 776,356" fill="#a55a35"/>
+
+    <!-- tagline -->
+    <text x="500" y="416" font-size="34" fill="#3a2e1d">Build retrieval-augmented generation,</text>
+    <text x="500" y="458" font-size="34" fill="#3a2e1d">step by step.</text>
+  </g>
+
+  <!-- footer locator line -->
+  <text x="600" y="540" text-anchor="middle"
+        font-family="'Trebuchet MS', 'Gill Sans', 'Segoe UI', Verdana, sans-serif"
+        font-size="22" letter-spacing="2" fill="#7a6446">brewpage.app</text>
+</svg>

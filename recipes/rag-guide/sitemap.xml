@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://brewpage.app/public/REPLACE_AT_PUBLISH</loc>
+    <lastmod>2026-06-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/what-rag.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/why-rag.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/chunking.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/embedding.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/vector-store.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/search.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/assemble-context.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/generation.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/evaluation.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/production.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://brewpage.app/public/REPLACE_AT_PUBLISH/payload-anatomy.html</loc><lastmod>2026-06-14</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+</urlset>

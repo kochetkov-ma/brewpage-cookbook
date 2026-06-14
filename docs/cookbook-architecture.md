@@ -120,6 +120,22 @@ Pick the highest available mechanism; fall back only as needed:
 
 When the BrewPage REST API changes upstream: re-read `brewpage-openapi/openapi/openapi.yaml`, update any code that calls REST directly, and bump recipe metadata if any visible behaviour changed.
 
+> **Republish vs recreate.** To update an already-published recipe, use `PUT /api/sites/{ns}/{id}` (full-replace republish: swaps the whole file set, keeps the same URL + id, requires `X-Owner-Token`). DELETE-then-POST mints a new id/URL and is **not** how we update -- see `docs/brewpage-platform.md`.
+
+### Publish-scope filter (deterministic bundling)
+
+The repo folder `recipes/<slug>/` carries more than the live site: manuscript (`content/`), mockups (`mokups/`), design docs (`*.md`), build scripts (`*.py`), agent state (`.claude/`), and authoring-time HTML partials (`shared/components/`). Publishing the raw folder would blow past the BrewPage site caps (**< 100 files / < 20 MB total / < 5 MB per file**). So the published bundle is **filtered, not the raw folder**.
+
+- **Filter file:** each recipe carries a **`recipes/<slug>/.brewpageignore`** (gitignore-style globs). It lists DEV-ONLY paths to exclude; everything else ships. This is repo-keeping vs publish-scope -- excluded files stay in git, they just do not upload.
+- **Deterministic bundling procedure (what CI applies):**
+  1. `cd recipes/<slug>/`.
+  2. Build the upload manifest = all files under the folder **minus** the `.brewpageignore` glob matches (and minus the `.brewpageignore` file itself).
+  3. Assert the caps before upload: **count < 100**, **total bytes < 20 MB**, **max single file < 5 MB**. Fail the run if any cap is exceeded -- never publish a partial/over-cap bundle.
+  4. Upload that exact manifest via the active mechanism (direct REST today; `brewpage` CLI / `brewpage-action` once released). With direct REST, send the manifest as the `files`+`paths` arrays (or a ZIP built from the manifest) to `POST /api/sites` (first publish) or `PUT /api/sites/{ns}/{id}` (republish).
+- **What is excluded** (every depth): `.claude/`, `content/`, `mokups/`, all `*.md`, all `*.py`, `scripts/`, `*.log`, `*.bak`/editor junk, `.gitkeep`, **`shared/components/`** (authoring-time copy-in partials -- their markup is inlined into each page; nothing fetches them at runtime), and design-source `*.svg` whose rasterized counterpart is what the site references (e.g. `shared/og/og-rag-guide.svg`; **`favicon.svg` is kept** because the pages reference it).
+- **What is kept** (audited against actual runtime imports/fetches): all `*.html` pages, `shared/css/**`, `shared/js/**`, `shared/data/**` (the JSON + JS the pages import or fetch), `shared/og/*.png|ico`, `favicon.*`, `sitemap.xml`.
+- **RAG Guide as built (2026-06-14):** raw folder ~137 files; filtered published set = **84 files / 1.69 MB / largest single 0.16 MB** -- all three caps satisfied with margin. Resolves board task `T-CI-RAG-PUBLISH-SCOPE` (was `T-CI-PUBLISH-SCOPE-FILTER`).
+
 ---
 
 ## 6. Release flow

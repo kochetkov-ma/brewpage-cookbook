@@ -45,6 +45,9 @@ import { init as initCodeBlocks } from "../lib/code-blocks.js";
 import { highlightInto } from "../lib/code-highlight.js";
 import * as chapterState from "../lib/chapter-state.js";
 import CHUNKING from "../../data/chunking.js";
+import { init as initSiteVersion } from "../lib/site-version.js";
+import { init as initProseI18n } from "../lib/prose-i18n.js";
+import PROSE_RU from "../../data/prose-ru.js";
 
 // This section's chapter slug (matches nav.json + the map flag id).
 const CHAPTER_SLUG = "chunking";
@@ -89,6 +92,10 @@ let stageHost = null;
 const rowEls = new Map();
 
 function boot() {
+  // footer version stamp (progressive enhancement; no-op if slot absent)
+  track(initSiteVersion(document, {}));
+  // RU prose overlay on the chapter article [data-pk] leaves (EN static = source)
+  track(initProseI18n(document, { ruData: PROSE_RU, slug: "chunking" }));
   // header full-text site search (client-side, zero external requests) --------
   track(initSiteSearch(document, {}));
   // a11y live-region announcer (scoped) -----------------------------------

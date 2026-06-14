@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="RAG Guide - BrewPage Cookbook">
+  <title>RAG Guide</title>
+  <!-- Atlas seal mark: parchment ground, sepia ring, rust+teal compass needle, gold centre -->
+  <rect width="100" height="100" rx="18" fill="#f3ead4"/>
+  <circle cx="50" cy="50" r="42" fill="none" stroke="#5c4a32" stroke-width="3"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="#7a6446" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <polygon points="50,16 57,50 50,84 43,50" fill="#a55a35" stroke="#7c3f24" stroke-width="1.2"/>
+  <polygon points="16,50 50,43 84,50 50,57" fill="#4a6f6a" stroke="#335551" stroke-width="1.2"/>
+  <circle cx="50" cy="50" r="6" fill="#b08a3e" stroke="#5c4a32" stroke-width="1.5"/>
+</svg>
