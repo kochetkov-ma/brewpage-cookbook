@@ -18,36 +18,36 @@
 ```python
 golden = [
     {
-        "q": "Kak vernut' tovar?",
-        "relevant": {"policy-12", "policy-13"},   # id chunkov s otvetom
+        "q": "Как вернуть товар?",
+        "relevant": {"policy-12", "policy-13"},   # id chunks с ответом
     },
     {
-        "q": "Skolko dney na vozvrat?",
+        "q": "Сколько дней на возврат?",
         "relevant": {"policy-13"},
     },
-    # ...50+ voprosov: chem bolshe, tem ustojchivee metrika
+    # ...50+ вопросов: чем больше, тем устойчивее метрика
 ]
 
 def precision_recall_at_k(retrieved_ids, relevant, k):
-    """retrieved_ids: top-k id ot retrieve, po ubyvaniyu score.
-       relevant: mnozhestvo id dejstvitelno nuzhnyh chunkov."""
+    """retrieved_ids: top-k id от retrieve, по убыванию score.
+       relevant: множество id действительно нужных chunks."""
     top_k = retrieved_ids[:k]
     hits = sum(1 for cid in top_k if cid in relevant)
-    precision = hits / k                      # dolya popadanij sredi vydannyh k
-    recall = hits / len(relevant)             # dolya najdennyh iz vseh nuzhnyh
+    precision = hits / k                      # доля попаданий среди выданных k
+    recall = hits / len(relevant)             # доля найденных из всех нужных
     return precision, recall
 
 def evaluate(retriever, golden, k=5):
     p_sum = r_sum = 0.0
     for item in golden:
-        ids = retriever(item["q"])            # vash retrieve -> spisok id
+        ids = retriever(item["q"])            # ваш retrieve -> список id
         p, r = precision_recall_at_k(ids, item["relevant"], k)
         p_sum += p
         r_sum += r
     n = len(golden)
     return {"precision@k": p_sum / n, "recall@k": r_sum / n, "k": k, "n": n}
 
-# Sravnenie do/posle pravki na odnom i tom zhe nabore:
+# Сравнение до/после правки на одном и том же наборе:
 before = evaluate(retriever_v1, golden, k=5)
 after  = evaluate(retriever_v2, golden, k=5)
 print(before, after)
@@ -75,9 +75,9 @@ from datasets import Dataset
 
 ds = Dataset.from_dict({
     "question":     [it["q"] for it in samples],
-    "answer":       [it["answer"] for it in samples],     # vyhod generation
-    "contexts":     [it["contexts"] for it in samples],   # chunki, vidannye modeli
-    "ground_truth": [it["truth"] for it in samples],      # etalon iz golden
+    "answer":       [it["answer"] for it in samples],     # выход generation
+    "contexts":     [it["contexts"] for it in samples],   # chunks, виденные моделью
+    "ground_truth": [it["truth"] for it in samples],      # эталон из golden
 })
 report = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])
 print(report)

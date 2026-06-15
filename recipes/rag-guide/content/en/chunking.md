@@ -82,9 +82,9 @@ def fixed_size_chunks(text: str, size: int) -> list[str]:
 
 
 if __name__ == "__main__":
-    doc = "RAG podmeshivaet vashi dokumenty v zapros k modeli. " \
-          "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor. " \
-          "Vektory hranyat v indekse i ishchut blizhajshie po smyslu."
+    doc = "RAG mixes your documents into the prompt sent to the model. " \
+          "The corpus is cut into chunks and each one is turned into a vector. " \
+          "The vectors are stored in an index and the nearest by meaning are found."
     for n, chunk in enumerate(fixed_size_chunks(doc, 60)):
         print(n, repr(chunk))
 ```
@@ -122,8 +122,8 @@ def sliding_window_chunks(text: str, size: int, overlap: int) -> list[str]:
 
 
 if __name__ == "__main__":
-    doc = "RAG podmeshivaet vashi dokumenty v zapros k modeli. " \
-          "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor."
+    doc = "RAG mixes your documents into the prompt sent to the model. " \
+          "The corpus is cut into chunks and each one is turned into a vector."
     for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):
         print(n, repr(chunk))
 ```
@@ -180,9 +180,9 @@ def recursive_chunks(text: str, size: int,
 
 
 if __name__ == "__main__":
-    doc = ("RAG podmeshivaet dokumenty v zapros.\n\n"
-           "Korpus rezhut na chunki. Kazhdyj chunk embeddyat.\n\n"
-           "Vektory hranyat v indekse i ishchut blizhajshie po smyslu.")
+    doc = ("RAG mixes your documents into the prompt.\n\n"
+           "The corpus is cut into chunks. Each chunk is embedded.\n\n"
+           "The vectors are stored in an index and the nearest by meaning are found.")
     for n, chunk in enumerate(recursive_chunks(doc, 70)):
         print(n, repr(chunk))
 ```
@@ -244,10 +244,10 @@ def markdown_header_chunks(text: str, size: int) -> list[dict]:
 
 
 if __name__ == "__main__":
-    doc = ("# Otpuska\n"
-           "Posle 3 let stazha polagaetsya 28 dnej otpuska.\n"
-           "## Bolnichnyj\n"
-           "Bolnichnyj oplachivaetsya s pervogo dnya.")
+    doc = ("# Vacation\n"
+           "After 3 years of service you are entitled to 28 days of vacation.\n"
+           "## Sick leave\n"
+           "Sick leave is paid from the first day.")
     for n, chunk in enumerate(markdown_header_chunks(doc, 200)):
         print(n, chunk["heading"], repr(chunk["text"]))
 ```

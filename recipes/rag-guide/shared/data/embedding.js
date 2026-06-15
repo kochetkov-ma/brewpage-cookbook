@@ -35,20 +35,32 @@
  *     (v1 -> c1, v2 -> c2, v3 -> c3); the chapter teaches this mapping.
  *   - dim is the REAL model width (1536, text-embedding-3-small); values[] is a
  *     3-number layout STUB only -- never a real embedding, never the full 1536.
- *   - fromChar/toChar index into the ACTIVE-LANG doc.text; keep ru/en lengths so
- *     the offsets tile both (here ASCII-Latin doc.text is shared verbatim).
+ *   - fromChar/toChar are PER-LANGUAGE { ru, en } char offsets into the
+ *     active-lang doc.text; doc.text and chunk.text are now per language (RU
+ *     Cyrillic, EN English), so the offsets are stored per language and tile
+ *     each script exactly. process-anim.js slices the active-lang doc.text by
+ *     these (and, since doc.text == the concatenation of the active-lang chunk
+ *     texts, also tiles correctly via its cursor fallback). These are
+ *     JS-rendered data (no static no-JS HTML), so Cyrillic here is correct.
  *   - copy fields are { ru, en }; consumers resolve by active lang. ASCII only.
  *   - underscore-prefixed keys (_schema) are metadata; consumers MUST skip them.
  */
 
 const B = (ru, en) => ({ ru, en });
 
-// doc.text is identical across langs here (ASCII-Latin source, like the chapter
-// Python). Offsets below index this exact string for the split highlight.
-const DOC_TEXT =
-  "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej. " +
-  "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki. " +
-  "Dostavka po gorodu zanimaet odin rabochij den'.";
+// Per-language source doc. doc.text for each language is EXACTLY the
+// concatenation of that language's chunk texts (see chunks below), so the
+// fromChar/toChar offsets tile the active-lang doc.text with no gaps/overlaps.
+// RU is real Cyrillic, EN is real English (canonical sample corpus shared across
+// the guide). JS-rendered data => Cyrillic here is correct.
+const DOC_RU =
+  "Гарантия на электронику составляет 12 месяцев с даты покупки. " +
+  "Командировки оформляются через портал не позднее чем за 3 дня. " +
+  "Больничный оплачивается с первого дня.";
+const DOC_EN =
+  "The warranty on electronics is 12 months from the date of purchase. " +
+  "Business trips are arranged through the portal no later than 3 days in advance. " +
+  "Sick leave is paid from the first day.";
 
 export default {
   _schema: {
@@ -57,7 +69,7 @@ export default {
     shape: {
       doc: "{ id, title:{ru,en}, text:{ru,en} } -- source text; text rendered as per-chunk spans.",
       chunks:
-        "[{ id, fromChar, toChar, text:{ru,en} }] -- ordered chunks; fromChar/toChar index into doc.text (active lang) and MUST tile it exactly.",
+        "[{ id, fromChar:{ru,en}, toChar:{ru,en}, text:{ru,en} }] -- ordered chunks; fromChar/toChar are per-language char offsets into the active-lang doc.text and MUST tile it exactly (doc.text == concatenation of active-lang chunk texts).",
       vectors:
         "[{ id, chunkId, dim, values[] }] -- one vector per chunk (1:1 via chunkId); dim=1536 real width; values[] is a 3-number layout stub, NOT a real embedding.",
       steps:
@@ -70,7 +82,7 @@ export default {
     rules: [
       "one vector per chunk, strictly 1:1 (vector.chunkId -> chunk.id: v1->c1, v2->c2, v3->c3).",
       "dim=1536 is the real model width; values[] is a 3-number layout stub only, never a real embedding, never the full 1536.",
-      "fromChar/toChar must tile doc.text exactly (no gaps/overlaps) so the split highlight lands.",
+      "fromChar/toChar are per-language { ru, en } offsets; for each language doc.text == the concatenation of that language's chunk texts, so the offsets tile doc.text exactly (no gaps/overlaps) and the split highlight lands.",
       "every copy field is { ru, en }; consumers resolve by active lang. ASCII punctuation only.",
       "transform/opacity only; reduced-motion jumps to end state over the same DOM (process-anim.js).",
       "underscore-prefixed keys (_schema) are metadata and MUST be skipped by consumers.",
@@ -79,37 +91,38 @@ export default {
 
   doc: {
     id: "doc-embed-ru",
-    title: B("FAQ magazina (ishodnyj dokument)", "Store FAQ (source document)"),
-    text: B(DOC_TEXT, DOC_TEXT),
+    title: B("FAQ магазина (исходный документ)", "Store FAQ (source document)"),
+    text: B(DOC_RU, DOC_EN),
   },
 
-  // chunks tile doc.text exactly: [0,68) [68,133) [133,180)
+  // chunks tile the active-lang doc.text exactly. Offsets per language:
+  //   RU: [0,62) [62,125) [125,163)   EN: [0,68) [68,148) [148,186)
   chunks: [
     {
       id: "c1",
-      fromChar: 0,
-      toChar: 68,
+      fromChar: B(0, 0),
+      toChar: B(62, 68),
       text: B(
-        "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej. ",
-        "Refund policy: a product can be returned within 30 days. "
+        "Гарантия на электронику составляет 12 месяцев с даты покупки. ",
+        "The warranty on electronics is 12 months from the date of purchase. "
       ),
     },
     {
       id: "c2",
-      fromChar: 68,
-      toChar: 133,
+      fromChar: B(62, 68),
+      toChar: B(125, 148),
       text: B(
-        "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki. ",
-        "Electronics warranty is 12 months from the purchase date. "
+        "Командировки оформляются через портал не позднее чем за 3 дня. ",
+        "Business trips are arranged through the portal no later than 3 days in advance. "
       ),
     },
     {
       id: "c3",
-      fromChar: 133,
-      toChar: 180,
+      fromChar: B(125, 148),
+      toChar: B(163, 186),
       text: B(
-        "Dostavka po gorodu zanimaet odin rabochij den'.",
-        "City delivery takes one business day."
+        "Больничный оплачивается с первого дня.",
+        "Sick leave is paid from the first day."
       ),
     },
   ],
@@ -126,7 +139,7 @@ export default {
       id: "s1",
       kind: "split",
       caption: B(
-        "Shag 1: berem gotovye chunki - po odnomu kusku teksta na fragment.",
+        "Шаг 1: берем готовые чанки - по одному куску текста на фрагмент.",
         "Step 1: take the ready chunks -- one piece of text per fragment."
       ),
       targets: ["c1", "c2", "c3"],
@@ -136,7 +149,7 @@ export default {
       id: "s2",
       kind: "embed",
       caption: B(
-        "Shag 2: kazhdyj chunk prevrashchaetsya v vektor (dlina zavisit ot modeli, zdes' 1536 dlja text-embedding-3-small) - menyaetsya predstavlenie, ne tekst.",
+        "Шаг 2: каждый чанк превращается в вектор (длина зависит от модели, здесь 1536 для text-embedding-3-small) - меняется представление, не текст.",
         "Step 2: each chunk becomes a vector (length depends on the model, here 1536 for text-embedding-3-small) -- the representation changes, not the text."
       ),
       targets: ["c1", "c2", "c3"],
@@ -146,7 +159,7 @@ export default {
       id: "s3",
       kind: "store",
       caption: B(
-        "Shag 3: vektory v1..v3 uhodyat v indeks; svyaz' chunk -> vektor strogo odin-k-odnomu.",
+        "Шаг 3: векторы v1..v3 уходят в индекс; связь чанк -> вектор строго один-к-одному.",
         "Step 3: vectors v1..v3 go to the index; the chunk -> vector mapping is strictly one-to-one."
       ),
       targets: ["v1", "v2", "v3"],

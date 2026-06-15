@@ -29,7 +29,7 @@ def retrieve(query, k=3):
     return [(m.id, round(m.score, 3), m.metadata["text"])
             for m in res.matches]
 
-for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
+for cid, score, text in retrieve("how to get a refund for a purchase"):
     print(cid, score, text[:40])
 # the refund chunk comes back first - with no words shared with the query
 ```

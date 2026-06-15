@@ -17,13 +17,13 @@ RAG removes both in one move: the needed fact is fed at request time from your f
 from anthropic import Anthropic
 
 client = Anthropic()  # ANTHROPIC_API_KEY
-question = "Po nashej politike: skolko dnej otpuska na ispytatelnom sroke?"
+question = "Under our policy, how many vacation days are there during probation?"
 
 def ask(context=None):
     if context:
         prompt = (
-            "Otvechaj tolko po kontekstu. Esli otveta net v kontekste, "
-            f"skazhi 'etogo net v dokumentah'.\nKontekst:\n{context}\n\nVopros: {question}"
+            "Answer only from the context. If the answer is not in the context, "
+            f"say 'this is not in the documents'.\nContext:\n{context}\n\nQuestion: {question}"
         )
     else:
         prompt = question
@@ -35,11 +35,11 @@ def ask(context=None):
     return r.content[0].text
 
 # Track A (no RAG): answer from memory - may be a fabrication about YOUR policy.
-print("BEZ RAG:", ask())
+print("NO RAG:", ask())
 
 # Track B (with RAG): retrieval supplies a real chunk, the answer is grounded.
-retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac."
-print("S RAG: ", ask(context=retrieved))
+retrieved = "Vacation during probation: 2 days for each month worked."
+print("RAG:   ", ask(context=retrieved))
 ```
 
 Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).

@@ -13,33 +13,33 @@
 RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:
 
 ```python
-# Tot zhe vopros dvumya putyami. Track A: bez konteksta. Track B: s retrieval.
+# Тот же вопрос двумя путями. Track A: без контекста. Track B: с retrieval.
 from anthropic import Anthropic
 
 client = Anthropic()  # ANTHROPIC_API_KEY
-question = "Po nashej politike: skolko dnej otpuska na ispytatelnom sroke?"
+question = "По нашей политике: сколько дней отпуска на испытательном сроке?"
 
 def ask(context=None):
     if context:
         prompt = (
-            "Otvechaj tolko po kontekstu. Esli otveta net v kontekste, "
-            f"skazhi 'etogo net v dokumentah'.\nKontekst:\n{context}\n\nVopros: {question}"
+            "Отвечай только по контексту. Если ответа нет в контексте, "
+            f"скажи 'этого нет в документах'.\nКонтекст:\n{context}\n\nВопрос: {question}"
         )
     else:
         prompt = question
     r = client.messages.create(
-        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
+        model="claude-sonnet-4-6",  # текущая модель -- см. обзор моделей
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
     return r.content[0].text
 
-# Track A (bez RAG): otvet iz pamyati - mozhet byt vydumkoj pro VASHU politiku.
-print("BEZ RAG:", ask())
+# Track A (без RAG): ответ из памяти - может быть выдумкой про ВАШУ политику.
+print("БЕЗ RAG:", ask())
 
-# Track B (s RAG): retrieval daet realnyj chunk, otvet zazemlen.
-retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac."
-print("S RAG: ", ask(context=retrieved))
+# Track B (с RAG): retrieval дает реальный chunk, ответ заземлен.
+retrieved = "Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц."
+print("С RAG: ", ask(context=retrieved))
 ```
 
 Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).

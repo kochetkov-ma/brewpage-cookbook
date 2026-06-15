@@ -26,14 +26,14 @@ ENC = tiktoken.get_encoding("cl100k_base")  # OpenAI tokenizer: fast OFFLINE APP
 def count_tokens(text: str) -> int:
     return len(ENC.encode(text))
 
-PROMPT_TEMPLATE = """Otvechaj tol'ko na osnove konteksta nizhe.
-Esli otveta v kontekste net, skazhi ob etom chestno.
+PROMPT_TEMPLATE = """Answer only from the context below.
+If the answer is not in the context, say so honestly.
 
-Kontekst:
+Context:
 {context}
 
-Vopros: {question}
-Otvet:"""
+Question: {question}
+Answer:"""
 
 def assemble_context(question, retrieved, max_context_tokens=3000):
     """

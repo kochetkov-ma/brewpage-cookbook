@@ -236,7 +236,7 @@
         <div class="callout">
           <p class="ctag">Фильтр по метаданным</p>
           <p>Рядом с вектором база хранит <span style="font-style:normal">source / section / date / access</span>.
-            Фильтр <code>filter={"section": "vozvrat"}</code> сужает поиск до нужного подмножества <b>перед</b> поиском ближайших.</p>
+            Фильтр <code>filter={"section": "refund"}</code> сужает поиск до нужного подмножества <b>перед</b> поиском ближайших.</p>
         </div>
 
         <div class="card">
@@ -272,9 +272,9 @@
       <div class="card static-card">
         <h2 class="static-card__head">top-k by cosine (k = 3)</h2>
         <ol class="ranklist ranklist--static">
-          <li class="near shown"><span class="rk">#1</span><span class="rtxt">refund policy - faq.md / section vozvrat</span><span class="rcos">0.91</span></li>
-          <li class="near shown"><span class="rk">#2</span><span class="rtxt">electronics warranty - faq.md / section garantiya</span><span class="rcos">0.85</span></li>
-          <li class="near shown"><span class="rk">#3</span><span class="rtxt">product exchange - faq.md / section vozvrat</span><span class="rcos">0.78</span></li>
+          <li class="near shown"><span class="rk">#1</span><span class="rtxt">refund policy - faq.md / section refund</span><span class="rcos">0.91</span></li>
+          <li class="near shown"><span class="rk">#2</span><span class="rtxt">electronics warranty - faq.md / section warranty</span><span class="rcos">0.85</span></li>
+          <li class="near shown"><span class="rk">#3</span><span class="rtxt">product exchange - faq.md / section refund</span><span class="rcos">0.78</span></li>
         </ol>
         <div class="cut">top-k boundary (k = 3)</div>
         <ol class="ranklist ranklist--static">
@@ -298,7 +298,7 @@
       <p data-pk="problem.p1">You have vectors - one per fragment from the previous chapter. When a query arrives, you need to find a few fragments closest in meaning to the query vector. You could compare the query against every vector in turn - and with a thousand fragments that works. But with a million fragments, scanning each one on every query becomes too slow.</p>
       <p data-pk="problem.p2">The solution is a vector store: a specialized storage that holds vectors and can quickly find nearest neighbours without comparing the query against the whole archive. Here is what the store step plus search look like using a vector-database client:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="vector-store-upsert-query">
-        <figcaption class="code-block__cap" data-i18n data-ru="Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Векторная база: upsert векторов с metadata, затем поиск top-k ближайших с фильтром по metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.</figcaption>
         <pre><code># pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
@@ -307,25 +307,25 @@ oai = OpenAI()
 pc = Pinecone()
 index = pc.Index("docs")
 
-# store: kladem vektor + metadata + tekst chunka
+# store: put the vector + metadata + chunk text
 def embed(text):
     return oai.embeddings.create(
         model="text-embedding-3-small", input=text
     ).data[0].embedding
 
 index.upsert(vectors=[
-    {"id": "c1", "values": embed("Politika vozvrata: vernut' tovar mozhno v 30 dnej."),
-     "metadata": {"source": "faq.md", "section": "vozvrat", "text": "..."}},
-    {"id": "c2", "values": embed("Garantiya na elektroniku 12 mesyacev."),
-     "metadata": {"source": "faq.md", "section": "garantiya", "text": "..."}},
+    {"id": "c1", "values": embed("Refund policy: a product may be returned within 30 days."),
+     "metadata": {"source": "faq.md", "section": "refund", "text": "..."}},
+    {"id": "c2", "values": embed("The warranty on electronics is 12 months."),
+     "metadata": {"source": "faq.md", "section": "warranty", "text": "..."}},
 ])
 
-# poisk: top-k blizhajshih k vektoru zaprosa
+# search: top-k nearest to the query vector
 res = index.query(
-    vector=embed("kak vernut' den'gi za pokupku"),
+    vector=embed("how to get a refund for a purchase"),
     top_k=3,
     include_metadata=True,
-    filter={"section": "vozvrat"},   # metadata-fil'tr
+    filter={"section": "refund"},   # metadata filter
 )
 for m in res.matches:
     print(m.id, round(m.score, 3), m.metadata["section"])</code></pre>
@@ -333,7 +333,7 @@ for m in res.matches:
           <li><strong>Clients and index</strong> -- The OpenAI client for embeddings and the docs index in Pinecone - the vector store.</li>
           <li><strong>embed helper</strong> -- A helper: text -> vector with the same model for both store and search.</li>
           <li><strong>Upsert with metadata</strong> -- Put each vector into the store together with its metadata (source, section, text) - the store keeps them side by side.</li>
-          <li><strong>Filtered search</strong> -- Search for the top-3 nearest, but first narrow the search with a metadata filter (section vozvrat).</li>
+          <li><strong>Filtered search</strong> -- Search for the top-3 nearest, but first narrow the search with a metadata filter (section refund).</li>
           <li><strong>Print matches</strong> -- Print the id, cosine score and section of each returned match.</li>
         </ol>
       </figure>

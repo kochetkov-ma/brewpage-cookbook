@@ -21,26 +21,26 @@
 # pip install tiktoken
 import tiktoken
 
-ENC = tiktoken.get_encoding("cl100k_base")  # tokenizer OpenAI: bystroe OFFLINE-PRIBLIZHENIE, ne tochno dlya Claude; dlya tochnogo scheta Claude ispolzujte client.messages.count_tokens()
+ENC = tiktoken.get_encoding("cl100k_base")  # токенизатор OpenAI: быстрое OFFLINE-ПРИБЛИЖЕНИЕ, не точно для Claude; для точного счета Claude используйте client.messages.count_tokens()
 
 def count_tokens(text: str) -> int:
     return len(ENC.encode(text))
 
-PROMPT_TEMPLATE = """Otvechaj tol'ko na osnove konteksta nizhe.
-Esli otveta v kontekste net, skazhi ob etom chestno.
+PROMPT_TEMPLATE = """Отвечай только на основе контекста ниже.
+Если ответа в контексте нет, скажи об этом честно.
 
-Kontekst:
+Контекст:
 {context}
 
-Vopros: {question}
-Otvet:"""
+Вопрос: {question}
+Ответ:"""
 
 def assemble_context(question, retrieved, max_context_tokens=3000):
     """
-    retrieved: spisok dict {id, text, score, source}, otsortirovannyj
-               po ubyvaniyu score (samyj relevantnyj pervym).
+    retrieved: список dict {id, text, score, source}, отсортированный
+               по убыванию score (самый релевантный первым).
     """
-    # 1. Dedup: vybrasyvaem povtory po tekstu, sohranyaya luchshij score.
+    # 1. Dedup: выбрасываем повторы по тексту, сохраняя лучший score.
     seen, unique = set(), []
     for chunk in retrieved:
         key = chunk["text"].strip()
@@ -48,19 +48,19 @@ def assemble_context(question, retrieved, max_context_tokens=3000):
             seen.add(key)
             unique.append(chunk)
 
-    # 2. Poryadok: samoe vazhnoe - po krayam, ne v seredine (lost-in-the-middle).
+    # 2. Порядок: самое важное - по краям, не в середине (lost-in-the-middle).
     ranked = order_for_attention(unique)
 
-    # 3. Token budget: nabiraem kuski, poka vlezaem v limit.
+    # 3. Token budget: набираем куски, пока влезаем в лимит.
     picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)
     for chunk in ranked:
-        cost = count_tokens(chunk["text"]) + 8  # +razdelitel'/podpis' istochnika
+        cost = count_tokens(chunk["text"]) + 8  # +разделитель/подпись источника
         if used + cost > max_context_tokens:
-            break  # ostal'noe ne vlezaet - obrezaem
+            break  # остальное не влезает - обрезаем
         picked.append(chunk)
         used += cost
 
-    # 4. Shablon: skleivaem s podpis'yu istochnika dlya posleduyushchih citat.
+    # 4. Шаблон: склеиваем с подписью источника для последующих цитат.
     context = "\n\n".join(f"[{c['source']}] {c['text']}" for c in picked)
     return PROMPT_TEMPLATE.format(context=context, question=question), picked
 ```
@@ -87,12 +87,12 @@ def assemble_context(question, retrieved, max_context_tokens=3000):
 
 ```python
 def order_for_attention(ranked):
-    """Luchshie kuski - po krayam okna, slabye - v seredinu.
-    ranked uzhe otsortirovan po ubyvaniyu relevantnosti."""
+    """Лучшие куски - по краям окна, слабые - в середину.
+    ranked уже отсортирован по убыванию релевантности."""
     head, tail = [], []
     for i, chunk in enumerate(ranked):
         (head if i % 2 == 0 else tail).append(chunk)
-    return head + tail[::-1]   # ...silnye...slabye...silnye
+    return head + tail[::-1]   # ...сильные...слабые...сильные
 ```
 
 ## Чистим дубли и обрезаем лишнее

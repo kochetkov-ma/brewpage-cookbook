@@ -245,19 +245,19 @@
       <h2 id="pr-endpoint" data-pk="endpoint.h2">The solution: a production endpoint with cost control</h2>
       <p data-pk="endpoint.p1">Here is a working endpoint in Python (FastAPI) that assembles the whole pipeline and adds production hooks: a cache, latency measurement, cost accounting, an access filter.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="production-fastapi-endpoint">
-      <figcaption class="code-block__cap" data-i18n data-ru="Produkshen-endpoint na FastAPI: kesh, podschet stoimosti, latency i filtr dostupa." data-en="A FastAPI production endpoint: cache, cost accounting, latency, and an access filter.">A FastAPI production endpoint: cache, cost accounting, latency, and an access filter.</figcaption>
+      <figcaption class="code-block__cap" data-i18n data-ru="Продакшен-эндпоинт на FastAPI: кеш, подсчет стоимости, latency и фильтр доступа." data-en="A FastAPI production endpoint: cache, cost accounting, latency, and an access filter.">A FastAPI production endpoint: cache, cost accounting, latency, and an access filter.</figcaption>
       <pre><code># pip install fastapi uvicorn cachetools
 import time, hashlib
 from cachetools import TTLCache
 from fastapi import FastAPI, Depends
 
 app = FastAPI()
-# Kesh otvetov: odinakovyj vopros ne platit dvazhdy. TTL - chtoby ne otdavat' ustarevshee.
+# Answer cache: the same question does not pay twice. TTL - so we do not serve stale content.
 answer_cache = TTLCache(maxsize=10_000, ttl=3600)
 
-# Cena za 1M tokenov - svery'te s pricing vendora pered raschetom.
-PRICE_IN_PER_MTOK = 3.00   # USD/1M -- replace with your vendor rate (see platform.claude.com pricing)
-PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- replace with your vendor rate (see platform.claude.com pricing)
+# Price per 1M tokens - check against the vendor pricing before you compute.
+PRICE_IN_PER_MTOK = 3.00   # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)
+PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)
 
 def cost_usd(tokens_in, tokens_out):
     return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK
@@ -269,14 +269,14 @@ def ask(question: str, user=Depends(current_user)):
     if key in answer_cache:
         return {"answer": answer_cache[key], "cached": True}
 
-    # Dostup: retrieve vidit tol'ko dokumenty, razreshennye etomu polzovatelyu.
+    # Access: retrieve sees only the documents permitted to this user.
     chunks = retrieve(question, allowed_filter=user.acl_filter)
     prompt, used = assemble_context(question, chunks)
     answer, tokens_in, tokens_out = generate_with_usage(prompt)
 
     answer_cache[key] = answer
     latency_ms = (time.perf_counter() - t0) * 1000
-    log_metrics(  # uhodit v vash monitoring, ne v otvet polzovatelyu
+    log_metrics(  # goes to your monitoring, not into the user's answer
         user=user.id, latency_ms=latency_ms,
         cost=cost_usd(tokens_in, tokens_out), n_chunks=len(chunks),
     )

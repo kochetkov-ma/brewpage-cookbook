@@ -20,25 +20,25 @@ oai = OpenAI()
 pc = Pinecone()
 index = pc.Index("docs")
 
-# store: kladem vektor + metadata + tekst chunka
+# store: кладем вектор + metadata + текст chunk
 def embed(text):
     return oai.embeddings.create(
         model="text-embedding-3-small", input=text
     ).data[0].embedding
 
 index.upsert(vectors=[
-    {"id": "c1", "values": embed("Politika vozvrata: vernut' tovar mozhno v 30 dnej."),
-     "metadata": {"source": "faq.md", "section": "vozvrat", "text": "..."}},
-    {"id": "c2", "values": embed("Garantiya na elektroniku 12 mesyacev."),
-     "metadata": {"source": "faq.md", "section": "garantiya", "text": "..."}},
+    {"id": "c1", "values": embed("Политика возврата: вернуть товар можно в 30 дней."),
+     "metadata": {"source": "faq.md", "section": "возврат", "text": "..."}},
+    {"id": "c2", "values": embed("Гарантия на электронику составляет 12 месяцев с даты покупки."),
+     "metadata": {"source": "faq.md", "section": "гарантия", "text": "..."}},
 ])
 
-# poisk: top-k blizhajshih k vektoru zaprosa
+# поиск: top-k ближайших к вектору запроса
 res = index.query(
-    vector=embed("kak vernut' den'gi za pokupku"),
+    vector=embed("как вернуть деньги за покупку"),
     top_k=3,
     include_metadata=True,
-    filter={"section": "vozvrat"},   # metadata-fil'tr
+    filter={"section": "возврат"},   # metadata-фильтр
 )
 for m in res.matches:
     print(m.id, round(m.score, 3), m.metadata["section"])
@@ -90,7 +90,7 @@ for m in res.matches:
 ## Попробуйте сами
 
 - Откройте интерактив ann-topk-drill: найдите узел-запрос и пройдите по нарисованному query path к его top-k соседям. Сделайте drill (semantic zoom) в одного из выбранных соседей и посмотрите его `cosine` и `metadata`.
-- Сравните, что вернется с фильтром по метаданным и без него: в коде выше уберите `filter={"section": "vozvrat"}` и посмотрите, как меняется набор top-k.
+- Сравните, что вернется с фильтром по метаданным и без него: в коде выше уберите `filter={"section": "refund"}` и посмотрите, как меняется набор top-k.
 - Прикиньте, нужна ли векторная база вашему случаю: сколько у вас фрагментов и ищете вы по смыслу или по точному совпадению - сверьтесь с разделом "Когда векторная база не нужна".
 
 ## Что дальше

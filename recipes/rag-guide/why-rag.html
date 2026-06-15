@@ -320,18 +320,18 @@
       <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
       <p data-pk="problem.p2">RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="why-rag-two-track">
-      <figcaption class="code-block__cap" data-i18n data-ru="Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).</figcaption>
-      <pre><code># Tot zhe vopros dvumya putyami. Track A: bez konteksta. Track B: s retrieval.
+      <figcaption class="code-block__cap" data-i18n data-ru="Один вопрос двумя путями: без RAG (из памяти) и с RAG (заземленный по чанку)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).</figcaption>
+      <pre><code># Same question, two paths. Track A: no context. Track B: with retrieval.
 from anthropic import Anthropic
 
 client = Anthropic()  # ANTHROPIC_API_KEY
-question = "Po nashej politike: skolko dnej otpuska na ispytatelnom sroke?"
+question = "Under our policy, how many vacation days are there during probation?"
 
 def ask(context=None):
     if context:
         prompt = (
-            "Otvechaj tolko po kontekstu. Esli otveta net v kontekste, "
-            f"skazhi 'etogo net v dokumentah'.\nKontekst:\n{context}\n\nVopros: {question}"
+            "Answer only from the context. If the answer is not in the context, "
+            f"say 'this is not in the documents'.\nContext:\n{context}\n\nQuestion: {question}"
         )
     else:
         prompt = question
@@ -342,15 +342,15 @@ def ask(context=None):
     )
     return r.content[0].text
 
-# Track A (bez RAG): otvet iz pamyati - mozhet byt vydumkoj pro VASHU politiku.
-print("BEZ RAG:", ask())
+# Track A (no RAG): answer from memory - may be a fabrication about YOUR policy.
+print("NO RAG:", ask())
 
-# Track B (s RAG): retrieval daet realnyj chunk, otvet zazemlen.
-retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac."
-print("S RAG: ", ask(context=retrieved))</code></pre>
+# Track B (with RAG): retrieval supplies a real chunk, the answer is grounded.
+retrieved = "Vacation during probation: 2 days for each month worked."
+print("RAG:   ", ask(context=retrieved))</code></pre>
       <ol class="code-annot-list no-js-only">
         <li><strong>Client and question</strong> -- One Anthropic client and one fixed question about internal policy - the point where an ordinary model does not know your data.</li>
-        <li><strong>With-context branch</strong> -- When context is passed, the instruction tells the model to answer only from it and to say 'etogo net v dokumentah' if there is no answer - the basis of grounding.</li>
+        <li><strong>With-context branch</strong> -- When context is passed, the instruction tells the model to answer only from it and to say 'this is not in the documents' if there is no answer - the basis of grounding.</li>
         <li><strong>No-context branch</strong> -- Without context the prompt is the bare question; the Messages API call is identical for both paths, only the input prompt differs.</li>
         <li><strong>Track A: no RAG</strong> -- Call with no context: the answer comes from parametric memory and may be a fabrication about your specific policy.</li>
         <li><strong>Track B: with RAG</strong> -- Retrieval supplies a real chunk first, then it goes into the context and the answer is grounded on it. The answer is never written before the context is substituted in.</li>

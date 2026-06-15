@@ -18,11 +18,11 @@ Here is a working harness in Python. The golden set is a list of questions, for 
 ```python
 golden = [
     {
-        "q": "Kak vernut' tovar?",
+        "q": "How do I return a product?",
         "relevant": {"policy-12", "policy-13"},   # ids of chunks with the answer
     },
     {
-        "q": "Skolko dney na vozvrat?",
+        "q": "How many days do I have to return it?",
         "relevant": {"policy-13"},
     },
     # ...50+ questions: the more, the more stable the metric

@@ -30,16 +30,16 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
     "type": "enabled",
     "budget_tokens": 2048
   },
-  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
+  "system": "Ты помощник поддержки. Отвечай ТОЛЬКО по тексту, который вернул инструмент search_docs. Если ответа в найденных кусках нет, честно скажи: этого нет в документах. Указывай источник каждого факта по полю source.",
   "tools": [
     {
       "name": "search_docs",
-      "description": "Semanticheskij poisk top-k chunkov po vektornoj baze znanij.",
+      "description": "Семантический поиск top-k chunks по векторной базе знаний.",
       "input_schema": {
         "type": "object",
         "properties": {
-          "query": { "type": "string", "description": "Poiskovyj zapros polzovatelya" },
-          "top_k": { "type": "integer", "description": "Skol'ko blizhajshih chunkov vernut'", "default": 4 }
+          "query": { "type": "string", "description": "Поисковый запрос пользователя" },
+          "top_k": { "type": "integer", "description": "Сколько ближайших chunks вернуть", "default": 4 }
         },
         "required": ["query"]
       }
@@ -49,7 +49,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
   "messages": [
     {
       "role": "user",
-      "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?"
+      "content": "Сколько дней отпуска у сотрудника после трех лет работы?"
     }
   ]
 }
@@ -68,7 +68,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
   "content": [
     {
       "type": "thinking",
-      "thinking": "Vopros pro dni otpuska posle treh let stazha. V system skazano otvechat' tol'ko po najdennomu, svoih dannyh u menya net. Nado vyzvat' search_docs s zaprosom pro otpusk i stazh.",
+      "thinking": "Вопрос про дни отпуска после трех лет стажа. В system сказано отвечать только по найденному, своих данных у меня нет. Надо вызвать search_docs с запросом про отпуск и стаж.",
       "signature": "EqoBCkg...=="
     },
     {
@@ -76,7 +76,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
       "id": "toolu_01A09q90qw",
       "name": "search_docs",
       "input": {
-        "query": "dni otpuska stazh tri goda politika",
+        "query": "дни отпуска стаж три года политика",
         "top_k": 4
       }
     }
@@ -100,17 +100,17 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 {
   "model": "claude-sonnet-4-6",
   "max_tokens": 1024,
-  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
+  "system": "Ты помощник поддержки. Отвечай ТОЛЬКО по тексту, который вернул инструмент search_docs. Если ответа в найденных кусках нет, честно скажи: этого нет в документах. Указывай источник каждого факта по полю source.",
   "tools": [
-    { "name": "search_docs", "description": "Semanticheskij poisk top-k chunkov po vektornoj baze znanij.", "input_schema": { "type": "object", "properties": { "query": { "type": "string" }, "top_k": { "type": "integer" } }, "required": ["query"] } }
+    { "name": "search_docs", "description": "Семантический поиск top-k chunks по векторной базе знаний.", "input_schema": { "type": "object", "properties": { "query": { "type": "string" }, "top_k": { "type": "integer" } }, "required": ["query"] } }
   ],
   "messages": [
-    { "role": "user", "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?" },
+    { "role": "user", "content": "Сколько дней отпуска у сотрудника после трех лет работы?" },
     {
       "role": "assistant",
       "content": [
         { "type": "thinking", "thinking": "...", "signature": "EqoBCkg...==" },
-        { "type": "tool_use", "id": "toolu_01A09q90qw", "name": "search_docs", "input": { "query": "dni otpuska stazh tri goda politika", "top_k": 4 } }
+        { "type": "tool_use", "id": "toolu_01A09q90qw", "name": "search_docs", "input": { "query": "дни отпуска стаж три года политика", "top_k": 4 } }
       ]
     },
     {
@@ -120,8 +120,8 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
           "type": "tool_result",
           "tool_use_id": "toolu_01A09q90qw",
           "content": [
-            { "type": "text", "text": "[chunk c-118 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.83 | rank=1] Posle 3 polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god." },
-            { "type": "text", "text": "[chunk c-119 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.71 | rank=2] Bazovyj otpusk pri stazhe do 3 let sostavlyaet 24 kalendarnyh dnya." }
+            { "type": "text", "text": "[chunk c-118 | source=hr-policy.md | section=Отпуска | date=2026-01-10 | cosine=0.83 | rank=1] После 3 полных лет стажа сотруднику полагается 28 календарных дней оплачиваемого отпуска в год." },
+            { "type": "text", "text": "[chunk c-119 | source=hr-policy.md | section=Отпуска | date=2026-01-10 | cosine=0.71 | rank=2] Базовый отпуск при стаже до 3 лет составляет 24 календарных дня." }
           ]
         }
       ]
@@ -143,7 +143,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
   "content": [
     {
       "type": "text",
-      "text": "Posle treh polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god (istochnik: hr-policy.md, razdel Otpuska)."
+      "text": "После трех полных лет стажа сотруднику полагается 28 календарных дней оплачиваемого отпуска в год (источник: hr-policy.md, раздел Отпуска)."
     }
   ],
   "stop_reason": "end_turn",

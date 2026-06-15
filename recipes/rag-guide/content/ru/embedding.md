@@ -21,9 +21,9 @@ from openai import OpenAI
 client = OpenAI()
 
 chunks = [
-    "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.",
-    "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.",
-    "Dostavka po gorodu zanimaet odin rabochij den'.",
+    "Политика возврата средств: вернуть товар можно в течение 30 дней.",
+    "Гарантия на электронику составляет 12 месяцев с даты покупки.",
+    "Доставка по городу занимает один рабочий день.",
 ]
 
 resp = client.embeddings.create(
@@ -31,10 +31,10 @@ resp = client.embeddings.create(
     input=chunks,
 )
 
-# odin vektor na kazhdyj chunk, strogo odin-k-odnomu
+# один вектор на каждый chunk, строго один-к-одному
 vectors = [item.embedding for item in resp.data]
-print(len(vectors), "vektorov")        # 3
-print(len(vectors[0]), "komponent")    # 1536
+print(len(vectors), "векторов")        # 3
+print(len(vectors[0]), "компонент")    # 1536
 ```
 
 После этого у вас три вектора длины 1536 - по одному на фрагмент. Сам текст напрямую сравнивать больше не нужно: вся дальнейшая работа идет с числами.
@@ -68,13 +68,13 @@ def cosine(a, b):
 
 query_vec = client.embeddings.create(
     model="text-embedding-3-small",
-    input="kak vernut' den'gi za pokupku",
+    input="как вернуть деньги за покупку",
 ).data[0].embedding
 
-# blizost' zaprosa k kazhdomu chunku
+# близость запроса к каждому chunk
 scores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]
 scores.sort(key=lambda t: t[1], reverse=True)
-print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij
+print(scores[0])   # chunk 0 (политика возврата) - самый близкий
 ```
 
 Фрагмент про возврат средств окажется ближе всего к запросу "как вернуть деньги", хотя ни одного общего ключевого слова между ними почти нет. Именно эта близость и позволяет на шаге retrieve достать top-k фрагментов, ближайших к вектору запроса, не сравнивая тексты побуквенно.

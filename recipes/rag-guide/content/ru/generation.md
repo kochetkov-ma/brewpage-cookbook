@@ -22,31 +22,31 @@
 import re
 from anthropic import Anthropic
 
-client = Anthropic()  # kluch v ANTHROPIC_API_KEY
+client = Anthropic()  # ключ в ANTHROPIC_API_KEY
 
 SYSTEM = (
-    "Ty otvechaesh' tol'ko na osnove peredannogo konteksta. "
-    "Posle kazhdogo utverzhdeniya stav' ssylku na istochnik v vide [source]. "
-    "Esli otveta v kontekste net, otvet': 'Etogo net v dokumentah.' "
-    "Ne dobavlyaj fakty iz sobstvennoj pamyati."
+    "Ты отвечаешь только на основе переданного контекста. "
+    "После каждого утверждения ставь ссылку на источник в виде [source]. "
+    "Если ответа в контексте нет, ответь: 'Этого нет в документах.' "
+    "Не добавляй факты из собственной памяти."
 )
 
 def generate(prompt: str):
     resp = client.messages.create(
-        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
+        model="claude-sonnet-4-6",  # текущая модель -- см. обзор моделей
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
     )
     answer = resp.content[0].text
-    # Razbiraem citaty [source] iz otveta dlya proverki zazemleniya.
+    # Разбираем цитаты [source] из ответа для проверки заземления.
     cited = re.findall(r"\[([^\]]+)\]", answer)
     return answer, cited
 
 def generate_stream(prompt: str):
-    # Streaming: tokeny pribyvayut po mere generacii - menshe ozhidanie.
+    # Streaming: токены прибывают по мере генерации - меньше ожидание.
     with client.messages.stream(
-        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
+        model="claude-sonnet-4-6",  # текущая модель -- см. обзор моделей
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],

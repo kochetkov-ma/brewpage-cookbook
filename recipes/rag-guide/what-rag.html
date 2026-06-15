@@ -259,20 +259,20 @@
       <p data-pk="problem.p1">You ask an ordinary LLM: "How many vacation days does an employee on probation get under our policy?" The model answers confidently - and wrong. It has never seen your internal policy, so it just generates plausible text. The fix is not to "ask better" but to hand the model your actual document BEFORE it answers.</p>
       <p data-pk="problem.p2">That is exactly what RAG does: it finds the relevant fragments of your data and mixes them into the request, after which the model answers from them. The architecture was introduced by Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Here is the same call, now with retrieval - a minimal working RAG on real APIs:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="what-rag-minimal-rag">
-      <figcaption class="code-block__cap" data-i18n data-ru="Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation." data-en="A minimal working RAG on real APIs: retrieval -> augmented -> generation.">A minimal working RAG on real APIs: retrieval -> augmented -> generation.</figcaption>
-      <pre><code># Minimalnyj RAG: snachala retrieval, potom generaciya po najdennomu.
+      <figcaption class="code-block__cap" data-i18n data-ru="Минимальный рабочий RAG на реальных API: retrieval -&gt; augmented -&gt; generation." data-en="A minimal working RAG on real APIs: retrieval -> augmented -> generation.">A minimal working RAG on real APIs: retrieval -> augmented -> generation.</figcaption>
+      <pre><code># Minimal RAG: retrieval first, then generation over what was found.
 from anthropic import Anthropic
 from openai import OpenAI
 import numpy as np
 
-oa = OpenAI()        # OPENAI_API_KEY: schitaem embeddingi
-anthropic = Anthropic()  # ANTHROPIC_API_KEY: generaciya
+oa = OpenAI()        # OPENAI_API_KEY: compute the embeddings
+anthropic = Anthropic()  # ANTHROPIC_API_KEY: generation
 
-# Korpus = vashi chunki (zdes' uproshchen do spiska strok).
+# Corpus = your chunks (simplified here to a list of strings).
 chunks = [
-    "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.",
-    "Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.",
-    "Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.",
+    "Vacation during probation: 2 days for each month worked.",
+    "Business trips are arranged through the portal no later than 3 days in advance.",
+    "Remote work is agreed with your manager separately for each week.",
 ]
 
 def embed(texts):
@@ -280,23 +280,23 @@ def embed(texts):
     return np.array([d.embedding for d in r.data])  # dim depends on the model (e.g. 1536 for text-embedding-3-small) -- see the OpenAI Embeddings guide
 
 chunk_vecs = embed(chunks)
-query = "Skolko dnej otpuska na ispytatelnom sroke?"
+query = "How many vacation days are there during probation?"
 q_vec = embed([query])[0]
 
-# Cosine similarity -> top-1 chunk (RETRIEVAL).
+# Cosine similarity -&gt; top-1 chunk (RETRIEVAL).
 cos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))
 top = chunks[int(np.argmax(cos))]
 
-# AUGMENTED + GENERATION: podkladyvaem najdennoe v prompt.
+# AUGMENTED + GENERATION: slot what was found into the prompt.
 resp = anthropic.messages.create(
     model="claude-sonnet-4-6",  # current model -- see the models overview
     max_tokens=300,
     messages=[{
         "role": "user",
-        "content": f"Otvechaj tolko po kontekstu. Kontekst:\n{top}\n\nVopros: {query}",
+        "content": f"Answer only from the context. Context:\n{top}\n\nQuestion: {query}",
     }],
 )
-print(resp.content[0].text)  # otvet opiraetsya na VASH chunk</code></pre>
+print(resp.content[0].text)  # the answer rests on YOUR chunk</code></pre>
       <ol class="code-annot-list no-js-only">
         <li><strong>API clients</strong> -- Two clients: OpenAI computes the embeddings, Anthropic generates the answer. Keys come from environment variables, not from code.</li>
         <li><strong>Chunk corpus</strong> -- Your knowledge base, simplified to a list of strings. In real RAG these are document chunks from a vector index.</li>

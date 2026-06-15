@@ -116,15 +116,15 @@ export default {
     id: "q",
     cx: 240,
     cy: 210,
-    label: B("zapros", "query"),
-    text: B('"kak vernut den\'gi za pokupku"', '"how to get my money back for a purchase"'),
-    tokens: ["kak", "vernut", "den'gi", "za", "pokupku"],
+    label: B("запрос", "query"),
+    text: B('"как вернуть деньги за покупку"', '"how to get my money back for a purchase"'),
+    tokens: ["как", "вернуть", "деньги", "за", "покупку"],
     vector: "[0.80, -0.11, 0.46, 0.06, -0.34, 0.20, ...]",
     dim: "1536",
     metric: "cosine",
     crumb: B("Запрос", "Query"),
     head: B("Вектор запроса", "Query vector"),
-    title: B('"kak vernut den\'gi za pokupku"', '"how to get my money back for a purchase"'),
+    title: B('"как вернуть деньги за покупку"', '"how to get my money back for a purchase"'),
     src: B("запрос пользователя -> поисковый вектор", "user query -> search vector"),
     body: B(
       "База ищет top-k ближайших к этому вектору по косинусу и возвращает их вместе со скором - без перебора всего архива (ANN).",
@@ -149,7 +149,7 @@ export default {
       cx: 320,
       cy: 156,
       cos: "0.91",
-      label: B("vozvrat 30 dnej", "refund 30 days"),
+      label: B("возврат 30 дней", "refund 30 days"),
       cosLabel: "0.91",
       topk: true,
       ariaLabel: B(
@@ -159,21 +159,21 @@ export default {
       crumb: B("Сосед #1", "Neighbour #1"),
       head: B("Вектор в индексе - ранг #1", "Vector in the index - rank #1"),
       title: B("Политика возврата средств", "Refund policy"),
-      src: B("faq.md  -  раздел vozvrat", "faq.md  -  section vozvrat"),
+      src: B("faq.md  -  раздел refund", "faq.md  -  section refund"),
       text: B(
-        '"<mark>Politika vozvrata sredstv</mark>: vernut tovar mozhno v techenie 30 dnej."',
+        '"<mark>Политика возврата средств</mark>: вернуть товар можно в течение 30 дней."',
         '"<mark>Refund policy</mark>: a product can be returned within 30 days."'
       ),
       metadata: {
         source: "faq.md",
-        section: "vozvrat",
+        section: "refund",
         date: "2026-02-10",
         access: "public",
       },
       vector: "[0.79, -0.10, 0.48, 0.04, -0.31, 0.21, ...]  (dim 1536)",
       deep: {
         label: B("Метаданные и вектор соседа", "Neighbour metadata and vector"),
-        preview: "source=faq.md  section=vozvrat  cos 0.91  vec[0.79, -0.10, 0.48, ...]",
+        preview: "source=faq.md  section=refund  cos 0.91  vec[0.79, -0.10, 0.48, ...]",
       },
     },
     {
@@ -183,7 +183,7 @@ export default {
       cx: 168,
       cy: 144,
       cos: "0.85",
-      label: B("garantiya 12 mes", "warranty 12 mo"),
+      label: B("гарантия 12 мес", "warranty 12 mo"),
       cosLabel: "0.85",
       topk: true,
       ariaLabel: B(
@@ -193,21 +193,21 @@ export default {
       crumb: B("Сосед #2", "Neighbour #2"),
       head: B("Вектор в индексе - ранг #2", "Vector in the index - rank #2"),
       title: B("Гарантия на электронику", "Electronics warranty"),
-      src: B("faq.md  -  раздел garantiya", "faq.md  -  section garantiya"),
+      src: B("faq.md  -  раздел warranty", "faq.md  -  section warranty"),
       text: B(
-        '"<mark>Garantiya na elektroniku</mark> sostavlyaet 12 mesyacev s daty pokupki."',
-        '"<mark>The electronics warranty</mark> is 12 months from the purchase date."'
+        '"<mark>Гарантия на электронику</mark> составляет 12 месяцев с даты покупки."',
+        '"<mark>The warranty on electronics</mark> is 12 months from the date of purchase."'
       ),
       metadata: {
         source: "faq.md",
-        section: "garantiya",
+        section: "warranty",
         date: "2026-01-22",
         access: "public",
       },
       vector: "[0.70, -0.17, 0.43, 0.10, -0.29, 0.15, ...]  (dim 1536)",
       deep: {
         label: B("Метаданные и вектор соседа", "Neighbour metadata and vector"),
-        preview: "source=faq.md  section=garantiya  cos 0.85  vec[0.70, -0.17, 0.43, ...]",
+        preview: "source=faq.md  section=warranty  cos 0.85  vec[0.70, -0.17, 0.43, ...]",
       },
     },
     {
@@ -217,7 +217,7 @@ export default {
       cx: 158,
       cy: 286,
       cos: "0.78",
-      label: B("obmen tovara", "product exchange"),
+      label: B("обмен товара", "product exchange"),
       cosLabel: "0.78",
       topk: true,
       ariaLabel: B(
@@ -227,21 +227,21 @@ export default {
       crumb: B("Сосед #3", "Neighbour #3"),
       head: B("Вектор в индексе - ранг #3", "Vector in the index - rank #3"),
       title: B("Обмен товара", "Product exchange"),
-      src: B("faq.md  -  раздел vozvrat", "faq.md  -  section vozvrat"),
+      src: B("faq.md  -  раздел refund", "faq.md  -  section refund"),
       text: B(
-        '"Tovar mozhno <mark>obmenyat na drugoj razmer</mark> v techenie 14 dnej pri sohranenii cheka."',
+        '"Товар можно <mark>обменять на другой размер</mark> в течение 14 дней при сохранении чека."',
         '"A product can be <mark>exchanged for another size</mark> within 14 days if the receipt is kept."'
       ),
       metadata: {
         source: "faq.md",
-        section: "vozvrat",
+        section: "refund",
         date: "2026-02-10",
         access: "public",
       },
       vector: "[0.62, -0.20, 0.38, 0.13, -0.26, 0.12, ...]  (dim 1536)",
       deep: {
         label: B("Метаданные и вектор соседа", "Neighbour metadata and vector"),
-        preview: "source=faq.md  section=vozvrat  cos 0.78  vec[0.62, -0.20, 0.38, ...]",
+        preview: "source=faq.md  section=refund  cos 0.78  vec[0.62, -0.20, 0.38, ...]",
       },
     },
 
@@ -253,7 +253,7 @@ export default {
       cx: 406,
       cy: 96,
       cos: "0.24",
-      label: B("dostavka", "delivery"),
+      label: B("доставка", "delivery"),
       cosLabel: "0.24",
       topk: false,
       ariaLabel: B(
@@ -263,20 +263,20 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Доставка по городу", "City delivery"),
-      src: B("faq.md  -  раздел dostavka", "faq.md  -  section dostavka"),
+      src: B("faq.md  -  раздел delivery", "faq.md  -  section delivery"),
       text: B(
-        '"<mark>Dostavka po gorodu</mark> zanimaet odin rabochij den."',
+        '"<mark>Доставка по городу</mark> занимает один рабочий день."',
         '"<mark>City delivery</mark> takes one business day."'
       ),
       metadata: {
         source: "faq.md",
-        section: "dostavka",
+        section: "delivery",
         date: "2026-03-01",
         access: "public",
       },
       vector: "[0.13, 0.42, -0.30, 0.26, 0.09, -0.18, ...]  (dim 1536)",
       reason: B(
-        'Фрагмент про сроки доставки, а не про возврат денег. Тема "kogda privezut", а не "kak vernut" - векторы расходятся, косинус низкий.',
+        'Фрагмент про сроки доставки, а не про возврат денег. Тема "когда привезут", а не "как вернуть" - векторы расходятся, косинус низкий.',
         'This fragment is about delivery times, not about getting money back. The topic is "when it arrives", not "how to refund" - the vectors diverge, the cosine is low.'
       ),
       deep: {
@@ -291,7 +291,7 @@ export default {
       cx: 90,
       cy: 350,
       cos: "0.12",
-      label: B("rezhim raboty", "opening hours"),
+      label: B("режим работы", "opening hours"),
       cosLabel: "0.12",
       topk: false,
       ariaLabel: B(
@@ -301,14 +301,14 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Режим работы магазина", "Store opening hours"),
-      src: B("faq.md  -  раздел kontakty", "faq.md  -  section kontakty"),
+      src: B("faq.md  -  раздел contacts", "faq.md  -  section contacts"),
       text: B(
-        '"Magazin <mark>rabotaet</mark> ezhednevno s 10:00 do 22:00 bez vyhodnyh."',
+        '"Магазин <mark>работает</mark> ежедневно с 10:00 до 22:00 без выходных."',
         '"The store is <mark>open</mark> daily from 10:00 to 22:00 with no days off."'
       ),
       metadata: {
         source: "faq.md",
-        section: "kontakty",
+        section: "contacts",
         date: "2026-02-28",
         access: "public",
       },
@@ -329,7 +329,7 @@ export default {
       cx: 428,
       cy: 318,
       cos: "0.19",
-      label: B("bonusy", "loyalty points"),
+      label: B("бонусы", "loyalty points"),
       cosLabel: "0.19",
       topk: false,
       ariaLabel: B(
@@ -339,20 +339,20 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Бонусная программа", "Loyalty programme"),
-      src: B("faq.md  -  раздел bonusy", "faq.md  -  section bonusy"),
+      src: B("faq.md  -  раздел loyalty", "faq.md  -  section loyalty"),
       text: B(
-        '"Za kazhduyu pokupku nachislyayutsya <mark>bonusnye bally</mark> - 1 ball za 100 rublej."',
+        '"За каждую покупку начисляются <mark>бонусные баллы</mark> - 1 балл за 100 рублей."',
         '"<mark>Loyalty points</mark> are awarded for every purchase - 1 point per 100 roubles."'
       ),
       metadata: {
         source: "faq.md",
-        section: "bonusy",
+        section: "loyalty",
         date: "2026-01-15",
         access: "public",
       },
       vector: "[0.10, 0.49, -0.27, 0.23, 0.15, -0.22, ...]  (dim 1536)",
       reason: B(
-        'Речь про начисление бонусов за покупку, а не про возврат денег. Слово "pokupka" есть, но смысл - "kopit bally", а не "vernut sredstva".',
+        'Речь про начисление бонусов за покупку, а не про возврат денег. Слово "покупка" есть, но смысл - "копить баллы", а не "вернуть средства".',
         'This is about awarding points for a purchase, not about getting money back. The word "purchase" is there, but the meaning is "collect points", not "refund money".'
       ),
       deep: {
@@ -367,7 +367,7 @@ export default {
       cx: 300,
       cy: 360,
       cos: "0.16",
-      label: B("samovyvoz", "pickup point"),
+      label: B("самовывоз", "pickup point"),
       cosLabel: "0.16",
       topk: false,
       ariaLabel: B(
@@ -377,14 +377,14 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Пункты самовывоза", "Pickup points"),
-      src: B("faq.md  -  раздел dostavka", "faq.md  -  section dostavka"),
+      src: B("faq.md  -  раздел delivery", "faq.md  -  section delivery"),
       text: B(
-        '"Zakaz mozhno zabrat samostoyatelno v <mark>punktah samovyvoza</mark> v techenie 5 dnej."',
+        '"Заказ можно забрать самостоятельно в <mark>пунктах самовывоза</mark> в течение 5 дней."',
         '"An order can be collected yourself at a <mark>pickup point</mark> within 5 days."'
       ),
       metadata: {
         source: "faq.md",
-        section: "dostavka",
+        section: "delivery",
         date: "2026-03-01",
         access: "public",
       },
@@ -405,7 +405,7 @@ export default {
       cx: 64,
       cy: 196,
       cos: "0.10",
-      label: B("podarochnaya karta", "gift card"),
+      label: B("подарочная карта", "gift card"),
       cosLabel: "0.10",
       topk: false,
       ariaLabel: B(
@@ -415,14 +415,14 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Подарочная карта", "Gift card"),
-      src: B("faq.md  -  раздел bonusy", "faq.md  -  section bonusy"),
+      src: B("faq.md  -  раздел loyalty", "faq.md  -  section loyalty"),
       text: B(
-        '"<mark>Podarochnuyu kartu</mark> mozhno aktivirovat na sajte ili v lyubom magazine seti."',
+        '"<mark>Подарочную карту</mark> можно активировать на сайте или в любом магазине сети."',
         '"A <mark>gift card</mark> can be activated on the website or in any store of the chain."'
       ),
       metadata: {
         source: "faq.md",
-        section: "bonusy",
+        section: "loyalty",
         date: "2026-01-15",
         access: "public",
       },
@@ -443,7 +443,7 @@ export default {
       cx: 360,
       cy: 264,
       cos: "0.14",
-      label: B("oplata kartoj", "card payment"),
+      label: B("оплата картой", "card payment"),
       cosLabel: "0.14",
       topk: false,
       ariaLabel: B(
@@ -453,20 +453,20 @@ export default {
       crumb: B("Не в top-k", "Not in top-k"),
       head: B("Вектор в индексе - НЕ вошел в top-k", "Vector in the index - did NOT make the top-k"),
       title: B("Способы оплаты", "Payment methods"),
-      src: B("faq.md  -  раздел oplata", "faq.md  -  section oplata"),
+      src: B("faq.md  -  раздел payment", "faq.md  -  section payment"),
       text: B(
-        '"<mark>Oplata kartoj</mark> dostupna onlajn i na kasse; nalichnye prinimayutsya tolko v magazine."',
+        '"<mark>Оплата картой</mark> доступна онлайн и на кассе; наличные принимаются только в магазине."',
         '"<mark>Card payment</mark> is available online and at the till; cash is accepted only in store."'
       ),
       metadata: {
         source: "faq.md",
-        section: "oplata",
+        section: "payment",
         date: "2026-02-05",
         access: "public",
       },
       vector: "[0.11, 0.43, -0.31, 0.25, 0.10, -0.21, ...]  (dim 1536)",
       reason: B(
-        'Фрагмент про оплату покупки картой. Слова "oplata", "karta" близки к деньгам, но смысл - "kak zaplatit", а не "kak vernut" - вектор уходит в сторону.',
+        'Фрагмент про оплату покупки картой. Слова "оплата", "карта" близки к деньгам, но смысл - "как заплатить", а не "как вернуть" - вектор уходит в сторону.',
         'This fragment is about paying for a purchase by card. The words "payment" and "card" are close to money, but the meaning is "how to pay", not "how to refund" - the vector drifts away.'
       ),
       deep: {

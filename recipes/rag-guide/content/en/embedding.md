@@ -20,9 +20,9 @@ from openai import OpenAI
 client = OpenAI()
 
 chunks = [
-    "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.",
-    "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.",
-    "Dostavka po gorodu zanimaet odin rabochij den'.",
+    "The refund policy: a product may be returned within 30 days.",
+    "The warranty on electronics is 12 months from the date of purchase.",
+    "City delivery takes one business day.",
 ]
 
 resp = client.embeddings.create(
@@ -32,8 +32,8 @@ resp = client.embeddings.create(
 
 # one vector per chunk, strictly one-to-one
 vectors = [item.embedding for item in resp.data]
-print(len(vectors), "vektorov")        # 3
-print(len(vectors[0]), "komponent")    # 1536
+print(len(vectors), "vectors")         # 3
+print(len(vectors[0]), "components")   # 1536
 ```
 
 After this you have three vectors of length 1536 - one per fragment. There is no need to compare the text directly anymore: all further work runs on numbers.
@@ -67,7 +67,7 @@ def cosine(a, b):
 
 query_vec = client.embeddings.create(
     model="text-embedding-3-small",
-    input="kak vernut' den'gi za pokupku",
+    input="how to get a refund for a purchase",
 ).data[0].embedding
 
 # closeness of the query to each chunk

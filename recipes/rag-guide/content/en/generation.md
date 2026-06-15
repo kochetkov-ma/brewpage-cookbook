@@ -25,10 +25,10 @@ from anthropic import Anthropic
 client = Anthropic()  # key in ANTHROPIC_API_KEY
 
 SYSTEM = (
-    "Ty otvechaesh' tol'ko na osnove peredannogo konteksta. "
-    "Posle kazhdogo utverzhdeniya stav' ssylku na istochnik v vide [source]. "
-    "Esli otveta v kontekste net, otvet': 'Etogo net v dokumentah.' "
-    "Ne dobavlyaj fakty iz sobstvennoj pamyati."
+    "You answer only from the context provided. "
+    "After each statement, add a reference to the source in the form [source]. "
+    "If the answer is not in the context, reply: 'This is not in the documents.' "
+    "Do not add facts from your own memory."
 )
 
 def generate(prompt: str):

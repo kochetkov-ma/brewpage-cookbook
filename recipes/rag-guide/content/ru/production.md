@@ -23,12 +23,12 @@ from cachetools import TTLCache
 from fastapi import FastAPI, Depends
 
 app = FastAPI()
-# Kesh otvetov: odinakovyj vopros ne platit dvazhdy. TTL - chtoby ne otdavat' ustarevshee.
+# Кеш ответов: одинаковый вопрос не платит дважды. TTL - чтобы не отдавать устаревшее.
 answer_cache = TTLCache(maxsize=10_000, ttl=3600)
 
-# Cena za 1M tokenov - svery'te s pricing vendora pered raschetom.
-PRICE_IN_PER_MTOK = 3.00   # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)
-PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)
+# Цена за 1M токенов - сверьте с pricing вендора перед расчетом.
+PRICE_IN_PER_MTOK = 3.00   # USD/1M -- подставьте тариф вашего поставщика (см. страницу цен Anthropic)
+PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- подставьте тариф вашего поставщика (см. страницу цен Anthropic)
 
 def cost_usd(tokens_in, tokens_out):
     return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK
@@ -40,14 +40,14 @@ def ask(question: str, user=Depends(current_user)):
     if key in answer_cache:
         return {"answer": answer_cache[key], "cached": True}
 
-    # Dostup: retrieve vidit tol'ko dokumenty, razreshennye etomu polzovatelyu.
+    # Доступ: retrieve видит только документы, разрешенные этому пользователю.
     chunks = retrieve(question, allowed_filter=user.acl_filter)
     prompt, used = assemble_context(question, chunks)
     answer, tokens_in, tokens_out = generate_with_usage(prompt)
 
     answer_cache[key] = answer
     latency_ms = (time.perf_counter() - t0) * 1000
-    log_metrics(  # uhodit v vash monitoring, ne v otvet polzovatelyu
+    log_metrics(  # уходит в ваш monitoring, не в ответ пользователю
         user=user.id, latency_ms=latency_ms,
         cost=cost_usd(tokens_in, tokens_out), n_chunks=len(chunks),
     )

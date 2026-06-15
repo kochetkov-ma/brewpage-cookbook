@@ -23,9 +23,9 @@ anthropic = Anthropic()  # ANTHROPIC_API_KEY: generation
 
 # Corpus = your chunks (simplified here to a list of strings).
 chunks = [
-    "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.",
-    "Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.",
-    "Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.",
+    "Vacation during probation: 2 days for each month worked.",
+    "Business trips are arranged through the portal no later than 3 days in advance.",
+    "Remote work is agreed with your manager separately for each week.",
 ]
 
 def embed(texts):
@@ -33,7 +33,7 @@ def embed(texts):
     return np.array([d.embedding for d in r.data])  # dim depends on the model (e.g. 1536 for text-embedding-3-small) -- see the OpenAI Embeddings guide
 
 chunk_vecs = embed(chunks)
-query = "Skolko dnej otpuska na ispytatelnom sroke?"
+query = "How many vacation days are there during probation?"
 q_vec = embed([query])[0]
 
 # Cosine similarity -> top-1 chunk (RETRIEVAL).
@@ -46,7 +46,7 @@ resp = anthropic.messages.create(
     max_tokens=300,
     messages=[{
         "role": "user",
-        "content": f"Otvechaj tolko po kontekstu. Kontekst:\n{top}\n\nVopros: {query}",
+        "content": f"Answer only from the context. Context:\n{top}\n\nQuestion: {query}",
     }],
 )
 print(resp.content[0].text)  # the answer rests on YOUR chunk

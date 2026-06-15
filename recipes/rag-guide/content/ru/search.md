@@ -20,18 +20,18 @@ oai = OpenAI()
 index = Pinecone().Index("docs")
 
 def retrieve(query, k=3):
-    # 1. zapros -> vektor zaprosa (ta zhe model, chto i u chunkov)
+    # 1. запрос -> вектор запроса (та же модель, что и у chunks)
     qvec = oai.embeddings.create(
         model="text-embedding-3-small", input=query
     ).data[0].embedding
-    # 2. top-k blizhajshih po cosine
+    # 2. top-k ближайших по cosine
     res = index.query(vector=qvec, top_k=k, include_metadata=True)
     return [(m.id, round(m.score, 3), m.metadata["text"])
             for m in res.matches]
 
-for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
+for cid, score, text in retrieve("как вернуть деньги за покупку"):
     print(cid, score, text[:40])
-# chunk pro vozvrat sredstv prihodit pervym - bez obshchih slov s zaprosom
+# chunk про возврат средств приходит первым - без общих слов с запросом
 ```
 
 Фрагмент "политика возврата средств" приходит первым, хотя слов из запроса в нем нет - потому что сравниваются смыслы, а не строки.

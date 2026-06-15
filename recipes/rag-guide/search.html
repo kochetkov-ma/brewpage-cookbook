@@ -313,7 +313,7 @@
       <p data-pk="problem.p1">The user asks: "how to get my money back for a purchase". But in your documents the relevant fragment is called "refund policy" - not a single word "money" or "back" appears in it. A full-text keyword search will miss here: there are almost no shared words, yet the answer lies in exactly this fragment.</p>
       <p data-pk="problem.p2">The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This step gathers all the previous ones into one live request:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="search-retrieve">
-        <figcaption class="code-block__cap" data-i18n data-ru="Zhivoj retrieve: zapros -> vektor toj zhe modelju -> top-k blizhajshih po cosine iz indeksa." data-en="Live retrieve: query -> vector with the same model -> top-k nearest by cosine from the index.">Live retrieve: query -&gt; vector with the same model -&gt; top-k nearest by cosine from the index.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Живой retrieve: запрос -&gt; вектор той же моделью -&gt; top-k ближайших по cosine из индекса." data-en="Live retrieve: query -> vector with the same model -> top-k nearest by cosine from the index.">Live retrieve: query -&gt; vector with the same model -&gt; top-k nearest by cosine from the index.</figcaption>
         <pre><code># pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
@@ -322,18 +322,18 @@ oai = OpenAI()
 index = Pinecone().Index("docs")
 
 def retrieve(query, k=3):
-    # 1. zapros -> vektor zaprosa (ta zhe model, chto i u chunkov)
+    # 1. query -&gt; query vector (the same model as the chunks)
     qvec = oai.embeddings.create(
         model="text-embedding-3-small", input=query
     ).data[0].embedding
-    # 2. top-k blizhajshih po cosine
+    # 2. top-k nearest by cosine
     res = index.query(vector=qvec, top_k=k, include_metadata=True)
     return [(m.id, round(m.score, 3), m.metadata["text"])
             for m in res.matches]
 
-for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
+for cid, score, text in retrieve("how to get a refund for a purchase"):
     print(cid, score, text[:40])
-# chunk pro vozvrat sredstv prihodit pervym - bez obshchih slov s zaprosom</code></pre>
+# the refund chunk comes back first - with no words shared with the query</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Install clients</strong> -- Install the Pinecone and OpenAI clients - the vector store plus the embedding model.</li>
           <li><strong>Clients and index</strong> -- Create the OpenAI client and open the docs index in Pinecone.</li>

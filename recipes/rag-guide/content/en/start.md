@@ -18,19 +18,19 @@ This recipe is a working path, not a survey. By the top of the route you will ha
 Here is a minimal request to the model WITHOUT RAG - this is exactly how a confident fabrication is born when the needed facts were not in training:
 
 ```python
-# Bez RAG: model otvechaet iz pamyati, bez dostupa k vashim dokumentam.
+# No RAG: the model answers from memory, with no access to your documents.
 from anthropic import Anthropic
 
-client = Anthropic()  # ANTHROPIC_API_KEY iz okruzheniya
+client = Anthropic()  # ANTHROPIC_API_KEY from the environment
 
 resp = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=512,
     messages=[
-        {"role": "user", "content": "Skolko dnej otpuska u sotrudnika na ispytatelnom sroke?"}
+        {"role": "user", "content": "How many vacation days does an employee get during probation?"}
     ],
 )
-print(resp.content[0].text)  # pravdopodobno, no ne fakt iz VASHEJ politiki
+print(resp.content[0].text)  # plausible, but not a fact from YOUR policy
 ```
 
 The shape of the call is the real Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)). The whole rest of the recipe adds a retrieval step before this call so that your context lands in `content`.

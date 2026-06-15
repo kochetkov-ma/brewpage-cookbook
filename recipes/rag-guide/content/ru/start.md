@@ -18,19 +18,19 @@ RAG (retrieval-augmented generation) решает именно это: пере�
 Вот минимальный запрос к модели БЕЗ RAG - именно так рождается уверенная выдумка, когда нужных фактов нет в обучении:
 
 ```python
-# Bez RAG: model otvechaet iz pamyati, bez dostupa k vashim dokumentam.
+# Без RAG: модель отвечает из памяти, без доступа к вашим документам.
 from anthropic import Anthropic
 
-client = Anthropic()  # ANTHROPIC_API_KEY iz okruzheniya
+client = Anthropic()  # ANTHROPIC_API_KEY из окружения
 
 resp = client.messages.create(
-    model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
+    model="claude-sonnet-4-6",  # текущая модель -- см. обзор моделей
     max_tokens=512,
     messages=[
-        {"role": "user", "content": "Skolko dnej otpuska u sotrudnika na ispytatelnom sroke?"}
+        {"role": "user", "content": "Сколько дней отпуска у сотрудника на испытательном сроке?"}
     ],
 )
-print(resp.content[0].text)  # pravdopodobno, no ne fakt iz VASHEJ politiki
+print(resp.content[0].text)  # правдоподобно, но не факт из ВАШЕЙ политики
 ```
 
 Форма вызова - реальный Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)). Весь остальной рецепт добавляет перед этим вызовом шаг retrieval, чтобы в `content` попал ваш контекст.

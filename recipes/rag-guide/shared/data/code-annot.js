@@ -22,11 +22,11 @@ export default {
   "what-rag-minimal-rag": {
     "lang": "python",
     "code": {
-      "ru": "# Minimalnyj RAG: snachala retrieval, potom generaciya po najdennomu.\nfrom anthropic import Anthropic\nfrom openai import OpenAI\nimport numpy as np\n\noa = OpenAI()        # OPENAI_API_KEY: schitaem embeddingi\nanthropic = Anthropic()  # ANTHROPIC_API_KEY: generaciya\n\n# Korpus = vashi chunki (zdes' uproshchen do spiska strok).\nchunks = [\n    \"Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.\",\n    \"Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.\",\n    \"Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.\",\n]\n\ndef embed(texts):\n    r = oa.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return np.array([d.embedding for d in r.data])  # razmernost zavisit ot modeli (naprimer, 1536 dlya text-embedding-3-small) -- sm. rukovodstvo OpenAI Embeddings\n\nchunk_vecs = embed(chunks)\nquery = \"Skolko dnej otpuska na ispytatelnom sroke?\"\nq_vec = embed([query])[0]\n\n# Cosine similarity -> top-1 chunk (RETRIEVAL).\ncos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))\ntop = chunks[int(np.argmax(cos))]\n\n# AUGMENTED + GENERATION: podkladyvaem najdennoe v prompt.\nresp = anthropic.messages.create(\n    model=\"claude-sonnet-4-6\",  # tekushchaya model -- sm. obzor modelej\n    max_tokens=300,\n    messages=[{\n        \"role\": \"user\",\n        \"content\": f\"Otvechaj tolko po kontekstu. Kontekst:\\n{top}\\n\\nVopros: {query}\",\n    }],\n)\nprint(resp.content[0].text)  # otvet opiraetsya na VASH chunk",
-      "en": "# Minimal RAG: retrieval first, then generation over what was found.\nfrom anthropic import Anthropic\nfrom openai import OpenAI\nimport numpy as np\n\noa = OpenAI()        # OPENAI_API_KEY: compute the embeddings\nanthropic = Anthropic()  # ANTHROPIC_API_KEY: generation\n\n# Corpus = your chunks (simplified here to a list of strings).\nchunks = [\n    \"Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.\",\n    \"Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.\",\n    \"Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.\",\n]\n\ndef embed(texts):\n    r = oa.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return np.array([d.embedding for d in r.data])  # dim depends on the model (e.g. 1536 for text-embedding-3-small) -- see the OpenAI Embeddings guide\n\nchunk_vecs = embed(chunks)\nquery = \"Skolko dnej otpuska na ispytatelnom sroke?\"\nq_vec = embed([query])[0]\n\n# Cosine similarity -> top-1 chunk (RETRIEVAL).\ncos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))\ntop = chunks[int(np.argmax(cos))]\n\n# AUGMENTED + GENERATION: slot what was found into the prompt.\nresp = anthropic.messages.create(\n    model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n    max_tokens=300,\n    messages=[{\n        \"role\": \"user\",\n        \"content\": f\"Otvechaj tolko po kontekstu. Kontekst:\\n{top}\\n\\nVopros: {query}\",\n    }],\n)\nprint(resp.content[0].text)  # the answer rests on YOUR chunk"
+      "ru": "# Минимальный RAG: сначала retrieval, потом генерация по найденному.\nfrom anthropic import Anthropic\nfrom openai import OpenAI\nimport numpy as np\n\noa = OpenAI()        # OPENAI_API_KEY: считаем embeddings\nanthropic = Anthropic()  # ANTHROPIC_API_KEY: генерация\n\n# Корпус = ваши chunks (здесь упрощен до списка строк).\nchunks = [\n    \"Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц.\",\n    \"Командировки оформляются через портал не позднее чем за 3 дня.\",\n    \"Удаленная работа согласуется с руководителем отдельно на каждую неделю.\",\n]\n\ndef embed(texts):\n    r = oa.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return np.array([d.embedding for d in r.data])  # размерность зависит от модели (например, 1536 для text-embedding-3-small) -- см. руководство OpenAI Embeddings\n\nchunk_vecs = embed(chunks)\nquery = \"Сколько дней отпуска на испытательном сроке?\"\nq_vec = embed([query])[0]\n\n# Cosine similarity -> top-1 chunk (RETRIEVAL).\ncos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))\ntop = chunks[int(np.argmax(cos))]\n\n# AUGMENTED + GENERATION: подкладываем найденное в prompt.\nresp = anthropic.messages.create(\n    model=\"claude-sonnet-4-6\",  # текущая модель -- см. обзор моделей\n    max_tokens=300,\n    messages=[{\n        \"role\": \"user\",\n        \"content\": f\"Отвечай только по контексту. Контекст:\\n{top}\\n\\nВопрос: {query}\",\n    }],\n)\nprint(resp.content[0].text)  # ответ опирается на ВАШ chunk",
+      "en": "# Minimal RAG: retrieval first, then generation over what was found.\nfrom anthropic import Anthropic\nfrom openai import OpenAI\nimport numpy as np\n\noa = OpenAI()        # OPENAI_API_KEY: compute the embeddings\nanthropic = Anthropic()  # ANTHROPIC_API_KEY: generation\n\n# Corpus = your chunks (simplified here to a list of strings).\nchunks = [\n    \"Vacation during probation: 2 days for each month worked.\",\n    \"Business trips are arranged through the portal no later than 3 days in advance.\",\n    \"Remote work is agreed with your manager separately for each week.\",\n]\n\ndef embed(texts):\n    r = oa.embeddings.create(model=\"text-embedding-3-small\", input=texts)\n    return np.array([d.embedding for d in r.data])  # dim depends on the model (e.g. 1536 for text-embedding-3-small) -- see the OpenAI Embeddings guide\n\nchunk_vecs = embed(chunks)\nquery = \"How many vacation days are there during probation?\"\nq_vec = embed([query])[0]\n\n# Cosine similarity -> top-1 chunk (RETRIEVAL).\ncos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))\ntop = chunks[int(np.argmax(cos))]\n\n# AUGMENTED + GENERATION: slot what was found into the prompt.\nresp = anthropic.messages.create(\n    model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n    max_tokens=300,\n    messages=[{\n        \"role\": \"user\",\n        \"content\": f\"Answer only from the context. Context:\\n{top}\\n\\nQuestion: {query}\",\n    }],\n)\nprint(resp.content[0].text)  # the answer rests on YOUR chunk"
     },
     "caption": {
-      "ru": "Minimalnyj rabochij RAG na realnyh API: retrieval -> augmented -> generation.",
+      "ru": "Минимальный рабочий RAG на реальных API: retrieval -> augmented -> generation.",
       "en": "A minimal working RAG on real APIs: retrieval -> augmented -> generation."
     },
     "regions": [
@@ -37,11 +37,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Klienty API",
+          "ru": "Клиенты API",
           "en": "API clients"
         },
         "explain": {
-          "ru": "Dva klienta: OpenAI schitaet embeddingi, Anthropic generiruet otvet. Kljuchi berutsya iz peremennyh okruzhenija, ne iz koda.",
+          "ru": "Два клиента: OpenAI считает эмбеддинги, Anthropic генерирует ответ. Ключи берутся из переменных окружения, а не из кода.",
           "en": "Two clients: OpenAI computes the embeddings, Anthropic generates the answer. Keys come from environment variables, not from code."
         }
       },
@@ -52,11 +52,11 @@ export default {
           14
         ],
         "label": {
-          "ru": "Korpus chunkov",
+          "ru": "Корпус чанков",
           "en": "Chunk corpus"
         },
         "explain": {
-          "ru": "Vasha baza znanij, uproshchennaja do spiska strok. V realnom RAG eto chunki dokumentov iz vektornogo indeksa.",
+          "ru": "Ваша база знаний, упрощенная до списка строк. В реальном RAG это чанки документов из векторного индекса.",
           "en": "Your knowledge base, simplified to a list of strings. In real RAG these are document chunks from a vector index."
         }
       },
@@ -67,11 +67,11 @@ export default {
           18
         ],
         "label": {
-          "ru": "Funkcija embed",
+          "ru": "Функция embed",
           "en": "embed function"
         },
         "explain": {
-          "ru": "Kazhdyj tekst prevrashchaetsja v vektor fiksirovannoj dliny (dim 1536 dlja text-embedding-3-small). Formy vyzova realnye (OpenAI Embeddings, developers.openai.com/api/docs/guides/embeddings).",
+          "ru": "Каждый текст превращается в вектор фиксированной длины (dim 1536 для text-embedding-3-small). Формы вызова реальные (OpenAI Embeddings, developers.openai.com/api/docs/guides/embeddings).",
           "en": "Each text becomes a fixed-length vector (dim 1536 for text-embedding-3-small). The call shapes are real (OpenAI Embeddings, developers.openai.com/api/docs/guides/embeddings)."
         }
       },
@@ -82,11 +82,11 @@ export default {
           22
         ],
         "label": {
-          "ru": "Vektor zaprosa",
+          "ru": "Вектор запроса",
           "en": "Query vector"
         },
         "explain": {
-          "ru": "Vopros polzovatelja vstraivaetsja tem zhe embedderom, chto i chunki - inache vektory ne sravnimy v odnom prostranstve.",
+          "ru": "Вопрос пользователя встраивается тем же эмбеддером, что и чанки - иначе векторы несравнимы в одном пространстве.",
           "en": "The user question is embedded with the same embedder as the chunks - otherwise the vectors are not comparable in one space."
         }
       },
@@ -101,7 +101,7 @@ export default {
           "en": "Retrieval: cosine"
         },
         "explain": {
-          "ru": "Cosine similarity mezhdu vektorom zaprosa i kazhdym chunkom; argmax daet samyj blizkij chunk. Eto shag RETRIEVAL.",
+          "ru": "Косинусная близость между вектором запроса и каждым чанком; argmax дает самый близкий чанк. Это шаг RETRIEVAL.",
           "en": "Cosine similarity between the query vector and each chunk; argmax picks the closest chunk. This is the RETRIEVAL step."
         }
       },
@@ -116,7 +116,7 @@ export default {
           "en": "Augmented + generation"
         },
         "explain": {
-          "ru": "Najdennyj chunk podkladyvaetsja v prompt (augmented), i model otvechaet tolko po nemu (generation). Forma vyzova - realnyj Anthropic Messages API (platform.claude.com/docs/en/api/messages).",
+          "ru": "Найденный чанк подкладывается в промпт (augmented), и модель отвечает только по нему (generation). Форма вызова - реальный Anthropic Messages API (platform.claude.com/docs/en/api/messages).",
           "en": "The found chunk is slotted into the prompt (augmented), and the model answers only from it (generation). The call shape is the real Anthropic Messages API (platform.claude.com/docs/en/api/messages)."
         }
       }
@@ -125,11 +125,11 @@ export default {
   "why-rag-two-track": {
     "lang": "python",
     "code": {
-      "ru": "# Tot zhe vopros dvumya putyami. Track A: bez konteksta. Track B: s retrieval.\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # ANTHROPIC_API_KEY\nquestion = \"Po nashej politike: skolko dnej otpuska na ispytatelnom sroke?\"\n\ndef ask(context=None):\n    if context:\n        prompt = (\n            \"Otvechaj tolko po kontekstu. Esli otveta net v kontekste, \"\n            f\"skazhi 'etogo net v dokumentah'.\\nKontekst:\\n{context}\\n\\nVopros: {question}\"\n        )\n    else:\n        prompt = question\n    r = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # tekushchaya model -- sm. obzor modelej\n        max_tokens=300,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return r.content[0].text\n\n# Track A (bez RAG): otvet iz pamyati - mozhet byt vydumkoj pro VASHU politiku.\nprint(\"BEZ RAG:\", ask())\n\n# Track B (s RAG): retrieval daet realnyj chunk, otvet zazemlen.\nretrieved = \"Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.\"\nprint(\"S RAG: \", ask(context=retrieved))",
-      "en": "# Same question, two paths. Track A: no context. Track B: with retrieval.\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # ANTHROPIC_API_KEY\nquestion = \"Po nashej politike: skolko dnej otpuska na ispytatelnom sroke?\"\n\ndef ask(context=None):\n    if context:\n        prompt = (\n            \"Otvechaj tolko po kontekstu. Esli otveta net v kontekste, \"\n            f\"skazhi 'etogo net v dokumentah'.\\nKontekst:\\n{context}\\n\\nVopros: {question}\"\n        )\n    else:\n        prompt = question\n    r = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=300,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return r.content[0].text\n\n# Track A (no RAG): answer from memory - may be a fabrication about YOUR policy.\nprint(\"BEZ RAG:\", ask())\n\n# Track B (with RAG): retrieval supplies a real chunk, the answer is grounded.\nretrieved = \"Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.\"\nprint(\"S RAG: \", ask(context=retrieved))"
+      "ru": "# Тот же вопрос двумя путями. Track A: без контекста. Track B: с retrieval.\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # ANTHROPIC_API_KEY\nquestion = \"По нашей политике: сколько дней отпуска на испытательном сроке?\"\n\ndef ask(context=None):\n    if context:\n        prompt = (\n            \"Отвечай только по контексту. Если ответа нет в контексте, \"\n            f\"скажи 'этого нет в документах'.\\nКонтекст:\\n{context}\\n\\nВопрос: {question}\"\n        )\n    else:\n        prompt = question\n    r = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # текущая модель -- см. обзор моделей\n        max_tokens=300,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return r.content[0].text\n\n# Track A (без RAG): ответ из памяти - может быть выдумкой про ВАШУ политику.\nprint(\"БЕЗ RAG:\", ask())\n\n# Track B (с RAG): retrieval дает реальный chunk, ответ заземлен.\nretrieved = \"Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц.\"\nprint(\"С RAG: \", ask(context=retrieved))",
+      "en": "# Same question, two paths. Track A: no context. Track B: with retrieval.\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # ANTHROPIC_API_KEY\nquestion = \"Under our policy, how many vacation days are there during probation?\"\n\ndef ask(context=None):\n    if context:\n        prompt = (\n            \"Answer only from the context. If the answer is not in the context, \"\n            f\"say 'this is not in the documents'.\\nContext:\\n{context}\\n\\nQuestion: {question}\"\n        )\n    else:\n        prompt = question\n    r = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=300,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    return r.content[0].text\n\n# Track A (no RAG): answer from memory - may be a fabrication about YOUR policy.\nprint(\"NO RAG:\", ask())\n\n# Track B (with RAG): retrieval supplies a real chunk, the answer is grounded.\nretrieved = \"Vacation during probation: 2 days for each month worked.\"\nprint(\"RAG:   \", ask(context=retrieved))"
     },
     "caption": {
-      "ru": "Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku).",
+      "ru": "Один вопрос двумя путями: без RAG (из памяти) и с RAG (заземленный по чанку).",
       "en": "One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk)."
     },
     "regions": [
@@ -140,11 +140,11 @@ export default {
           5
         ],
         "label": {
-          "ru": "Klient i vopros",
+          "ru": "Клиент и вопрос",
           "en": "Client and question"
         },
         "explain": {
-          "ru": "Odin Anthropic-klient i odin fiksirovannyj vopros pro vnutrennjuju politiku - tochka, gde obychnaja model ne znaet vashih dannyh.",
+          "ru": "Один Anthropic-клиент и один фиксированный вопрос про внутреннюю политику - точка, где обычная модель не знает ваших данных.",
           "en": "One Anthropic client and one fixed question about internal policy - the point where an ordinary model does not know your data."
         }
       },
@@ -155,12 +155,12 @@ export default {
           12
         ],
         "label": {
-          "ru": "Vetka s kontekstom",
+          "ru": "Ветка с контекстом",
           "en": "With-context branch"
         },
         "explain": {
-          "ru": "Kogda kontekst peredan, instrukcija velit otvechat tolko po nemu i chestno skazat 'etogo net v dokumentah', esli otveta net - osnova groundinga.",
-          "en": "When context is passed, the instruction tells the model to answer only from it and to say 'etogo net v dokumentah' if there is no answer - the basis of grounding."
+          "ru": "Когда контекст передан, инструкция велит отвечать только по нему и честно сказать 'этого нет в документах', если ответа нет - основа заземления.",
+          "en": "When context is passed, the instruction tells the model to answer only from it and to say 'this is not in the documents' if there is no answer - the basis of grounding."
         }
       },
       {
@@ -170,11 +170,11 @@ export default {
           20
         ],
         "label": {
-          "ru": "Vetka bez konteksta",
+          "ru": "Ветка без контекста",
           "en": "No-context branch"
         },
         "explain": {
-          "ru": "Bez konteksta prompt - eto golyj vopros; vyzov Messages API odinakov dlja oboih putej, otlichaetsja tolko vhodnoj prompt.",
+          "ru": "Без контекста промпт - это голый вопрос; вызов Messages API одинаков для обоих путей, отличается только входной промпт.",
           "en": "Without context the prompt is the bare question; the Messages API call is identical for both paths, only the input prompt differs."
         }
       },
@@ -185,11 +185,11 @@ export default {
           23
         ],
         "label": {
-          "ru": "Track A: bez RAG",
+          "ru": "Track A: без RAG",
           "en": "Track A: no RAG"
         },
         "explain": {
-          "ru": "Vyzov bez konteksta: otvet idet iz parametricheskoj pamjati i mozhet byt vydumkoj pro imenno vashu politiku.",
+          "ru": "Вызов без контекста: ответ идет из параметрической памяти и может быть выдумкой про именно вашу политику.",
           "en": "Call with no context: the answer comes from parametric memory and may be a fabrication about your specific policy."
         }
       },
@@ -200,11 +200,11 @@ export default {
           27
         ],
         "label": {
-          "ru": "Track B: s RAG",
+          "ru": "Track B: с RAG",
           "en": "Track B: with RAG"
         },
         "explain": {
-          "ru": "Snachala retrieval daet realnyj chunk, potom on idet v kontekst i otvet zazemlen na nem. Otvet nikogda ne pishetsja do podstanovki konteksta.",
+          "ru": "Сначала retrieval дает реальный чанк, потом он идет в контекст и ответ заземлен на нем. Ответ никогда не пишется до подстановки контекста.",
           "en": "Retrieval supplies a real chunk first, then it goes into the context and the answer is grounded on it. The answer is never written before the context is substituted in."
         }
       }
@@ -213,11 +213,11 @@ export default {
   "production-fastapi-endpoint": {
     "lang": "python",
     "code": {
-      "ru": "# pip install fastapi uvicorn cachetools\nimport time, hashlib\nfrom cachetools import TTLCache\nfrom fastapi import FastAPI, Depends\n\napp = FastAPI()\n# Kesh otvetov: odinakovyj vopros ne platit dvazhdy. TTL - chtoby ne otdavat' ustarevshee.\nanswer_cache = TTLCache(maxsize=10_000, ttl=3600)\n\n# Cena za 1M tokenov - svery'te s pricing vendora pered raschetom.\nPRICE_IN_PER_MTOK = 3.00   # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)\nPRICE_OUT_PER_MTOK = 15.00  # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)\n\ndef cost_usd(tokens_in, tokens_out):\n    return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK\n\n@app.post(\"/ask\")\ndef ask(question: str, user=Depends(current_user)):\n    t0 = time.perf_counter()\n    key = hashlib.sha256(f\"{user.tenant}:{question}\".encode()).hexdigest()\n    if key in answer_cache:\n        return {\"answer\": answer_cache[key], \"cached\": True}\n\n    # Dostup: retrieve vidit tol'ko dokumenty, razreshennye etomu polzovatelyu.\n    chunks = retrieve(question, allowed_filter=user.acl_filter)\n    prompt, used = assemble_context(question, chunks)\n    answer, tokens_in, tokens_out = generate_with_usage(prompt)\n\n    answer_cache[key] = answer\n    latency_ms = (time.perf_counter() - t0) * 1000\n    log_metrics(  # uhodit v vash monitoring, ne v otvet polzovatelyu\n        user=user.id, latency_ms=latency_ms,\n        cost=cost_usd(tokens_in, tokens_out), n_chunks=len(chunks),\n    )\n    return {\"answer\": answer, \"cached\": False, \"latency_ms\": round(latency_ms)}",
+      "ru": "# pip install fastapi uvicorn cachetools\nimport time, hashlib\nfrom cachetools import TTLCache\nfrom fastapi import FastAPI, Depends\n\napp = FastAPI()\n# Кеш ответов: одинаковый вопрос не платит дважды. TTL - чтобы не отдавать устаревшее.\nanswer_cache = TTLCache(maxsize=10_000, ttl=3600)\n\n# Цена за 1M токенов - сверьте с pricing вендора перед расчетом.\nPRICE_IN_PER_MTOK = 3.00   # USD/1M -- подставьте тариф вашего поставщика (см. страницу цен Anthropic)\nPRICE_OUT_PER_MTOK = 15.00  # USD/1M -- подставьте тариф вашего поставщика (см. страницу цен Anthropic)\n\ndef cost_usd(tokens_in, tokens_out):\n    return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK\n\n@app.post(\"/ask\")\ndef ask(question: str, user=Depends(current_user)):\n    t0 = time.perf_counter()\n    key = hashlib.sha256(f\"{user.tenant}:{question}\".encode()).hexdigest()\n    if key in answer_cache:\n        return {\"answer\": answer_cache[key], \"cached\": True}\n\n    # Доступ: retrieve видит только документы, разрешенные этому пользователю.\n    chunks = retrieve(question, allowed_filter=user.acl_filter)\n    prompt, used = assemble_context(question, chunks)\n    answer, tokens_in, tokens_out = generate_with_usage(prompt)\n\n    answer_cache[key] = answer\n    latency_ms = (time.perf_counter() - t0) * 1000\n    log_metrics(  # уходит в ваш monitoring, не в ответ пользователю\n        user=user.id, latency_ms=latency_ms,\n        cost=cost_usd(tokens_in, tokens_out), n_chunks=len(chunks),\n    )\n    return {\"answer\": answer, \"cached\": False, \"latency_ms\": round(latency_ms)}",
       "en": "# pip install fastapi uvicorn cachetools\nimport time, hashlib\nfrom cachetools import TTLCache\nfrom fastapi import FastAPI, Depends\n\napp = FastAPI()\n# Answer cache: the same question does not pay twice. TTL - so we do not serve stale content.\nanswer_cache = TTLCache(maxsize=10_000, ttl=3600)\n\n# Price per 1M tokens - check against the vendor pricing before you compute.\nPRICE_IN_PER_MTOK = 3.00   # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)\nPRICE_OUT_PER_MTOK = 15.00  # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)\n\ndef cost_usd(tokens_in, tokens_out):\n    return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK\n\n@app.post(\"/ask\")\ndef ask(question: str, user=Depends(current_user)):\n    t0 = time.perf_counter()\n    key = hashlib.sha256(f\"{user.tenant}:{question}\".encode()).hexdigest()\n    if key in answer_cache:\n        return {\"answer\": answer_cache[key], \"cached\": True}\n\n    # Access: retrieve sees only the documents permitted to this user.\n    chunks = retrieve(question, allowed_filter=user.acl_filter)\n    prompt, used = assemble_context(question, chunks)\n    answer, tokens_in, tokens_out = generate_with_usage(prompt)\n\n    answer_cache[key] = answer\n    latency_ms = (time.perf_counter() - t0) * 1000\n    log_metrics(  # goes to your monitoring, not into the user's answer\n        user=user.id, latency_ms=latency_ms,\n        cost=cost_usd(tokens_in, tokens_out), n_chunks=len(chunks),\n    )\n    return {\"answer\": answer, \"cached\": False, \"latency_ms\": round(latency_ms)}"
     },
     "caption": {
-      "ru": "Produkshen-endpoint na FastAPI: kesh, podschet stoimosti, latency i filtr dostupa.",
+      "ru": "Продакшен-эндпоинт на FastAPI: кеш, подсчет стоимости, latency и фильтр доступа.",
       "en": "A FastAPI production endpoint: cache, cost accounting, latency, and an access filter."
     },
     "regions": [
@@ -228,11 +228,11 @@ export default {
           8
         ],
         "label": {
-          "ru": "TTL-kesh otvetov",
+          "ru": "TTL-кеш ответов",
           "en": "TTL answer cache"
         },
         "explain": {
-          "ru": "Odinakovyj vopros ne platit za generaciju dvazhdy; TTL ne daet kesh otdavat ustarevshee posle obnovlenija dannyh.",
+          "ru": "Одинаковый вопрос не платит за генерацию дважды; TTL не дает кешу отдавать устаревшее после обновления данных.",
           "en": "The same question does not pay for generation twice; the TTL keeps the cache from serving stale content after a data update."
         }
       },
@@ -243,11 +243,11 @@ export default {
           15
         ],
         "label": {
-          "ru": "Raschet stoimosti",
+          "ru": "Расчет стоимости",
           "en": "Cost calculation"
         },
         "explain": {
-          "ru": "Otdelnaja cena za vhodnye i vyhodnye tokeny; svetit s pricing vendora (naprimer, Anthropic pricing, platform.claude.com/docs/en/about-claude/pricing). cost_usd skladyvaet oba slagaemyh.",
+          "ru": "Отдельная цена за входные и выходные токены; сверьте с прайсингом вендора (например, Anthropic pricing, platform.claude.com/docs/en/about-claude/pricing). cost_usd складывает оба слагаемых.",
           "en": "Separate price for input and output tokens; check the vendor pricing (for example Anthropic pricing, platform.claude.com/docs/en/about-claude/pricing). cost_usd sums both addends."
         }
       },
@@ -258,11 +258,11 @@ export default {
           22
         ],
         "label": {
-          "ru": "Kesh-kljuch po tenant",
+          "ru": "Кеш-ключ по tenant",
           "en": "Tenant-scoped cache key"
         },
         "explain": {
-          "ru": "Kljuch kesha vkljuchaet tenant polzovatelja, chtoby otvety raznyh tenantov ne smeshivalis; pri popadanii vozvrashchaem gotovyj otvet bez generacii.",
+          "ru": "Ключ кеша включает tenant пользователя, чтобы ответы разных tenant не смешивались; при попадании возвращаем готовый ответ без генерации.",
           "en": "The cache key includes the user tenant so different tenants' answers never mix; on a hit we return the ready answer with no generation."
         }
       },
@@ -273,11 +273,11 @@ export default {
           25
         ],
         "label": {
-          "ru": "Dostup na retrieve",
+          "ru": "Доступ на retrieve",
           "en": "Access at retrieve"
         },
         "explain": {
-          "ru": "Dostup proverjaetsja na shage retrieve, a ne posle generacii: retrieve poluchaet allowed_filter i fizicheski ne vozvrashchaet zapreshchennye kuski. Esli kusok popal v kontekst, schitajte, chto polzovatel uzhe poluchil k nemu dostup.",
+          "ru": "Доступ проверяется на шаге retrieve, а не после генерации: retrieve получает allowed_filter и физически не возвращает запрещенные куски. Если кусок попал в контекст, считайте, что пользователь уже получил к нему доступ.",
           "en": "Access is checked at the retrieve step, not after generation: retrieve takes allowed_filter and physically does not return forbidden chunks. If a chunk made it into the context, assume the user already has access to it."
         }
       },
@@ -288,11 +288,11 @@ export default {
           27
         ],
         "label": {
-          "ru": "Sborka i generacija",
+          "ru": "Сборка и генерация",
           "en": "Assemble and generate"
         },
         "explain": {
-          "ru": "Najdennye chunki pakujutsja v odin prompt v ramkah token-bjudzheta, zatem generacija vozvrashchaet otvet vmeste s uchetom tokenov dlja stoimosti.",
+          "ru": "Найденные чанки пакуются в один промпт в рамках токен-бюджета, затем генерация возвращает ответ вместе с учетом токенов для стоимости.",
           "en": "The found chunks are packed into one prompt within the token budget, then generation returns the answer together with token usage for the cost."
         }
       },
@@ -303,11 +303,11 @@ export default {
           35
         ],
         "label": {
-          "ru": "Metriki i otvet",
+          "ru": "Метрики и ответ",
           "en": "Metrics and response"
         },
         "explain": {
-          "ru": "Otvet kladetsja v kesh; latency, stoimost i chislo kuskov logirujutsya v monitoring (ne v otvet polzovatelju). To, chto ne izmerjaeshsja, slomaetsja tiho.",
+          "ru": "Ответ кладется в кеш; latency, стоимость и число кусков логируются в мониторинг (не в ответ пользователю). То, что не измеряется, сломается тихо.",
           "en": "The answer is cached; latency, cost, and the number of chunks are logged to monitoring (not into the user's answer). What you do not measure will break silently."
         }
       }
@@ -316,11 +316,11 @@ export default {
   "embedding-embed-call": {
     "lang": "python",
     "code": {
-      "ru": "# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nchunks = [\n    \"Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.\",\n    \"Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.\",\n    \"Dostavka po gorodu zanimaet odin rabochij den'.\",\n]\n\nresp = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=chunks,\n)\n\n# odin vektor na kazhdyj chunk, strogo odin-k-odnomu\nvectors = [item.embedding for item in resp.data]\nprint(len(vectors), \"vektorov\")        # 3\nprint(len(vectors[0]), \"komponent\")    # 1536",
-      "en": "# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nchunks = [\n    \"Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.\",\n    \"Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.\",\n    \"Dostavka po gorodu zanimaet odin rabochij den'.\",\n]\n\nresp = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=chunks,\n)\n\n# one vector per chunk, strictly one-to-one\nvectors = [item.embedding for item in resp.data]\nprint(len(vectors), \"vektorov\")        # 3\nprint(len(vectors[0]), \"komponent\")    # 1536"
+      "ru": "# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nchunks = [\n    \"Политика возврата средств: вернуть товар можно в течение 30 дней.\",\n    \"Гарантия на электронику составляет 12 месяцев с даты покупки.\",\n    \"Доставка по городу занимает один рабочий день.\",\n]\n\nresp = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=chunks,\n)\n\n# один вектор на каждый chunk, строго один-к-одному\nvectors = [item.embedding for item in resp.data]\nprint(len(vectors), \"векторов\")        # 3\nprint(len(vectors[0]), \"компонент\")    # 1536",
+      "en": "# pip install openai\nfrom openai import OpenAI\n\nclient = OpenAI()\n\nchunks = [\n    \"The refund policy: a product may be returned within 30 days.\",\n    \"The warranty on electronics is 12 months from the date of purchase.\",\n    \"City delivery takes one business day.\",\n]\n\nresp = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=chunks,\n)\n\n# one vector per chunk, strictly one-to-one\nvectors = [item.embedding for item in resp.data]\nprint(len(vectors), \"vectors\")         # 3\nprint(len(vectors[0]), \"components\")   # 1536"
     },
     "caption": {
-      "ru": "Realnyj vyzov API embeddingov: spisok chankov -> spisok vektorov, strogo odin-k-odnomu.",
+      "ru": "Реальный вызов API эмбеддингов: список чанков -> список векторов, строго один-к-одному.",
       "en": "A real embeddings API call: a list of chunks -> a list of vectors, strictly one-to-one."
     },
     "regions": [
@@ -331,11 +331,11 @@ export default {
           1
         ],
         "label": {
-          "ru": "Ustanovka paketa",
+          "ru": "Установка пакета",
           "en": "Install the package"
         },
         "explain": {
-          "ru": "Kommentarij s komandoj ustanovki oficialnogo klienta OpenAI; v samom kode ne ispolnjaetsja.",
+          "ru": "Комментарий с командой установки официального клиента OpenAI; в самом коде не исполняется.",
           "en": "A comment with the install command for the official OpenAI client; it does not run in the code itself."
         }
       },
@@ -346,11 +346,11 @@ export default {
           4
         ],
         "label": {
-          "ru": "Klient OpenAI",
+          "ru": "Клиент OpenAI",
           "en": "OpenAI client"
         },
         "explain": {
-          "ru": "Importiruem klient i sozdaem ekzempljar; kljuch API on beret iz okruzhenija.",
+          "ru": "Импортируем клиент и создаем экземпляр; ключ API он берет из окружения.",
           "en": "Import the client and create an instance; it reads the API key from the environment."
         }
       },
@@ -361,12 +361,12 @@ export default {
           10
         ],
         "label": {
-          "ru": "Vhodnye chanki",
+          "ru": "Входные чанки",
           "en": "Input chunks"
         },
         "explain": {
-          "ru": "Spisok iz treh tekstovyh fragmentov - eto vhod embeddera; stroki dany v translite, chtoby ostatsja ASCII.",
-          "en": "A list of three text fragments is the embedder input; the strings are transliterated to stay ASCII."
+          "ru": "Список из трех текстовых фрагментов - это вход эмбеддера; реальный текст справочных документов на естественном языке.",
+          "en": "A list of three text fragments is the embedder input; natural-language snippets from reference documents."
         }
       },
       {
@@ -376,11 +376,11 @@ export default {
           15
         ],
         "label": {
-          "ru": "Vyzov embeddinga",
+          "ru": "Вызов эмбеддинга",
           "en": "Embedding call"
         },
         "explain": {
-          "ru": "Odin vyzov create s modelju text-embedding-3-small i srazu vsem spiskom chankov na vhode.",
+          "ru": "Один вызов create с моделью text-embedding-3-small и сразу всем списком чанков на входе.",
           "en": "One create call with the text-embedding-3-small model and the whole chunk list as input."
         }
       },
@@ -391,11 +391,11 @@ export default {
           20
         ],
         "label": {
-          "ru": "Sbor vektorov",
+          "ru": "Сбор векторов",
           "en": "Collect vectors"
         },
         "explain": {
-          "ru": "Dostaem po vektoru na kazhdyj element otveta - svjaz chank-vektor strogo odin-k-odnomu. Na vyhode tri vektora po 1536 komponent.",
+          "ru": "Достаем по вектору на каждый элемент ответа - связь чанк-вектор строго один-к-одному. На выходе три вектора по 1536 компонент.",
           "en": "Pull one vector per response item - the chunk-to-vector link is strictly one-to-one. The output is three vectors of 1536 components each."
         }
       }
@@ -404,11 +404,11 @@ export default {
   "embedding-cosine": {
     "lang": "python",
     "code": {
-      "ru": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nquery_vec = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=\"kak vernut' den'gi za pokupku\",\n).data[0].embedding\n\n# blizost' zaprosa k kazhdomu chunku\nscores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]\nscores.sort(key=lambda t: t[1], reverse=True)\nprint(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij",
-      "en": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nquery_vec = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=\"kak vernut' den'gi za pokupku\",\n).data[0].embedding\n\n# closeness of the query to each chunk\nscores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]\nscores.sort(key=lambda t: t[1], reverse=True)\nprint(scores[0])   # chunk 0 (refund policy) - the closest"
+      "ru": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nquery_vec = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=\"как вернуть деньги за покупку\",\n).data[0].embedding\n\n# близость запроса к каждому chunk\nscores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]\nscores.sort(key=lambda t: t[1], reverse=True)\nprint(scores[0])   # chunk 0 (политика возврата) - самый близкий",
+      "en": "import math\n\ndef cosine(a, b):\n    dot = sum(x * y for x, y in zip(a, b))\n    na = math.sqrt(sum(x * x for x in a))\n    nb = math.sqrt(sum(y * y for y in b))\n    return dot / (na * nb)\n\nquery_vec = client.embeddings.create(\n    model=\"text-embedding-3-small\",\n    input=\"how to get a refund for a purchase\",\n).data[0].embedding\n\n# closeness of the query to each chunk\nscores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]\nscores.sort(key=lambda t: t[1], reverse=True)\nprint(scores[0])   # chunk 0 (refund policy) - the closest"
     },
     "caption": {
-      "ru": "Kosinusnaja blizost vruchnuju, bez bibliotek: chem blizhe vektor zaprosa k vektoru chanka, tem blizhe smysl.",
+      "ru": "Косинусная близость вручную, без библиотек: чем ближе вектор запроса к вектору чанка, тем ближе смысл.",
       "en": "Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning."
     },
     "regions": [
@@ -419,11 +419,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Formula kosinusa",
+          "ru": "Формула косинуса",
           "en": "Cosine formula"
         },
         "explain": {
-          "ru": "Skaljarnoe proizvedenie, delennoe na proizvedenie dlin (norm) dvuh vektorov; tak vidna sama formula bez zavisimostej.",
+          "ru": "Скалярное произведение, деленное на произведение длин (норм) двух векторов; так видна сама формула без зависимостей.",
           "en": "The dot product divided by the product of the two vectors' lengths (norms); this shows the formula itself with no dependencies."
         }
       },
@@ -434,11 +434,11 @@ export default {
           12
         ],
         "label": {
-          "ru": "Vektor zaprosa",
+          "ru": "Вектор запроса",
           "en": "Query vector"
         },
         "explain": {
-          "ru": "Tot zhe embedder kodiruet zapros polzovatelja v vektor - toj zhe modelju, chto i chanki, inache sravnenie bessmyslenno.",
+          "ru": "Тот же эмбеддер кодирует запрос пользователя в вектор - той же моделью, что и чанки, иначе сравнение бессмысленно.",
           "en": "The same embedder encodes the user query into a vector - the same model as the chunks, otherwise the comparison is meaningless."
         }
       },
@@ -449,11 +449,11 @@ export default {
           17
         ],
         "label": {
-          "ru": "Ranzhirovanie po blizosti",
+          "ru": "Ранжирование по близости",
           "en": "Rank by closeness"
         },
         "explain": {
-          "ru": "Schitaem blizost zaprosa k kazhdomu chanku i sortiruem po ubyvaniju; samyj blizkij po smyslu chank vyhodit pervym, dazhe bez obshchih slov.",
+          "ru": "Считаем близость запроса к каждому чанку и сортируем по убыванию; самый близкий по смыслу чанк выходит первым, даже без общих слов.",
           "en": "Compute the query's closeness to each chunk and sort descending; the chunk closest in meaning comes first, even with no shared words."
         }
       }
@@ -462,11 +462,11 @@ export default {
   "assemble-context-assembler": {
     "lang": "python",
     "code": {
-      "ru": "# pip install tiktoken\nimport tiktoken\n\nENC = tiktoken.get_encoding(\"cl100k_base\")  # tokenizer OpenAI: bystroe OFFLINE-PRIBLIZHENIE, ne tochno dlya Claude; dlya tochnogo scheta Claude ispolzujte client.messages.count_tokens()\n\ndef count_tokens(text: str) -> int:\n    return len(ENC.encode(text))\n\nPROMPT_TEMPLATE = \"\"\"Otvechaj tol'ko na osnove konteksta nizhe.\nEsli otveta v kontekste net, skazhi ob etom chestno.\n\nKontekst:\n{context}\n\nVopros: {question}\nOtvet:\"\"\"\n\ndef assemble_context(question, retrieved, max_context_tokens=3000):\n    \"\"\"\n    retrieved: spisok dict {id, text, score, source}, otsortirovannyj\n               po ubyvaniyu score (samyj relevantnyj pervym).\n    \"\"\"\n    # 1. Dedup: vybrasyvaem povtory po tekstu, sohranyaya luchshij score.\n    seen, unique = set(), []\n    for chunk in retrieved:\n        key = chunk[\"text\"].strip()\n        if key not in seen:\n            seen.add(key)\n            unique.append(chunk)\n\n    # 2. Poryadok: samoe vazhnoe - po krayam, ne v seredine (lost-in-the-middle).\n    ranked = order_for_attention(unique)\n\n    # 3. Token budget: nabiraem kuski, poka vlezaem v limit.\n    picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)\n    for chunk in ranked:\n        cost = count_tokens(chunk[\"text\"]) + 8  # +razdelitel'/podpis' istochnika\n        if used + cost > max_context_tokens:\n            break  # ostal'noe ne vlezaet - obrezaem\n        picked.append(chunk)\n        used += cost\n\n    # 4. Shablon: skleivaem s podpis'yu istochnika dlya posleduyushchih citat.\n    context = \"\\n\\n\".join(f\"[{c['source']}] {c['text']}\" for c in picked)\n    return PROMPT_TEMPLATE.format(context=context, question=question), picked",
-      "en": "# pip install tiktoken\nimport tiktoken\n\nENC = tiktoken.get_encoding(\"cl100k_base\")  # OpenAI tokenizer: fast OFFLINE APPROXIMATION, not Claude-accurate; for exact Claude counts use client.messages.count_tokens()\n\ndef count_tokens(text: str) -> int:\n    return len(ENC.encode(text))\n\nPROMPT_TEMPLATE = \"\"\"Otvechaj tol'ko na osnove konteksta nizhe.\nEsli otveta v kontekste net, skazhi ob etom chestno.\n\nKontekst:\n{context}\n\nVopros: {question}\nOtvet:\"\"\"\n\ndef assemble_context(question, retrieved, max_context_tokens=3000):\n    \"\"\"\n    retrieved: list of dict {id, text, score, source}, sorted\n               by descending score (most relevant first).\n    \"\"\"\n    # 1. Dedup: drop text repeats, keeping the best score.\n    seen, unique = set(), []\n    for chunk in retrieved:\n        key = chunk[\"text\"].strip()\n        if key not in seen:\n            seen.add(key)\n            unique.append(chunk)\n\n    # 2. Order: most important at the edges, not the middle (lost-in-the-middle).\n    ranked = order_for_attention(unique)\n\n    # 3. Token budget: take chunks while they fit the limit.\n    picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)\n    for chunk in ranked:\n        cost = count_tokens(chunk[\"text\"]) + 8  # +separator/source tag\n        if used + cost > max_context_tokens:\n            break  # the rest does not fit - trim it\n        picked.append(chunk)\n        used += cost\n\n    # 4. Template: glue with the source tag for later citations.\n    context = \"\\n\\n\".join(f\"[{c['source']}] {c['text']}\" for c in picked)\n    return PROMPT_TEMPLATE.format(context=context, question=question), picked"
+      "ru": "# pip install tiktoken\nimport tiktoken\n\nENC = tiktoken.get_encoding(\"cl100k_base\")  # токенизатор OpenAI: быстрое OFFLINE-ПРИБЛИЖЕНИЕ, не точно для Claude; для точного счета Claude используйте client.messages.count_tokens()\n\ndef count_tokens(text: str) -> int:\n    return len(ENC.encode(text))\n\nPROMPT_TEMPLATE = \"\"\"Отвечай только на основе контекста ниже.\nЕсли ответа в контексте нет, скажи об этом честно.\n\nКонтекст:\n{context}\n\nВопрос: {question}\nОтвет:\"\"\"\n\ndef assemble_context(question, retrieved, max_context_tokens=3000):\n    \"\"\"\n    retrieved: список dict {id, text, score, source}, отсортированный\n               по убыванию score (самый релевантный первым).\n    \"\"\"\n    # 1. Dedup: выбрасываем повторы по тексту, сохраняя лучший score.\n    seen, unique = set(), []\n    for chunk in retrieved:\n        key = chunk[\"text\"].strip()\n        if key not in seen:\n            seen.add(key)\n            unique.append(chunk)\n\n    # 2. Порядок: самое важное - по краям, не в середине (lost-in-the-middle).\n    ranked = order_for_attention(unique)\n\n    # 3. Token budget: набираем куски, пока влезаем в лимит.\n    picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)\n    for chunk in ranked:\n        cost = count_tokens(chunk[\"text\"]) + 8  # +разделитель/подпись источника\n        if used + cost > max_context_tokens:\n            break  # остальное не влезает - обрезаем\n        picked.append(chunk)\n        used += cost\n\n    # 4. Шаблон: склеиваем с подписью источника для последующих цитат.\n    context = \"\\n\\n\".join(f\"[{c['source']}] {c['text']}\" for c in picked)\n    return PROMPT_TEMPLATE.format(context=context, question=question), picked",
+      "en": "# pip install tiktoken\nimport tiktoken\n\nENC = tiktoken.get_encoding(\"cl100k_base\")  # OpenAI tokenizer: fast OFFLINE APPROXIMATION, not Claude-accurate; for exact Claude counts use client.messages.count_tokens()\n\ndef count_tokens(text: str) -> int:\n    return len(ENC.encode(text))\n\nPROMPT_TEMPLATE = \"\"\"Answer only from the context below.\nIf the answer is not in the context, say so honestly.\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer:\"\"\"\n\ndef assemble_context(question, retrieved, max_context_tokens=3000):\n    \"\"\"\n    retrieved: list of dict {id, text, score, source}, sorted\n               by descending score (most relevant first).\n    \"\"\"\n    # 1. Dedup: drop text repeats, keeping the best score.\n    seen, unique = set(), []\n    for chunk in retrieved:\n        key = chunk[\"text\"].strip()\n        if key not in seen:\n            seen.add(key)\n            unique.append(chunk)\n\n    # 2. Order: most important at the edges, not the middle (lost-in-the-middle).\n    ranked = order_for_attention(unique)\n\n    # 3. Token budget: take chunks while they fit the limit.\n    picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)\n    for chunk in ranked:\n        cost = count_tokens(chunk[\"text\"]) + 8  # +separator/source tag\n        if used + cost > max_context_tokens:\n            break  # the rest does not fit - trim it\n        picked.append(chunk)\n        used += cost\n\n    # 4. Template: glue with the source tag for later citations.\n    context = \"\\n\\n\".join(f\"[{c['source']}] {c['text']}\" for c in picked)\n    return PROMPT_TEMPLATE.format(context=context, question=question), picked"
     },
     "caption": {
-      "ru": "Sborshchik konteksta celikom: dedup, porjadok po krajam, bjudzhet tokenov i shablon prompta v odnoj funkcii.",
+      "ru": "Сборщик контекста целиком: dedup, порядок по краям, бюджет токенов и шаблон промпта в одной функции.",
       "en": "The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function."
     },
     "regions": [
@@ -477,11 +477,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Schet tokenov",
+          "ru": "Счет токенов",
           "en": "Token counting"
         },
         "explain": {
-          "ru": "Berem nastojashchij tokenizer tiktoken (semejstvo GPT-4/3.5) i schitaem tokeny, a ne simvoly - bjudzhet modeli merjaetsja v tokenah.",
+          "ru": "Берем настоящий токенизатор tiktoken (семейство GPT-4/3.5) и считаем токены, а не символы - бюджет модели меряется в токенах.",
           "en": "Take the real tiktoken tokenizer (GPT-4/3.5 family) and count tokens, not characters - the model budget is measured in tokens."
         }
       },
@@ -492,11 +492,11 @@ export default {
           16
         ],
         "label": {
-          "ru": "Shablon prompta",
+          "ru": "Шаблон промпта",
           "en": "Prompt template"
         },
         "explain": {
-          "ru": "Tri chasti v fiksirovannom porjadke: instrukcija, plejsholder konteksta i vopros. Tekst shablona - strokovyj literal, odinakovyj v oboih variantah.",
+          "ru": "Три части в фиксированном порядке: инструкция, плейсхолдер контекста и вопрос. Текст шаблона - строковый литерал, одинаковый в обоих вариантах.",
           "en": "Three parts in a fixed order: instruction, the context placeholder, and the question. The template text is a string literal, identical in both variants."
         }
       },
@@ -507,11 +507,11 @@ export default {
           29
         ],
         "label": {
-          "ru": "Udalenie dublej",
+          "ru": "Удаление дублей",
           "en": "Deduplication"
         },
         "explain": {
-          "ru": "Vybrasyvaem tochnye povtory teksta, sohranjaja pervyj (luchshij po score) ekzempljar - dubli edjat bjudzhet, no ne nesut novoj informacii.",
+          "ru": "Выбрасываем точные повторы текста, сохраняя первый (лучший по score) экземпляр - дубли едят бюджет, но не несут новой информации.",
           "en": "Drop exact text repeats, keeping the first (best-score) instance - duplicates eat budget but carry no new information."
         }
       },
@@ -522,11 +522,11 @@ export default {
           32
         ],
         "label": {
-          "ru": "Porjadok po krajam",
+          "ru": "Порядок по краям",
           "en": "Edge ordering"
         },
         "explain": {
-          "ru": "Raskladyvaem kuski tak, chtoby samye vazhnye stojali po krajam okna, a ne v seredine - smjagchenie effekta lost-in-the-middle.",
+          "ru": "Раскладываем куски так, чтобы самые важные стояли по краям окна, а не в середине - смягчение эффекта lost-in-the-middle.",
           "en": "Lay out the pieces so the most important ones sit at the window edges, not the middle - mitigating the lost-in-the-middle effect."
         }
       },
@@ -537,11 +537,11 @@ export default {
           42
         ],
         "label": {
-          "ru": "Bjudzhet tokenov",
+          "ru": "Бюджет токенов",
           "en": "Token budget"
         },
         "explain": {
-          "ru": "Nabiraem kuski po ocheredi, poka summa tokenov vlezaet v limit; kak tolko sledujushchij ne vlezaet - ostanavlivaemsja i obrezaem ostatok.",
+          "ru": "Набираем куски по очереди, пока сумма токенов влезает в лимит; как только следующий не влезает - останавливаемся и обрезаем остаток.",
           "en": "Take pieces one by one while the token sum fits the limit; as soon as the next one does not fit, stop and trim the rest."
         }
       },
@@ -552,11 +552,11 @@ export default {
           45
         ],
         "label": {
-          "ru": "Zapolnenie shablona",
+          "ru": "Заполнение шаблона",
           "en": "Fill the template"
         },
         "explain": {
-          "ru": "Skleivaem otobrannye kuski s podpisju istochnika [source] i podstavljaem v shablon vmeste s voprosom - gotovyj prompt dlja generacii.",
+          "ru": "Склеиваем отобранные куски с подписью источника [source] и подставляем в шаблон вместе с вопросом - готовый промпт для генерации.",
           "en": "Glue the picked pieces with their [source] tag and substitute them into the template along with the question - the finished prompt for generation."
         }
       }
@@ -565,11 +565,11 @@ export default {
   "assemble-context-order": {
     "lang": "python",
     "code": {
-      "ru": "def order_for_attention(ranked):\n    \"\"\"Luchshie kuski - po krayam okna, slabye - v seredinu.\n    ranked uzhe otsortirovan po ubyvaniyu relevantnosti.\"\"\"\n    head, tail = [], []\n    for i, chunk in enumerate(ranked):\n        (head if i % 2 == 0 else tail).append(chunk)\n    return head + tail[::-1]   # ...silnye...slabye...silnye",
+      "ru": "def order_for_attention(ranked):\n    \"\"\"Лучшие куски - по краям окна, слабые - в середину.\n    ranked уже отсортирован по убыванию релевантности.\"\"\"\n    head, tail = [], []\n    for i, chunk in enumerate(ranked):\n        (head if i % 2 == 0 else tail).append(chunk)\n    return head + tail[::-1]   # ...сильные...слабые...сильные",
       "en": "def order_for_attention(ranked):\n    \"\"\"Best chunks at the window edges, weak ones in the middle.\n    ranked is already sorted by descending relevance.\"\"\"\n    head, tail = [], []\n    for i, chunk in enumerate(ranked):\n        (head if i % 2 == 0 else tail).append(chunk)\n    return head + tail[::-1]   # ...strong...weak...strong"
     },
     "caption": {
-      "ru": "Raskladka po krajam: silnye kuski uezzhajut k nachalu i koncu okna, slabye - v seredinu.",
+      "ru": "Раскладка по краям: сильные куски уезжают к началу и концу окна, слабые - в середину.",
       "en": "Edge layout: strong pieces move to the start and end of the window, weak ones to the middle."
     },
     "regions": [
@@ -580,11 +580,11 @@ export default {
           3
         ],
         "label": {
-          "ru": "Vhod funkcii",
+          "ru": "Вход функции",
           "en": "Function input"
         },
         "explain": {
-          "ru": "Na vhod prihodit ranked - kuski, uzhe otsortirovannye po ubyvaniju relevantnosti; zadacha - perestavit ih pod vnimanie modeli.",
+          "ru": "На вход приходит ranked - куски, уже отсортированные по убыванию релевантности; задача - переставить их под внимание модели.",
           "en": "The input is ranked - pieces already sorted by descending relevance; the job is to reorder them for the model's attention."
         }
       },
@@ -595,11 +595,11 @@ export default {
           6
         ],
         "label": {
-          "ru": "Razvodim na kraja",
+          "ru": "Разводим на края",
           "en": "Split into edges"
         },
         "explain": {
-          "ru": "Cheredkem: chetnye po indeksu kuski idut v head, nechetnye - v tail; tak silnejshie raspredeljajutsja k oboim krajam okna.",
+          "ru": "Чередуем: четные по индексу куски идут в head, нечетные - в tail; так сильнейшие распределяются к обоим краям окна.",
           "en": "Alternate: even-indexed pieces go to head, odd-indexed ones to tail; this spreads the strongest toward both window edges."
         }
       },
@@ -610,11 +610,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Sborka kraja-seredina-kraja",
+          "ru": "Сборка край-середина-край",
           "en": "Edge-middle-edge recombine"
         },
         "explain": {
-          "ru": "Skleivaem head s razvernutym tail, poluchaja raskladku silnye...slabye...silnye - seredina okna dostaetsja naimenee vazhnym kuskam.",
+          "ru": "Склеиваем head с развернутым tail, получая раскладку сильные...слабые...сильные - середина окна достается наименее важным кускам.",
           "en": "Glue head with the reversed tail, yielding a strong...weak...strong layout - the window middle goes to the least important pieces."
         }
       }
@@ -623,11 +623,11 @@ export default {
   "search-retrieve": {
     "lang": "python",
     "code": {
-      "ru": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\nindex = Pinecone().Index(\"docs\")\n\ndef retrieve(query, k=3):\n    # 1. zapros -> vektor zaprosa (ta zhe model, chto i u chunkov)\n    qvec = oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=query\n    ).data[0].embedding\n    # 2. top-k blizhajshih po cosine\n    res = index.query(vector=qvec, top_k=k, include_metadata=True)\n    return [(m.id, round(m.score, 3), m.metadata[\"text\"])\n            for m in res.matches]\n\nfor cid, score, text in retrieve(\"kak vernut' den'gi za pokupku\"):\n    print(cid, score, text[:40])\n# chunk pro vozvrat sredstv prihodit pervym - bez obshchih slov s zaprosom",
-      "en": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\nindex = Pinecone().Index(\"docs\")\n\ndef retrieve(query, k=3):\n    # 1. query -> query vector (the same model as the chunks)\n    qvec = oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=query\n    ).data[0].embedding\n    # 2. top-k nearest by cosine\n    res = index.query(vector=qvec, top_k=k, include_metadata=True)\n    return [(m.id, round(m.score, 3), m.metadata[\"text\"])\n            for m in res.matches]\n\nfor cid, score, text in retrieve(\"kak vernut' den'gi za pokupku\"):\n    print(cid, score, text[:40])\n# the refund chunk comes back first - with no words shared with the query"
+      "ru": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\nindex = Pinecone().Index(\"docs\")\n\ndef retrieve(query, k=3):\n    # 1. запрос -> вектор запроса (та же модель, что и у chunks)\n    qvec = oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=query\n    ).data[0].embedding\n    # 2. top-k ближайших по cosine\n    res = index.query(vector=qvec, top_k=k, include_metadata=True)\n    return [(m.id, round(m.score, 3), m.metadata[\"text\"])\n            for m in res.matches]\n\nfor cid, score, text in retrieve(\"как вернуть деньги за покупку\"):\n    print(cid, score, text[:40])\n# chunk про возврат средств приходит первым - без общих слов с запросом",
+      "en": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\nindex = Pinecone().Index(\"docs\")\n\ndef retrieve(query, k=3):\n    # 1. query -> query vector (the same model as the chunks)\n    qvec = oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=query\n    ).data[0].embedding\n    # 2. top-k nearest by cosine\n    res = index.query(vector=qvec, top_k=k, include_metadata=True)\n    return [(m.id, round(m.score, 3), m.metadata[\"text\"])\n            for m in res.matches]\n\nfor cid, score, text in retrieve(\"how to get a refund for a purchase\"):\n    print(cid, score, text[:40])\n# the refund chunk comes back first - with no words shared with the query"
     },
     "caption": {
-      "ru": "Zhivoj retrieve: zapros -> vektor toj zhe modelju -> top-k blizhajshih po cosine iz indeksa.",
+      "ru": "Живой retrieve: запрос -> вектор той же моделью -> top-k ближайших по cosine из индекса.",
       "en": "Live retrieve: query -> vector with the same model -> top-k nearest by cosine from the index."
     },
     "regions": [
@@ -638,11 +638,11 @@ export default {
           1
         ],
         "label": {
-          "ru": "Ustanovka klientov",
+          "ru": "Установка клиентов",
           "en": "Install clients"
         },
         "explain": {
-          "ru": "Stavim klienty Pinecone i OpenAI - vektornaya baza plyus model embeddingov.",
+          "ru": "Ставим клиенты Pinecone и OpenAI - векторная база плюс модель эмбеддингов.",
           "en": "Install the Pinecone and OpenAI clients - the vector store plus the embedding model."
         }
       },
@@ -653,11 +653,11 @@ export default {
           6
         ],
         "label": {
-          "ru": "Klienty i indeks",
+          "ru": "Клиенты и индекс",
           "en": "Clients and index"
         },
         "explain": {
-          "ru": "Sozdaem klient OpenAI i otkryvaem indeks docs v Pinecone.",
+          "ru": "Создаем клиент OpenAI и открываем индекс docs в Pinecone.",
           "en": "Create the OpenAI client and open the docs index in Pinecone."
         }
       },
@@ -668,11 +668,11 @@ export default {
           12
         ],
         "label": {
-          "ru": "Vektor zaprosa",
+          "ru": "Вектор запроса",
           "en": "Query vector"
         },
         "explain": {
-          "ru": "Prevrashchaem tekst zaprosa v vektor TOJ ZHE modelju, chto i chunki - inache prostranstva ne sovpadut.",
+          "ru": "Превращаем текст запроса в вектор ТОЙ ЖЕ моделью, что и чанки - иначе пространства не совпадут.",
           "en": "Turn the query text into a vector with the SAME model as the chunks - otherwise the spaces will not match."
         }
       },
@@ -683,11 +683,11 @@ export default {
           16
         ],
         "label": {
-          "ru": "Top-k po cosine",
+          "ru": "Top-k по cosine",
           "en": "Top-k by cosine"
         },
         "explain": {
-          "ru": "Otdaem vektor v indeks i beriom top-k blizhajshih, vozvrashchaja id, score i tekst.",
+          "ru": "Отдаем вектор в индекс и берем top-k ближайших, возвращая id, score и текст.",
           "en": "Send the vector to the index and take the top-k nearest, returning id, score and text."
         }
       },
@@ -698,11 +698,11 @@ export default {
           20
         ],
         "label": {
-          "ru": "Zapusk na zaprose",
+          "ru": "Запуск на запросе",
           "en": "Run on a query"
         },
         "explain": {
-          "ru": "Zapuskaem retrieve na zhivom zaprose: nuzhnyj chunk prihodit pervym bez obshchih slov.",
+          "ru": "Запускаем retrieve на живом запросе: нужный чанк приходит первым без общих слов.",
           "en": "Run retrieve on a live query: the needed chunk comes back first with no shared words."
         }
       }
@@ -711,11 +711,11 @@ export default {
   "vector-store-upsert-query": {
     "lang": "python",
     "code": {
-      "ru": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\npc = Pinecone()\nindex = pc.Index(\"docs\")\n\n# store: kladem vektor + metadata + tekst chunka\ndef embed(text):\n    return oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=text\n    ).data[0].embedding\n\nindex.upsert(vectors=[\n    {\"id\": \"c1\", \"values\": embed(\"Politika vozvrata: vernut' tovar mozhno v 30 dnej.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"vozvrat\", \"text\": \"...\"}},\n    {\"id\": \"c2\", \"values\": embed(\"Garantiya na elektroniku 12 mesyacev.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"garantiya\", \"text\": \"...\"}},\n])\n\n# poisk: top-k blizhajshih k vektoru zaprosa\nres = index.query(\n    vector=embed(\"kak vernut' den'gi za pokupku\"),\n    top_k=3,\n    include_metadata=True,\n    filter={\"section\": \"vozvrat\"},   # metadata-fil'tr\n)\nfor m in res.matches:\n    print(m.id, round(m.score, 3), m.metadata[\"section\"])",
-      "en": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\npc = Pinecone()\nindex = pc.Index(\"docs\")\n\n# store: put the vector + metadata + chunk text\ndef embed(text):\n    return oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=text\n    ).data[0].embedding\n\nindex.upsert(vectors=[\n    {\"id\": \"c1\", \"values\": embed(\"Politika vozvrata: vernut' tovar mozhno v 30 dnej.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"vozvrat\", \"text\": \"...\"}},\n    {\"id\": \"c2\", \"values\": embed(\"Garantiya na elektroniku 12 mesyacev.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"garantiya\", \"text\": \"...\"}},\n])\n\n# search: top-k nearest to the query vector\nres = index.query(\n    vector=embed(\"kak vernut' den'gi za pokupku\"),\n    top_k=3,\n    include_metadata=True,\n    filter={\"section\": \"vozvrat\"},   # metadata filter\n)\nfor m in res.matches:\n    print(m.id, round(m.score, 3), m.metadata[\"section\"])"
+      "ru": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\npc = Pinecone()\nindex = pc.Index(\"docs\")\n\n# store: кладем вектор + metadata + текст chunk\ndef embed(text):\n    return oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=text\n    ).data[0].embedding\n\nindex.upsert(vectors=[\n    {\"id\": \"c1\", \"values\": embed(\"Политика возврата: вернуть товар можно в 30 дней.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"возврат\", \"text\": \"...\"}},\n    {\"id\": \"c2\", \"values\": embed(\"Гарантия на электронику составляет 12 месяцев с даты покупки.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"гарантия\", \"text\": \"...\"}},\n])\n\n# поиск: top-k ближайших к вектору запроса\nres = index.query(\n    vector=embed(\"как вернуть деньги за покупку\"),\n    top_k=3,\n    include_metadata=True,\n    filter={\"section\": \"возврат\"},   # metadata-фильтр\n)\nfor m in res.matches:\n    print(m.id, round(m.score, 3), m.metadata[\"section\"])",
+      "en": "# pip install pinecone openai\nfrom pinecone import Pinecone\nfrom openai import OpenAI\n\noai = OpenAI()\npc = Pinecone()\nindex = pc.Index(\"docs\")\n\n# store: put the vector + metadata + chunk text\ndef embed(text):\n    return oai.embeddings.create(\n        model=\"text-embedding-3-small\", input=text\n    ).data[0].embedding\n\nindex.upsert(vectors=[\n    {\"id\": \"c1\", \"values\": embed(\"Refund policy: a product may be returned within 30 days.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"refund\", \"text\": \"...\"}},\n    {\"id\": \"c2\", \"values\": embed(\"The warranty on electronics is 12 months.\"),\n     \"metadata\": {\"source\": \"faq.md\", \"section\": \"warranty\", \"text\": \"...\"}},\n])\n\n# search: top-k nearest to the query vector\nres = index.query(\n    vector=embed(\"how to get a refund for a purchase\"),\n    top_k=3,\n    include_metadata=True,\n    filter={\"section\": \"refund\"},   # metadata filter\n)\nfor m in res.matches:\n    print(m.id, round(m.score, 3), m.metadata[\"section\"])"
     },
     "caption": {
-      "ru": "Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata.",
+      "ru": "Векторная база: upsert векторов с metadata, затем поиск top-k ближайших с фильтром по metadata.",
       "en": "Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter."
     },
     "regions": [
@@ -726,11 +726,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Klienty i indeks",
+          "ru": "Клиенты и индекс",
           "en": "Clients and index"
         },
         "explain": {
-          "ru": "Klient OpenAI dlja embeddingov i indeks docs v Pinecone - hranilishche vektorov.",
+          "ru": "Клиент OpenAI для эмбеддингов и индекс docs в Pinecone - хранилище векторов.",
           "en": "The OpenAI client for embeddings and the docs index in Pinecone - the vector store."
         }
       },
@@ -741,11 +741,11 @@ export default {
           13
         ],
         "label": {
-          "ru": "Funkcija embed",
+          "ru": "Функция embed",
           "en": "embed helper"
         },
         "explain": {
-          "ru": "Vspomogatelnaja funkcija: tekst -> vektor toj zhe modelju dlja store i poiska.",
+          "ru": "Вспомогательная функция: текст -> вектор той же моделью для store и поиска.",
           "en": "A helper: text -> vector with the same model for both store and search."
         }
       },
@@ -756,11 +756,11 @@ export default {
           20
         ],
         "label": {
-          "ru": "Upsert s metadata",
+          "ru": "Upsert с metadata",
           "en": "Upsert with metadata"
         },
         "explain": {
-          "ru": "Kladem v bazu vektor vmeste s metadata (source, section, text) - baza hranit ih rjadom.",
+          "ru": "Кладем в базу вектор вместе с metadata (source, section, text) - база хранит их рядом.",
           "en": "Put each vector into the store together with its metadata (source, section, text) - the store keeps them side by side."
         }
       },
@@ -771,12 +771,12 @@ export default {
           28
         ],
         "label": {
-          "ru": "Poisk s filtrom",
+          "ru": "Поиск с фильтром",
           "en": "Filtered search"
         },
         "explain": {
-          "ru": "Ishchem top-3 blizhajshih, no snachala suzhaem poisk filtrom po metadata (section vozvrat).",
-          "en": "Search for the top-3 nearest, but first narrow the search with a metadata filter (section vozvrat)."
+          "ru": "Ищем top-3 ближайших, но сначала сужаем поиск фильтром по metadata (section refund).",
+          "en": "Search for the top-3 nearest, but first narrow the search with a metadata filter (section refund)."
         }
       },
       {
@@ -786,11 +786,11 @@ export default {
           30
         ],
         "label": {
-          "ru": "Vyvod sovpadenij",
+          "ru": "Вывод совпадений",
           "en": "Print matches"
         },
         "explain": {
-          "ru": "Pechataem id, cosine-score i razdel kazhdogo najdennogo sovpadenija.",
+          "ru": "Печатаем id, cosine-score и раздел каждого найденного совпадения.",
           "en": "Print the id, cosine score and section of each returned match."
         }
       }
@@ -799,11 +799,11 @@ export default {
   "evaluation-harness": {
     "lang": "python",
     "code": {
-      "ru": "golden = [\n    {\n        \"q\": \"Kak vernut' tovar?\",\n        \"relevant\": {\"policy-12\", \"policy-13\"},   # id chunkov s otvetom\n    },\n    {\n        \"q\": \"Skolko dney na vozvrat?\",\n        \"relevant\": {\"policy-13\"},\n    },\n    # ...50+ voprosov: chem bolshe, tem ustojchivee metrika\n]\n\ndef precision_recall_at_k(retrieved_ids, relevant, k):\n    \"\"\"retrieved_ids: top-k id ot retrieve, po ubyvaniyu score.\n       relevant: mnozhestvo id dejstvitelno nuzhnyh chunkov.\"\"\"\n    top_k = retrieved_ids[:k]\n    hits = sum(1 for cid in top_k if cid in relevant)\n    precision = hits / k                      # dolya popadanij sredi vydannyh k\n    recall = hits / len(relevant)             # dolya najdennyh iz vseh nuzhnyh\n    return precision, recall\n\ndef evaluate(retriever, golden, k=5):\n    p_sum = r_sum = 0.0\n    for item in golden:\n        ids = retriever(item[\"q\"])            # vash retrieve -> spisok id\n        p, r = precision_recall_at_k(ids, item[\"relevant\"], k)\n        p_sum += p\n        r_sum += r\n    n = len(golden)\n    return {\"precision@k\": p_sum / n, \"recall@k\": r_sum / n, \"k\": k, \"n\": n}\n\n# Sravnenie do/posle pravki na odnom i tom zhe nabore:\nbefore = evaluate(retriever_v1, golden, k=5)\nafter  = evaluate(retriever_v2, golden, k=5)\nprint(before, after)",
-      "en": "golden = [\n    {\n        \"q\": \"Kak vernut' tovar?\",\n        \"relevant\": {\"policy-12\", \"policy-13\"},   # ids of chunks with the answer\n    },\n    {\n        \"q\": \"Skolko dney na vozvrat?\",\n        \"relevant\": {\"policy-13\"},\n    },\n    # ...50+ questions: the more, the more stable the metric\n]\n\ndef precision_recall_at_k(retrieved_ids, relevant, k):\n    \"\"\"retrieved_ids: top-k ids from retrieve, by descending score.\n       relevant: the set of ids of the genuinely needed chunks.\"\"\"\n    top_k = retrieved_ids[:k]\n    hits = sum(1 for cid in top_k if cid in relevant)\n    precision = hits / k                      # share of hits among the returned k\n    recall = hits / len(relevant)             # share found out of all needed\n    return precision, recall\n\ndef evaluate(retriever, golden, k=5):\n    p_sum = r_sum = 0.0\n    for item in golden:\n        ids = retriever(item[\"q\"])            # your retrieve -> list of ids\n        p, r = precision_recall_at_k(ids, item[\"relevant\"], k)\n        p_sum += p\n        r_sum += r\n    n = len(golden)\n    return {\"precision@k\": p_sum / n, \"recall@k\": r_sum / n, \"k\": k, \"n\": n}\n\n# Compare before/after an edit on the same set:\nbefore = evaluate(retriever_v1, golden, k=5)\nafter  = evaluate(retriever_v2, golden, k=5)\nprint(before, after)"
+      "ru": "golden = [\n    {\n        \"q\": \"Как вернуть товар?\",\n        \"relevant\": {\"policy-12\", \"policy-13\"},   # id chunks с ответом\n    },\n    {\n        \"q\": \"Сколько дней на возврат?\",\n        \"relevant\": {\"policy-13\"},\n    },\n    # ...50+ вопросов: чем больше, тем устойчивее метрика\n]\n\ndef precision_recall_at_k(retrieved_ids, relevant, k):\n    \"\"\"retrieved_ids: top-k id от retrieve, по убыванию score.\n       relevant: множество id действительно нужных chunks.\"\"\"\n    top_k = retrieved_ids[:k]\n    hits = sum(1 for cid in top_k if cid in relevant)\n    precision = hits / k                      # доля попаданий среди выданных k\n    recall = hits / len(relevant)             # доля найденных из всех нужных\n    return precision, recall\n\ndef evaluate(retriever, golden, k=5):\n    p_sum = r_sum = 0.0\n    for item in golden:\n        ids = retriever(item[\"q\"])            # ваш retrieve -> список id\n        p, r = precision_recall_at_k(ids, item[\"relevant\"], k)\n        p_sum += p\n        r_sum += r\n    n = len(golden)\n    return {\"precision@k\": p_sum / n, \"recall@k\": r_sum / n, \"k\": k, \"n\": n}\n\n# Сравнение до/после правки на одном и том же наборе:\nbefore = evaluate(retriever_v1, golden, k=5)\nafter  = evaluate(retriever_v2, golden, k=5)\nprint(before, after)",
+      "en": "golden = [\n    {\n        \"q\": \"How do I return a product?\",\n        \"relevant\": {\"policy-12\", \"policy-13\"},   # ids of chunks with the answer\n    },\n    {\n        \"q\": \"How many days do I have to return it?\",\n        \"relevant\": {\"policy-13\"},\n    },\n    # ...50+ questions: the more, the more stable the metric\n]\n\ndef precision_recall_at_k(retrieved_ids, relevant, k):\n    \"\"\"retrieved_ids: top-k ids from retrieve, by descending score.\n       relevant: the set of ids of the genuinely needed chunks.\"\"\"\n    top_k = retrieved_ids[:k]\n    hits = sum(1 for cid in top_k if cid in relevant)\n    precision = hits / k                      # share of hits among the returned k\n    recall = hits / len(relevant)             # share found out of all needed\n    return precision, recall\n\ndef evaluate(retriever, golden, k=5):\n    p_sum = r_sum = 0.0\n    for item in golden:\n        ids = retriever(item[\"q\"])            # your retrieve -> list of ids\n        p, r = precision_recall_at_k(ids, item[\"relevant\"], k)\n        p_sum += p\n        r_sum += r\n    n = len(golden)\n    return {\"precision@k\": p_sum / n, \"recall@k\": r_sum / n, \"k\": k, \"n\": n}\n\n# Compare before/after an edit on the same set:\nbefore = evaluate(retriever_v1, golden, k=5)\nafter  = evaluate(retriever_v2, golden, k=5)\nprint(before, after)"
     },
     "caption": {
-      "ru": "Eval-harness nad zolotym naborom: schitaem precision@k i recall@k i sravnivaem dve versii na odnom nabore.",
+      "ru": "Eval-харнесс над золотым набором: считаем precision@k и recall@k и сравниваем две версии на одном наборе.",
       "en": "Eval harness over a golden set: compute precision@k and recall@k and compare two versions on the same set."
     },
     "regions": [
@@ -814,11 +814,11 @@ export default {
           11
         ],
         "label": {
-          "ru": "Zolotoj nabor",
+          "ru": "Золотой набор",
           "en": "Golden set"
         },
         "explain": {
-          "ru": "Spisok voprosov, dlja kazhdogo zaranee razmecheny id relevantnyh chunkov - fundament ocenki.",
+          "ru": "Список вопросов, для каждого заранее размечены id релевантных чанков - фундамент оценки.",
           "en": "A list of questions, each pre-labelled with the ids of its relevant chunks - the foundation of evaluation."
         }
       },
@@ -829,11 +829,11 @@ export default {
           20
         ],
         "label": {
-          "ru": "precision@k i recall@k",
+          "ru": "precision@k и recall@k",
           "en": "precision@k and recall@k"
         },
         "explain": {
-          "ru": "Schitaem popadanija v pervyh k: precision - dolja sredi vydannyh, recall - dolja iz vseh nuzhnyh.",
+          "ru": "Считаем попадания в первых k: precision - доля среди выданных, recall - доля из всех нужных.",
           "en": "Count hits in the first k: precision is the share among the returned, recall is the share of all needed."
         }
       },
@@ -844,11 +844,11 @@ export default {
           30
         ],
         "label": {
-          "ru": "Progon po naboru",
+          "ru": "Прогон по набору",
           "en": "Run over the set"
         },
         "explain": {
-          "ru": "Proganjaem retriever po vsem voprosam i usrednjaem precision@k i recall@k po naboru.",
+          "ru": "Прогоняем retriever по всем вопросам и усредняем precision@k и recall@k по набору.",
           "en": "Run the retriever over every question and average precision@k and recall@k across the set."
         }
       },
@@ -859,11 +859,11 @@ export default {
           35
         ],
         "label": {
-          "ru": "Sravnenie do/posle",
+          "ru": "Сравнение до/после",
           "en": "Before/after compare"
         },
         "explain": {
-          "ru": "Obe versii retrievera proganjajutsja na ODNOM fiksirovannom nabore - tolko tak sravnenie chestnoe.",
+          "ru": "Обе версии retriever прогоняются на ОДНОМ фиксированном наборе - только так сравнение честное.",
           "en": "Both retriever versions run on the SAME fixed set - only that way is the comparison honest."
         }
       }
@@ -872,11 +872,11 @@ export default {
   "evaluation-ragas": {
     "lang": "python",
     "code": {
-      "ru": "# pip install ragas datasets\nfrom ragas import evaluate as ragas_evaluate\nfrom ragas.metrics import faithfulness, answer_relevancy, context_precision\nfrom datasets import Dataset\n\nds = Dataset.from_dict({\n    \"question\":     [it[\"q\"] for it in samples],\n    \"answer\":       [it[\"answer\"] for it in samples],     # vyhod generation\n    \"contexts\":     [it[\"contexts\"] for it in samples],   # chunki, vidannye modeli\n    \"ground_truth\": [it[\"truth\"] for it in samples],      # etalon iz golden\n})\nreport = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])\nprint(report)",
+      "ru": "# pip install ragas datasets\nfrom ragas import evaluate as ragas_evaluate\nfrom ragas.metrics import faithfulness, answer_relevancy, context_precision\nfrom datasets import Dataset\n\nds = Dataset.from_dict({\n    \"question\":     [it[\"q\"] for it in samples],\n    \"answer\":       [it[\"answer\"] for it in samples],     # выход generation\n    \"contexts\":     [it[\"contexts\"] for it in samples],   # chunks, виденные моделью\n    \"ground_truth\": [it[\"truth\"] for it in samples],      # эталон из golden\n})\nreport = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])\nprint(report)",
       "en": "# pip install ragas datasets\nfrom ragas import evaluate as ragas_evaluate\nfrom ragas.metrics import faithfulness, answer_relevancy, context_precision\nfrom datasets import Dataset\n\nds = Dataset.from_dict({\n    \"question\":     [it[\"q\"] for it in samples],\n    \"answer\":       [it[\"answer\"] for it in samples],     # generation output\n    \"contexts\":     [it[\"contexts\"] for it in samples],   # chunks shown to the model\n    \"ground_truth\": [it[\"truth\"] for it in samples],      # reference from golden\n})\nreport = ragas_evaluate(ds, metrics=[faithfulness, answer_relevancy, context_precision])\nprint(report)"
     },
     "caption": {
-      "ru": "RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision.",
+      "ru": "RAGAS: автоматическая оценка качества ответа - faithfulness, answer relevancy, context precision.",
       "en": "RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision."
     },
     "regions": [
@@ -887,11 +887,11 @@ export default {
           4
         ],
         "label": {
-          "ru": "Metriki RAGAS",
+          "ru": "Метрики RAGAS",
           "en": "RAGAS metrics"
         },
         "explain": {
-          "ru": "Stavim ragas i podkljuchaem tri metriki kachestva: faithfulness, answer_relevancy, context_precision.",
+          "ru": "Ставим ragas и подключаем три метрики качества: faithfulness, answer_relevancy, context_precision.",
           "en": "Install ragas and import the three quality metrics: faithfulness, answer_relevancy, context_precision."
         }
       },
@@ -902,11 +902,11 @@ export default {
           11
         ],
         "label": {
-          "ru": "Datset ocenki",
+          "ru": "Датасет оценки",
           "en": "Eval dataset"
         },
         "explain": {
-          "ru": "Sobiraem dataset iz voprosov, otvetov generacii, vydannyh chunkov i etalona iz golden.",
+          "ru": "Собираем dataset из вопросов, ответов генерации, выданных чанков и эталона из golden.",
           "en": "Assemble the dataset from questions, generation answers, the returned chunks and the golden reference."
         }
       },
@@ -917,11 +917,11 @@ export default {
           13
         ],
         "label": {
-          "ru": "Zapusk ocenki",
+          "ru": "Запуск оценки",
           "en": "Run evaluation"
         },
         "explain": {
-          "ru": "Proganjaem RAGAS po datasetu - on schitaet metriki avtomaticheski, bez ruchnoj razmetki kazhdogo otveta.",
+          "ru": "Прогоняем RAGAS по датасету - он считает метрики автоматически, без ручной разметки каждого ответа.",
           "en": "Run RAGAS over the dataset - it scores the metrics automatically, with no manual labelling of each answer."
         }
       }
@@ -930,11 +930,11 @@ export default {
   "chunking-fixed-size": {
     "lang": "python",
     "code": {
-      "ru": "def fixed_size_chunks(text: str, size: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG podmeshivaet vashi dokumenty v zapros k modeli. \" \\\n          \"Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor. \" \\\n          \"Vektory hranyat v indekse i ishchut blizhajshie po smyslu.\"\n    for n, chunk in enumerate(fixed_size_chunks(doc, 60)):\n        print(n, repr(chunk))",
-      "en": "def fixed_size_chunks(text: str, size: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG podmeshivaet vashi dokumenty v zapros k modeli. \" \\\n          \"Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor. \" \\\n          \"Vektory hranyat v indekse i ishchut blizhajshie po smyslu.\"\n    for n, chunk in enumerate(fixed_size_chunks(doc, 60)):\n        print(n, repr(chunk))"
+      "ru": "def fixed_size_chunks(text: str, size: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG подмешивает ваши документы в запрос к модели. \" \\\n          \"Корпус режут на chunks и каждый превращают в вектор. \" \\\n          \"Векторы хранят в индексе и ищут ближайшие по смыслу.\"\n    for n, chunk in enumerate(fixed_size_chunks(doc, 60)):\n        print(n, repr(chunk))",
+      "en": "def fixed_size_chunks(text: str, size: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    return [text[i:i + size] for i in range(0, len(text), size)]\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG mixes your documents into the prompt sent to the model. \" \\\n          \"The corpus is cut into chunks and each one is turned into a vector. \" \\\n          \"The vectors are stored in an index and the nearest by meaning are found.\"\n    for n, chunk in enumerate(fixed_size_chunks(doc, 60)):\n        print(n, repr(chunk))"
     },
     "caption": {
-      "ru": "fixed-size: rezhem rovno po N edinic podrjad, ignoriruja smyslovye granicy.",
+      "ru": "fixed-size: режем ровно по N единиц подряд, игнорируя смысловые границы.",
       "en": "fixed-size: cut exactly N units in a row, ignoring meaning boundaries."
     },
     "regions": [
@@ -945,11 +945,11 @@ export default {
           3
         ],
         "label": {
-          "ru": "Proverka razmera",
+          "ru": "Проверка размера",
           "en": "Size guard"
         },
         "explain": {
-          "ru": "Signatura funkcii i zashchita ot nepozitivnogo razmera okna - inache rez ne imeet smysla.",
+          "ru": "Сигнатура функции и защита от неположительного размера окна - иначе рез не имеет смысла.",
           "en": "The function signature and a guard against a non-positive window size - otherwise the cut makes no sense."
         }
       },
@@ -960,11 +960,11 @@ export default {
           4
         ],
         "label": {
-          "ru": "Narezka po shagu size",
+          "ru": "Нарезка по шагу size",
           "en": "Slice by step size"
         },
         "explain": {
-          "ru": "Odin prohod srezami text[i:i+size] s shagom size - rezy padajut cherez ravnye intervaly, ignoriruja slova.",
+          "ru": "Один проход срезами text[i:i+size] с шагом size - резы падают через равные интервалы, игнорируя слова.",
           "en": "A single pass of text[i:i+size] slices stepping by size - cuts fall at equal intervals, ignoring words."
         }
       },
@@ -975,12 +975,12 @@ export default {
           12
         ],
         "label": {
-          "ru": "Demonstracija",
+          "ru": "Демонстрация",
           "en": "Demo run"
         },
         "explain": {
-          "ru": "Primer na transliterirovannom dokumente s size=60; pechataet kazhdyj chank - vidno, chto granicy mogut past poseredine slova.",
-          "en": "An example over a transliterated document with size=60; prints each chunk - boundaries can land mid-word."
+          "ru": "Пример на документе с size=60; печатает каждый чанк - видно, что границы могут пасть посередине слова.",
+          "en": "An example over a document with size=60; prints each chunk - boundaries can land mid-word."
         }
       }
     ]
@@ -988,11 +988,11 @@ export default {
   "chunking-sliding-window": {
     "lang": "python",
     "code": {
-      "ru": "def sliding_window_chunks(text: str, size: int, overlap: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    if not 0 <= overlap < size:\n        raise ValueError(\"overlap must satisfy 0 <= overlap < size\")\n    step = size - overlap\n    chunks = []\n    i = 0\n    while i < len(text):\n        chunks.append(text[i:i + size])\n        i += step\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG podmeshivaet vashi dokumenty v zapros k modeli. \" \\\n          \"Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor.\"\n    for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):\n        print(n, repr(chunk))",
-      "en": "def sliding_window_chunks(text: str, size: int, overlap: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    if not 0 <= overlap < size:\n        raise ValueError(\"overlap must satisfy 0 <= overlap < size\")\n    step = size - overlap\n    chunks = []\n    i = 0\n    while i < len(text):\n        chunks.append(text[i:i + size])\n        i += step\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG podmeshivaet vashi dokumenty v zapros k modeli. \" \\\n          \"Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor.\"\n    for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):\n        print(n, repr(chunk))"
+      "ru": "def sliding_window_chunks(text: str, size: int, overlap: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    if not 0 <= overlap < size:\n        raise ValueError(\"overlap must satisfy 0 <= overlap < size\")\n    step = size - overlap\n    chunks = []\n    i = 0\n    while i < len(text):\n        chunks.append(text[i:i + size])\n        i += step\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG подмешивает ваши документы в запрос к модели. \" \\\n          \"Корпус режут на chunks и каждый превращают в вектор.\"\n    for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):\n        print(n, repr(chunk))",
+      "en": "def sliding_window_chunks(text: str, size: int, overlap: int) -> list[str]:\n    if size <= 0:\n        raise ValueError(\"size must be positive\")\n    if not 0 <= overlap < size:\n        raise ValueError(\"overlap must satisfy 0 <= overlap < size\")\n    step = size - overlap\n    chunks = []\n    i = 0\n    while i < len(text):\n        chunks.append(text[i:i + size])\n        i += step\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = \"RAG mixes your documents into the prompt sent to the model. \" \\\n          \"The corpus is cut into chunks and each one is turned into a vector.\"\n    for n, chunk in enumerate(sliding_window_chunks(doc, 50, 15)):\n        print(n, repr(chunk))"
     },
     "caption": {
-      "ru": "sliding-window: to zhe okno, no sosednie chanki perekryvajutsja na overlap edinic.",
+      "ru": "sliding-window: то же окно, но соседние чанки перекрываются на overlap единиц.",
       "en": "sliding-window: the same window, but neighbouring chunks overlap by overlap units."
     },
     "regions": [
@@ -1003,11 +1003,11 @@ export default {
           5
         ],
         "label": {
-          "ru": "Proverki size i overlap",
+          "ru": "Проверки size и overlap",
           "en": "Size and overlap guards"
         },
         "explain": {
-          "ru": "Signatura i dve zashchity: polozhitelnyj size i 0 <= overlap < size, inache okno ne sdvigaetsja vpered.",
+          "ru": "Сигнатура и две защиты: положительный size и 0 <= overlap < size, иначе окно не сдвигается вперед.",
           "en": "The signature and two guards: a positive size and 0 <= overlap < size, otherwise the window does not move forward."
         }
       },
@@ -1018,11 +1018,11 @@ export default {
           8
         ],
         "label": {
-          "ru": "Shag s perekrytiem",
+          "ru": "Шаг с перекрытием",
           "en": "Overlapping step"
         },
         "explain": {
-          "ru": "Shag step = size - overlap menshe okna, poetomu sosednie chanki nakladyvajutsja na overlap edinic.",
+          "ru": "Шаг step = size - overlap меньше окна, поэтому соседние чанки накладываются на overlap единиц.",
           "en": "The step step = size - overlap is smaller than the window, so neighbouring chunks overlap by overlap units."
         }
       },
@@ -1033,11 +1033,11 @@ export default {
           12
         ],
         "label": {
-          "ru": "Cikl narezki",
+          "ru": "Цикл нарезки",
           "en": "Cutting loop"
         },
         "explain": {
-          "ru": "Rezhem text[i:i+size] i dvigaem kursor na step; hvost overlap predydushchego chanka povtorjaetsja v nachale sledujushchego.",
+          "ru": "Режем text[i:i+size] и двигаем курсор на step; хвост overlap предыдущего чанка повторяется в начале следующего.",
           "en": "Cut text[i:i+size] and advance the cursor by step; the overlap tail of the previous chunk repeats at the start of the next."
         }
       },
@@ -1048,11 +1048,11 @@ export default {
           19
         ],
         "label": {
-          "ru": "Demonstracija",
+          "ru": "Демонстрация",
           "en": "Demo run"
         },
         "explain": {
-          "ru": "Primer s size=50, overlap=15; pechat chankov pokazyvaet povtorjajushchijsja pogranichnyj hvost.",
+          "ru": "Пример с size=50, overlap=15; печать чанков показывает повторяющийся пограничный хвост.",
           "en": "An example with size=50, overlap=15; printing the chunks shows the repeated boundary tail."
         }
       }
@@ -1061,11 +1061,11 @@ export default {
   "chunking-recursive": {
     "lang": "python",
     "code": {
-      "ru": "def recursive_chunks(text: str, size: int,\n                     separators: list[str] | None = None) -> list[str]:\n    if separators is None:\n        separators = [\"\\n\\n\", \"\\n\", \" \", \"\"]\n    if len(text) <= size:\n        return [text] if text else []\n\n    sep = separators[0]\n    rest = separators[1:]\n    parts = list(text) if sep == \"\" else text.split(sep)\n\n    chunks: list[str] = []\n    buf = \"\"\n    glue = \"\" if sep == \"\" else sep\n    for part in parts:\n        candidate = part if not buf else buf + glue + part\n        if len(candidate) <= size:\n            buf = candidate\n            continue\n        if buf:\n            chunks.append(buf)\n            buf = \"\"\n        if len(part) <= size:\n            buf = part\n        elif rest:\n            chunks.extend(recursive_chunks(part, size, rest))\n        else:\n            chunks.extend(part[i:i + size] for i in range(0, len(part), size))\n    if buf:\n        chunks.append(buf)\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"RAG podmeshivaet dokumenty v zapros.\\n\\n\"\n           \"Korpus rezhut na chunki. Kazhdyj chunk embeddyat.\\n\\n\"\n           \"Vektory hranyat v indekse i ishchut blizhajshie po smyslu.\")\n    for n, chunk in enumerate(recursive_chunks(doc, 70)):\n        print(n, repr(chunk))",
-      "en": "def recursive_chunks(text: str, size: int,\n                     separators: list[str] | None = None) -> list[str]:\n    if separators is None:\n        separators = [\"\\n\\n\", \"\\n\", \" \", \"\"]\n    if len(text) <= size:\n        return [text] if text else []\n\n    sep = separators[0]\n    rest = separators[1:]\n    parts = list(text) if sep == \"\" else text.split(sep)\n\n    chunks: list[str] = []\n    buf = \"\"\n    glue = \"\" if sep == \"\" else sep\n    for part in parts:\n        candidate = part if not buf else buf + glue + part\n        if len(candidate) <= size:\n            buf = candidate\n            continue\n        if buf:\n            chunks.append(buf)\n            buf = \"\"\n        if len(part) <= size:\n            buf = part\n        elif rest:\n            chunks.extend(recursive_chunks(part, size, rest))\n        else:\n            chunks.extend(part[i:i + size] for i in range(0, len(part), size))\n    if buf:\n        chunks.append(buf)\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"RAG podmeshivaet dokumenty v zapros.\\n\\n\"\n           \"Korpus rezhut na chunki. Kazhdyj chunk embeddyat.\\n\\n\"\n           \"Vektory hranyat v indekse i ishchut blizhajshie po smyslu.\")\n    for n, chunk in enumerate(recursive_chunks(doc, 70)):\n        print(n, repr(chunk))"
+      "ru": "def recursive_chunks(text: str, size: int,\n                     separators: list[str] | None = None) -> list[str]:\n    if separators is None:\n        separators = [\"\\n\\n\", \"\\n\", \" \", \"\"]\n    if len(text) <= size:\n        return [text] if text else []\n\n    sep = separators[0]\n    rest = separators[1:]\n    parts = list(text) if sep == \"\" else text.split(sep)\n\n    chunks: list[str] = []\n    buf = \"\"\n    glue = \"\" if sep == \"\" else sep\n    for part in parts:\n        candidate = part if not buf else buf + glue + part\n        if len(candidate) <= size:\n            buf = candidate\n            continue\n        if buf:\n            chunks.append(buf)\n            buf = \"\"\n        if len(part) <= size:\n            buf = part\n        elif rest:\n            chunks.extend(recursive_chunks(part, size, rest))\n        else:\n            chunks.extend(part[i:i + size] for i in range(0, len(part), size))\n    if buf:\n        chunks.append(buf)\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"RAG подмешивает документы в запрос.\\n\\n\"\n           \"Корпус режут на chunks. Каждый chunk превращают в вектор.\\n\\n\"\n           \"Векторы хранят в индексе и ищут ближайшие по смыслу.\")\n    for n, chunk in enumerate(recursive_chunks(doc, 70)):\n        print(n, repr(chunk))",
+      "en": "def recursive_chunks(text: str, size: int,\n                     separators: list[str] | None = None) -> list[str]:\n    if separators is None:\n        separators = [\"\\n\\n\", \"\\n\", \" \", \"\"]\n    if len(text) <= size:\n        return [text] if text else []\n\n    sep = separators[0]\n    rest = separators[1:]\n    parts = list(text) if sep == \"\" else text.split(sep)\n\n    chunks: list[str] = []\n    buf = \"\"\n    glue = \"\" if sep == \"\" else sep\n    for part in parts:\n        candidate = part if not buf else buf + glue + part\n        if len(candidate) <= size:\n            buf = candidate\n            continue\n        if buf:\n            chunks.append(buf)\n            buf = \"\"\n        if len(part) <= size:\n            buf = part\n        elif rest:\n            chunks.extend(recursive_chunks(part, size, rest))\n        else:\n            chunks.extend(part[i:i + size] for i in range(0, len(part), size))\n    if buf:\n        chunks.append(buf)\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"RAG mixes your documents into the prompt.\\n\\n\"\n           \"The corpus is cut into chunks. Each chunk is embedded.\\n\\n\"\n           \"The vectors are stored in an index and the nearest by meaning are found.\")\n    for n, chunk in enumerate(recursive_chunks(doc, 70)):\n        print(n, repr(chunk))"
     },
     "caption": {
-      "ru": "recursive: spusk po prioritetu razdelitelej, poka kusok ne vlezet v limit size.",
+      "ru": "recursive: спуск по приоритету разделителей, пока кусок не влезет в лимит size.",
       "en": "recursive: descend the separator priority until a piece fits the size limit."
     },
     "regions": [
@@ -1076,11 +1076,11 @@ export default {
           6
         ],
         "label": {
-          "ru": "Baza rekursii",
+          "ru": "База рекурсии",
           "en": "Recursion base"
         },
         "explain": {
-          "ru": "Spisok razdelitelej po umolchaniju ot krupnogo k melkomu; esli tekst uzhe vlezaet v size, on vozvrashchaetsja kak est.",
+          "ru": "Список разделителей по умолчанию от крупного к мелкому; если текст уже влезает в size, он возвращается как есть.",
           "en": "A default separator list from coarse to fine; if the text already fits size, it is returned as is."
         }
       },
@@ -1091,11 +1091,11 @@ export default {
           10
         ],
         "label": {
-          "ru": "Rez tekushchim razdelitelem",
+          "ru": "Рез текущим разделителем",
           "en": "Split by current separator"
         },
         "explain": {
-          "ru": "Berem pervyj razdelitel urovnja i rezhem im; pustoj razdelitel oznachaet rez po simvolam.",
+          "ru": "Берем первый разделитель уровня и режем им; пустой разделитель означает рез по символам.",
           "en": "Take the first separator of the level and split by it; an empty separator means a per-character cut."
         }
       },
@@ -1106,11 +1106,11 @@ export default {
           19
         ],
         "label": {
-          "ru": "Sklejka melkih kuskov",
+          "ru": "Склейка мелких кусков",
           "en": "Glue small pieces"
         },
         "explain": {
-          "ru": "Kopim chasti v bufer, poka summa vlezaet v size - chtoby ne plodit slishkom melkie chanki.",
+          "ru": "Копим части в буфер, пока сумма влезает в size - чтобы не плодить слишком мелкие чанки.",
           "en": "Accumulate parts in a buffer while the sum fits size - so as not to breed overly small chunks."
         }
       },
@@ -1121,11 +1121,11 @@ export default {
           30
         ],
         "label": {
-          "ru": "Spusk na sledujushchij uroven",
+          "ru": "Спуск на следующий уровень",
           "en": "Descend a level"
         },
         "explain": {
-          "ru": "Esli chast vse eshche bolshe size, rekursivno primenjaem SLEDUJUSHCHIJ razdelitel; kogda razdeliteli konchilis - zhestkij fixed-size rez.",
+          "ru": "Если часть все еще больше size, рекурсивно применяем СЛЕДУЮЩИЙ разделитель; когда разделители кончились - жесткий fixed-size рез.",
           "en": "If a part is still larger than size, recursively apply the NEXT separator; when separators run out, a hard fixed-size cut."
         }
       },
@@ -1136,11 +1136,11 @@ export default {
           39
         ],
         "label": {
-          "ru": "Demonstracija",
+          "ru": "Демонстрация",
           "en": "Demo run"
         },
         "explain": {
-          "ru": "Dokument s abzacami cherez dvojnoj perevod stroki i size=70; vidno spusk ot abzacev k predlozhenijam i slovam.",
+          "ru": "Документ с абзацами через двойной перевод строки и size=70; виден спуск от абзацев к предложениям и словам.",
           "en": "A document with paragraphs via blank lines and size=70; you see the descent from paragraphs to sentences and words."
         }
       }
@@ -1149,11 +1149,11 @@ export default {
   "chunking-markdown-header": {
     "lang": "python",
     "code": {
-      "ru": "import re\n\n\ndef markdown_header_chunks(text: str, size: int) -> list[dict]:\n    sections: list[dict] = []\n    heading = \"\"\n    buf: list[str] = []\n\n    def flush() -> None:\n        body = \"\\n\".join(buf).strip()\n        if body:\n            sections.append({\"heading\": heading, \"text\": body})\n\n    for line in text.splitlines():\n        m = re.match(r\"^(#{1,6})\\s+(.*)$\", line)\n        if m:\n            flush()\n            buf = []\n            heading = m.group(2).strip()\n        else:\n            buf.append(line)\n    flush()\n\n    chunks: list[dict] = []\n    for sec in sections:\n        body = sec[\"text\"]\n        if len(body) <= size:\n            chunks.append(sec)\n            continue\n        for i in range(0, len(body), size):\n            chunks.append({\"heading\": sec[\"heading\"], \"text\": body[i:i + size]})\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"# Otpuska\\n\"\n           \"Posle 3 let stazha polagaetsya 28 dnej otpuska.\\n\"\n           \"## Bolnichnyj\\n\"\n           \"Bolnichnyj oplachivaetsya s pervogo dnya.\")\n    for n, chunk in enumerate(markdown_header_chunks(doc, 200)):\n        print(n, chunk[\"heading\"], repr(chunk[\"text\"]))",
-      "en": "import re\n\n\ndef markdown_header_chunks(text: str, size: int) -> list[dict]:\n    sections: list[dict] = []\n    heading = \"\"\n    buf: list[str] = []\n\n    def flush() -> None:\n        body = \"\\n\".join(buf).strip()\n        if body:\n            sections.append({\"heading\": heading, \"text\": body})\n\n    for line in text.splitlines():\n        m = re.match(r\"^(#{1,6})\\s+(.*)$\", line)\n        if m:\n            flush()\n            buf = []\n            heading = m.group(2).strip()\n        else:\n            buf.append(line)\n    flush()\n\n    chunks: list[dict] = []\n    for sec in sections:\n        body = sec[\"text\"]\n        if len(body) <= size:\n            chunks.append(sec)\n            continue\n        for i in range(0, len(body), size):\n            chunks.append({\"heading\": sec[\"heading\"], \"text\": body[i:i + size]})\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"# Otpuska\\n\"\n           \"Posle 3 let stazha polagaetsya 28 dnej otpuska.\\n\"\n           \"## Bolnichnyj\\n\"\n           \"Bolnichnyj oplachivaetsya s pervogo dnya.\")\n    for n, chunk in enumerate(markdown_header_chunks(doc, 200)):\n        print(n, chunk[\"heading\"], repr(chunk[\"text\"]))"
+      "ru": "import re\n\n\ndef markdown_header_chunks(text: str, size: int) -> list[dict]:\n    sections: list[dict] = []\n    heading = \"\"\n    buf: list[str] = []\n\n    def flush() -> None:\n        body = \"\\n\".join(buf).strip()\n        if body:\n            sections.append({\"heading\": heading, \"text\": body})\n\n    for line in text.splitlines():\n        m = re.match(r\"^(#{1,6})\\s+(.*)$\", line)\n        if m:\n            flush()\n            buf = []\n            heading = m.group(2).strip()\n        else:\n            buf.append(line)\n    flush()\n\n    chunks: list[dict] = []\n    for sec in sections:\n        body = sec[\"text\"]\n        if len(body) <= size:\n            chunks.append(sec)\n            continue\n        for i in range(0, len(body), size):\n            chunks.append({\"heading\": sec[\"heading\"], \"text\": body[i:i + size]})\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"# Отпуска\\n\"\n           \"После 3 лет стажа полагается 28 дней отпуска.\\n\"\n           \"## Больничный\\n\"\n           \"Больничный оплачивается с первого дня.\")\n    for n, chunk in enumerate(markdown_header_chunks(doc, 200)):\n        print(n, chunk[\"heading\"], repr(chunk[\"text\"]))",
+      "en": "import re\n\n\ndef markdown_header_chunks(text: str, size: int) -> list[dict]:\n    sections: list[dict] = []\n    heading = \"\"\n    buf: list[str] = []\n\n    def flush() -> None:\n        body = \"\\n\".join(buf).strip()\n        if body:\n            sections.append({\"heading\": heading, \"text\": body})\n\n    for line in text.splitlines():\n        m = re.match(r\"^(#{1,6})\\s+(.*)$\", line)\n        if m:\n            flush()\n            buf = []\n            heading = m.group(2).strip()\n        else:\n            buf.append(line)\n    flush()\n\n    chunks: list[dict] = []\n    for sec in sections:\n        body = sec[\"text\"]\n        if len(body) <= size:\n            chunks.append(sec)\n            continue\n        for i in range(0, len(body), size):\n            chunks.append({\"heading\": sec[\"heading\"], \"text\": body[i:i + size]})\n    return chunks\n\n\nif __name__ == \"__main__\":\n    doc = (\"# Vacation\\n\"\n           \"After 3 years of service you are entitled to 28 days of vacation.\\n\"\n           \"## Sick leave\\n\"\n           \"Sick leave is paid from the first day.\")\n    for n, chunk in enumerate(markdown_header_chunks(doc, 200)):\n        print(n, chunk[\"heading\"], repr(chunk[\"text\"]))"
     },
     "caption": {
-      "ru": "structure-aware (markdown): rezhem po zagolovkam, uroven zagolovka kladem v metadannye chanka.",
+      "ru": "structure-aware (markdown): режем по заголовкам, уровень заголовка кладем в метаданные чанка.",
       "en": "structure-aware (markdown): cut by headings, put the heading level into the chunk metadata."
     },
     "regions": [
@@ -1164,11 +1164,11 @@ export default {
           7
         ],
         "label": {
-          "ru": "Sostojanie razbora",
+          "ru": "Состояние разбора",
           "en": "Parse state"
         },
         "explain": {
-          "ru": "Zavodim spisok sekcij, tekushchij zagolovok i bufer tela - prostoj potokovyj parser po strokam.",
+          "ru": "Заводим список секций, текущий заголовок и буфер тела - простой потоковый парсер по строкам.",
           "en": "Set up a sections list, the current heading, and a body buffer - a simple line-by-line streaming parser."
         }
       },
@@ -1179,11 +1179,11 @@ export default {
           12
         ],
         "label": {
-          "ru": "Zakrytie sekcii",
+          "ru": "Закрытие секции",
           "en": "Flush a section"
         },
         "explain": {
-          "ru": "flush sbrasyvaet nakoplennoe telo v sekciju vmeste s ee zagolovkom, esli telo nepustoe.",
+          "ru": "flush сбрасывает накопленное тело в секцию вместе с ее заголовком, если тело непустое.",
           "en": "flush dumps the accumulated body into a section together with its heading, if the body is non-empty."
         }
       },
@@ -1194,11 +1194,11 @@ export default {
           22
         ],
         "label": {
-          "ru": "Poisk zagolovkov",
+          "ru": "Поиск заголовков",
           "en": "Scan headings"
         },
         "explain": {
-          "ru": "Reguljarka lovit stroki # .. ###### ; na kazhdom zagolovke zakryvaem proshluju sekciju i zapominaem novyj zagolovok.",
+          "ru": "Регулярка ловит строки # .. ###### ; на каждом заголовке закрываем прошлую секцию и запоминаем новый заголовок.",
           "en": "The regex catches # .. ###### lines; on each heading we close the previous section and remember the new heading."
         }
       },
@@ -1209,11 +1209,11 @@ export default {
           32
         ],
         "label": {
-          "ru": "Sekcii v chanki",
+          "ru": "Секции в чанки",
           "en": "Sections to chunks"
         },
         "explain": {
-          "ru": "Kazhdaja sekcija stanovitsja chankom s metadannymi zagolovka; slishkom dlinnuju sekciju rezhem zapasnym fixed-size.",
+          "ru": "Каждая секция становится чанком с метаданными заголовка; слишком длинную секцию режем запасным fixed-size.",
           "en": "Each section becomes a chunk with heading metadata; an over-long section is cut with a fallback fixed-size pass."
         }
       },
@@ -1224,11 +1224,11 @@ export default {
           41
         ],
         "label": {
-          "ru": "Demonstracija",
+          "ru": "Демонстрация",
           "en": "Demo run"
         },
         "explain": {
-          "ru": "Markdown-dokument s # i ## ; pechat pokazyvaet zagolovok rjadom s telom kazhdogo chanka.",
+          "ru": "Markdown-документ с # и ## ; печать показывает заголовок рядом с телом каждого чанка.",
           "en": "A Markdown document with # and ##; printing shows the heading next to each chunk body."
         }
       }
@@ -1237,11 +1237,11 @@ export default {
   "generation-grounded-call": {
     "lang": "python",
     "code": {
-      "ru": "# pip install anthropic\nimport re\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # kluch v ANTHROPIC_API_KEY\n\nSYSTEM = (\n    \"Ty otvechaesh' tol'ko na osnove peredannogo konteksta. \"\n    \"Posle kazhdogo utverzhdeniya stav' ssylku na istochnik v vide [source]. \"\n    \"Esli otveta v kontekste net, otvet': 'Etogo net v dokumentah.' \"\n    \"Ne dobavlyaj fakty iz sobstvennoj pamyati.\"\n)\n\ndef generate(prompt: str):\n    resp = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # tekushchaya model -- sm. obzor modelej\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    answer = resp.content[0].text\n    # Razbiraem citaty [source] iz otveta dlya proverki zazemleniya.\n    cited = re.findall(r\"\\[([^\\]]+)\\]\", answer)\n    return answer, cited\n\ndef generate_stream(prompt: str):\n    # Streaming: tokeny pribyvayut po mere generacii - menshe ozhidanie.\n    with client.messages.stream(\n        model=\"claude-sonnet-4-6\",  # tekushchaya model -- sm. obzor modelej\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    ) as stream:\n        for text in stream.text_stream:\n            yield text",
-      "en": "# pip install anthropic\nimport re\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # key in ANTHROPIC_API_KEY\n\nSYSTEM = (\n    \"Ty otvechaesh' tol'ko na osnove peredannogo konteksta. \"\n    \"Posle kazhdogo utverzhdeniya stav' ssylku na istochnik v vide [source]. \"\n    \"Esli otveta v kontekste net, otvet': 'Etogo net v dokumentah.' \"\n    \"Ne dobavlyaj fakty iz sobstvennoj pamyati.\"\n)\n\ndef generate(prompt: str):\n    resp = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    answer = resp.content[0].text\n    # Parse the [source] citations out of the answer to check grounding.\n    cited = re.findall(r\"\\[([^\\]]+)\\]\", answer)\n    return answer, cited\n\ndef generate_stream(prompt: str):\n    # Streaming: tokens arrive as they are generated - less waiting.\n    with client.messages.stream(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    ) as stream:\n        for text in stream.text_stream:\n            yield text"
+      "ru": "# pip install anthropic\nimport re\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # ключ в ANTHROPIC_API_KEY\n\nSYSTEM = (\n    \"Ты отвечаешь только на основе переданного контекста. \"\n    \"После каждого утверждения ставь ссылку на источник в виде [source]. \"\n    \"Если ответа в контексте нет, ответь: 'Этого нет в документах.' \"\n    \"Не добавляй факты из собственной памяти.\"\n)\n\ndef generate(prompt: str):\n    resp = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # текущая модель -- см. обзор моделей\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    answer = resp.content[0].text\n    # Разбираем цитаты [source] из ответа для проверки заземления.\n    cited = re.findall(r\"\\[([^\\]]+)\\]\", answer)\n    return answer, cited\n\ndef generate_stream(prompt: str):\n    # Streaming: токены прибывают по мере генерации - меньше ожидание.\n    with client.messages.stream(\n        model=\"claude-sonnet-4-6\",  # текущая модель -- см. обзор моделей\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    ) as stream:\n        for text in stream.text_stream:\n            yield text",
+      "en": "# pip install anthropic\nimport re\nfrom anthropic import Anthropic\n\nclient = Anthropic()  # key in ANTHROPIC_API_KEY\n\nSYSTEM = (\n    \"You answer only from the context provided. \"\n    \"After each statement, add a reference to the source in the form [source]. \"\n    \"If the answer is not in the context, reply: 'This is not in the documents.' \"\n    \"Do not add facts from your own memory.\"\n)\n\ndef generate(prompt: str):\n    resp = client.messages.create(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    answer = resp.content[0].text\n    # Parse the [source] citations out of the answer to check grounding.\n    cited = re.findall(r\"\\[([^\\]]+)\\]\", answer)\n    return answer, cited\n\ndef generate_stream(prompt: str):\n    # Streaming: tokens arrive as they are generated - less waiting.\n    with client.messages.stream(\n        model=\"claude-sonnet-4-6\",  # current model -- see the models overview\n        max_tokens=1024,\n        system=SYSTEM,\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    ) as stream:\n        for text in stream.text_stream:\n            yield text"
     },
     "caption": {
-      "ru": "Vyzov generacii s zazemleniem: zhestkij system, razbor [source]-citat i streaming-variant.",
+      "ru": "Вызов генерации с заземлением: жесткий system, разбор [source]-цитат и streaming-вариант.",
       "en": "Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant."
     },
     "regions": [
@@ -1252,11 +1252,11 @@ export default {
           5
         ],
         "label": {
-          "ru": "Klient Anthropic",
+          "ru": "Клиент Anthropic",
           "en": "Anthropic client"
         },
         "explain": {
-          "ru": "Stavim SDK i sozdaem klient - kljuch beriotsja iz peremennoj ANTHROPIC_API_KEY.",
+          "ru": "Ставим SDK и создаем клиент - ключ берется из переменной ANTHROPIC_API_KEY.",
           "en": "Install the SDK and create the client - the key is read from ANTHROPIC_API_KEY."
         }
       },
@@ -1267,11 +1267,11 @@ export default {
           12
         ],
         "label": {
-          "ru": "Instrukcija zazemlenija",
+          "ru": "Инструкция заземления",
           "en": "Grounding instruction"
         },
         "explain": {
-          "ru": "System delaet tri veshchi: tolko po kontekstu, citaty [source] i chestnyj zapasnoj otvet pri probele.",
+          "ru": "System делает три вещи: только по контексту, цитаты [source] и честный запасной ответ при пробеле.",
           "en": "The system instruction does three things: only-from-context, [source] citations, and an honest fallback on a gap."
         }
       },
@@ -1282,11 +1282,11 @@ export default {
           24
         ],
         "label": {
-          "ru": "Vyzov i razbor citat",
+          "ru": "Вызов и разбор цитат",
           "en": "Call and parse citations"
         },
         "explain": {
-          "ru": "Vyzyvaem model i vytaskivaem vse [source] iz otveta - proverka, chto otvet zazemlen na kontekste.",
+          "ru": "Вызываем модель и вытаскиваем все [source] из ответа - проверка, что ответ заземлен на контексте.",
           "en": "Call the model and pull every [source] out of the answer - a check that the answer is grounded on the context."
         }
       },
@@ -1297,11 +1297,11 @@ export default {
           35
         ],
         "label": {
-          "ru": "Streaming-variant",
+          "ru": "Streaming-вариант",
           "en": "Streaming variant"
         },
         "explain": {
-          "ru": "To zhe, no tokeny otdajutsja po mere generacii cherez stream - polzovatel vidit tekst srazu.",
+          "ru": "То же, но токены отдаются по мере генерации через stream - пользователь видит текст сразу.",
           "en": "The same call, but tokens are yielded as they are generated via stream - the user sees text right away."
         }
       }

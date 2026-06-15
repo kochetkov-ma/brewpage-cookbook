@@ -52,7 +52,14 @@
  *   recursive: { text, separators[], size }         descent down separator levels
  *   structure: { text, boundaries[], forbidden[] }  cuts only at boundary indices
  *   semantic:  { sentences[], sims[], threshold }   cut where neighbour sim<threshold
- * (text uses ASCII transliteration to keep cut positions stable across fonts.)
+ * PER-LANGUAGE TEXT: text/sentences/size/boundaries/forbidden are { ru, en }
+ * pairs. chunk-anim.js resolves each by config.lang at init (and is re-inited on
+ * lang:change by pages/chunking.js), then computes cut positions at RUNTIME from
+ * the ACTIVE-LANG string -- so RU renders Cyrillic, EN renders English, and the
+ * cut/boundary indices land correctly for whichever script is on screen. The
+ * boundaries/forbidden char indices differ per language (Cyrillic vs Latin
+ * string lengths differ) and are therefore stored per language too. These are
+ * JS-rendered data (no static no-JS HTML), so Cyrillic here is correct.
  *
  * RULES
  *   - Every reader-visible string is { ru, en }. Code (python, anim text) is ASCII.
@@ -92,26 +99,52 @@ const ratings = {
   computeCost: ["low", "low-medium", "medium", "medium-high", "high"],
 };
 
-// ASCII-transliterated sample doc (keeps cut positions glyph-stable across fonts).
-const DOC_FIXED =
-  "RAG podmeshivaet vashi dokumenty v zapros k modeli. " +
-  "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor. " +
-  "Vektory hranyat v indekse i ishchut blizhajshie po smyslu.";
+// Per-language sample docs. chunk-anim.js resolves text/size by config.lang and
+// computes cut positions at runtime from the active-lang string, so RU renders
+// Cyrillic and EN renders English with cuts landing correctly in either script.
+const DOC_FIXED = {
+  ru:
+    "Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц. " +
+    "Гарантия на электронику составляет 12 месяцев с даты покупки. " +
+    "Больничный оплачивается с первого дня.",
+  en:
+    "Vacation during probation: 2 days for each month worked. " +
+    "The warranty on electronics is 12 months from the date of purchase. " +
+    "Sick leave is paid from the first day.",
+};
 
-const DOC_SLIDING =
-  "RAG podmeshivaet vashi dokumenty v zapros k modeli. " +
-  "Korpus rezhut na chunki i kazhdyj prevrashchayut v vektor.";
+const DOC_SLIDING = {
+  ru:
+    "Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц. " +
+    "Гарантия на электронику составляет 12 месяцев с даты покупки.",
+  en:
+    "Vacation during probation: 2 days for each month worked. " +
+    "The warranty on electronics is 12 months from the date of purchase.",
+};
 
-const DOC_RECURSIVE =
-  "RAG podmeshivaet dokumenty v zapros.\n\n" +
-  "Korpus rezhut na chunki. Kazhdyj chunk embeddyat.\n\n" +
-  "Vektory hranyat v indekse i ishchut blizhajshie po smyslu.";
+const DOC_RECURSIVE = {
+  ru:
+    "Отпуск на испытательном сроке: 2 дня за каждый месяц.\n\n" +
+    "Гарантия на электронику составляет 12 месяцев.\n\n" +
+    "Больничный оплачивается с первого дня.",
+  en:
+    "Vacation during probation: 2 days for each month.\n\n" +
+    "The warranty on electronics is 12 months.\n\n" +
+    "Sick leave is paid from the first day.",
+};
 
-const DOC_STRUCTURE =
-  "# Otpuska\n" +
-  "Posle 3 let stazha polagaetsya 28 dnej otpuska. " +
-  "Otpusk oformlyaetsya zayavleniem za 2 nedeli. " +
-  "Neispolzovannye dni perenosyatsya na sleduyushchij god.";
+const DOC_STRUCTURE = {
+  ru:
+    "# Отпуск\n" +
+    "После 3 лет стажа полагается 28 дней отпуска. " +
+    "Отпуск оформляется заявлением за 2 недели. " +
+    "Неиспользованные дни переносятся на следующий год.",
+  en:
+    "# Vacation\n" +
+    "After 3 years of service you are entitled to 28 days of vacation. " +
+    "Vacation is arranged by application 2 weeks in advance. " +
+    "Unused days carry over to the next year.",
+};
 
 const PY_FIXED = [
   "def fixed_size_chunks(text: str, size: int) -> list[str]:",
@@ -235,7 +268,7 @@ const strategies = [
     python: { ru: PY_FIXED, en: PY_FIXED },
     anim: {
       mode: "fixed",
-      params: { text: DOC_FIXED, size: 60 },
+      params: { text: DOC_FIXED, size: { ru: 55, en: 60 } },
       caption: {
         ru: "Резы падают через равные интервалы независимо от границ слов - рез может пасть посередине слова.",
         en: "Cuts fall at equal intervals regardless of word boundaries - a cut can land mid-word.",
@@ -279,7 +312,7 @@ const strategies = [
     python: { ru: PY_SLIDING, en: PY_SLIDING },
     anim: {
       mode: "sliding",
-      params: { text: DOC_SLIDING, size: 50, overlap: 15 },
+      params: { text: DOC_SLIDING, size: { ru: 45, en: 50 }, overlap: { ru: 14, en: 15 } },
       caption: {
         ru: "Окно едет по тексту с шагом step = size - overlap; зона перекрытия повторяется в соседнем чанке.",
         en: "The window slides by step = size - overlap; the overlap zone repeats in the neighbour chunk.",
@@ -323,7 +356,7 @@ const strategies = [
     python: { ru: PY_RECURSIVE, en: PY_RECURSIVE },
     anim: {
       mode: "recursive",
-      params: { text: DOC_RECURSIVE, separators: ["\n\n", "\n", " ", ""], size: 70 },
+      params: { text: DOC_RECURSIVE, separators: ["\n\n", "\n", " ", ""], size: { ru: 45, en: 48 } },
       caption: {
         ru: "Сначала рез по абзацам; куски, не влезшие в size, режутся по предложениям, потом по словам - спуск по дереву.",
         en: "First cut on paragraphs; pieces over size are cut on sentences, then words - a descent down the tree.",
@@ -369,10 +402,14 @@ const strategies = [
       mode: "structure",
       // boundaries: char indices where a cut is allowed (end of heading + sentence ends).
       // forbidden: char indices of mid-sentence positions briefly flagged + skipped.
+      // Per language: Cyrillic vs Latin lengths differ, so the indices differ too.
+      // RU "# Отпуск\n..." -> heading ends at 9, sentence ends at 55 and 98 (final
+      // sentence end coincides with text end 148 and is filtered out by chunk-anim).
+      // EN "# Vacation\n..." -> heading ends at 11, sentence ends at 77 and 133.
       params: {
         text: DOC_STRUCTURE,
-        boundaries: [9, 56, 102, 153],
-        forbidden: [30, 78, 125],
+        boundaries: { ru: [9, 55, 98], en: [11, 77, 133] },
+        forbidden: { ru: [38, 74, 119], en: [36, 98, 145] },
       },
       caption: {
         ru: "Резы ложатся только на концы предложений и после заголовка, никогда внутри фразы.",
@@ -568,15 +605,27 @@ const strategies = [
     anim: {
       mode: "semantic",
       // sentences shown as rows; sims[i] = neighbour similarity between sentence i and i+1.
-      // A cut is placed after sentence i when sims[i] < threshold.
+      // A cut is placed after sentence i when sims[i] < threshold. sentences is a
+      // per-language { ru, en } pair (chunk-anim resolves by config.lang); sims is
+      // language-neutral (the same semantic profile holds for both: the topic
+      // shifts from vacation/leave to warranty at the sims[2]=0.34 dip).
       params: {
-        sentences: [
-          "RAG podmeshivaet dokumenty v zapros.",
-          "Korpus rezhut na chunki.",
-          "Kazhdyj chunk prevrashchayut v vektor.",
-          "Otpusk sostavlyaet 28 dnej v god.",
-          "Bolnichnyj oplachivaetsya s pervogo dnya.",
-        ],
+        sentences: {
+          ru: [
+            "Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц.",
+            "После 3 лет стажа полагается 28 дней отпуска.",
+            "Отпуск оформляется заявлением за 2 недели.",
+            "Гарантия на электронику составляет 12 месяцев с даты покупки.",
+            "Больничный оплачивается с первого дня.",
+          ],
+          en: [
+            "Vacation during probation: 2 days for each month worked.",
+            "After 3 years of service you are entitled to 28 days of vacation.",
+            "Vacation is arranged by application 2 weeks in advance.",
+            "The warranty on electronics is 12 months from the date of purchase.",
+            "Sick leave is paid from the first day.",
+          ],
+        },
         sims: [0.81, 0.78, 0.34, 0.71],
         threshold: 0.5,
       },

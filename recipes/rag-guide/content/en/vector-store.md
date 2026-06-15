@@ -27,18 +27,18 @@ def embed(text):
     ).data[0].embedding
 
 index.upsert(vectors=[
-    {"id": "c1", "values": embed("Politika vozvrata: vernut' tovar mozhno v 30 dnej."),
-     "metadata": {"source": "faq.md", "section": "vozvrat", "text": "..."}},
-    {"id": "c2", "values": embed("Garantiya na elektroniku 12 mesyacev."),
-     "metadata": {"source": "faq.md", "section": "garantiya", "text": "..."}},
+    {"id": "c1", "values": embed("Refund policy: a product may be returned within 30 days."),
+     "metadata": {"source": "faq.md", "section": "refund", "text": "..."}},
+    {"id": "c2", "values": embed("The warranty on electronics is 12 months."),
+     "metadata": {"source": "faq.md", "section": "warranty", "text": "..."}},
 ])
 
 # search: top-k nearest to the query vector
 res = index.query(
-    vector=embed("kak vernut' den'gi za pokupku"),
+    vector=embed("how to get a refund for a purchase"),
     top_k=3,
     include_metadata=True,
-    filter={"section": "vozvrat"},   # metadata filter
+    filter={"section": "refund"},   # metadata filter
 )
 for m in res.matches:
     print(m.id, round(m.score, 3), m.metadata["section"])
@@ -64,7 +64,7 @@ A common ANN algorithm is **HNSW** (Hierarchical Navigable Small World): a multi
 
 In a search you ask not for the single closest vector but for the **top-k** - several nearest ones (often k=3..10). This gives the model a few spare pieces in case the closest one does not fully cover the question.
 
-Together with the vector, the database stores **metadata** - source, section, date, access rights. Metadata filters narrow the search to the needed subset before searching for the nearest: for example, only documents from this department or only what is fresher than a certain date ([Pinecone, metadata filtering](https://docs.pinecone.io/guides/index-data/indexing-overview#metadata)). In the code above this is `filter={"section": "vozvrat"}`.
+Together with the vector, the database stores **metadata** - source, section, date, access rights. Metadata filters narrow the search to the needed subset before searching for the nearest: for example, only documents from this department or only what is fresher than a certain date ([Pinecone, metadata filtering](https://docs.pinecone.io/guides/index-data/indexing-overview#metadata)). In the code above this is `filter={"section": "refund"}`.
 
 ## Scale: millions of fragments without a scan
 
@@ -90,7 +90,7 @@ The rule: take a vector database when the corpus is large AND the search is genu
 ## Try it yourself
 
 - Open the ann-topk-drill interaction: find the query node and walk the drawn query path to its top-k neighbours. Drill (semantic zoom) into one of the selected neighbours and look at its `cosine` and `metadata`.
-- Compare what comes back with and without a metadata filter: in the code above remove `filter={"section": "vozvrat"}` and see how the top-k set changes.
+- Compare what comes back with and without a metadata filter: in the code above remove `filter={"section": "refund"}` and see how the top-k set changes.
 - Estimate whether a vector database fits your case: how many fragments do you have, and do you search by meaning or by exact match - check against the section "When you do not need a vector database".
 
 ## What is next

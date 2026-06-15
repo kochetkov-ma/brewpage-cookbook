@@ -29,16 +29,16 @@ Below is a real exchange of three turns: you send the question with a descriptio
     "type": "enabled",
     "budget_tokens": 2048
   },
-  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
+  "system": "You are a support assistant. Answer ONLY from the text returned by the search_docs tool. If the answer is not in the found pieces, honestly say: this is not in the documents. Cite the source of each fact via the source field.",
   "tools": [
     {
       "name": "search_docs",
-      "description": "Semanticheskij poisk top-k chunkov po vektornoj baze znanij.",
+      "description": "Semantic search for the top-k chunks over the vector knowledge base.",
       "input_schema": {
         "type": "object",
         "properties": {
-          "query": { "type": "string", "description": "Poiskovyj zapros polzovatelya" },
-          "top_k": { "type": "integer", "description": "Skol'ko blizhajshih chunkov vernut'", "default": 4 }
+          "query": { "type": "string", "description": "The user's search query" },
+          "top_k": { "type": "integer", "description": "How many nearest chunks to return", "default": 4 }
         },
         "required": ["query"]
       }
@@ -48,7 +48,7 @@ Below is a real exchange of three turns: you send the question with a descriptio
   "messages": [
     {
       "role": "user",
-      "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?"
+      "content": "How many vacation days does an employee get after three years of service?"
     }
   ]
 }
@@ -67,7 +67,7 @@ Below is a real exchange of three turns: you send the question with a descriptio
   "content": [
     {
       "type": "thinking",
-      "thinking": "Vopros pro dni otpuska posle treh let stazha. V system skazano otvechat' tol'ko po najdennomu, svoih dannyh u menya net. Nado vyzvat' search_docs s zaprosom pro otpusk i stazh.",
+      "thinking": "A question about vacation days after three years of service. The system says to answer only from what was found; I have no data of my own. I need to call search_docs with a query about vacation and length of service.",
       "signature": "EqoBCkg...=="
     },
     {
@@ -75,7 +75,7 @@ Below is a real exchange of three turns: you send the question with a descriptio
       "id": "toolu_01A09q90qw",
       "name": "search_docs",
       "input": {
-        "query": "dni otpuska stazh tri goda politika",
+        "query": "vacation days length of service three years policy",
         "top_k": 4
       }
     }
@@ -99,17 +99,17 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
 {
   "model": "claude-sonnet-4-6",
   "max_tokens": 1024,
-  "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
+  "system": "You are a support assistant. Answer ONLY from the text returned by the search_docs tool. If the answer is not in the found pieces, honestly say: this is not in the documents. Cite the source of each fact via the source field.",
   "tools": [
-    { "name": "search_docs", "description": "Semanticheskij poisk top-k chunkov po vektornoj baze znanij.", "input_schema": { "type": "object", "properties": { "query": { "type": "string" }, "top_k": { "type": "integer" } }, "required": ["query"] } }
+    { "name": "search_docs", "description": "Semantic search for the top-k chunks over the vector knowledge base.", "input_schema": { "type": "object", "properties": { "query": { "type": "string" }, "top_k": { "type": "integer" } }, "required": ["query"] } }
   ],
   "messages": [
-    { "role": "user", "content": "Skol'ko dnej otpuska u sotrudnika posle treh let raboty?" },
+    { "role": "user", "content": "How many vacation days does an employee get after three years of service?" },
     {
       "role": "assistant",
       "content": [
         { "type": "thinking", "thinking": "...", "signature": "EqoBCkg...==" },
-        { "type": "tool_use", "id": "toolu_01A09q90qw", "name": "search_docs", "input": { "query": "dni otpuska stazh tri goda politika", "top_k": 4 } }
+        { "type": "tool_use", "id": "toolu_01A09q90qw", "name": "search_docs", "input": { "query": "vacation days length of service three years policy", "top_k": 4 } }
       ]
     },
     {
@@ -119,8 +119,8 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
           "type": "tool_result",
           "tool_use_id": "toolu_01A09q90qw",
           "content": [
-            { "type": "text", "text": "[chunk c-118 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.83 | rank=1] Posle 3 polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god." },
-            { "type": "text", "text": "[chunk c-119 | source=hr-policy.md | section=Otpuska | date=2026-01-10 | cosine=0.71 | rank=2] Bazovyj otpusk pri stazhe do 3 let sostavlyaet 24 kalendarnyh dnya." }
+            { "type": "text", "text": "[chunk c-118 | source=hr-policy.md | section=Vacation | date=2026-01-10 | cosine=0.83 | rank=1] After 3 full years of service an employee is entitled to 28 calendar days of paid vacation per year." },
+            { "type": "text", "text": "[chunk c-119 | source=hr-policy.md | section=Vacation | date=2026-01-10 | cosine=0.71 | rank=2] The base vacation for under 3 years of service is 24 calendar days." }
           ]
         }
       ]
@@ -142,7 +142,7 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
   "content": [
     {
       "type": "text",
-      "text": "Posle treh polnyh let stazha sotrudniku polagaetsya 28 kalendarnyh dnej oplachivaemogo otpuska v god (istochnik: hr-policy.md, razdel Otpuska)."
+      "text": "After three full years of service an employee is entitled to 28 calendar days of paid vacation per year (source: hr-policy.md, section Vacation)."
     }
   ],
   "stop_reason": "end_turn",

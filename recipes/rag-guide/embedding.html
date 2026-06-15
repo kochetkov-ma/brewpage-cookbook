@@ -223,9 +223,9 @@
         <div class="embed-static">
           <div class="es-col">
             <h2>Fragments (chunks)</h2>
-            <p>c1: Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.</p>
-            <p>c2: Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.</p>
-            <p>c3: Dostavka po gorodu zanimaet odin rabochij den'.</p>
+            <p>c1: The refund policy: a product may be returned within 30 days.</p>
+            <p>c2: The warranty on electronics is 12 months from the date of purchase.</p>
+            <p>c3: City delivery takes one business day.</p>
           </div>
           <div class="es-arrow" aria-hidden="true">-&gt;</div>
           <div class="es-col">
@@ -259,16 +259,16 @@
       <p data-pk="problem.p2">The solution is the embedding: turn each fragment into a vector, a numeric code of its meaning, where the closeness of vectors reflects the closeness of meaning (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is the second step of the pipeline: after the document is cut into fragments, each fragment is turned into a vector once, and from there the vectors go into the index.</p>
       <p data-pk="problem.p3">Here is the whole step at once - the real API call that turns a list of fragments into a list of vectors:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-embed-call">
-        <figcaption class="code-block__cap" data-i18n data-ru="Realnyj vyzov API embeddingov: spisok chankov -&gt; spisok vektorov, strogo odin-k-odnomu." data-en="A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.">A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Реальный вызов API эмбеддингов: список чанков -&gt; список векторов, строго один-к-одному." data-en="A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.">A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.</figcaption>
         <pre><code># pip install openai
 from openai import OpenAI
 
 client = OpenAI()
 
 chunks = [
-    "Politika vozvrata sredstv: vernut' tovar mozhno v techenie 30 dnej.",
-    "Garantiya na elektroniku sostavlyaet 12 mesyacev s daty pokupki.",
-    "Dostavka po gorodu zanimaet odin rabochij den'.",
+    "The refund policy: a product may be returned within 30 days.",
+    "The warranty on electronics is 12 months from the date of purchase.",
+    "City delivery takes one business day.",
 ]
 
 resp = client.embeddings.create(
@@ -276,14 +276,14 @@ resp = client.embeddings.create(
     input=chunks,
 )
 
-# odin vektor na kazhdyj chunk, strogo odin-k-odnomu
+# one vector per chunk, strictly one-to-one
 vectors = [item.embedding for item in resp.data]
-print(len(vectors), "vektorov")        # 3
-print(len(vectors[0]), "komponent")    # dim depends on the model (1536 for text-embedding-3-small)</code></pre>
+print(len(vectors), "vectors")         # 3
+print(len(vectors[0]), "components")   # 1536</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Install the package</strong> -- A comment with the install command for the official OpenAI client; it does not run in the code itself.</li>
           <li><strong>OpenAI client</strong> -- Import the client and create an instance; it reads the API key from the environment.</li>
-          <li><strong>Input chunks</strong> -- A list of three text fragments is the embedder input; the strings are transliterated to stay ASCII.</li>
+          <li><strong>Input chunks</strong> -- A list of three text fragments is the embedder input; natural-language snippets from reference documents.</li>
           <li><strong>Embedding call</strong> -- One create call with the text-embedding-3-small model and the whole chunk list as input.</li>
           <li><strong>Collect vectors</strong> -- Pull one vector per response item - the chunk-to-vector link is strictly one-to-one. The output is three vectors whose dimension depends on the model (1536 for text-embedding-3-small -- see the OpenAI Embeddings guide).</li>
         </ol>
@@ -304,7 +304,7 @@ print(len(vectors[0]), "komponent")    # dim depends on the model (1536 for text
       <p data-pk="cos.p2">Why 0..1 rather than the full range from -1 to 1: text embeddings are usually normalized by length (L2 normalization) - each vector is brought to unit length (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). For normalized vectors the cosine coincides with the dot product, so ranking by dot product is the same as ranking by cosine, but cheaper: you do not need to divide by the norms, which already equal one.</p>
       <p data-pk="cos.p3">Here is how the cosine similarity of two vectors is computed by hand - without libraries, so the formula is visible:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-cosine">
-        <figcaption class="code-block__cap" data-i18n data-ru="Kosinusnaja blizost vruchnuju, bez bibliotek: chem blizhe vektor zaprosa k vektoru chanka, tem blizhe smysl." data-en="Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.">Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Косинусная близость вручную, без библиотек: чем ближе вектор запроса к вектору чанка, тем ближе смысл." data-en="Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.">Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.</figcaption>
         <pre><code>import math
 
 def cosine(a, b):
@@ -315,13 +315,13 @@ def cosine(a, b):
 
 query_vec = client.embeddings.create(
     model="text-embedding-3-small",
-    input="kak vernut' den'gi za pokupku",
+    input="how to get a refund for a purchase",
 ).data[0].embedding
 
-# blizost' zaprosa k kazhdomu chunku
+# closeness of the query to each chunk
 scores = [(i, cosine(query_vec, v)) for i, v in enumerate(vectors)]
 scores.sort(key=lambda t: t[1], reverse=True)
-print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij</code></pre>
+print(scores[0])   # chunk 0 (refund policy) - the closest</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Cosine formula</strong> -- The dot product divided by the product of the two vectors' lengths (norms); this shows the formula itself with no dependencies.</li>
           <li><strong>Query vector</strong> -- The same embedder encodes the user query into a vector - the same model as the chunks, otherwise the comparison is meaningless.</li>

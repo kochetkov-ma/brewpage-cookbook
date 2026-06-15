@@ -37,12 +37,41 @@ import { init as initTimeline } from "./timeline.js";
 
 const STEP_MS = 900;
 
+/** Resolve a value that may be a { ru, en } pair against the active locale. */
+function loc(v, lang) {
+  if (v && typeof v === "object" && !Array.isArray(v) && ("ru" in v || "en" in v)) {
+    return v[lang] != null ? v[lang] : v.ru != null ? v.ru : v.en != null ? v.en : v;
+  }
+  return v;
+}
+
+/**
+ * Resolve every per-language param entry to the active locale. Known keys
+ * (text, size, overlap, boundaries, forbidden, sentences) may be { ru, en };
+ * unknown keys (separators, sims, threshold) are language-neutral and pass
+ * through unchanged.
+ */
+function resolveParams(params, lang) {
+  const out = {};
+  Object.keys(params).forEach((k) => {
+    out[k] = loc(params[k], lang);
+  });
+  return out;
+}
+
 export function init(rootEl, config) {
   const cfg = config || {};
   const anim = cfg.anim || {};
   const mode = anim.mode || "fixed";
-  const params = anim.params || {};
   const lang = cfg.lang === "en" ? "en" : "ru";
+  // Resolve per-language params to the active locale. Each value may be a flat
+  // (lang-neutral) primitive/array OR a { ru, en } pair (text, size, overlap,
+  // boundaries, forbidden, sentences are stored per language so RU renders
+  // Cyrillic and EN renders English). Cut positions are then computed at runtime
+  // from the resolved active-lang string, so boundary/cut indices land correctly
+  // for whichever script is on screen. Falls back ru -> en so a half-translated
+  // field never renders as "[object Object]".
+  const params = resolveParams(anim.params || {}, lang);
   const caption = anim.caption ? anim.caption[lang] || anim.caption.ru || "" : "";
 
   let timeline = null;

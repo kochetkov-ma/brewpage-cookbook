@@ -13,43 +13,43 @@
 Именно это делает RAG: находит релевантные фрагменты ваших данных и подмешивает их в запрос, после чего модель отвечает по ним. Архитектуру ввели Lewis et al., 2020 ([arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)). Вот тот же вызов, но уже с retrieval - минимальный рабочий RAG на реальных API:
 
 ```python
-# Minimalnyj RAG: snachala retrieval, potom generaciya po najdennomu.
+# Минимальный RAG: сначала retrieval, потом генерация по найденному.
 from anthropic import Anthropic
 from openai import OpenAI
 import numpy as np
 
-oa = OpenAI()        # OPENAI_API_KEY: schitaem embeddingi
-anthropic = Anthropic()  # ANTHROPIC_API_KEY: generaciya
+oa = OpenAI()        # OPENAI_API_KEY: считаем embeddings
+anthropic = Anthropic()  # ANTHROPIC_API_KEY: генерация
 
-# Korpus = vashi chunki (zdes' uproshchen do spiska strok).
+# Корпус = ваши chunks (здесь упрощен до списка строк).
 chunks = [
-    "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac.",
-    "Komandirovki oformlyayutsya cherez portal ne pozdnee chem za 3 dnya.",
-    "Udalenka soglasuetsya s rukovoditelem na kazhduyu nedelyu otdelno.",
+    "Отпуск на испытательном сроке: 2 дня за каждый отработанный месяц.",
+    "Командировки оформляются через портал не позднее чем за 3 дня.",
+    "Удаленная работа согласуется с руководителем отдельно на каждую неделю.",
 ]
 
 def embed(texts):
     r = oa.embeddings.create(model="text-embedding-3-small", input=texts)
-    return np.array([d.embedding for d in r.data])  # razmernost zavisit ot modeli (naprimer, 1536 dlya text-embedding-3-small) -- sm. rukovodstvo OpenAI Embeddings
+    return np.array([d.embedding for d in r.data])  # размерность зависит от модели (например, 1536 для text-embedding-3-small) -- см. руководство OpenAI Embeddings
 
 chunk_vecs = embed(chunks)
-query = "Skolko dnej otpuska na ispytatelnom sroke?"
+query = "Сколько дней отпуска на испытательном сроке?"
 q_vec = embed([query])[0]
 
 # Cosine similarity -> top-1 chunk (RETRIEVAL).
 cos = chunk_vecs @ q_vec / (np.linalg.norm(chunk_vecs, axis=1) * np.linalg.norm(q_vec))
 top = chunks[int(np.argmax(cos))]
 
-# AUGMENTED + GENERATION: podkladyvaem najdennoe v prompt.
+# AUGMENTED + GENERATION: подкладываем найденное в prompt.
 resp = anthropic.messages.create(
-    model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
+    model="claude-sonnet-4-6",  # текущая модель -- см. обзор моделей
     max_tokens=300,
     messages=[{
         "role": "user",
-        "content": f"Otvechaj tolko po kontekstu. Kontekst:\n{top}\n\nVopros: {query}",
+        "content": f"Отвечай только по контексту. Контекст:\n{top}\n\nВопрос: {query}",
     }],
 )
-print(resp.content[0].text)  # otvet opiraetsya na VASH chunk
+print(resp.content[0].text)  # ответ опирается на ВАШ chunk
 ```
 
 Тут видны все три шага: retrieval (cosine -> top chunk), augmented (chunk в промпте), generation (ответ модели). Формы вызовов реальные: OpenAI Embeddings ([developers.openai.com/api/docs/guides/embeddings](https://developers.openai.com/api/docs/guides/embeddings)) и Anthropic Messages ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).

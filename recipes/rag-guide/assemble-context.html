@@ -254,7 +254,7 @@ Answer:
       <h2 id="pr-solution" data-pk="solution.h2">The solution: the context assembler in full</h2>
       <p data-pk="solution.p1">Here is a working Python function that takes the top-k results from retrieve and assembles a prompt from them under a token budget. It does all four things at once: template, budget, order, deduplication.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="assemble-context-assembler">
-        <figcaption class="code-block__cap" data-i18n data-ru="Sborshchik konteksta celikom: dedup, porjadok po krajam, bjudzhet tokenov i shablon prompta v odnoj funkcii." data-en="The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function.">The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Сборщик контекста целиком: dedup, порядок по краям, бюджет токенов и шаблон промпта в одной функции." data-en="The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function.">The full context assembler: dedup, edge ordering, token budget, and the prompt template in one function.</figcaption>
         <pre><code># pip install tiktoken
 import tiktoken
 
@@ -263,21 +263,21 @@ ENC = tiktoken.get_encoding("cl100k_base")  # OpenAI tokenizer: fast OFFLINE APP
 def count_tokens(text: str) -&gt; int:
     return len(ENC.encode(text))
 
-PROMPT_TEMPLATE = """Otvechaj tol'ko na osnove konteksta nizhe.
-Esli otveta v kontekste net, skazhi ob etom chestno.
+PROMPT_TEMPLATE = """Answer only from the context below.
+If the answer is not in the context, say so honestly.
 
-Kontekst:
+Context:
 {context}
 
-Vopros: {question}
-Otvet:"""
+Question: {question}
+Answer:"""
 
 def assemble_context(question, retrieved, max_context_tokens=3000):
     """
-    retrieved: spisok dict {id, text, score, source}, otsortirovannyj
-               po ubyvaniyu score (samyj relevantnyj pervym).
+    retrieved: list of dict {id, text, score, source}, sorted
+               by descending score (most relevant first).
     """
-    # 1. Dedup: vybrasyvaem povtory po tekstu, sohranyaya luchshij score.
+    # 1. Dedup: drop text repeats, keeping the best score.
     seen, unique = set(), []
     for chunk in retrieved:
         key = chunk["text"].strip()
@@ -285,19 +285,19 @@ def assemble_context(question, retrieved, max_context_tokens=3000):
             seen.add(key)
             unique.append(chunk)
 
-    # 2. Poryadok: samoe vazhnoe - po krayam, ne v seredine (lost-in-the-middle).
+    # 2. Order: most important at the edges, not the middle (lost-in-the-middle).
     ranked = order_for_attention(unique)
 
-    # 3. Token budget: nabiraem kuski, poka vlezaem v limit.
+    # 3. Token budget: take chunks while they fit the limit.
     picked, used = [], count_tokens(PROMPT_TEMPLATE) + count_tokens(question)
     for chunk in ranked:
-        cost = count_tokens(chunk["text"]) + 8  # +razdelitel'/podpis' istochnika
+        cost = count_tokens(chunk["text"]) + 8  # +separator/source tag
         if used + cost &gt; max_context_tokens:
-            break  # ostal'noe ne vlezaet - obrezaem
+            break  # the rest does not fit - trim it
         picked.append(chunk)
         used += cost
 
-    # 4. Shablon: skleivaem s podpis'yu istochnika dlya posleduyushchih citat.
+    # 4. Template: glue with the source tag for later citations.
     context = "\n\n".join(f"[{c['source']}] {c['text']}" for c in picked)
     return PROMPT_TEMPLATE.format(context=context, question=question), picked</code></pre>
         <ol class="code-annot-list no-js-only">
@@ -329,14 +329,14 @@ def assemble_context(question, retrieved, max_context_tokens=3000):
       <p data-pk="order.p1">The main counterintuitive fact of this chapter: the order of pieces within the prompt changes the answer. Models use information that lands in the <strong>middle</strong> of a long context worst, and what stands at the <strong>beginning or end</strong> best. This is the "lost in the middle" effect: accuracy drops when the needed fact lies in the middle of the window (<a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">Liu et al., 2023</a>).</p>
       <p data-pk="order.p2">The practical conclusion is direct: put the most relevant pieces at the edges and the less important ones in the middle. That is exactly what <code>order_for_attention</code> does:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="assemble-context-order">
-        <figcaption class="code-block__cap" data-i18n data-ru="Raskladka po krajam: silnye kuski uezzhajut k nachalu i koncu okna, slabye - v seredinu." data-en="Edge layout: strong pieces move to the start and end of the window, weak ones to the middle.">Edge layout: strong pieces move to the start and end of the window, weak ones to the middle.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Раскладка по краям: сильные куски уезжают к началу и концу окна, слабые - в середину." data-en="Edge layout: strong pieces move to the start and end of the window, weak ones to the middle.">Edge layout: strong pieces move to the start and end of the window, weak ones to the middle.</figcaption>
         <pre><code>def order_for_attention(ranked):
-    """Luchshie kuski - po krayam okna, slabye - v seredinu.
-    ranked uzhe otsortirovan po ubyvaniyu relevantnosti."""
+    """Best chunks at the window edges, weak ones in the middle.
+    ranked is already sorted by descending relevance."""
     head, tail = [], []
     for i, chunk in enumerate(ranked):
         (head if i % 2 == 0 else tail).append(chunk)
-    return head + tail[::-1]   # ...silnye...slabye...silnye</code></pre>
+    return head + tail[::-1]   # ...strong...weak...strong</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Function input</strong> -- The input is ranked - pieces already sorted by descending relevance; the job is to reorder them for the model's attention.</li>
           <li><strong>Split into edges</strong> -- Alternate: even-indexed pieces go to head, odd-indexed ones to tail; this spreads the strongest toward both window edges.</li>

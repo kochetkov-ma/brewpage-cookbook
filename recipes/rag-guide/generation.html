@@ -261,18 +261,18 @@
       <h2 id="pr-solution" data-pk="solution.h2">The solution: a generation call with grounding</h2>
       <p data-pk="solution.p1">Here is a working call in Python via the Anthropic SDK. The prompt was assembled at the previous stage; what matters here are three things: a firm system instruction, signed sources in the context, and parsing the citations from the answer.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="generation-grounded-call">
-        <figcaption class="code-block__cap" data-i18n data-ru="Vyzov generacii s zazemleniem: zhestkij system, razbor [source]-citat i streaming-variant." data-en="Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant.">Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant.</figcaption>
+        <figcaption class="code-block__cap" data-i18n data-ru="Вызов генерации с заземлением: жесткий system, разбор [source]-цитат и streaming-вариант." data-en="Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant.">Grounded generation call: a firm system instruction, [source] citation parsing, and a streaming variant.</figcaption>
         <pre><code># pip install anthropic
 import re
 from anthropic import Anthropic
 
-client = Anthropic()  # kluch v ANTHROPIC_API_KEY
+client = Anthropic()  # key in ANTHROPIC_API_KEY
 
 SYSTEM = (
-    "Ty otvechaesh' tol'ko na osnove peredannogo konteksta. "
-    "Posle kazhdogo utverzhdeniya stav' ssylku na istochnik v vide [source]. "
-    "Esli otveta v kontekste net, otvet': 'Etogo net v dokumentah.' "
-    "Ne dobavlyaj fakty iz sobstvennoj pamyati."
+    "You answer only from the context provided. "
+    "After each statement, add a reference to the source in the form [source]. "
+    "If the answer is not in the context, reply: 'This is not in the documents.' "
+    "Do not add facts from your own memory."
 )
 
 def generate(prompt: str):
@@ -283,12 +283,12 @@ def generate(prompt: str):
         messages=[{"role": "user", "content": prompt}],
     )
     answer = resp.content[0].text
-    # Razbiraem citaty [source] iz otveta dlya proverki zazemleniya.
+    # Parse the [source] citations out of the answer to check grounding.
     cited = re.findall(r"\[([^\]]+)\]", answer)
     return answer, cited
 
 def generate_stream(prompt: str):
-    # Streaming: tokeny pribyvayut po mere generacii - menshe ozhidanie.
+    # Streaming: tokens arrive as they are generated - less waiting.
     with client.messages.stream(
         model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=1024,
