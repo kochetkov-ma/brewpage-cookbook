@@ -97,59 +97,78 @@ PLAN                          AUTHOR                       PUBLISH
 
 ---
 
-## 5. Publishing pipeline
+## 5. Publishing pipeline (WORKING -- as built 2026-06-15)
 
-**Trigger:** every push to `main`.
+**Status:** LIVE. The RAG Guide is the first production publish -- **https://brewpage.app/public/FsOfbLP4df** -- shipped through the working workflow below. The publish path is now **`brewpage-action`**, no longer direct-REST for updates.
 
-**Flow:** `git push origin main` -> publish the recipe's **static folder directly** to BrewPage **as a multi-file site**. There is no build and no `dist/` -- the files in `recipes/<slug>/` are exactly what gets hosted.
+**Trigger:** push of an unprefixed semver tag **`vX.Y.Z`** (+ manual `workflow_dispatch`). NOT every push to `main` -- a tag marks each publish. Workflow: [`.github/workflows/publish-recipe.yml`](../.github/workflows/publish-recipe.yml).
 
-A recipe is a multi-file static bundle (HTML/CSS/JS/assets), so it is published as a BrewPage **multi-file site**, not as a single HTML page.
+A recipe is a multi-file static bundle (HTML/CSS/JS/assets), published as a BrewPage **multi-file site**. There is no build and no `dist/` -- the files in `recipes/<slug>/` are exactly what gets hosted (after the publish-scope filter below).
 
-### Publish mechanism -- preference order
+### Publish mechanism (resolved -- action, not REST)
 
-Pick the highest available mechanism; fall back only as needed:
+- **`brewpage-action`** -- the working mechanism, pinned **exact** to **[`kochetkov-ma/brewpage-action@v1.1.1`](https://github.com/kochetkov-ma/brewpage-action)** (annotated tag, never `@v1`/`@main`). This repo is the action's first production consumer (deliberate dogfood).
+- **Direct REST** against `https://brewpage.app` -- now used **only** for the one-time bootstrap CREATE (below). All subsequent updates go through the action.
+- The `brewpage` CLI fallback is not needed -- the action works.
 
-1. **`brewpage-action`** (preferred -- dogfood). [`kochetkov-ma/brewpage-action@v1`](https://github.com/kochetkov-ma/brewpage-action), used once released. This repository is the action's **first production consumer**, so using it here is deliberate dogfooding of the ecosystem's own publish tooling.
-2. **`brewpage` CLI** -- `npx brewpage publish-site ./recipes/<slug>`. Used while the action is still pre-release.
-3. **Direct REST** against `https://brewpage.app` -- **last resort** only, when neither the action nor the CLI is viable.
+### Bootstrap CREATE (one-time, per recipe)
+
+Run **once** to mint the stable id + link + owner token:
+
+1. `POST /api/sites?ns=public&ttl=30` with a **zip bundle** (the publish-scope set, zipped) -> returns `{ id, link, ownerToken }`.
+2. The **owner token** goes straight to repo secret **`BREWPAGE_OWNER_TOKEN_RAG_GUIDE`** -- never committed, never logged, **unrecoverable if lost**.
+3. The **non-secret** `{ namespace, id, link }` is committed to **`recipes/rag-guide/.brewpage-site.json`** (feeds stamp-url + the workflow's `update-id`). A private, gitignored `.claude/brewpage-history.md` records the same id/ns/link for human reference.
+
+### Tag-triggered UPDATE flow (every release thereafter)
+
+Pushing a `vX.Y.Z` tag runs the workflow:
+
+1. **stamp-version** (`.claude/scripts/stamp-version.mjs`) from the tag.
+2. **read `.brewpage-site.json`** -> `namespace` / `id` / `link` via `$GITHUB_OUTPUT`.
+3. **stamp-url** (`.claude/scripts/stamp-url.mjs`) -- replaces `REPLACE_AT_PUBLISH` with the real id across pages + `sitemap.xml` + `recipes/index.json`.
+4. **stage + zip** -- materialise the `.brewpageignore`-filtered set into a staging dir, assert the caps, **ZIP it**.
+5. **publish** -- `brewpage-action` publishes the **zip** via PUT, `mode: update`, `update-id: <id>`, `ttl-days: 30`. The link stays stable.
+6. **create GitHub Release** -- body carries the live link + the `recipes/index.json` manifest + both ecosystem cross-links. `github.ref_name` drives the tag/name; the workflow creates no tags/commits itself.
+
+> **CRITICAL gotcha -- hand the action a `.zip`, never a directory.** Pointing the action at a directory triggers its `files[]`+`paths[]` array-upload mode, which the brewpage.app site endpoint rejects with a misleading **HTTP 413** ("max 25 MB per file") even for a ~1.8 MB bundle. The zip-archive upload mode is accepted (POST 201 create / PUT 200 update). The workflow zips the staged bundle before calling the action. (`brewpage-action@v1.1.1` sends a single `archive` field when `path` ends in `.zip`.)
+
+> **Platform-contract gap (flagged to platform owners):** PUT `/api/sites/{ns}/{id}` can return 413 on the array-upload path though the openapi contract models only 400/403/404/410/415/429; the cookbook uses zip to avoid it.
+
+### Link permanence / TTL (renew-on-release)
+
+BrewPage caps `ttl` at **30 days** and **auto-deletes at expiry**. Each publish sets `ttl=30`, so the stable link survives **only if a release happens at least every 30 days** (renew-on-release). There is **no scheduled cron renewal** currently. Current expiry: **2026-07-15** -- the next release before then keeps the link alive.
 
 ### Owner tokens & secrets
 
-- Each recipe has its own BrewPage **owner token**, stored as a GitHub repo secret named **`BREWPAGE_OWNER_TOKEN_<RECIPE>`** (one per recipe).
-- **Never commit owner tokens.** They live only as masked repo secrets, are injected at CI time, and must never appear in source, logs, or recipe content.
-
-When the BrewPage REST API changes upstream: re-read `brewpage-openapi/openapi/openapi.yaml`, update any code that calls REST directly, and bump recipe metadata if any visible behaviour changed.
-
-> **Republish vs recreate.** To update an already-published recipe, use `PUT /api/sites/{ns}/{id}` (full-replace republish: swaps the whole file set, keeps the same URL + id, requires `X-Owner-Token`). DELETE-then-POST mints a new id/URL and is **not** how we update -- see `docs/brewpage-platform.md`.
+- Owner token = **secret only** (`BREWPAGE_OWNER_TOKEN_RAG_GUIDE`); never in source, logs, or recipe content; unrecoverable if lost. The action calls `core.setSecret` before any emission, masking its token output.
+- id + namespace + link = committed **`.brewpage-site.json`** (non-secret) + the gitignored `.claude/brewpage-history.md` record.
 
 ### Publish-scope filter (deterministic bundling)
 
-The repo folder `recipes/<slug>/` carries more than the live site: manuscript (`content/`), mockups (`mokups/`), design docs (`*.md`), build scripts (`*.py`), agent state (`.claude/`), and authoring-time HTML partials (`shared/components/`). Publishing the raw folder would blow past the BrewPage site caps (**< 100 files / < 20 MB total / < 5 MB per file**). So the published bundle is **filtered, not the raw folder**.
+The repo folder `recipes/<slug>/` carries more than the live site: manuscript (`content/`), mockups (`mokups/`), design docs (`*.md`), build scripts (`*.py`), agent state (`.claude/`), and authoring-time HTML partials (`shared/components/`). `brewpage-action` does **not** filter, so the workflow pre-bundles. Publishing the raw folder would blow past the BrewPage site caps (**<= 100 files / 20 MB total / 5 MB per file**).
 
-- **Filter file:** each recipe carries a **`recipes/<slug>/.brewpageignore`** (gitignore-style globs). It lists DEV-ONLY paths to exclude; everything else ships. This is repo-keeping vs publish-scope -- excluded files stay in git, they just do not upload.
-- **Deterministic bundling procedure (what CI applies):**
-  1. `cd recipes/<slug>/`.
-  2. Build the upload manifest = all files under the folder **minus** the `.brewpageignore` glob matches (and minus the `.brewpageignore` file itself).
-  3. Assert the caps before upload: **count < 100**, **total bytes < 20 MB**, **max single file < 5 MB**. Fail the run if any cap is exceeded -- never publish a partial/over-cap bundle.
-  4. Upload that exact manifest via the active mechanism (direct REST today; `brewpage` CLI / `brewpage-action` once released). With direct REST, send the manifest as the `files`+`paths` arrays (or a ZIP built from the manifest) to `POST /api/sites` (first publish) or `PUT /api/sites/{ns}/{id}` (republish).
-- **What is excluded** (every depth): `.claude/`, `content/`, `mokups/`, all `*.md`, all `*.py`, `scripts/`, `*.log`, `*.bak`/editor junk, `.gitkeep`, **`shared/components/`** (authoring-time copy-in partials -- their markup is inlined into each page; nothing fetches them at runtime), and design-source `*.svg` whose rasterized counterpart is what the site references (e.g. `shared/og/og-rag-guide.svg`; **`favicon.svg` is kept** because the pages reference it).
-- **What is kept** (audited against actual runtime imports/fetches): all `*.html` pages, `shared/css/**`, `shared/js/**`, `shared/data/**` (the JSON + JS the pages import or fetch), `shared/og/*.png|ico`, `favicon.*`, `sitemap.xml`.
-- **RAG Guide as built (2026-06-14):** raw folder ~137 files; filtered published set = **84 files / 1.69 MB / largest single 0.16 MB** -- all three caps satisfied with margin. Resolves board task `T-CI-RAG-PUBLISH-SCOPE` (was `T-CI-PUBLISH-SCOPE-FILTER`).
+- **Filter file:** each recipe carries a **`recipes/<slug>/.brewpageignore`** (gitignore-style globs) listing DEV-ONLY paths to exclude; everything else ships. Excluded files stay in git, they just do not upload. The workflow's `rsync --exclude` set mirrors it 1:1.
+- **Procedure (what the workflow applies):** stage the filtered set -> assert caps (**count < 100**, **total < 20 MB**, **max single < 5 MB**, and **not empty**); fail loudly otherwise -> **zip the staged set** -> hand the `.zip` to the action.
+- **What is excluded** (every depth): `.claude/`, `content/`, `mokups/`, all `*.md`, all `*.py`, `scripts/`, `*.log`, `*.bak`/editor junk, `.gitkeep`, `.brewpageignore`, **`shared/components/`** (authoring-time copy-in partials -- inlined into each page; nothing fetches them at runtime), and design-source `*.svg` whose rasterized counterpart is what the site references (`shared/og/og-rag-guide.svg`; **`favicon.svg` is kept** -- pages reference it).
+- **What is kept** (audited against actual runtime imports/fetches): all `*.html` pages, `shared/css/**`, `shared/js/**`, `shared/data/**`, `shared/og/*.png|ico`, `favicon.*`, `sitemap.xml`.
+- **RAG Guide as built (2026-06-15):** filtered published set = **84 files / ~1.72 MB / largest single < 5 MB** -- all three caps satisfied with margin.
 
 ---
 
 ## 6. Release flow
 
-The cookbook is **content-first**: most changes ship on merge, and tags mark curated milestones rather than gating every publish.
+A **tag drives every publish**: pushing an unprefixed `vX.Y.Z` tag runs the §5 workflow (publish + GitHub Release). PR/merge to `main` alone does **not** publish -- it only lands content; the publish happens when the next tag is pushed (this also renews the 30-day TTL, see §5).
 
-| Event | What ships |
+| Event | What happens |
 |---|---|
-| **Content-only PR merged to `main`** | Ships straight to the live URL on merge (via the §5 pipeline). No tag required. |
-| **Tag bump** | Marks a curated milestone (e.g. a complete recipe ships). |
+| **PR merged to `main`** | Lands content. No publish, no tag. |
+| **`vX.Y.Z` tag pushed** | Runs `publish-recipe.yml`: site UPDATE via `brewpage-action` (stable link) + GitHub Release. Also renews TTL. |
 
-**Tag format:** tags are **unprefixed `vX.Y.Z`** -- `v0.1.0`, `v1.0.0` -- matching the rest of the BrewPage ecosystem.
+**Tag format:** **unprefixed `vX.Y.Z`** -- `v0.1.0`, `v1.0.0` -- matching the rest of the BrewPage ecosystem. The workflow consumes `github.ref_name` and creates **no** tags/commits itself.
 
-**Version handling:** the tag is the single source of truth for the released version. There is no `package.json` to keep in sync -- a tag simply marks the commit that a curated milestone shipped from.
+**Local tag flow (human/manager, outside CI):** one chained command -- check last tag -> `git tag vX.Y.Z` -> add/commit -> push commit + tag together (`git push origin main && git push origin vX.Y.Z`).
+
+**Version handling:** the tag is the single source of truth; `stamp-version.mjs` stamps it at CI time -- do not hand-edit any version file.
 
 ---
 
