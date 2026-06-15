@@ -14,8 +14,13 @@
 # folder recipes/rag-guide/ carries ~137 files (manuscript md, mockups, .claude
 # state, build scripts) that must NOT ship and would blow the site caps
 # (< 100 files / < 20 MB). So we PRE-BUNDLE: rsync the recipe into a staging dir
-# applying the exact exclude set from recipes/rag-guide/.brewpageignore, then
-# point the action at the staged dir. Audited published set: 84 files / 1.69 MB.
+# applying the exact exclude set from recipes/rag-guide/.brewpageignore, then ZIP
+# that dir and point the action at the .zip. Audited published set: 85 files /
+# ~1.8 MB. We hand the action a .zip (not the dir) because the site endpoint's
+# parallel files[]+paths[] array upload trips an edge HTTP 413 for this bundle
+# ("max 25 MB per file", though it is ~1.8 MB) -- the .zip `archive` upload mode
+# is accepted (verified POST 201 / PUT 200 live). brewpage-action@v1.1.1 sends a
+# single `archive` field when `path` ends in .zip.
 
 name: Publish recipe
 
@@ -141,7 +146,22 @@ jobs:
             echo "::error::largest staged file ${LARGEST_BYTES} bytes -- exceeds the 5 MB per-file cap."
             exit 1
           fi
+
+          # Pack the staged set into a single .zip. The brewpage.app multi-file
+          # site endpoint REJECTS the parallel files[]+paths[] multipart array
+          # upload for this bundle with HTTP 413 ("Upload too large; max 25 MB
+          # per file") even though the bundle is ~1.8 MB / 85 files -- the array
+          # mode trips an edge multipart limit, NOT a real size cap. The .zip
+          # `archive` upload mode (the contract's primary documented mode) is
+          # accepted (verified: POST 201 / PUT 200 against the live API with this
+          # exact bundle). brewpage-action@v1.1.1 buildSiteForm() sends a single
+          # `archive` field whenever `path` ends in .zip, so we hand it the zip.
+          ZIP="${DEST}.zip"
+          rm -f "${ZIP}"
+          ( cd "${DEST}" && zip -q -r -X "${ZIP}" . )
+          echo "packed zip bytes=$(stat -c%s "${ZIP}")"
           echo "dir=${DEST}" >> "${GITHUB_OUTPUT}"
+          echo "zip=${ZIP}" >> "${GITHUB_OUTPUT}"
 
       - name: Publish to brewpage.app (site update)
         id: brewpage
@@ -151,7 +171,7 @@ jobs:
         # owner-token is a GitHub secret and is auto-masked by the runner.
         uses: kochetkov-ma/brewpage-action@v1.1.1
         with:
-          path: ${{ steps.bundle.outputs.dir }}
+          path: ${{ steps.bundle.outputs.zip }}
           kind: site
           namespace: public
           ttl-days: '30'
