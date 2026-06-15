@@ -17,8 +17,9 @@
 //   3. Updates recipes/index.json so the rag-guide entry carries a `liveLink`
 //      field of form https://brewpage.app/public/<id> (the full link straight
 //      from .brewpage-site.json -- ONE source of truth: this script owns the
-//      fill). It also stamps any bare-id placeholder left inside the legacy
-//      `liveUrl` field so the two stay consistent.
+//      fill). The legacy `liveUrl` field is stamped to the SAME
+//      https://brewpage.app/public/<id> form so there is one correct URL form
+//      everywhere (the publish workflow reads liveUrl for the release body).
 //
 // ZERO DEPENDENCIES: node:fs / node:path / node:url only.
 //
@@ -120,9 +121,10 @@ function stampPages(id, dryRun) {
   return { results, total, alreadyStamped };
 }
 
-// Ensure index.json rag-guide entry carries liveLink = full link; also stamp
-// any bare-id placeholder left in the legacy liveUrl field. Preserves trailing
-// newline. Returns { changed, replacements }.
+// Ensure index.json rag-guide entry carries liveLink = full link AND liveUrl =
+// the SAME https://brewpage.app/public/<id> form (one correct URL form
+// everywhere; the publish workflow reads liveUrl for the release body).
+// Preserves trailing newline. Returns { changed, replacements }.
 function stampIndex(id, link, dryRun) {
   if (!existsSync(INDEX_JSON)) return { changed: false, replacements: 0, missing: true };
   const raw = readFileSync(INDEX_JSON, "utf8");
@@ -142,9 +144,11 @@ function stampIndex(id, link, dryRun) {
         r.liveLink = link;
         replacements += 1;
       }
-      // legacy liveUrl: stamp any bare-id placeholder so it stays consistent.
-      if (typeof r.liveUrl === "string" && r.liveUrl.includes(TOKEN)) {
-        r.liveUrl = r.liveUrl.split(TOKEN).join(id);
+      // legacy liveUrl: stamp to the SAME /public/<id> link form (one correct
+      // form everywhere). Covers both the REPLACE_AT_PUBLISH placeholder and
+      // the old bare https://brewpage.app/<id> (no /public/) form.
+      if (typeof r.liveUrl === "string" && r.liveUrl !== link) {
+        r.liveUrl = link;
         replacements += 1;
       }
     }

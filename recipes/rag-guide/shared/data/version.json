@@ -1,7 +1,7 @@
 {
-  "version": "0.1.0",
-  "commit": "bc1552e",
-  "date": "2026-06-14",
+  "version": "0.1.1",
+  "commit": "82b9586",
+  "date": "2026-06-15",
   "_schema": {
     "purpose": "Site version stamp. Placeholder skeleton; the release stamp script overwrites version/commit/date when a vX.Y.Z tag is cut, and keeps the static no-JS footer fallback in sync. No build step -- this file ships verbatim with the recipe folder.",
     "fields": {

@@ -15,10 +15,13 @@
       "slug": "rag-guide",
       "title": "RAG Guide",
       "status": "staged",
-      "lang": ["ru", "en"],
+      "lang": [
+        "ru",
+        "en"
+      ],
       "dir": "recipes/rag-guide",
-      "liveUrl": "https://brewpage.app/REPLACE_AT_PUBLISH",
-      "liveLink": "https://brewpage.app/public/REPLACE_AT_PUBLISH",
+      "liveUrl": "https://brewpage.app/public/FsOfbLP4df",
+      "liveLink": "https://brewpage.app/public/FsOfbLP4df",
       "description": "Long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (RU default, EN-ready); RU prose is the authored manuscript. Doubles as the production dogfood for the publish pipeline.",
       "crossLinks": {
         "platform": "https://brewpage.app",
