@@ -30,7 +30,7 @@
  * SHAPE
  * -----
  * Default export = {
- *   model:   string,                 // model id echoed in every turn ("claude-sonnet-4-5")
+ *   model:   string,                 // model id echoed in every turn ("claude-sonnet-4-6")
  *   turns:   Turn[],                 // 4 turns; each .json is a valid ASCII JSON string
  *   order:   string[],              // the 17 block ids, table order (== drill keys)
  *   blocks:  { [id]: Block }         // annotation map, keyed by data-block id
@@ -96,8 +96,8 @@ const SYSTEM =
 // ---- The 4 turns. Each `json` is a real, parse-able, ASCII-only payload. ----
 
 const TURN1 = {
-  model: "claude-sonnet-4-5",
-  max_tokens: 1024,
+  model: "claude-sonnet-4-6",
+  max_tokens: 4096,
   thinking: { type: "enabled", budget_tokens: 2048 },
   system: SYSTEM,
   tools: [
@@ -124,7 +124,7 @@ const TURN2 = {
   id: "msg_01XAbcRequestDemo",
   type: "message",
   role: "assistant",
-  model: "claude-sonnet-4-5",
+  model: "claude-sonnet-4-6",
   content: [
     {
       type: "thinking",
@@ -146,7 +146,7 @@ const TURN2 = {
 };
 
 const TURN3 = {
-  model: "claude-sonnet-4-5",
+  model: "claude-sonnet-4-6",
   max_tokens: 1024,
   system: SYSTEM,
   tools: [
@@ -214,7 +214,7 @@ const TURN4 = {
   id: "msg_01YDefResponseDemo",
   type: "message",
   role: "assistant",
-  model: "claude-sonnet-4-5",
+  model: "claude-sonnet-4-6",
   content: [
     {
       type: "text",
@@ -288,8 +288,8 @@ const blocks = {
     crumb: { ru: "model", en: "model" },
     aria: { ru: "Blok model: kakuyu model vyzvat'", en: "Block model: which model to call" },
     function: {
-      ru: "Kakuyu model vyzvat'. Zdes' claude-sonnet-4-5; modeli s servera ehom vozvrashchayut etot id v kazhdom otvete.",
-      en: "Which model to call. Here claude-sonnet-4-5; the server echoes this id back in every response.",
+      ru: "Kakuyu model vyzvat'. Zdes' claude-sonnet-4-6; modeli s servera ehom vozvrashchayut etot id v kazhdom otvete.",
+      en: "Which model to call. Here a current Claude model (see the models overview); the server echoes this id back in every response.",
     },
     ragRole: {
       ru: "Vybor generatora stadii Generation; opredelyaet predel dliny konteksta i stoimost zaprosa.",
@@ -557,7 +557,7 @@ const blocks = {
 
 export default {
   _schema,
-  model: "claude-sonnet-4-5",
+  model: "claude-sonnet-4-6",
   turns,
   order,
   blocks,

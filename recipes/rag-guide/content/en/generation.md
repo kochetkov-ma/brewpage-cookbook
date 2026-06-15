@@ -33,7 +33,7 @@ SYSTEM = (
 
 def generate(prompt: str):
     resp = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -46,7 +46,7 @@ def generate(prompt: str):
 def generate_stream(prompt: str):
     # Streaming: tokens arrive as they are generated - less waiting.
     with client.messages.stream(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -55,7 +55,7 @@ def generate_stream(prompt: str):
             yield text
 ```
 
-The model and the call shape follow the [Anthropic Messages API](https://docs.anthropic.com/en/api/messages); check the model name at launch against the [Models overview](https://docs.anthropic.com/en/docs/about-claude/models). Any vendor with a chat API will do - what matters is not the names but the three techniques below.
+The model and the call shape follow the [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); check the model name at launch against the [Models overview](https://platform.claude.com/docs/en/docs/about-claude/models). Any vendor with a chat API will do - what matters is not the names but the three techniques below.
 
 ## Instructions: answer only from the context
 
@@ -79,7 +79,7 @@ RAG reduces hallucinations by slipping in verifiable context, but it does not re
 
 Tone and format are set in the same instruction: "answer briefly as a list", "return JSON with the fields answer and sources". Format is part of the contract with your UI.
 
-Streaming improves perception: instead of waiting for the whole answer, tokens arrive as they are generated, and the user sees text right away. The Anthropic Messages API delivers the stream via server-sent events ([Anthropic streaming](https://docs.anthropic.com/en/api/messages-streaming)); the `generate_stream` function above does exactly this. Important for grounding: do not show the green "ready" answer in the UI as final until generation has finished and the citations are verified - partial text may still append a source.
+Streaming improves perception: instead of waiting for the whole answer, tokens arrive as they are generated, and the user sees text right away. The Anthropic Messages API delivers the stream via server-sent events ([Anthropic streaming](https://platform.claude.com/docs/en/api/messages-streaming)); the `generate_stream` function above does exactly this. Important for grounding: do not show the green "ready" answer in the UI as final until generation has finished and the citations are verified - partial text may still append a source.
 
 <!-- IE-BRIEF: element=grounded-answer-reveal | purpose=показать что каждое утверждение ответа построено ИЗ конкретного чанка и заземлено на нем; ответ появляется только по мере завершения заземления, не pre-painted | inputs=NET-NEW default-export shared/data/generation.js { contextChunks:[{id,source,text}], answer:"...[source:c1]...", claims:[{text,chunkId}], noContext:bool } ([source] маркеры в ответе связывают claims с чанками) | host=[data-component="drilldown-host"] (slots stage/crumbs/zoomout/panel); grounded-answer-reveal монтируется как level-1 panel content | recipe-path=shared/js/lib/drilldown-zoom.js (shipped камера, zoom в связь утверждение<->chunk) + NET-NEW shared/js/lib/grounded-answer.js на timeline.js (пошаговое построение ответа по цитатам) | animation=каждое утверждение ответа проявляется после того как его chunk-источник подсветился (линия связи рисуется gated stroke-dashoffset); зеленый акцент заземления загорается только когда цитата сопоставлена; no-context кейс показывает fallback "Этого нет в документах" без зеленого; transform/opacity only, IO-gated, reduced-motion сразу показывает final с нарисованными связями; mobile 390/320 ответ и чанки stack; NO mascot dot -->
 
@@ -89,9 +89,9 @@ In the static (no-JS) view, the host shows the answer where each claim is follow
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <https://arxiv.org/abs/2202.03629>
-- Anthropic. Messages API. <https://docs.anthropic.com/en/api/messages>
-- Anthropic. Streaming Messages. <https://docs.anthropic.com/en/api/messages-streaming>
-- Anthropic. Models overview. <https://docs.anthropic.com/en/docs/about-claude/models>
+- Anthropic. Messages API. <https://platform.claude.com/docs/en/api/messages>
+- Anthropic. Streaming Messages. <https://platform.claude.com/docs/en/api/messages-streaming>
+- Anthropic. Models overview. <https://platform.claude.com/docs/en/docs/about-claude/models>
 
 ## Try it yourself
 

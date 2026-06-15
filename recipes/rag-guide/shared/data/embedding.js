@@ -136,8 +136,8 @@ export default {
       id: "s2",
       kind: "embed",
       caption: B(
-        "Shag 2: kazhdyj chunk prevrashchaetsya v vektor dliny dim=1536 - menyaetsya predstavlenie, ne tekst.",
-        "Step 2: each chunk becomes a vector of length dim=1536 -- the representation changes, not the text."
+        "Shag 2: kazhdyj chunk prevrashchaetsya v vektor (dlina zavisit ot modeli, zdes' 1536 dlja text-embedding-3-small) - menyaetsya predstavlenie, ne tekst.",
+        "Step 2: each chunk becomes a vector (length depends on the model, here 1536 for text-embedding-3-small) -- the representation changes, not the text."
       ),
       targets: ["c1", "c2", "c3"],
       duration: 1200,

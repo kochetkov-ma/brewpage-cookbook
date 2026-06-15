@@ -12,11 +12,11 @@
 
 Вы прошли весь маршрут - чанки, эмбеддинги, поиск, сборка контекста, генерация. Каждая глава показывала свою стадию отдельно. Но в живой системе все они сходятся в одну вещь: HTTP-запрос к LLM и ответ от нее. Это обычный JSON. И пока вы не увидите этот JSON целиком, с каждым полем на своем месте, RAG остается набором отдельных идей, а не одним механизмом.
 
-Здесь мы разбираем один реальный обмен с моделью: запрос, который вы шлете, и ответ, который приходит. Поля настоящие - это формат Anthropic Messages API (<https://docs.anthropic.com/en/api/messages>). Каждый функциональный блок размечен дважды: что он делает технически и какую роль играет в конвейере RAG. Это та самая сборка retrieve-augment-generate из статьи Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), но уже не на схеме, а в байтах, которые уходят по проводу.
+Здесь мы разбираем один реальный обмен с моделью: запрос, который вы шлете, и ответ, который приходит. Поля настоящие - это формат Anthropic Messages API (<https://platform.claude.com/docs/en/api/messages>). Каждый функциональный блок размечен дважды: что он делает технически и какую роль играет в конвейере RAG. Это та самая сборка retrieve-augment-generate из статьи Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), но уже не на схеме, а в байтах, которые уходят по проводу.
 
 ## Один payload сквозь весь конвейер
 
-RAG-запрос к Anthropic Messages API устроен так: вы кладете инструкции-заземление в `system`, собранный контекст и вопрос - в `messages`, а сам поиск выражаете как вызов инструмента (`tools` плюс `tool_choice`) (<https://docs.anthropic.com/en/api/messages>). Модель отвечает не одним текстом, а массивом блоков `content`: рассуждение (`thinking`), запрос на поиск (`tool_use`) и финальный текст. Поле `stop_reason` говорит, почему модель остановилась, а `usage` - сколько токенов это стоило (<https://docs.anthropic.com/en/api/messages>).
+RAG-запрос к Anthropic Messages API устроен так: вы кладете инструкции-заземление в `system`, собранный контекст и вопрос - в `messages`, а сам поиск выражаете как вызов инструмента (`tools` плюс `tool_choice`) (<https://platform.claude.com/docs/en/api/messages>). Модель отвечает не одним текстом, а массивом блоков `content`: рассуждение (`thinking`), запрос на поиск (`tool_use`) и финальный текст. Поле `stop_reason` говорит, почему модель остановилась, а `usage` - сколько токенов это стоило (<https://platform.claude.com/docs/en/api/messages>).
 
 Ниже - реальный обмен из трех ходов: вы шлете вопрос с описанием инструмента поиска, модель просит вызвать поиск (`tool_use`), вы возвращаете найденные чанки (`tool_result`), модель пишет заземленный ответ.
 
@@ -24,8 +24,8 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
-  "max_tokens": 1024,
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4096,
   "thinking": {
     "type": "enabled",
     "budget_tokens": 2048
@@ -55,7 +55,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 }
 ```
 
-`system` - это слой заземления (grounding): жесткая инструкция отвечать только по найденному и честно признавать пробел (<https://docs.anthropic.com/en/api/messages>). В терминах RAG это и есть инструкция стадии generation из главы generation.html. `tools` описывает поиск как функцию, которую модель может вызвать - это объявление шага retrieve из статьи Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), выраженное в схеме tool use (<https://docs.anthropic.com/en/api/tool-use>). `tool_choice: auto` отдает модели решение, нужен ли поиск (<https://docs.anthropic.com/en/api/tool-use>). `thinking` включает расширенное рассуждение с бюджетом токенов (<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>).
+`system` - это слой заземления (grounding): жесткая инструкция отвечать только по найденному и честно признавать пробел (<https://platform.claude.com/docs/en/api/messages>). В терминах RAG это и есть инструкция стадии generation из главы generation.html. `tools` описывает поиск как функцию, которую модель может вызвать - это объявление шага retrieve из статьи Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), выраженное в схеме tool use (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `tool_choice: auto` отдает модели решение, нужен ли поиск (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `thinking` включает расширенное рассуждение с бюджетом токенов (<https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>).
 
 ### Ход 2. Ответ: модель рассуждает и просит вызвать поиск
 
@@ -64,7 +64,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
   "id": "msg_01XAbc...",
   "type": "message",
   "role": "assistant",
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "content": [
     {
       "type": "thinking",
@@ -90,15 +90,15 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 }
 ```
 
-Блок `thinking` - это рассуждение модели перед действием; в RAG это видимый план стадии retrieve, а не финальный ответ (<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>). Блок `tool_use` - это и есть запрос на поиск: модель просит вызвать `search_docs` с конкретным `query` и `top_k` (<https://docs.anthropic.com/en/api/tool-use>). `stop_reason: tool_use` - управляющий сигнал: модель остановилась не потому, что закончила, а потому, что ждет результат инструмента; ваш код обязан выполнить поиск и вернуть результат (<https://docs.anthropic.com/en/api/messages>). `usage` - сигнал бюджета и стоимости: `input_tokens` и `output_tokens` за этот ход (<https://docs.anthropic.com/en/api/messages>); в RAG раздутый `input_tokens` - первый признак, что собранный контекст слишком велик (см. assemble-context.html).
+Блок `thinking` - это рассуждение модели перед действием; в RAG это видимый план стадии retrieve, а не финальный ответ (<https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>). Блок `tool_use` - это и есть запрос на поиск: модель просит вызвать `search_docs` с конкретным `query` и `top_k` (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `stop_reason: tool_use` - управляющий сигнал: модель остановилась не потому, что закончила, а потому, что ждет результат инструмента; ваш код обязан выполнить поиск и вернуть результат (<https://platform.claude.com/docs/en/api/messages>). `usage` - сигнал бюджета и стоимости: `input_tokens` и `output_tokens` за этот ход (<https://platform.claude.com/docs/en/api/messages>); в RAG раздутый `input_tokens` - первый признак, что собранный контекст слишком велик (см. assemble-context.html).
 
 ### Ход 3. Запрос с tool_result: возвращаем найденные чанки
 
-Ваш код запускает поиск (стадия retrieve: запрос -> вектор -> top-k по косинусу, как в search.html), затем продолжает тот же разговор, добавляя ответ ассистента и блок `tool_result` с найденными чанками. Форма вектора и метрика косинуса - из OpenAI Embeddings guide (<https://platform.openai.com/docs/guides/embeddings>).
+Ваш код запускает поиск (стадия retrieve: запрос -> вектор -> top-k по косинусу, как в search.html), затем продолжает тот же разговор, добавляя ответ ассистента и блок `tool_result` с найденными чанками. Форма вектора и метрика косинуса - из OpenAI Embeddings guide (<https://developers.openai.com/api/docs/guides/embeddings>).
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "max_tokens": 1024,
   "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
   "tools": [
@@ -130,7 +130,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 }
 ```
 
-`tool_result` - это возврат стадии retrieve в разговор: связан с запросом по `tool_use_id`, несет найденные чанки как текст (<https://docs.anthropic.com/en/api/tool-use>). Внутри каждого чанка - метаданные стадий конвейера: `source`/`section`/`date` приходят из чанкинга (chunking.html), а `cosine`/`rank` - из поиска (search.html, метрика косинуса по OpenAI Embeddings guide, <https://platform.openai.com/docs/guides/embeddings>). Этот блок и есть Augmented-шаг из Lewis et al., 2020: найденное подкладывается в контекст модели перед генерацией (<https://arxiv.org/abs/2005.11401>).
+`tool_result` - это возврат стадии retrieve в разговор: связан с запросом по `tool_use_id`, несет найденные чанки как текст (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). Внутри каждого чанка - метаданные стадий конвейера: `source`/`section`/`date` приходят из чанкинга (chunking.html), а `cosine`/`rank` - из поиска (search.html, метрика косинуса по OpenAI Embeddings guide, <https://developers.openai.com/api/docs/guides/embeddings>). Этот блок и есть Augmented-шаг из Lewis et al., 2020: найденное подкладывается в контекст модели перед генерацией (<https://arxiv.org/abs/2005.11401>).
 
 ### Ход 4 (финал ответа). Заземленный ответ модели
 
@@ -139,7 +139,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
   "id": "msg_01YDef...",
   "type": "message",
   "role": "assistant",
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "content": [
     {
       "type": "text",
@@ -155,7 +155,7 @@ RAG-запрос к Anthropic Messages API устроен так: вы клад�
 }
 ```
 
-Здесь `content` - один блок `text`: финальный заземленный ответ со ссылкой на `source`, как требовала инструкция в `system`. Это стадия Generation из Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>); связь с конкретными полями описана в generation.html. `stop_reason: end_turn` - управляющий сигнал, что модель закончила сама, а не из-за лимита (<https://docs.anthropic.com/en/api/messages>). `usage.input_tokens` вырос с 412 до 638 - это цена подложенного контекста: тот самый бюджетный сигнал, по которому в assemble-context.html решают, что обрезать.
+Здесь `content` - один блок `text`: финальный заземленный ответ со ссылкой на `source`, как требовала инструкция в `system`. Это стадия Generation из Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>); связь с конкретными полями описана в generation.html. `stop_reason: end_turn` - управляющий сигнал, что модель закончила сама, а не из-за лимита (<https://platform.claude.com/docs/en/api/messages>). `usage.input_tokens` вырос с 412 до 638 - это цена подложенного контекста: тот самый бюджетный сигнал, по которому в assemble-context.html решают, что обрезать.
 
 ## Карта блоков: функция и роль в RAG
 
@@ -191,11 +191,11 @@ Greppable-таблица: каждый функциональный блок pay
 
 ## Источники
 
-- Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <https://docs.anthropic.com/en/api/messages>
-- Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <https://docs.anthropic.com/en/api/tool-use>
-- Anthropic. Extended thinking (thinking blocks, budget_tokens). <https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>
+- Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <https://platform.claude.com/docs/en/api/messages>
+- Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>
+- Anthropic. Extended thinking (thinking blocks, budget_tokens). <https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
-- OpenAI. Embeddings guide (vector shape, cosine similarity). <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide (vector shape, cosine similarity). <https://developers.openai.com/api/docs/guides/embeddings>
 
 ## Попробуйте сами
 

@@ -8,7 +8,7 @@
  * config.data. cookbook-author owns the final VALUES; interactive-engineer owns
  * the SHAPE + the renderer. ASCII punctuation only (incl. inside Russian).
  *
- * The model id where shown is `claude-sonnet-4-5` (Anthropic Messages API).
+ * The model id where shown is `claude-sonnet-4-6` (Anthropic Messages API).
  *
  * SHAPE (every _-prefixed key is metadata; consumers skip it via stripMeta)
  * ------------------------------------------------------------------------
@@ -58,11 +58,11 @@ const data = {
       "{ ru, en } -> { model, system, contextChunks[], claims[], noContext, ui }",
     rules:
       "skip _-prefixed keys; grounded chunkId must exist in contextChunks; one hallucinated claim; trusted static text",
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-4-6",
   },
 
   ru: {
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-4-6",
     system:
       "Ты отвечаешь только на основе переданного контекста. После каждого утверждения ставь ссылку на источник в виде [source]. Если ответа в контексте нет, ответь: 'Этого нет в документах.' Не добавляй факты из собственной памяти.",
     contextChunks: [
@@ -135,7 +135,7 @@ const data = {
   },
 
   en: {
-    model: "claude-sonnet-4-5",
+    model: "claude-sonnet-4-6",
     system:
       "You answer only from the provided context. After each statement add a source link as [source]. If the answer is not in the context, reply: 'This is not in the documents.' Do not add facts from your own memory.",
     contextChunks: [

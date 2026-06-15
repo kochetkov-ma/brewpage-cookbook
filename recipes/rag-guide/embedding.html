@@ -155,7 +155,7 @@
       <div class="title-block">
         <p class="eyebrow" data-i18n="eyebrow" data-ru="Эмбеддинг" data-en="Embedding">Embedding</p>
         <h1 id="plateTitle" data-i18n="plateTitle" data-ru="Эмбеддинг: превращаем фрагмент в вектор" data-en="Embedding: turning a fragment into a vector">Embedding: turning a fragment into a vector</h1>
-        <p data-i18n="plateSub" data-ru="Каждый фрагмент один раз становится вектором (dim 1536) - меняется представление, а не текст" data-en="Each fragment becomes a vector once (dim 1536) - the representation changes, not the text">Each fragment becomes a vector once (dim 1536) - the representation changes, not the text</p>
+        <p data-i18n="plateSub" data-ru="Каждый фрагмент один раз становится вектором (размерность зависит от модели) - меняется представление, а не текст" data-en="Each fragment becomes a vector once (dimension depends on the model) - the representation changes, not the text">Each fragment becomes a vector once (dimension depends on the model) - the representation changes, not the text</p>
       </div>
       <svg class="compass" data-component="compass" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
         <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
@@ -229,8 +229,8 @@
           </div>
           <div class="es-arrow" aria-hidden="true">-&gt;</div>
           <div class="es-col">
-            <h2>The embed step (dim 1536)</h2>
-            <p>Each fragment becomes a fixed-length vector once. The representation changes, not the text.</p>
+            <h2>The embed step (fixed-length vector)</h2>
+            <p>Each fragment becomes a fixed-length vector once; the dimension depends on the model (e.g. 1536 for text-embedding-3-small -- see the OpenAI Embeddings guide). The representation changes, not the text.</p>
           </div>
           <div class="es-arrow" aria-hidden="true">-&gt;</div>
           <div class="es-col">
@@ -256,7 +256,7 @@
     <section aria-labelledby="pr-problem">
       <h2 id="pr-problem" data-pk="problem.h2">The problem</h2>
       <p data-pk="problem.p1">You have fragments - pieces of text from the previous chapter. The user's question is text too, but in different words: "how to get my money back" versus the fragment "refund policy". String comparison does not work here: they have almost no words in common, yet the meaning is the same. You need a way to search by meaning, not by letters.</p>
-      <p data-pk="problem.p2">The solution is the embedding: turn each fragment into a vector, a numeric code of its meaning, where the closeness of vectors reflects the closeness of meaning (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is the second step of the pipeline: after the document is cut into fragments, each fragment is turned into a vector once, and from there the vectors go into the index.</p>
+      <p data-pk="problem.p2">The solution is the embedding: turn each fragment into a vector, a numeric code of its meaning, where the closeness of vectors reflects the closeness of meaning (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is the second step of the pipeline: after the document is cut into fragments, each fragment is turned into a vector once, and from there the vectors go into the index.</p>
       <p data-pk="problem.p3">Here is the whole step at once - the real API call that turns a list of fragments into a list of vectors:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-embed-call">
         <figcaption class="code-block__cap" data-i18n data-ru="Realnyj vyzov API embeddingov: spisok chankov -&gt; spisok vektorov, strogo odin-k-odnomu." data-en="A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.">A real embeddings API call: a list of chunks -&gt; a list of vectors, strictly one-to-one.</figcaption>
@@ -279,29 +279,29 @@ resp = client.embeddings.create(
 # odin vektor na kazhdyj chunk, strogo odin-k-odnomu
 vectors = [item.embedding for item in resp.data]
 print(len(vectors), "vektorov")        # 3
-print(len(vectors[0]), "komponent")    # 1536</code></pre>
+print(len(vectors[0]), "komponent")    # dim depends on the model (1536 for text-embedding-3-small)</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Install the package</strong> -- A comment with the install command for the official OpenAI client; it does not run in the code itself.</li>
           <li><strong>OpenAI client</strong> -- Import the client and create an instance; it reads the API key from the environment.</li>
           <li><strong>Input chunks</strong> -- A list of three text fragments is the embedder input; the strings are transliterated to stay ASCII.</li>
           <li><strong>Embedding call</strong> -- One create call with the text-embedding-3-small model and the whole chunk list as input.</li>
-          <li><strong>Collect vectors</strong> -- Pull one vector per response item - the chunk-to-vector link is strictly one-to-one. The output is three vectors of 1536 components each.</li>
+          <li><strong>Collect vectors</strong> -- Pull one vector per response item - the chunk-to-vector link is strictly one-to-one. The output is three vectors whose dimension depends on the model (1536 for text-embedding-3-small -- see the OpenAI Embeddings guide).</li>
         </ol>
       </figure>
-      <p data-pk="problem.p4">After this you have three vectors of length 1536 - one per fragment. There is no need to compare the text directly anymore: all further work runs on numbers.</p>
+      <p data-pk="problem.p4">After this you have three vectors of the model's fixed length (1536 for text-embedding-3-small) - one per fragment. There is no need to compare the text directly anymore: all further work runs on numbers.</p>
     </section>
 
     <section aria-labelledby="pr-what">
       <h2 id="pr-what" data-pk="what.h2">What a vector is here</h2>
-      <p data-pk="what.p1">A vector is an ordered list of numbers of fixed length <code>dim</code>. The embedding model maps text into a point in a <code>dim</code>-dimensional space so that texts of similar meaning end up near each other. For example, OpenAI <code>text-embedding-3-small</code> produces vectors of length 1536 (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). That is exactly why every vector carries <code>dim: 1536</code>.</p>
+      <p data-pk="what.p1">A vector is an ordered list of numbers of fixed length <code>dim</code>. The embedding model maps text into a point in a <code>dim</code>-dimensional space so that texts of similar meaning end up near each other. The dimension depends on the model; for example, OpenAI <code>text-embedding-3-small</code> produces vectors of length 1536 at the time of writing (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). That is exactly why every vector in this example carries <code>dim: 1536</code>.</p>
       <p data-pk="what.p2">The dimensionality is not a random number: the model sets it, and it is the same for all vectors of one model. You cannot mix vectors from different models - they live in different spaces, and comparing them is meaningless.</p>
-      <p data-pk="what.p3">Important: the numbers in the <code>values</code> field of the live example are short stubs for the mockup (three values per vector), not a real embedding. A real vector has all 1536 components; showing them in full is pointless, so the animation shows only the fact "fragment -&gt; vector", not the raw numbers.</p>
+      <p data-pk="what.p3">Important: the numbers in the <code>values</code> field of the live example are short stubs for the mockup (three values per vector), not a real embedding. A real vector has all of the model's components (1536 for text-embedding-3-small); showing them in full is pointless, so the animation shows only the fact "fragment -&gt; vector", not the raw numbers.</p>
     </section>
 
     <section aria-labelledby="pr-cos">
       <h2 id="pr-cos" data-pk="cos.h2">Why vector closeness = closeness of meaning</h2>
-      <p data-pk="cos.p1">Once fragments have become vectors, "similarity" is measured geometrically - most often via cosine similarity, the cosine of the angle between vectors (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). The smaller the angle, the closer the meaning. The cosine value lies in the range from -1 to 1; for text embeddings, in practice the range of roughly 0..1 applies, where 1 is a match of meaning and around 0 means the texts are about different things.</p>
-      <p data-pk="cos.p2">Why 0..1 rather than the full range from -1 to 1: text embeddings are usually normalized by length (L2 normalization) - each vector is brought to unit length (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). For normalized vectors the cosine coincides with the dot product, so ranking by dot product is the same as ranking by cosine, but cheaper: you do not need to divide by the norms, which already equal one.</p>
+      <p data-pk="cos.p1">Once fragments have become vectors, "similarity" is measured geometrically - most often via cosine similarity, the cosine of the angle between vectors (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). The smaller the angle, the closer the meaning. The cosine value lies in the range from -1 to 1; for text embeddings, in practice the range of roughly 0..1 applies, where 1 is a match of meaning and around 0 means the texts are about different things.</p>
+      <p data-pk="cos.p2">Why 0..1 rather than the full range from -1 to 1: text embeddings are usually normalized by length (L2 normalization) - each vector is brought to unit length (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). For normalized vectors the cosine coincides with the dot product, so ranking by dot product is the same as ranking by cosine, but cheaper: you do not need to divide by the norms, which already equal one.</p>
       <p data-pk="cos.p3">Here is how the cosine similarity of two vectors is computed by hand - without libraries, so the formula is visible:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="embedding-cosine">
         <figcaption class="code-block__cap" data-i18n data-ru="Kosinusnaja blizost vruchnuju, bez bibliotek: chem blizhe vektor zaprosa k vektoru chanka, tem blizhe smysl." data-en="Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.">Cosine similarity by hand, no libraries: the closer the query vector is to a chunk vector, the closer the meaning.</figcaption>
@@ -345,7 +345,7 @@ print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij</code></pre>
 
     <section aria-labelledby="pr-dense">
       <h2 id="pr-dense" data-pk="dense.h2">Sparse, dense, and hybrid vectors</h2>
-      <p data-pk="dense.p1">Embeddings from a transformer are <strong>dense</strong> vectors: all 1536 components are filled with numbers, and each encodes part of the meaning (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>). They contrast with <strong>sparse</strong> representations like TF-IDF or BM25, where the vector is a set of weights over the vocabulary and almost all components are zero. Sparse search still wins on exact term matches and rare tokens (SKUs, names, codes), where the literal word matters (<a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">Robertson &amp; Zaragoza, 2009, BM25</a>). That is why in practice people often use <strong>hybrid retrieval</strong>: sparse (BM25) and dense are combined to catch both exact terms and meaning.</p>
+      <p data-pk="dense.p1">Embeddings from a transformer are <strong>dense</strong> vectors: all of their components (the count depends on the model) are filled with numbers, and each encodes part of the meaning (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>). They contrast with <strong>sparse</strong> representations like TF-IDF or BM25, where the vector is a set of weights over the vocabulary and almost all components are zero. Sparse search still wins on exact term matches and rare tokens (SKUs, names, codes), where the literal word matters (Robertson &amp; Zaragoza, The Probabilistic Relevance Framework: BM25 and Beyond; <a href="https://nlp.stanford.edu/IR-book/" target="_blank" rel="noopener">Stanford IR Book, open IR reference</a>). That is why in practice people often use <strong>hybrid retrieval</strong>: sparse (BM25) and dense are combined to catch both exact terms and meaning.</p>
     </section>
 
     <section aria-labelledby="pr-more">
@@ -362,7 +362,7 @@ print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij</code></pre>
       <h2 id="pr-model" data-pk="model.h2">Model choice, dimensionality, drift</h2>
       <p data-pk="model.p1">The embedding model is a choice that directly determines search quality:</p>
       <ul>
-        <li data-pk="model.li1"><strong>Dimensionality.</strong> A larger <code>dim</code> usually means more accuracy, but more expensive storage and slower search. <code>text-embedding-3-small</code> gives 1536 components; some models let you trim the dimensionality to save resources (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>).</li>
+        <li data-pk="model.li1"><strong>Dimensionality.</strong> A larger <code>dim</code> usually means more accuracy, but more expensive storage and slower search. The dimension depends on the model (e.g. <code>text-embedding-3-small</code> gives 1536 components at the time of writing); some models let you trim the dimensionality to save resources (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>).</li>
         <li data-pk="model.li2"><strong>Language and domain.</strong> The model must understand the language and terminology of your documents. General models are good broadly; a narrow domain sometimes requires a specially trained model.</li>
         <li data-pk="model.li3"><strong>Model drift (drift).</strong> If you change the embedding model, all the old vectors in the index become incompatible with the new ones - they must be recomputed entirely. Vectors from different models cannot be compared with one another.</li>
       </ul>
@@ -378,9 +378,9 @@ print(scores[0])   # chunk 0 (politika vozvrata) - samyj blizkij</code></pre>
     <section class="sources" aria-labelledby="pr-sources">
       <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li data-pk="sources.li1">OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2 normalization to unit length, the dimensions parameter). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li data-pk="sources.li1">OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2 normalization to unit length, the dimensions parameter). <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a></li>
         <li data-pk="sources.li2">Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a></li>
-        <li data-pk="sources.li3">Robertson &amp; Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">nowpublishers.com/article/Details/INR-019</a></li>
+        <li data-pk="sources.li3">Robertson &amp; Zaragoza, The Probabilistic Relevance Framework: BM25 and Beyond. <a href="https://nlp.stanford.edu/IR-book/" target="_blank" rel="noopener">nlp.stanford.edu/IR-book (open IR reference)</a></li>
         <li data-pk="sources.li4">Kusupati et al., 2022. Matryoshka Representation Learning. <a href="https://arxiv.org/abs/2205.13147" target="_blank" rel="noopener">arxiv.org/abs/2205.13147</a></li>
         <li data-pk="sources.li5">Wang et al., 2022. Text Embeddings by Weakly-Supervised Contrastive Pre-training (E5). <a href="https://arxiv.org/abs/2212.03533" target="_blank" rel="noopener">arxiv.org/abs/2212.03533</a></li>
         <li data-pk="sources.li6">Reimers &amp; Gurevych, 2020. Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation. <a href="https://arxiv.org/abs/2004.09813" target="_blank" rel="noopener">arxiv.org/abs/2004.09813</a></li>

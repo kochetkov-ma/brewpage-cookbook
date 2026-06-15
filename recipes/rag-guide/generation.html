@@ -217,32 +217,32 @@
     <!-- NO-JS fallback: a meaningful static end-state - the answer with [source]
          markers, the source chunks, and the honest-fallback case. -->
     <div class="no-js-only">
-      <p class="ga-model-static"><span class="lbl">модель</span> <span class="mono">claude-sonnet-4-5</span></p>
+      <p class="ga-model-static"><span class="lbl">model</span> <span class="mono">claude-sonnet-4-6</span></p>
       <div class="ga-cols-static">
-        <section class="ga-col-static" aria-label="Контекст: источники">
-          <h2>Контекст: источники</h2>
-          <p class="src mono">[policy.md, разд. 4]</p>
-          <p class="txt">[1] "Сотруднику предоставляется ежегодный оплачиваемый отдых - 28 календарных дней."</p>
-          <p class="src mono">[policy.md, разд. 4]</p>
-          <p class="txt">[2] "Неиспользованные дни можно перенести на следующий год по согласованию с руководителем."</p>
+        <section class="ga-col-static" aria-label="Context: sources">
+          <h2>Context: sources</h2>
+          <p class="src mono">[policy.md, sect. 4]</p>
+          <p class="txt">[1] "An employee is granted annual paid leave - 28 calendar days."</p>
+          <p class="src mono">[policy.md, sect. 4]</p>
+          <p class="txt">[2] "Unused days may be carried over to the next year by agreement with the manager."</p>
           <p class="src mono">[hr-faq.md]</p>
-          <p class="txt">[3] "Отпуск оформляется заявлением за 2 недели до начала."</p>
+          <p class="txt">[3] "Leave is requested by application 2 weeks before it starts."</p>
         </section>
-        <section class="ga-col-static" aria-label="Ответ модели">
-          <h2>Ответ модели</h2>
-          <p class="claim">По политике компании - 28 календарных дней оплачиваемого отпуска в год <span class="cite mono">[1]</span> <span class="badge good">заземлено</span></p>
-          <p class="claim">Неиспользованные дни можно перенести на следующий год по согласованию с руководителем <span class="cite mono">[2]</span> <span class="badge good">заземлено</span></p>
-          <p class="claim">Заявление подается за 2 недели до начала отпуска <span class="cite mono">[3]</span> <span class="badge good">заземлено</span></p>
-          <p class="claim bad">За выслугу лет добавляется 5 дополнительных дней <span class="cite mono">[9]</span> <span class="badge reject">цитата не из контекста - отклонить</span></p>
+        <section class="ga-col-static" aria-label="Model answer">
+          <h2>Model answer</h2>
+          <p class="claim">Per company policy - 28 calendar days of paid leave per year <span class="cite mono">[1]</span> <span class="badge good">grounded</span></p>
+          <p class="claim">Unused days may be carried over to the next year by agreement with the manager <span class="cite mono">[2]</span> <span class="badge good">grounded</span></p>
+          <p class="claim">The application is filed 2 weeks before the leave starts <span class="cite mono">[3]</span> <span class="badge good">grounded</span></p>
+          <p class="claim bad">5 extra days are added for length of service <span class="cite mono">[9]</span> <span class="badge reject">citation not in context - reject</span></p>
         </section>
       </div>
       <div class="ga-nocontext-static">
-        <h2>Случай: ответа в контексте нет</h2>
-        <p class="nc-q">Можно ли взять отпуск авансом за следующий год?</p>
-        <p class="nc-fallback">Этого нет в документах.</p>
-        <p class="nc-note">В контексте нет такого правила. Правильный результат - честный отказ, а не правдоподобная выдумка.</p>
+        <h2>Case: the answer is not in the context</h2>
+        <p class="nc-q">Can I take leave in advance against next year?</p>
+        <p class="nc-fallback">This is not in the documents.</p>
+        <p class="nc-note">There is no such rule in the context. The correct result is an honest refusal, not a plausible fabrication.</p>
       </div>
-      <p class="legend-hint">Источник <span class="mono">[9]</span> отсутствует в контексте - это галлюцинация цитаты, и такой ответ надо отклонять. Включите JavaScript, чтобы навести на утверждение и проследить линию связи до его куска-источника.</p>
+      <p class="legend-hint">Source <span class="mono">[9]</span> is absent from the context - this is a citation hallucination, and such an answer must be rejected. Enable JavaScript to hover a claim and trace the link line down to its source chunk.</p>
     </div>
   </section>
 
@@ -277,7 +277,7 @@ SYSTEM = (
 
 def generate(prompt: str):
     resp = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -290,7 +290,7 @@ def generate(prompt: str):
 def generate_stream(prompt: str):
     # Streaming: tokeny pribyvayut po mere generacii - menshe ozhidanie.
     with client.messages.stream(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -304,7 +304,7 @@ def generate_stream(prompt: str):
           <li><strong>Streaming variant</strong> -- The same call, but tokens are yielded as they are generated via stream - the user sees text right away.</li>
         </ol>
       </figure>
-      <p data-pk="solution.p2">The model and the call shape follow the <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; check the model name at launch against the <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Any vendor with a chat API will do - what matters is not the names but the three techniques below.</p>
+      <p data-pk="solution.p2">The model and the call shape follow the <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; check the model name at launch against the <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Any vendor with a chat API will do - what matters is not the names but the three techniques below.</p>
     </section>
 
     <section aria-labelledby="pr-instructions">
@@ -328,7 +328,7 @@ def generate_stream(prompt: str):
     <section aria-labelledby="pr-stream">
       <h2 id="pr-stream" data-pk="stream.h2">Tone, format, and streaming</h2>
       <p data-pk="stream.p1">Tone and format are set in the same instruction: "answer briefly as a list", "return JSON with the fields answer and sources". Format is part of the contract with your UI.</p>
-      <p data-pk="stream.p2">Streaming improves perception: instead of waiting for the whole answer, tokens arrive as they are generated, and the user sees text right away. The Anthropic Messages API delivers the stream via server-sent events (<a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); the <code>generate_stream</code> function above does exactly this. Important for grounding: do not show the green "ready" answer in the UI as final until generation has finished and the citations are verified - partial text may still append a source.</p>
+      <p data-pk="stream.p2">Streaming improves perception: instead of waiting for the whole answer, tokens arrive as they are generated, and the user sees text right away. The Anthropic Messages API delivers the stream via server-sent events (<a href="https://platform.claude.com/docs/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); the <code>generate_stream</code> function above does exactly this. Important for grounding: do not show the green "ready" answer in the UI as final until generation has finished and the citations are verified - partial text may still append a source.</p>
     </section>
 
     <section class="sources" aria-labelledby="pr-sources">
@@ -336,9 +336,9 @@ def generate_stream(prompt: str):
       <ul>
         <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
         <li data-pk="sources.li2">Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">arxiv.org/abs/2202.03629</a></li>
-        <li data-pk="sources.li3">Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
-        <li data-pk="sources.li4">Anthropic. Streaming Messages. <a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages-streaming</a></li>
-        <li data-pk="sources.li5">Anthropic. Models overview. <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
+        <li data-pk="sources.li3">Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a></li>
+        <li data-pk="sources.li4">Anthropic. Streaming Messages. <a href="https://platform.claude.com/docs/en/api/messages-streaming" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages-streaming</a></li>
+        <li data-pk="sources.li5">Anthropic. Models overview. <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a></li>
       </ul>
     </section>
 

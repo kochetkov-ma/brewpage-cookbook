@@ -29,7 +29,7 @@ Chunk size and overlap are a trade-off, not a constant: small chunks hit the que
 
 Chunk size can be counted in characters or in tokens, and this is not a cosmetic difference. The character count is simple: a string's length in Python is `len(text)`, no dependencies. But the real budget that RAG runs into is measured not in characters but in tokens: both the model's context window and the bill for a call are counted in tokens, not characters. One token is on average a piece of a word, and the character-to-token ratio differs for different languages and alphabets (Cyrillic usually yields more tokens for the same text than Latin). So a chunk of 1000 characters may unexpectedly fail to fit into the token budget of the context-assembly step.
 
-That is why production splitters count tokens specifically, with the same tokenizer as the target model. OpenAI publishes `tiktoken` - the tokenizer of its models ([OpenAI, tiktoken](https://github.com/openai/tiktoken); [OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)); LangChain wraps it in `TokenTextSplitter`, which cuts by tokens rather than characters ([LangChain, split by token](https://python.langchain.com/docs/how_to/split_by_token/)). Any strategy from the catalog below can be implemented as character-based (simple and dependency-free) or token-based (more accurate to the model's budget); the unit of counting is an orthogonal knob to the choice of splitter. In the examples below the count is character-based for clarity, but in production the same logic is run by tokens.
+That is why production splitters count tokens specifically, with the same tokenizer as the target model. OpenAI publishes `tiktoken` - the tokenizer of its models ([OpenAI, tiktoken](https://github.com/openai/tiktoken); [OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)); LangChain wraps it in `TokenTextSplitter`, which cuts by tokens rather than characters ([LangChain, split by token](https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter)). Any strategy from the catalog below can be implemented as character-based (simple and dependency-free) or token-based (more accurate to the model's budget); the unit of counting is an orthogonal knob to the choice of splitter. In the examples below the count is character-based for clarity, but in production the same logic is run by tokens.
 
 ## Cutting strategies: the catalog
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
 ### recursive (separator hierarchy): cut by separator priority
 
-**How it works.** Cut by a prioritized list of separators - first by the largest (a double newline = a paragraph), then by smaller ones (a newline, a sentence, a space), until each piece fits the limit `size`. If a piece is still larger than the limit, the next separator from the list is applied to it recursively. This is the default strategy in LangChain's `RecursiveCharacterTextSplitter`: it tries to cut by `["\n\n", "\n", " ", ""]` in exactly this order, keeping paragraphs and sentences whole as long as possible ([LangChain, RecursiveCharacterTextSplitter](https://python.langchain.com/docs/how_to/recursive_text_splitter/)).
+**How it works.** Cut by a prioritized list of separators - first by the largest (a double newline = a paragraph), then by smaller ones (a newline, a sentence, a space), until each piece fits the limit `size`. If a piece is still larger than the limit, the next separator from the list is applied to it recursively. This is the default strategy in LangChain's `RecursiveCharacterTextSplitter`: it tries to cut by `["\n\n", "\n", " ", ""]` in exactly this order, keeping paragraphs and sentences whole as long as possible ([LangChain, RecursiveCharacterTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter)).
 
 **When to apply.** The universal default for prose: it gives neat boundaries (by paragraphs and sentences) but guarantees that no chunk exceeds the limit. Almost always better than bare fixed-size at the same low price.
 
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         print(n, repr(chunk))
 ```
 
-> This is a simplified but working implementation of the same idea as in LangChain's `RecursiveCharacterTextSplitter`. A production splitter adds token counting and overlap; the logic of descending through the separators is the same ([LangChain, RecursiveCharacterTextSplitter](https://python.langchain.com/docs/how_to/recursive_text_splitter/)).
+> This is a simplified but working implementation of the same idea as in LangChain's `RecursiveCharacterTextSplitter`. A production splitter adds token counting and overlap; the logic of descending through the separators is the same ([LangChain, RecursiveCharacterTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter)).
 
 <!-- IE-BRIEF: element=RecursiveDescentAnim | purpose=Показать рекурсивный спуск по иерархии separators: сначала рез по абзацам, те куски, что не влезли, режутся по предложениям, потом по словам - древовидный спуск | inputs=строка doc с \n\n и предложениями; separators=["\n\n","\n"," ",""]; size=70; из strategy.anim.params в data/chunking.js | host=[data-slot="anim"] внутри level-1 панели стратегии recursive | recipe-path=NET-NEW shared/js/lib/chunk-anim.js mode=recursive (reuses timeline.js; НЕ process-anim.js) | animation=текст показан блоком; уровень 0 - резы по \n\n появляются через scaleY (transform); куски, превысившие size, подсвечиваются opacity и на следующем шаге в них появляются резы следующего separator (спуск на уровень ниже) - визуально как descent по дереву; IO-gated; reduced-motion: сразу показаны все финальные границы с пометкой уровня separator; mobile 390/320: блок сужается, уровни separators маркируются цветом border по theme accent; NO mascot dot -->
 
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         print(n, chunk["heading"], repr(chunk["text"]))
 ```
 
-> This is a simplified version of the idea of LangChain's `MarkdownHeaderTextSplitter`: cut by headings and put the heading level/text into the chunk metadata so that at search time you can see which section the fragment came from ([LangChain, MarkdownHeaderTextSplitter](https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/)). For sentences and code AST the wrapper of steps 1-6 is the same, only the parser changes.
+> This is a simplified version of the idea of LangChain's `MarkdownHeaderTextSplitter`: cut by headings and put the heading level/text into the chunk metadata so that at search time you can see which section the fragment came from ([LangChain, MarkdownHeaderTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter)). For sentences and code AST the wrapper of steps 1-6 is the same, only the parser changes.
 
 <!-- IE-BRIEF: element=StructureAwareAnim | purpose=Показать, что резы ложатся только на границы предложений/заголовков, никогда не внутри; сравнить с fixed-size, где рез может пасть в середине фразы | inputs=короткий текст с 3-4 предложениями и одним заголовком; границы = позиции концов предложений и заголовка; из strategy.anim.params в data/chunking.js | host=[data-slot="anim"] внутри level-1 панели стратегии structure-aware | recipe-path=NET-NEW shared/js/lib/chunk-anim.js mode=structure (reuses timeline.js; НЕ process-anim.js; defer-candidate если milestone тесный - панель деградирует до алгоритм-шаги + проза) | animation=текст с выделенными предложениями; резы появляются через scaleY (transform) строго на концах предложений/после заголовка; "запрещенные" позиции внутри предложения кратко подсвечиваются opacity и пропускаются; IO-gated; reduced-motion: все структурные границы сразу нарисованы; mobile 390/320: предложения переносятся, границы маркируются на концах; NO mascot dot -->
 
@@ -260,7 +260,7 @@ if __name__ == "__main__":
 
 **How it works.** A particular but very common case of structure-aware: the document is already marked up with Markdown headings (`#`, `##`, ...). Cut by headings, make each section a chunk, and put the heading level and text into the metadata. This way a chunk always coincides with a logical section, and the metadata shows its place in the document hierarchy.
 
-**When to apply.** Documentation, READMEs, knowledge bases in Markdown - anything where the author already laid out the structure. The heading metadata later helps to filter and to show the reader which section the answer came from ([LangChain, MarkdownHeaderTextSplitter](https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/)).
+**When to apply.** Documentation, READMEs, knowledge bases in Markdown - anything where the author already laid out the structure. The heading metadata later helps to filter and to show the reader which section the answer came from ([LangChain, MarkdownHeaderTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter)).
 
 **Algorithm (step by step).**
 
@@ -276,7 +276,7 @@ The working Python for this strategy is given above, in the structure-aware sect
 
 **How it works.** Separate the unit of search from the unit of context. The document is cut twice: into small child chunks (precise hit on the query) and into large parent ones (broad context). Only the small chunks go into the vector index, but each stores a reference to its parent. At search time you find a small chunk, and into the model's context you slip its large parent - so the hit stays precise while the answer gets surrounding context.
 
-**When to apply.** When small chunks win at search (for reasons from "lost in the middle"), but the answer needs a wider piece than was found. This removes the main downside of small chunking - narrow context - without losing search precision ([LangChain, ParentDocumentRetriever](https://python.langchain.com/docs/how_to/parent_document_retriever/)).
+**When to apply.** When small chunks win at search (for reasons from "lost in the middle"), but the answer needs a wider piece than was found. This removes the main downside of small chunking - narrow context - without losing search precision ([LangChain, ParentDocumentRetriever](https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever)).
 
 **Algorithm (step by step).**
 
@@ -366,12 +366,12 @@ Primary:
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>
 - Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <https://arxiv.org/abs/2409.04701>
-- LangChain. RecursiveCharacterTextSplitter (how-to). <https://python.langchain.com/docs/how_to/recursive_text_splitter/>
-- LangChain. Split by token. <https://python.langchain.com/docs/how_to/split_by_token/>
-- LangChain. MarkdownHeaderTextSplitter. <https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/>
-- LangChain. ParentDocumentRetriever. <https://python.langchain.com/docs/how_to/parent_document_retriever/>
+- LangChain. RecursiveCharacterTextSplitter (how-to). <https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter>
+- LangChain. Split by token. <https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter>
+- LangChain. MarkdownHeaderTextSplitter. <https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter>
+- LangChain. ParentDocumentRetriever. <https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever>
 - OpenAI. tiktoken (tokenizer). <https://github.com/openai/tiktoken>
-- OpenAI. Embeddings guide. <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide. <https://developers.openai.com/api/docs/guides/embeddings>
 - Anthropic. Contextual Retrieval. <https://www.anthropic.com/news/contextual-retrieval>
 
 Secondary (vendor explainer):

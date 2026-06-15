@@ -1563,6 +1563,26 @@ pre.code-block__pre code {
   margin-bottom: 0;
 }
 
+/* ---- long-token overflow safety (structural; no color/size/font) ----
+   Long unbreakable strings -- chiefly full source URLs in prose links and
+   the .sources / .about-recipe lists -- must wrap rather than push the page
+   wider than the viewport. At 320px these caused horizontal page overflow on
+   what-rag / assemble-context / generation / payload-anatomy. Shared here so
+   every section page is covered uniformly (some per-section CSS set this only
+   on .sources, leaving inline prose links and a couple of pages unfixed).
+   overflow-wrap / word-break / min-width are structural, not tokens. */
+.chapter-prose a,
+.chapter-prose .sources a,
+.chapter-prose .about-recipe a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.chapter-prose p,
+.chapter-prose li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* reduced-motion: snap to end state over the SAME DOM (AtlasMD 1.5 / 6) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

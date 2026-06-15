@@ -24,7 +24,7 @@ from anthropic import Anthropic
 client = Anthropic()  # ANTHROPIC_API_KEY iz okruzheniya
 
 resp = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
     max_tokens=512,
     messages=[
         {"role": "user", "content": "Skolko dnej otpuska u sotrudnika na ispytatelnom sroke?"}
@@ -33,7 +33,7 @@ resp = client.messages.create(
 print(resp.content[0].text)  # pravdopodobno, no ne fakt iz VASHEJ politiki
 ```
 
-Форма вызова - реальный Anthropic Messages API ([docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)). Весь остальной рецепт добавляет перед этим вызовом шаг retrieval, чтобы в `content` попал ваш контекст.
+Форма вызова - реальный Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)). Весь остальной рецепт добавляет перед этим вызовом шаг retrieval, чтобы в `content` попал ваш контекст.
 
 ## Что вы получите в конце пути
 
@@ -66,7 +66,7 @@ print(resp.content[0].text)  # pravdopodobno, no ne fakt iz VASHEJ politiki
 ## Источники
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
-- Anthropic. Messages API. [docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)
+- Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
 
 (Технические источники по каждой стадии живут в соответствующих главах: chunking, embedding, vector-store, search, generation, evaluation.)
 

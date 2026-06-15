@@ -188,34 +188,34 @@
     <!-- ===== NO-JS fallback: the worked golden table at a couple of k values,
          so the chapter still teaches precision@k / recall@k with JS off. ===== -->
     <div class="no-js-only">
-      <p class="legend-hint">Каркас прогоняет retrieve на фиксированном золотом наборе и считает precision@k = попаданий в top-k / k и recall@k = попаданий в top-k / всех нужных кусков. Зеленым отмечено попадание в нужные куски, серым - лишнее. Включите JavaScript, чтобы подвигать слайдер k и переключить before/after.</p>
-      <table class="eval-static" aria-label="Золотой набор: top-k и метрики">
+      <p class="legend-hint">The harness runs retrieve on a fixed golden set and computes precision@k = hits in top-k / k and recall@k = hits in top-k / all needed chunks. Green marks a hit on a needed chunk, grey is extra. Enable JavaScript to drag the k slider and toggle before/after.</p>
+      <table class="eval-static" aria-label="Golden set: top-k and metrics">
         <thead>
           <tr>
-            <th scope="col">Вопрос</th>
-            <th scope="col">Нужные куски</th>
-            <th scope="col">Выдано (after, top-5)</th>
+            <th scope="col">Question</th>
+            <th scope="col">Needed chunks</th>
+            <th scope="col">Returned (after, top-5)</th>
             <th scope="col">precision@5</th>
             <th scope="col">recall@5</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Как вернуть товар?</td>
+            <td>How to return an item?</td>
             <td><span class="chip is-hit">policy-12</span> <span class="chip is-hit">policy-13</span></td>
             <td><span class="chip is-hit">policy-12</span> <span class="chip is-hit">policy-13</span> <span class="chip is-miss">faq-07</span> <span class="chip is-miss">policy-12b</span> <span class="chip is-miss">promo-02</span></td>
             <td>2/5 = 0.40</td>
             <td>2/2 = 1.00</td>
           </tr>
           <tr>
-            <td>Сколько дней на возврат?</td>
+            <td>How many days to return?</td>
             <td><span class="chip is-hit">policy-13</span></td>
             <td><span class="chip is-hit">policy-13</span> <span class="chip is-miss">policy-12</span> <span class="chip is-miss">faq-31</span> <span class="chip is-miss">ship-04</span> <span class="chip is-miss">promo-02</span></td>
             <td>1/5 = 0.20</td>
             <td>1/1 = 1.00</td>
           </tr>
           <tr>
-            <td>Можно ли вернуть без чека?</td>
+            <td>Can I return without a receipt?</td>
             <td><span class="chip is-hit">policy-13</span> <span class="chip is-hit">policy-44</span> <span class="chip is-hit">faq-31</span></td>
             <td><span class="chip is-hit">policy-13</span> <span class="chip is-hit">faq-31</span> <span class="chip is-hit">policy-44</span> <span class="chip is-miss">policy-12</span> <span class="chip is-miss">promo-02</span></td>
             <td>3/5 = 0.60</td>
@@ -223,7 +223,7 @@
           </tr>
         </tbody>
       </table>
-      <p class="legend-hint">Высокий precision@5, но низкий recall@5: что выдали - по делу, но часть нужного не дотянулась до top-5. Высокий recall, но низкий precision: нужное есть, но тонет в мусоре, который съедает бюджет токенов на сборке контекста. Поэтому метрики считают парой.</p>
+      <p class="legend-hint">High precision@5 but low recall@5: what came back is on point, but part of what was needed did not reach the top-5. High recall but low precision: the needed piece is there, but it drowns in junk that eats the token budget at context assembly. That is why the metrics are read as a pair.</p>
     </div>
   </section>
 
@@ -298,7 +298,7 @@ print(before, after)</code></pre>
     <section aria-labelledby="pr-quality">
       <h2 id="pr-quality" data-pk="quality.h2">Answer quality</h2>
       <p data-pk="quality.p1">Accurate retrieve does not yet guarantee a good answer: the model may correctly find pieces but answer incompletely, off-topic, or with an added fabrication. Answer quality is measured by another group of metrics.</p>
-      <p data-pk="quality.p2">For RAG, the <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS framework (Es et al., 2023)</a> formalizes them: it proposes <strong>faithfulness</strong> (how grounded the answer is on the returned context - a measure against the hallucinations from the generation chapter), <strong>answer relevance</strong> (whether the answer responds to the actual question), and <strong>context relevance/precision</strong> (how much the returned context relates to the question). RAGAS evaluates these aspects automatically, without manually labelling every answer.</p>
+      <p data-pk="quality.p2">For RAG, the <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS framework (Es et al., 2023)</a> formalizes them: it proposes <strong>faithfulness</strong> (how grounded the answer is on the returned context - a measure against the hallucinations from the generation chapter), <strong>answer relevance</strong> (whether the answer responds to the actual question), and <strong>context relevance</strong> (how much the returned context relates to the question - called <code>context_precision</code> in the ragas library). RAGAS evaluates these aspects automatically, without manually labelling every answer.</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="evaluation-ragas">
         <figcaption class="code-block__cap" data-i18n data-ru="RAGAS: avtomaticheskaja ocenka kachestva otveta - faithfulness, answer relevancy, context precision." data-en="RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.">RAGAS: automated answer-quality evaluation - faithfulness, answer relevancy, context precision.</figcaption>
         <pre><code># pip install ragas datasets

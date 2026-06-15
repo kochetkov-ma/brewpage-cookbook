@@ -29,7 +29,7 @@ RAG как метод - "найти, дополнить, сгенерирова�
 
 Размер чанка можно считать в символах, а можно - в токенах, и это не косметическая разница. Символьный счет прост: длина строки в Python - это `len(text)`, никаких зависимостей. Но настоящий бюджет, в который упирается RAG, измеряется не в символах, а в токенах: и окно контекста модели, и счет за вызов считаются в токенах, а не в символах. Один токен - это в среднем кусок слова, и для разных языков и алфавитов соотношение символов к токенам разное (кириллица обычно дает больше токенов на тот же текст, чем латиница). Поэтому чанк в 1000 символов может неожиданно не влезть в токен-бюджет шага сборки контекста.
 
-Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует `tiktoken` - токенизатор ее моделей ([OpenAI, tiktoken](https://github.com/openai/tiktoken); [OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)); LangChain оборачивает его в `TokenTextSplitter`, который режет по токенам, а не по символам ([LangChain, split by token](https://python.langchain.com/docs/how_to/split_by_token/)). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.
+Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует `tiktoken` - токенизатор ее моделей ([OpenAI, tiktoken](https://github.com/openai/tiktoken); [OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)); LangChain оборачивает его в `TokenTextSplitter`, который режет по токенам, а не по символам ([LangChain, split by token](https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter)). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.
 
 ## Стратегии реза: каталог
 
@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
 ### recursive (separator hierarchy): рез по приоритету разделителей
 
-**Как работает.** Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит `size`. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель из списка. Это стратегия по умолчанию в LangChain `RecursiveCharacterTextSplitter`: она пытается резать по `["\n\n", "\n", " ", ""]` именно в этом порядке, сохраняя абзацы и предложения целыми как можно дольше ([LangChain, RecursiveCharacterTextSplitter](https://python.langchain.com/docs/how_to/recursive_text_splitter/)).
+**Как работает.** Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит `size`. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель из списка. Это стратегия по умолчанию в LangChain `RecursiveCharacterTextSplitter`: она пытается резать по `["\n\n", "\n", " ", ""]` именно в этом порядке, сохраняя абзацы и предложения целыми как можно дольше ([LangChain, RecursiveCharacterTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter)).
 
 **Когда применять.** Универсальный выбор по умолчанию для прозы: дает аккуратные границы (по абзацам и предложениям), но гарантирует, что ни один чанк не превысит лимит. Почти всегда лучше голого fixed-size при той же низкой цене.
 
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         print(n, repr(chunk))
 ```
 
-> Это упрощенная, но рабочая реализация той же идеи, что в LangChain `RecursiveCharacterTextSplitter`. Продакшен-сплиттер добавляет счет по токенам и перекрытие; логика спуска по разделителям - та же ([LangChain, RecursiveCharacterTextSplitter](https://python.langchain.com/docs/how_to/recursive_text_splitter/)).
+> Это упрощенная, но рабочая реализация той же идеи, что в LangChain `RecursiveCharacterTextSplitter`. Продакшен-сплиттер добавляет счет по токенам и перекрытие; логика спуска по разделителям - та же ([LangChain, RecursiveCharacterTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter)).
 
 <!-- IE-BRIEF: element=RecursiveDescentAnim | purpose=Показать рекурсивный спуск по иерархии separators: сначала рез по абзацам, те куски, что не влезли, режутся по предложениям, потом по словам - древовидный спуск | inputs=строка doc с \n\n и предложениями; separators=["\n\n","\n"," ",""]; size=70; из strategy.anim.params в data/chunking.js | host=[data-slot="anim"] внутри level-1 панели стратегии recursive | recipe-path=NET-NEW shared/js/lib/chunk-anim.js mode=recursive (reuses timeline.js; НЕ process-anim.js) | animation=текст показан блоком; уровень 0 - резы по \n\n появляются через scaleY (transform); куски, превысившие size, подсвечиваются opacity и на следующем шаге в них появляются резы следующего separator (спуск на уровень ниже) - визуально как descent по дереву; IO-gated; reduced-motion: сразу показаны все финальные границы с пометкой уровня separator; mobile 390/320: блок сужается, уровни separators маркируются цветом border по theme accent; NO mascot dot -->
 
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         print(n, chunk["heading"], repr(chunk["text"]))
 ```
 
-> Это упрощенная версия идеи LangChain `MarkdownHeaderTextSplitter`: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка, чтобы при поиске было видно, из какой секции пришел фрагмент ([LangChain, MarkdownHeaderTextSplitter](https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/)). Для предложений и AST кода обертка шагов 1-6 та же, меняется только парсер.
+> Это упрощенная версия идеи LangChain `MarkdownHeaderTextSplitter`: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка, чтобы при поиске было видно, из какой секции пришел фрагмент ([LangChain, MarkdownHeaderTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter)). Для предложений и AST кода обертка шагов 1-6 та же, меняется только парсер.
 
 <!-- IE-BRIEF: element=StructureAwareAnim | purpose=Показать, что резы ложатся только на границы предложений/заголовков, никогда не внутри; сравнить с fixed-size, где рез может пасть в середине фразы | inputs=короткий текст с 3-4 предложениями и одним заголовком; границы = позиции концов предложений и заголовка; из strategy.anim.params в data/chunking.js | host=[data-slot="anim"] внутри level-1 панели стратегии structure-aware | recipe-path=NET-NEW shared/js/lib/chunk-anim.js mode=structure (reuses timeline.js; НЕ process-anim.js; defer-candidate если milestone тесный - панель деградирует до алгоритм-шаги + проза) | animation=текст с выделенными предложениями; резы появляются через scaleY (transform) строго на концах предложений/после заголовка; "запрещенные" позиции внутри предложения кратко подсвечиваются opacity и пропускаются; IO-gated; reduced-motion: все структурные границы сразу нарисованы; mobile 390/320: предложения переносятся, границы маркируются на концах; NO mascot dot -->
 
@@ -260,7 +260,7 @@ if __name__ == "__main__":
 
 **Как работает.** Частный, но очень частый случай structure-aware: документ уже размечен заголовками Markdown (`#`, `##`, ...). Режем по заголовкам, каждую секцию делаем чанком, а уровень и текст заголовка кладем в метаданные. Так чанк всегда совпадает с логической секцией, а в метаданных видно его место в иерархии документа.
 
-**Когда применять.** Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру. Метаданные заголовков потом помогают фильтровать и показывать читателю, из какого раздела пришел ответ ([LangChain, MarkdownHeaderTextSplitter](https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/)).
+**Когда применять.** Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру. Метаданные заголовков потом помогают фильтровать и показывать читателю, из какого раздела пришел ответ ([LangChain, MarkdownHeaderTextSplitter](https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter)).
 
 **Алгоритм (пошагово).**
 
@@ -276,7 +276,7 @@ if __name__ == "__main__":
 
 **Как работает.** Разводим единицу поиска и единицу контекста. Документ режется дважды: на мелкие дочерние чанки (точное попадание в запрос) и на крупные родительские (широкий контекст). В векторный индекс кладутся только мелкие чанки, но у каждого хранится ссылка на родителя. На поиске вы находите мелкий чанк, а в контекст модели подкладываете его крупного родителя - так попадание остается точным, а ответ получает окружающий контекст.
 
-**Когда применять.** Когда мелкие чанки выигрывают на поиске (по причинам из "lost in the middle"), но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска ([LangChain, ParentDocumentRetriever](https://python.langchain.com/docs/how_to/parent_document_retriever/)).
+**Когда применять.** Когда мелкие чанки выигрывают на поиске (по причинам из "lost in the middle"), но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска ([LangChain, ParentDocumentRetriever](https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever)).
 
 **Алгоритм (пошагово).**
 
@@ -366,12 +366,12 @@ Primary:
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>
 - Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <https://arxiv.org/abs/2409.04701>
-- LangChain. RecursiveCharacterTextSplitter (how-to). <https://python.langchain.com/docs/how_to/recursive_text_splitter/>
-- LangChain. Split by token. <https://python.langchain.com/docs/how_to/split_by_token/>
-- LangChain. MarkdownHeaderTextSplitter. <https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/>
-- LangChain. ParentDocumentRetriever. <https://python.langchain.com/docs/how_to/parent_document_retriever/>
+- LangChain. RecursiveCharacterTextSplitter (how-to). <https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter>
+- LangChain. Split by token. <https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter>
+- LangChain. MarkdownHeaderTextSplitter. <https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter>
+- LangChain. ParentDocumentRetriever. <https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever>
 - OpenAI. tiktoken (tokenizer). <https://github.com/openai/tiktoken>
-- OpenAI. Embeddings guide. <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide. <https://developers.openai.com/api/docs/guides/embeddings>
 - Anthropic. Contextual Retrieval. <https://www.anthropic.com/news/contextual-retrieval>
 
 Secondary (vendor explainer):

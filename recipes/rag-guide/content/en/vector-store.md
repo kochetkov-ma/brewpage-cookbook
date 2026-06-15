@@ -12,7 +12,7 @@ You have vectors - one per fragment from the previous chapter. When a query arri
 The solution is a vector store: a specialized storage that holds vectors and can quickly find nearest neighbours without comparing the query against the whole archive. Here is what the store step plus search look like using a vector-database client:
 
 ```python
-# pip install pinecone-client openai
+# pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -40,8 +40,8 @@ res = index.query(
     include_metadata=True,
     filter={"section": "vozvrat"},   # metadata filter
 )
-for m in res["matches"]:
-    print(m["id"], round(m["score"], 3), m["metadata"]["section"])
+for m in res.matches:
+    print(m.id, round(m.score, 3), m.metadata["section"])
 ```
 
 The database stores the vectors itself, searches for the nearest itself, and returns the top-k together with their cosine closeness - you do not have to write a scan by hand.

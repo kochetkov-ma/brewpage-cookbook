@@ -106,6 +106,7 @@ export default {
   calc: {
     tokensIn: 1240,
     tokensOut: 320,
+    // Example defaults -- update to your vendor tariff (USD per 1M tokens; see platform.claude.com pricing)
     priceInPerM: 3.0,
     priceOutPerM: 15.0,
     qps: 2,

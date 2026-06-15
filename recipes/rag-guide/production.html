@@ -217,11 +217,11 @@
         <li>The "This is not in the documents" fallback works for cases without context (generation).</li>
       </ul>
       <h2>A worked cost example for one request</h2>
-      <p class="legend-hint">At 1240 input tokens and 320 output tokens, at a rate of $3.00 per 1M input and $15.00 per 1M output tokens:</p>
+      <p class="legend-hint">At 1240 input tokens and 320 output tokens, at a rate of X per 1M input and Y per 1M output tokens (substitute your vendor rate -- see the Anthropic pricing page):</p>
       <ul class="cost-static">
-        <li>input: 1240 / 1 000 000 &times; $3.00 = $0.003720</li>
-        <li>output: 320 / 1 000 000 &times; $15.00 = $0.004800</li>
-        <li><strong>cost per request = $0.008520</strong></li>
+        <li>input: 1240 / 1 000 000 &times; X</li>
+        <li>output: 320 / 1 000 000 &times; Y</li>
+        <li><strong>cost per request = (1240 / 1 000 000 &times; X) + (320 / 1 000 000 &times; Y)</strong></li>
         <li>at 2 requests/s and 30% cache hits, the monthly estimate scales by the number of requests and the share not covered by the cache.</li>
       </ul>
       <p class="legend-hint">Turn on JavaScript to check the checklist and compute the cost on your own numbers.</p>
@@ -256,8 +256,8 @@ app = FastAPI()
 answer_cache = TTLCache(maxsize=10_000, ttl=3600)
 
 # Cena za 1M tokenov - svery'te s pricing vendora pered raschetom.
-PRICE_IN_PER_MTOK = 3.00
-PRICE_OUT_PER_MTOK = 15.00
+PRICE_IN_PER_MTOK = 3.00   # USD/1M -- replace with your vendor rate (see platform.claude.com pricing)
+PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- replace with your vendor rate (see platform.claude.com pricing)
 
 def cost_usd(tokens_in, tokens_out):
     return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK
@@ -283,7 +283,7 @@ def ask(question: str, user=Depends(current_user)):
     return {"answer": answer, "cached": False, "latency_ms": round(latency_ms)}</code></pre>
       <ol class="code-annot-list no-js-only">
         <li><strong>TTL answer cache</strong> -- The same question does not pay for generation twice; the TTL keeps the cache from serving stale content after a data update.</li>
-        <li><strong>Cost calculation</strong> -- Separate price for input and output tokens; check the vendor pricing (for example Anthropic pricing, anthropic.com/pricing). cost_usd sums both addends.</li>
+        <li><strong>Cost calculation</strong> -- Separate price for input and output tokens; check the vendor pricing (for example the Anthropic pricing page, platform.claude.com/docs/en/about-claude/pricing). cost_usd sums both addends.</li>
         <li><strong>Tenant-scoped cache key</strong> -- The cache key includes the user tenant so different tenants' answers never mix; on a hit we return the ready answer with no generation.</li>
         <li><strong>Access at retrieve</strong> -- Access is checked at the retrieve step, not after generation: retrieve takes allowed_filter and physically does not return forbidden chunks. If a chunk made it into the context, assume the user already has access to it.</li>
         <li><strong>Assemble and generate</strong> -- The found chunks are packed into one prompt within the token budget, then generation returns the answer together with token usage for the cost.</li>
@@ -294,7 +294,7 @@ def ask(question: str, user=Depends(current_user)):
 
     <section aria-labelledby="pr-cost">
       <h2 id="pr-cost" data-pk="cost.h2">Speed and cost of a request</h2>
-      <p data-pk="cost.p1">Every request pays for input tokens (instruction + context + question) and output tokens (the answer). The price is computed by the vendor's per-token rate - for example, the public <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">Anthropic pricing</a> sets a separate price for input and output tokens. From here come two levers: less context (the token budget from the context-assembly chapter) and a shorter answer.</p>
+      <p data-pk="cost.p1">Every request pays for input tokens (instruction + context + question) and output tokens (the answer). The price is computed by the vendor's per-token rate - for example, the <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">Anthropic pricing page</a> sets a separate price for input and output tokens. From here come two levers: less context (the token budget from the context-assembly chapter) and a shorter answer.</p>
       <p data-pk="cost.p2">The third lever is the <strong>cache</strong>. Identical questions should not pay for generation again; the <code>TTLCache</code> above returns a ready answer, while the TTL keeps the cache from serving stale content after a data update. Separately, a cache of the query embedding removes a repeat call to the embedder on the same text.</p>
       <p data-pk="cost.p3">Latency consists of two parts: the index search (usually milliseconds, see ANN in the vector-store chapter) and generation (the longest part). Streaming from the generation chapter does not reduce the total time, but it sharply cuts the perceived wait - the user sees the first tokens right away.</p>
     </section>
@@ -336,7 +336,7 @@ def ask(question: str, user=Depends(current_user)):
       <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
         <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
-        <li data-pk="sources.li2">Anthropic. Pricing (price per input/output tokens). <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">anthropic.com/pricing</a></li>
+        <li data-pk="sources.li2">Anthropic. Pricing (price per input/output tokens). <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">platform.claude.com pricing</a></li>
         <li data-pk="sources.li3">Pinecone. Metadata filtering (access via metadata). <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">docs.pinecone.io</a></li>
       </ul>
     </section>

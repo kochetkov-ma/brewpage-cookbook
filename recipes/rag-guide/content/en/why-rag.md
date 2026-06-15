@@ -8,7 +8,7 @@
 
 ## The problem: the model goes stale and does not know yours
 
-An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model ([docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.
+An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.
 
 RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:
 
@@ -28,7 +28,7 @@ def ask(context=None):
     else:
         prompt = question
     r = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -42,13 +42,13 @@ retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac
 print("S RAG: ", ask(context=retrieved))
 ```
 
-Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API ([docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)).
+Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).
 
 ## Why an ordinary model cannot cope
 
 Two reasons, both structural rather than "you asked badly":
 
-- **Training cutoff.** After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview ([docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)).
+- **Training cutoff.** After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)).
 - **No private data.** Your internal documents were not and will not be in the public training corpus, so any answer about them without retrieval is a guess.
 
 ## Fresh and private data without retraining
@@ -61,7 +61,7 @@ When the model answers from the supplied context, the answer is grounded on conc
 
 ## Cost: RAG versus fine-tuning
 
-Fine-tuning requires collecting a dataset, running training, and repeating that at every data update - a separate cycle of work and expense ([platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)). RAG, by contrast, adds one retrieval step before an ordinary model call and indexes new documents incrementally. When the task is to give the model FACTS that change often, RAG is usually cheaper and faster to maintain; fine-tuning stays for tasks of FORM and style. (This is an engineering trade-off, not an absolute: do the math on your own volumes - see the production chapter.)
+Fine-tuning requires collecting a dataset, running training, and repeating that at every data update - a separate cycle of work and expense ([developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)). RAG, by contrast, adds one retrieval step before an ordinary model call and indexes new documents incrementally. When the task is to give the model FACTS that change often, RAG is usually cheaper and faster to maintain; fine-tuning stays for tasks of FORM and style. (This is an engineering trade-off, not an absolute: do the math on your own volumes - see the production chapter.)
 
 Below is an interactive two-track trace of one request. **Track A (without RAG):** the request goes straight to the model -> a stale or fabricated answer. **Track B (with RAG):** the request first fills the context box with the retrieved chunks, and only AFTER that does the grounded answer appear. The main path is Track B; some nodes open by drill (semantic-zoom camera) into detail. The grounded green answer is never drawn before retrieval is complete - that is the didactic meaning of the motion. With JS off, both tracks are shown as a static inline-SVG schematic with the full text.
 
@@ -71,9 +71,9 @@ Below is an interactive two-track trace of one request. **Track A (without RAG):
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)
-- Anthropic. Models overview (model families, training cutoff). [docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)
-- Anthropic. Messages API. [docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)
-- OpenAI. Fine-tuning guide (cost/lifecycle contrast). [platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)
+- Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
+- OpenAI. Fine-tuning guide (cost/lifecycle contrast). [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)
 
 ## Try it yourself
 

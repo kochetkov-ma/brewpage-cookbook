@@ -9,10 +9,10 @@
 
 Пользователь спрашивает: "как вернуть деньги за покупку". А в ваших документах нужный фрагмент называется "политика возврата средств" - ни слова "деньги", ни слова "вернуть" в нем нет. Полнотекстовый поиск по ключевым словам здесь промахнется: общих слов почти нет, а ответ лежит именно в этом фрагменте.
 
-Решение - поиск по смыслу (semantic search): запрос превращаем в вектор той же моделью, что и фрагменты, и ищем в индексе top-k фрагментов (top-k - несколько самых близких, обычно 3..10), ближайших к нему по косинусной близости (cosine - косинус угла между векторами, чем он ближе к 1, тем ближе смысл) ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). Этот шаг собирает все предыдущие в один живой запрос:
+Решение - поиск по смыслу (semantic search): запрос превращаем в вектор той же моделью, что и фрагменты, и ищем в индексе top-k фрагментов (top-k - несколько самых близких, обычно 3..10), ближайших к нему по косинусной близости (cosine - косинус угла между векторами, чем он ближе к 1, тем ближе смысл) ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). Этот шаг собирает все предыдущие в один живой запрос:
 
 ```python
-# pip install pinecone-client openai
+# pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -26,8 +26,8 @@ def retrieve(query, k=3):
     ).data[0].embedding
     # 2. top-k blizhajshih po cosine
     res = index.query(vector=qvec, top_k=k, include_metadata=True)
-    return [(m["id"], round(m["score"], 3), m["metadata"]["text"])
-            for m in res["matches"]]
+    return [(m.id, round(m.score, 3), m.metadata["text"])
+            for m in res.matches]
 
 for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
     print(cid, score, text[:40])
@@ -44,7 +44,7 @@ for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
 
 ## Запрос -> вектор запроса
 
-Первый шаг живого поиска - превратить текст запроса в вектор той же моделью эмбеддингов, что использовалась для фрагментов ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). Это критично: если запрос превратить в вектор одной моделью, а фрагменты - другой, они окажутся в разных пространствах, и косинусная близость между ними ничего не будет значить. В коде выше это шаг 1 в функции `retrieve`.
+Первый шаг живого поиска - превратить текст запроса в вектор той же моделью эмбеддингов, что использовалась для фрагментов ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). Это критично: если запрос превратить в вектор одной моделью, а фрагменты - другой, они окажутся в разных пространствах, и косинусная близость между ними ничего не будет значить. В коде выше это шаг 1 в функции `retrieve`.
 
 ## Top-k ближайших по косинусу
 
@@ -65,7 +65,7 @@ Top-k из векторного поиска - хорошая первая вы�
 
 ## Источники
 
-- OpenAI. Embeddings guide (вектор запроса, cosine similarity). <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide (вектор запроса, cosine similarity). <https://developers.openai.com/api/docs/guides/embeddings>
 - Reimers & Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- против cross-encoder). <https://arxiv.org/abs/1908.10084>
 - Malkov & Yashunin, 2016. Efficient and robust ANN search using Hierarchical Navigable Small World graphs. <https://arxiv.org/abs/1603.09320>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>

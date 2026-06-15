@@ -33,7 +33,7 @@ SYSTEM = (
 
 def generate(prompt: str):
     resp = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -46,7 +46,7 @@ def generate(prompt: str):
 def generate_stream(prompt: str):
     # Streaming: tokeny pribyvayut po mere generacii - menshe ozhidanie.
     with client.messages.stream(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
         max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
@@ -55,7 +55,7 @@ def generate_stream(prompt: str):
             yield text
 ```
 
-Модель и форма вызова - по [Anthropic Messages API](https://docs.anthropic.com/en/api/messages); имя модели при запуске сверьте с [Models overview](https://docs.anthropic.com/en/docs/about-claude/models). Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.
+Модель и форма вызова - по [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); имя модели при запуске сверьте с [Models overview](https://platform.claude.com/docs/en/docs/about-claude/models). Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.
 
 ## Инструкции: отвечай только по контексту
 
@@ -79,7 +79,7 @@ RAG снижает галлюцинации, подкладывая провер
 
 Тон и формат задаются в той же инструкции: "отвечай кратко списком", "верни JSON с полями answer и sources". Формат - часть контракта с вашим UI.
 
-Стриминг улучшает восприятие: вместо ожидания целого ответа токены прибывают по мере генерации, и пользователь видит текст сразу. Anthropic Messages API отдает поток через server-sent events ([Anthropic streaming](https://docs.anthropic.com/en/api/messages-streaming)); функция `generate_stream` выше именно это и делает. Важно для заземления: зеленый "готовый" ответ в UI не показываем как финальный, пока генерация не завершилась и цитаты не проверили - частичный текст может еще дописать источник.
+Стриминг улучшает восприятие: вместо ожидания целого ответа токены прибывают по мере генерации, и пользователь видит текст сразу. Anthropic Messages API отдает поток через server-sent events ([Anthropic streaming](https://platform.claude.com/docs/en/api/messages-streaming)); функция `generate_stream` выше именно это и делает. Важно для заземления: зеленый "готовый" ответ в UI не показываем как финальный, пока генерация не завершилась и цитаты не проверили - частичный текст может еще дописать источник.
 
 <!-- IE-BRIEF: element=grounded-answer-reveal | purpose=показать что каждое утверждение ответа построено ИЗ конкретного чанка и заземлено на нем; ответ появляется только по мере завершения заземления, не pre-painted | inputs=NET-NEW default-export shared/data/generation.js { contextChunks:[{id,source,text}], answer:"...[source:c1]...", claims:[{text,chunkId}], noContext:bool } ([source] маркеры в ответе связывают claims с чанками) | host=[data-component="drilldown-host"] (slots stage/crumbs/zoomout/panel); grounded-answer-reveal монтируется как level-1 panel content | recipe-path=shared/js/lib/drilldown-zoom.js (shipped камера, zoom в связь утверждение<->chunk) + NET-NEW shared/js/lib/grounded-answer.js на timeline.js (пошаговое построение ответа по цитатам) | animation=каждое утверждение ответа проявляется после того как его chunk-источник подсветился (линия связи рисуется gated stroke-dashoffset); зеленый акцент заземления загорается только когда цитата сопоставлена; no-context кейс показывает fallback "Этого нет в документах" без зеленого; transform/opacity only, IO-gated, reduced-motion сразу показывает final с нарисованными связями; mobile 390/320 ответ и чанки stack; NO mascot dot -->
 
@@ -89,9 +89,9 @@ RAG снижает галлюцинации, подкладывая провер
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <https://arxiv.org/abs/2202.03629>
-- Anthropic. Messages API. <https://docs.anthropic.com/en/api/messages>
-- Anthropic. Streaming Messages. <https://docs.anthropic.com/en/api/messages-streaming>
-- Anthropic. Models overview. <https://docs.anthropic.com/en/docs/about-claude/models>
+- Anthropic. Messages API. <https://platform.claude.com/docs/en/api/messages>
+- Anthropic. Streaming Messages. <https://platform.claude.com/docs/en/api/messages-streaming>
+- Anthropic. Models overview. <https://platform.claude.com/docs/en/docs/about-claude/models>
 
 ## Попробуйте сами
 

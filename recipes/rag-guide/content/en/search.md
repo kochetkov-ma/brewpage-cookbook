@@ -9,10 +9,10 @@
 
 The user asks: "how to get my money back for a purchase". But in your documents the relevant fragment is called "refund policy" - not a single word "money" or "back" appears in it. A full-text keyword search will miss here: there are almost no shared words, yet the answer lies in exactly this fragment.
 
-The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). This step gathers all the previous ones into one live request:
+The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). This step gathers all the previous ones into one live request:
 
 ```python
-# pip install pinecone-client openai
+# pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -26,8 +26,8 @@ def retrieve(query, k=3):
     ).data[0].embedding
     # 2. top-k nearest by cosine
     res = index.query(vector=qvec, top_k=k, include_metadata=True)
-    return [(m["id"], round(m["score"], 3), m["metadata"]["text"])
-            for m in res["matches"]]
+    return [(m.id, round(m.score, 3), m.metadata["text"])
+            for m in res.matches]
 
 for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
     print(cid, score, text[:40])
@@ -44,7 +44,7 @@ A classic keyword search finds documents where the same words as in the query ap
 
 ## Query -> query vector
 
-The first step of live search is to turn the query text into a vector with the same embedding model that was used for the fragments ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). This is critical: if you embed the query with one model and the fragments with another, they end up in different spaces, and the cosine closeness between them means nothing. In the code above this is step 1 in the `retrieve` function.
+The first step of live search is to turn the query text into a vector with the same embedding model that was used for the fragments ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). This is critical: if you embed the query with one model and the fragments with another, they end up in different spaces, and the cosine closeness between them means nothing. In the code above this is step 1 in the `retrieve` function.
 
 ## Top-k nearest by cosine
 
@@ -65,7 +65,7 @@ After the search, the model gets not the whole archive but only the top-k found 
 
 ## Sources
 
-- OpenAI. Embeddings guide (query vector, cosine similarity). <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide (query vector, cosine similarity). <https://developers.openai.com/api/docs/guides/embeddings>
 - Reimers & Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- vs cross-encoder). <https://arxiv.org/abs/1908.10084>
 - Malkov & Yashunin, 2016. Efficient and robust ANN search using Hierarchical Navigable Small World graphs. <https://arxiv.org/abs/1603.09320>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>

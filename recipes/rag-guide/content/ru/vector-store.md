@@ -12,7 +12,7 @@
 Решение - векторная база (vector store): специальное хранилище, которое держит векторы и умеет быстро находить ближайших соседей, не сравнивая запрос со всем архивом. Вот как выглядит шаг store плюс поиск на примере клиента векторной базы:
 
 ```python
-# pip install pinecone-client openai
+# pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -40,8 +40,8 @@ res = index.query(
     include_metadata=True,
     filter={"section": "vozvrat"},   # metadata-fil'tr
 )
-for m in res["matches"]:
-    print(m["id"], round(m["score"], 3), m["metadata"]["section"])
+for m in res.matches:
+    print(m.id, round(m.score, 3), m.metadata["section"])
 ```
 
 База сама хранит векторы, сама ищет ближайших и возвращает top-k вместе с их косинусной близостью - вам не нужно писать перебор руками.

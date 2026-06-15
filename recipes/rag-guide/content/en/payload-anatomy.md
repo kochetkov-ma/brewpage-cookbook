@@ -11,11 +11,11 @@
 
 You walked the whole route - chunks, embeddings, search, context assembly, generation. Each chapter showed its stage in isolation. But in a live system they all converge into one thing: an HTTP request to the LLM and a response from it. This is ordinary JSON. And until you see this JSON in full, with every field in its place, RAG stays a set of separate ideas rather than one mechanism.
 
-Here we take apart one real exchange with the model: the request you send and the response that comes back. The fields are real - this is the format of the Anthropic Messages API (<https://docs.anthropic.com/en/api/messages>). Each functional block is labelled twice: what it does technically and what role it plays in the RAG pipeline. This is that same retrieve-augment-generate assembly from the paper Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), but no longer on a diagram - in the bytes that go over the wire.
+Here we take apart one real exchange with the model: the request you send and the response that comes back. The fields are real - this is the format of the Anthropic Messages API (<https://platform.claude.com/docs/en/api/messages>). Each functional block is labelled twice: what it does technically and what role it plays in the RAG pipeline. This is that same retrieve-augment-generate assembly from the paper Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), but no longer on a diagram - in the bytes that go over the wire.
 
 ## One payload through the whole pipeline
 
-A RAG request to the Anthropic Messages API is arranged like this: you put the grounding instructions in `system`, the assembled context and the question in `messages`, and you express the search itself as a tool call (`tools` plus `tool_choice`) (<https://docs.anthropic.com/en/api/messages>). The model answers not with a single text but with an array of `content` blocks: reasoning (`thinking`), a search request (`tool_use`), and the final text. The `stop_reason` field tells why the model stopped, and `usage` - how many tokens it cost (<https://docs.anthropic.com/en/api/messages>).
+A RAG request to the Anthropic Messages API is arranged like this: you put the grounding instructions in `system`, the assembled context and the question in `messages`, and you express the search itself as a tool call (`tools` plus `tool_choice`) (<https://platform.claude.com/docs/en/api/messages>). The model answers not with a single text but with an array of `content` blocks: reasoning (`thinking`), a search request (`tool_use`), and the final text. The `stop_reason` field tells why the model stopped, and `usage` - how many tokens it cost (<https://platform.claude.com/docs/en/api/messages>).
 
 Below is a real exchange of three turns: you send the question with a description of the search tool, the model asks to call the search (`tool_use`), you return the found chunks (`tool_result`), the model writes a grounded answer.
 
@@ -23,8 +23,8 @@ Below is a real exchange of three turns: you send the question with a descriptio
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
-  "max_tokens": 1024,
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 4096,
   "thinking": {
     "type": "enabled",
     "budget_tokens": 2048
@@ -54,7 +54,7 @@ Below is a real exchange of three turns: you send the question with a descriptio
 }
 ```
 
-`system` is the grounding layer: a firm instruction to answer only from what was found and to honestly admit a gap (<https://docs.anthropic.com/en/api/messages>). In RAG terms this is exactly the instruction of the generation stage from generation.html. `tools` describes search as a function the model can call - this is the declaration of the retrieve step from the paper Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), expressed in the tool-use schema (<https://docs.anthropic.com/en/api/tool-use>). `tool_choice: auto` leaves the model to decide whether search is needed (<https://docs.anthropic.com/en/api/tool-use>). `thinking` enables extended reasoning with a token budget (<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>).
+`system` is the grounding layer: a firm instruction to answer only from what was found and to honestly admit a gap (<https://platform.claude.com/docs/en/api/messages>). In RAG terms this is exactly the instruction of the generation stage from generation.html. `tools` describes search as a function the model can call - this is the declaration of the retrieve step from the paper Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>), expressed in the tool-use schema (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `tool_choice: auto` leaves the model to decide whether search is needed (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `thinking` enables extended reasoning with a token budget (<https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>).
 
 ### Turn 2. Response: the model reasons and asks to call the search
 
@@ -63,7 +63,7 @@ Below is a real exchange of three turns: you send the question with a descriptio
   "id": "msg_01XAbc...",
   "type": "message",
   "role": "assistant",
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "content": [
     {
       "type": "thinking",
@@ -89,15 +89,15 @@ Below is a real exchange of three turns: you send the question with a descriptio
 }
 ```
 
-The `thinking` block is the model's reasoning before acting; in RAG this is the visible plan of the retrieve stage, not the final answer (<https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>). The `tool_use` block is exactly the search request: the model asks to call `search_docs` with a concrete `query` and `top_k` (<https://docs.anthropic.com/en/api/tool-use>). `stop_reason: tool_use` is a control signal: the model stopped not because it finished but because it is waiting for the tool result; your code must run the search and return the result (<https://docs.anthropic.com/en/api/messages>). `usage` is a budget and cost signal: `input_tokens` and `output_tokens` for this turn (<https://docs.anthropic.com/en/api/messages>); in RAG a bloated `input_tokens` is the first sign that the assembled context is too large (see assemble-context.html).
+The `thinking` block is the model's reasoning before acting; in RAG this is the visible plan of the retrieve stage, not the final answer (<https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>). The `tool_use` block is exactly the search request: the model asks to call `search_docs` with a concrete `query` and `top_k` (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). `stop_reason: tool_use` is a control signal: the model stopped not because it finished but because it is waiting for the tool result; your code must run the search and return the result (<https://platform.claude.com/docs/en/api/messages>). `usage` is a budget and cost signal: `input_tokens` and `output_tokens` for this turn (<https://platform.claude.com/docs/en/api/messages>); in RAG a bloated `input_tokens` is the first sign that the assembled context is too large (see assemble-context.html).
 
 ### Turn 3. Request with tool_result: returning the found chunks
 
-Your code runs the search (the retrieve stage: query -> vector -> top-k by cosine, as in search.html), then continues the same conversation, appending the assistant's response and a `tool_result` block with the found chunks. The vector shape and the cosine metric are from the OpenAI Embeddings guide (<https://platform.openai.com/docs/guides/embeddings>).
+Your code runs the search (the retrieve stage: query -> vector -> top-k by cosine, as in search.html), then continues the same conversation, appending the assistant's response and a `tool_result` block with the found chunks. The vector shape and the cosine metric are from the OpenAI Embeddings guide (<https://developers.openai.com/api/docs/guides/embeddings>).
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "max_tokens": 1024,
   "system": "Ty pomoshchnik podderzhki. Otvechaj TOL'KO po tekstu, kotoryj vernul instrument search_docs. Esli otveta v najdennyh kuskah net, chestno skazhi: etogo net v dokumentah. Ukazyvaj istochnik kazhdogo fakta po polyu source.",
   "tools": [
@@ -129,7 +129,7 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
 }
 ```
 
-`tool_result` is the return of the retrieve stage into the conversation: linked to the request by `tool_use_id`, carrying the found chunks as text (<https://docs.anthropic.com/en/api/tool-use>). Inside each chunk are pipeline-stage metadata: `source`/`section`/`date` come from chunking (chunking.html), while `cosine`/`rank` come from search (search.html, the cosine metric per the OpenAI Embeddings guide, <https://platform.openai.com/docs/guides/embeddings>). This block is exactly the Augmented step from Lewis et al., 2020: what was found is slipped into the model's context before generation (<https://arxiv.org/abs/2005.11401>).
+`tool_result` is the return of the retrieve stage into the conversation: linked to the request by `tool_use_id`, carrying the found chunks as text (<https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>). Inside each chunk are pipeline-stage metadata: `source`/`section`/`date` come from chunking (chunking.html), while `cosine`/`rank` come from search (search.html, the cosine metric per the OpenAI Embeddings guide, <https://developers.openai.com/api/docs/guides/embeddings>). This block is exactly the Augmented step from Lewis et al., 2020: what was found is slipped into the model's context before generation (<https://arxiv.org/abs/2005.11401>).
 
 ### Turn 4 (final answer). The model's grounded answer
 
@@ -138,7 +138,7 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
   "id": "msg_01YDef...",
   "type": "message",
   "role": "assistant",
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-4-6",
   "content": [
     {
       "type": "text",
@@ -154,7 +154,7 @@ Your code runs the search (the retrieve stage: query -> vector -> top-k by cosin
 }
 ```
 
-Here `content` is one `text` block: the final grounded answer with a link to `source`, as the instruction in `system` required. This is the Generation stage from Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>); the link to the concrete fields is described in generation.html. `stop_reason: end_turn` is a control signal that the model finished on its own, not because of a limit (<https://docs.anthropic.com/en/api/messages>). `usage.input_tokens` grew from 412 to 638 - this is the price of the supplied context: that same budget signal by which assemble-context.html decides what to trim.
+Here `content` is one `text` block: the final grounded answer with a link to `source`, as the instruction in `system` required. This is the Generation stage from Lewis et al., 2020 (<https://arxiv.org/abs/2005.11401>); the link to the concrete fields is described in generation.html. `stop_reason: end_turn` is a control signal that the model finished on its own, not because of a limit (<https://platform.claude.com/docs/en/api/messages>). `usage.input_tokens` grew from 412 to 638 - this is the price of the supplied context: that same budget signal by which assemble-context.html decides what to trim.
 
 ## A map of the blocks: function and role in RAG
 
@@ -190,11 +190,11 @@ With JS off, the block map works as the static labelled table above plus the JSO
 
 ## Sources
 
-- Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <https://docs.anthropic.com/en/api/messages>
-- Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <https://docs.anthropic.com/en/api/tool-use>
-- Anthropic. Extended thinking (thinking blocks, budget_tokens). <https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking>
+- Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <https://platform.claude.com/docs/en/api/messages>
+- Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview>
+- Anthropic. Extended thinking (thinking blocks, budget_tokens). <https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking>
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
-- OpenAI. Embeddings guide (vector shape, cosine similarity). <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide (vector shape, cosine similarity). <https://developers.openai.com/api/docs/guides/embeddings>
 
 ## Try it yourself
 

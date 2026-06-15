@@ -27,8 +27,8 @@ app = FastAPI()
 answer_cache = TTLCache(maxsize=10_000, ttl=3600)
 
 # Price per 1M tokens - check against the vendor pricing before you compute.
-PRICE_IN_PER_MTOK = 3.00
-PRICE_OUT_PER_MTOK = 15.00
+PRICE_IN_PER_MTOK = 3.00   # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)
+PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- replace with your vendor rate (see the Anthropic pricing page)
 
 def cost_usd(tokens_in, tokens_out):
     return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK
@@ -56,7 +56,7 @@ def ask(question: str, user=Depends(current_user)):
 
 ## Speed and cost of a request
 
-Every request pays for input tokens (instruction + context + question) and output tokens (the answer). The price is computed by the vendor's per-token rate - for example, the public [Anthropic pricing](https://www.anthropic.com/pricing) sets a separate price for input and output tokens. From here come two levers: less context (the token budget from the context-assembly chapter) and a shorter answer.
+Every request pays for input tokens (instruction + context + question) and output tokens (the answer). The price is computed by the vendor's per-token rate - for example, the public [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing) sets a separate price for input and output tokens. From here come two levers: less context (the token budget from the context-assembly chapter) and a shorter answer.
 
 The third lever is the **cache**. Identical questions should not pay for generation again; the `TTLCache` above returns a ready answer, while the TTL keeps the cache from serving stale content after a data update. Separately, a cache of the query embedding removes a repeat call to the embedder on the same text.
 
@@ -98,7 +98,7 @@ In the static (no-JS) view, the host shows the whole checklist as a prose list (
 ## Sources
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
-- Anthropic. Pricing (price per input/output tokens). <https://www.anthropic.com/pricing>
+- Anthropic. Pricing (price per input/output tokens). <https://platform.claude.com/docs/en/about-claude/pricing>
 - Pinecone. Metadata filtering (access via metadata). <https://docs.pinecone.io/guides/index-data/indexing-overview#metadata>
 
 ## Try it yourself

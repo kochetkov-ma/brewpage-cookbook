@@ -9,7 +9,7 @@
 
 You have fragments - pieces of text from the previous chapter. The user's question is text too, but in different words: "how to get my money back" versus the fragment "refund policy". String comparison does not work here: they have almost no words in common, yet the meaning is the same. You need a way to search by meaning, not by letters.
 
-The solution is the embedding: turn each fragment into a vector, a numeric code of its meaning, where the closeness of vectors reflects the closeness of meaning ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). This is the second step of the pipeline: after the document is cut into fragments, each fragment is turned into a vector once, and from there the vectors go into the index.
+The solution is the embedding: turn each fragment into a vector, a numeric code of its meaning, where the closeness of vectors reflects the closeness of meaning ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). This is the second step of the pipeline: after the document is cut into fragments, each fragment is turned into a vector once, and from there the vectors go into the index.
 
 Here is the whole step at once - the real API call that turns a list of fragments into a list of vectors:
 
@@ -40,7 +40,7 @@ After this you have three vectors of length 1536 - one per fragment. There is no
 
 ## What a vector is here
 
-A vector is an ordered list of numbers of fixed length `dim`. The embedding model maps text into a point in a `dim`-dimensional space so that texts of similar meaning end up near each other. For example, OpenAI's `text-embedding-3-small` produces vectors of length 1536 ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). That is exactly why every vector in `worked-example.json` carries `dim: 1536`.
+A vector is an ordered list of numbers of fixed length `dim`. The embedding model maps text into a point in a `dim`-dimensional space so that texts of similar meaning end up near each other. For example, OpenAI's `text-embedding-3-small` produces vectors of length 1536 ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). That is exactly why every vector in `worked-example.json` carries `dim: 1536`.
 
 The dimensionality is not a random number: the model sets it, and it is the same for all vectors of one model. You cannot mix vectors from different models - they live in different spaces, and comparing them is meaningless.
 
@@ -50,9 +50,9 @@ Important: the numbers in the `values` field of the live example are short stubs
 
 ## Why vector closeness = closeness of meaning
 
-Once fragments have become vectors, "similarity" is measured geometrically - most often via cosine similarity, the cosine of the angle between vectors ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). The smaller the angle, the closer the meaning. The cosine value lies in the range from -1 to 1; for text embeddings, in practice the range of roughly 0..1 applies, where 1 is a match of meaning and around 0 means the texts are about different things.
+Once fragments have become vectors, "similarity" is measured geometrically - most often via cosine similarity, the cosine of the angle between vectors ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). The smaller the angle, the closer the meaning. The cosine value lies in the range from -1 to 1; for text embeddings, in practice the range of roughly 0..1 applies, where 1 is a match of meaning and around 0 means the texts are about different things.
 
-Why 0..1 rather than the full range from -1 to 1: text embeddings are usually normalized by length (L2 normalization) - each vector is brought to unit length ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)). For normalized vectors the cosine coincides with the dot product, so ranking by dot product is the same as ranking by cosine, but cheaper: you do not need to divide by the norms, which already equal one.
+Why 0..1 rather than the full range from -1 to 1: text embeddings are usually normalized by length (L2 normalization) - each vector is brought to unit length ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)). For normalized vectors the cosine coincides with the dot product, so ranking by dot product is the same as ranking by cosine, but cheaper: you do not need to divide by the norms, which already equal one.
 
 Here is how the cosine similarity of two vectors is computed by hand - without libraries, so the formula is visible:
 
@@ -92,7 +92,7 @@ An important fact: for vectors normalized to unit length, all three metrics rank
 
 ## Sparse, dense, and hybrid vectors
 
-Embeddings from a transformer are **dense** vectors: all 1536 components are filled with numbers, and each encodes part of the meaning ([Reimers & Gurevych, 2019, Sentence-BERT](https://arxiv.org/abs/1908.10084)). They contrast with **sparse** representations like TF-IDF or BM25, where the vector is a set of weights over the vocabulary and almost all components are zero. Sparse search still wins on exact term matches and rare tokens (SKUs, names, codes), where the literal word matters ([Robertson & Zaragoza, 2009, BM25](https://www.nowpublishers.com/article/Details/INR-019)). That is why in practice people often use **hybrid retrieval**: sparse (BM25) and dense are combined to catch both exact terms and meaning.
+Embeddings from a transformer are **dense** vectors: all 1536 components are filled with numbers, and each encodes part of the meaning ([Reimers & Gurevych, 2019, Sentence-BERT](https://arxiv.org/abs/1908.10084)). They contrast with **sparse** representations like TF-IDF or BM25, where the vector is a set of weights over the vocabulary and almost all components are zero. Sparse search still wins on exact term matches and rare tokens (SKUs, names, codes), where the literal word matters ([Robertson & Zaragoza, 2009, BM25](https://nlp.stanford.edu/IR-book/)). That is why in practice people often use **hybrid retrieval**: sparse (BM25) and dense are combined to catch both exact terms and meaning.
 
 ## Extra: what else embeddings can do
 
@@ -105,7 +105,7 @@ Embeddings from a transformer are **dense** vectors: all 1536 components are fil
 
 The embedding model is a choice that directly determines search quality:
 
-- **Dimensionality.** A larger `dim` usually means more accuracy, but more expensive storage and slower search. `text-embedding-3-small` gives 1536 components; some models let you trim the dimensionality to save resources ([OpenAI Embeddings guide](https://platform.openai.com/docs/guides/embeddings)).
+- **Dimensionality.** A larger `dim` usually means more accuracy, but more expensive storage and slower search. `text-embedding-3-small` gives 1536 components; some models let you trim the dimensionality to save resources ([OpenAI Embeddings guide](https://developers.openai.com/api/docs/guides/embeddings)).
 - **Language and domain.** The model must understand the language and terminology of your documents. General models are good broadly; a narrow domain sometimes requires a specially trained model.
 - **Model drift.** If you change the embedding model, all the old vectors in the index become incompatible with the new ones - they must be recomputed entirely. Vectors from different models cannot be compared with one another.
 
@@ -119,9 +119,9 @@ After step `s3` (store) the vectors go into the index - that is the next stage o
 
 ## Sources
 
-- OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2 normalization to unit length, the dimensions parameter). <https://platform.openai.com/docs/guides/embeddings>
+- OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2 normalization to unit length, the dimensions parameter). <https://developers.openai.com/api/docs/guides/embeddings>
 - Reimers & Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. <https://arxiv.org/abs/1908.10084>
-- Robertson & Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <https://www.nowpublishers.com/article/Details/INR-019>
+- Robertson & Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <https://nlp.stanford.edu/IR-book/>
 - Kusupati et al., 2022. Matryoshka Representation Learning. <https://arxiv.org/abs/2205.13147>
 - Wang et al., 2022. Text Embeddings by Weakly-Supervised Contrastive Pre-training (E5). <https://arxiv.org/abs/2212.03533>
 - Reimers & Gurevych, 2020. Making Monolingual Sentence Embeddings Multilingual using Knowledge Distillation. <https://arxiv.org/abs/2004.09813>

@@ -279,25 +279,25 @@
 
     <!-- ============ NO-JS fallback: static labelled plot data + kNN list ============ -->
     <div class="no-js-only">
-      <p class="legend-hint">Включите JavaScript, чтобы открыть интерактивную карту: точки, косинусные кольца, семантический зум.</p>
+      <p class="legend-hint">Enable JavaScript to open the interactive map: points, cosine rings, semantic zoom. Below is the same query and top-k, static.</p>
       <div class="card static-card">
-        <h2 class="static-card__head">Запрос</h2>
-        <p class="qline">"Сколько дней отпуска в году?" -> поисковый вектор (dim 1536), сравнение по косинусу, k = 3.</p>
+        <h2 class="static-card__head">Query</h2>
+        <p class="qline">"how many vacation days per year?" -> query vector (dim 1536), comparison by cosine, k = 3.</p>
       </div>
       <div class="card static-card">
-        <h2 class="static-card__head">kNN - ранжирование по косинусу (k = 3)</h2>
+        <h2 class="static-card__head">kNN - ranking by cosine (k = 3)</h2>
         <ol class="ranklist ranklist--static">
-          <li class="near shown"><span class="rk">#1</span><span class="rtxt">ежегодный оплачиваемый отдых - 28 дней</span><span class="rcos">0.92</span></li>
-          <li class="near shown"><span class="rk">#2</span><span class="rtxt">дни отдыха можно перенести</span><span class="rcos">0.86</span></li>
-          <li class="near shown"><span class="rk">#3</span><span class="rtxt">отгулы за переработку</span><span class="rcos">0.74</span></li>
+          <li class="near shown"><span class="rk">#1</span><span class="rtxt">annual paid leave - 28 days</span><span class="rcos">0.92</span></li>
+          <li class="near shown"><span class="rk">#2</span><span class="rtxt">rest days may be carried over</span><span class="rcos">0.86</span></li>
+          <li class="near shown"><span class="rk">#3</span><span class="rtxt">time off in lieu for overtime</span><span class="rcos">0.74</span></li>
         </ol>
-        <div class="cut">граница top-k</div>
+        <div class="cut">top-k boundary</div>
         <ol class="ranklist ranklist--static">
-          <li class="far shown"><span class="rk">#4</span><span class="rtxt">командировочные расходы</span><span class="rcos">0.21</span></li>
-          <li class="far shown"><span class="rk">#5</span><span class="rtxt">оплата проезда</span><span class="rcos">0.19</span></li>
-          <li class="far shown"><span class="rk">#6</span><span class="rtxt">пропуск на вход в офис</span><span class="rcos">0.14</span></li>
+          <li class="far shown"><span class="rk">#4</span><span class="rtxt">business travel expenses</span><span class="rcos">0.21</span></li>
+          <li class="far shown"><span class="rk">#5</span><span class="rtxt">transport reimbursement</span><span class="rcos">0.19</span></li>
+          <li class="far shown"><span class="rk">#6</span><span class="rtxt">office entry pass</span><span class="rcos">0.14</span></li>
         </ol>
-        <p class="meta static-card__meta">Поиск по словам пропустил бы #1: в нём нет слова "отпуск", только "ежегодный оплачиваемый отдых". Семантический поиск находит по близости векторов.</p>
+        <p class="meta static-card__meta">A keyword search would miss #1: it has no word "vacation", only "annual paid leave". Semantic search finds it by vector closeness.</p>
       </div>
     </div>
   </section>
@@ -311,10 +311,10 @@
     <section aria-labelledby="pr-problem">
       <h2 id="pr-problem" data-pk="problem.h2">The problem</h2>
       <p data-pk="problem.p1">The user asks: "how to get my money back for a purchase". But in your documents the relevant fragment is called "refund policy" - not a single word "money" or "back" appears in it. A full-text keyword search will miss here: there are almost no shared words, yet the answer lies in exactly this fragment.</p>
-      <p data-pk="problem.p2">The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This step gathers all the previous ones into one live request:</p>
+      <p data-pk="problem.p2">The solution is semantic search: turn the query into a vector with the same model used for the fragments, and search the index for the top-k fragments (top-k - the few closest, usually 3..10) nearest to it by cosine closeness (cosine - the cosine of the angle between vectors; the closer it is to 1, the closer the meaning) (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This step gathers all the previous ones into one live request:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="search-retrieve">
         <figcaption class="code-block__cap" data-i18n data-ru="Zhivoj retrieve: zapros -> vektor toj zhe modelju -> top-k blizhajshih po cosine iz indeksa." data-en="Live retrieve: query -> vector with the same model -> top-k nearest by cosine from the index.">Live retrieve: query -&gt; vector with the same model -&gt; top-k nearest by cosine from the index.</figcaption>
-        <pre><code># pip install pinecone-client openai
+        <pre><code># pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -328,8 +328,8 @@ def retrieve(query, k=3):
     ).data[0].embedding
     # 2. top-k blizhajshih po cosine
     res = index.query(vector=qvec, top_k=k, include_metadata=True)
-    return [(m["id"], round(m["score"], 3), m["metadata"]["text"])
-            for m in res["matches"]]
+    return [(m.id, round(m.score, 3), m.metadata["text"])
+            for m in res.matches]
 
 for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
     print(cid, score, text[:40])
@@ -352,7 +352,7 @@ for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
 
     <section aria-labelledby="pr-qvec">
       <h2 id="pr-qvec" data-pk="qvec.h2">Query -&gt; query vector</h2>
-      <p data-pk="qvec.p1">The first step of live search is to turn the query text into a vector with the same embedding model that was used for the fragments (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is critical: if you embed the query with one model and the fragments with another, they end up in different spaces, and the cosine closeness between them means nothing. In the code above this is step 1 in the <code>retrieve</code> function.</p>
+      <p data-pk="qvec.p1">The first step of live search is to turn the query text into a vector with the same embedding model that was used for the fragments (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). This is critical: if you embed the query with one model and the fragments with another, they end up in different spaces, and the cosine closeness between them means nothing. In the code above this is step 1 in the <code>retrieve</code> function.</p>
     </section>
 
     <section aria-labelledby="pr-topk">
@@ -378,7 +378,7 @@ for cid, score, text in retrieve("kak vernut' den'gi za pokupku"):
     <section class="sources" aria-labelledby="pr-sources">
       <h2 id="pr-sources" data-pk="sources.h2">Sources</h2>
       <ul>
-        <li data-pk="sources.li1">OpenAI. Embeddings guide (query vector, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a></li>
+        <li data-pk="sources.li1">OpenAI. Embeddings guide (query vector, cosine similarity). <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a></li>
         <li data-pk="sources.li2">Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- vs cross-encoder). <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a></li>
         <li data-pk="sources.li3">Malkov &amp; Yashunin, 2016. Efficient and robust ANN search using Hierarchical Navigable Small World graphs. <a href="https://arxiv.org/abs/1603.09320" target="_blank" rel="noopener">arxiv.org/abs/1603.09320</a></li>
         <li data-pk="sources.li4">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>

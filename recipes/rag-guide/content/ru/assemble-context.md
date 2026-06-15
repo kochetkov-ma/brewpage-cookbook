@@ -21,7 +21,7 @@
 # pip install tiktoken
 import tiktoken
 
-ENC = tiktoken.get_encoding("cl100k_base")  # tokenizer semejstva GPT-4/3.5
+ENC = tiktoken.get_encoding("cl100k_base")  # tokenizer OpenAI: bystroe OFFLINE-PRIBLIZHENIE, ne tochno dlya Claude; dlya tochnogo scheta Claude ispolzujte client.messages.count_tokens()
 
 def count_tokens(text: str) -> int:
     return len(ENC.encode(text))
@@ -75,7 +75,7 @@ def assemble_context(question, retrieved, max_context_tokens=3000):
 
 ## Сколько контекста влезает
 
-У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Например, семейство Claude работает с окном в 200 000 токенов ([Anthropic, Models overview](https://docs.anthropic.com/en/docs/about-claude/models)). Это кажется огромным, но бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.
+У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Например, семейство Claude работает с окном в 200 000 токенов ([Anthropic, Models overview](https://platform.claude.com/docs/en/docs/about-claude/models)). Это кажется огромным, но бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.
 
 Токен - это не слово и не символ; это единица, на которые токенизатор режет текст (части слов, знаки). Считать надо именно токены, а не символы - поэтому в коде выше `count_tokens` использует настоящий токенизатор `tiktoken` ([OpenAI tiktoken](https://github.com/openai/tiktoken)), а не `len(text)`. Большое окно не бесплатно: каждый лишний токен контекста - это деньги и задержка в каждом запросе (об этом - глава про продакшен).
 
@@ -109,7 +109,7 @@ Retrieve часто возвращает почти-дубли: один и то
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>
-- Anthropic. Models overview (context window). <https://docs.anthropic.com/en/docs/about-claude/models>
+- Anthropic. Models overview (context window). <https://platform.claude.com/docs/en/docs/about-claude/models>
 - OpenAI. tiktoken (tokenizer). <https://github.com/openai/tiktoken>
 
 ## Попробуйте сами

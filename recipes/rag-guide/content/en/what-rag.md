@@ -30,7 +30,7 @@ chunks = [
 
 def embed(texts):
     r = oa.embeddings.create(model="text-embedding-3-small", input=texts)
-    return np.array([d.embedding for d in r.data])  # dim = 1536
+    return np.array([d.embedding for d in r.data])  # dim depends on the model (e.g. 1536 for text-embedding-3-small) -- see the OpenAI Embeddings guide
 
 chunk_vecs = embed(chunks)
 query = "Skolko dnej otpuska na ispytatelnom sroke?"
@@ -42,7 +42,7 @@ top = chunks[int(np.argmax(cos))]
 
 # AUGMENTED + GENERATION: slot what was found into the prompt.
 resp = anthropic.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",  # current model -- see the models overview
     max_tokens=300,
     messages=[{
         "role": "user",
@@ -52,7 +52,7 @@ resp = anthropic.messages.create(
 print(resp.content[0].text)  # the answer rests on YOUR chunk
 ```
 
-All three steps are visible here: retrieval (cosine -> top chunk), augmented (the chunk in the prompt), generation (the model's answer). The call shapes are real: OpenAI Embeddings ([platform.openai.com/docs/guides/embeddings](https://platform.openai.com/docs/guides/embeddings)) and Anthropic Messages ([docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)).
+All three steps are visible here: retrieval (cosine -> top chunk), augmented (the chunk in the prompt), generation (the model's answer). The call shapes are real: OpenAI Embeddings ([developers.openai.com/api/docs/guides/embeddings](https://developers.openai.com/api/docs/guides/embeddings)) and Anthropic Messages ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).
 
 ## What RAG is: three words
 
@@ -68,7 +68,7 @@ This is exactly the definition from the original work: the retriever selects doc
 
 RAG is often confused with neighbouring things. The clear boundaries:
 
-- **It is not fine-tuning.** Fine-tuning changes the model's weights on your examples; RAG does not touch the weights at all - it only feeds data at request time. Fine-tuning teaches the model FORM and style, RAG gives it FACTS (see the distinction in OpenAI's fine-tuning guide, [platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)). To add a new document in RAG it is enough to index it, not to retrain the model.
+- **It is not fine-tuning.** Fine-tuning changes the model's weights on your examples; RAG does not touch the weights at all - it only feeds data at request time. Fine-tuning teaches the model FORM and style, RAG gives it FACTS (see the distinction in OpenAI's fine-tuning guide, [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)). To add a new document in RAG it is enough to index it, not to retrain the model.
 - **It is not just a large context window.** "Let us stuff all the documents into the prompt" does not scale and even hurts: models use information in the middle of a long context less well - the "lost in the middle" effect (Liu et al., 2023, [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)). RAG feeds the model only a small top-k of relevant pieces.
 - **It is not the model's memory.** The model remembers nothing between requests; "memory" in RAG lives in your external index, not inside the model.
 
@@ -91,9 +91,9 @@ Below is an interactive diagram of this pipeline: a horizontal row of stage node
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)
-- OpenAI. Embeddings guide. [platform.openai.com/docs/guides/embeddings](https://platform.openai.com/docs/guides/embeddings)
-- OpenAI. Fine-tuning guide (RAG vs fine-tuning contrast). [platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
-- Anthropic. Messages API. [docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)
+- OpenAI. Embeddings guide. [developers.openai.com/api/docs/guides/embeddings](https://developers.openai.com/api/docs/guides/embeddings)
+- OpenAI. Fine-tuning guide (RAG vs fine-tuning contrast). [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)
+- Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
 
 ## Try it yourself
 

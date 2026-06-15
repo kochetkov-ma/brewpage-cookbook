@@ -8,7 +8,7 @@
 
 ## Проблема: модель устаревает и не знает вашего
 
-Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели ([docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.
+Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.
 
 RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:
 
@@ -28,7 +28,7 @@ def ask(context=None):
     else:
         prompt = question
     r = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # tekushchaya model -- sm. obzor modelej
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -42,13 +42,13 @@ retrieved = "Otpusk na ispytatelnom sroke: 2 dnya za kazhdyj otrabotannyj mesyac
 print("S RAG: ", ask(context=retrieved))
 ```
 
-Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API ([docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)).
+Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)).
 
 ## Почему обычная модель не справляется
 
 Две причины, обе структурные, а не "плохо спросили":
 
-- **Training cutoff.** После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей ([docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)).
+- **Training cutoff.** После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)).
 - **Нет приватных данных.** Ваши внутренние документы не были и не будут в общедоступном обучающем корпусе, поэтому любой ответ о них без retrieval - догадка.
 
 ## Свежие и приватные данные без переобучения
@@ -61,7 +61,7 @@ RAG хранит знания ВНЕ модели - во внешнем инде
 
 ## Стоимость: RAG против дообучения
 
-Дообучение (fine-tuning) требует собрать dataset, запустить обучение и повторять это при каждом обновлении данных - это отдельный цикл работы и расходов ([platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)). RAG же добавляет один шаг retrieval перед обычным вызовом модели и индексирует новые документы инкрементально. Когда задача - дать модели ФАКТЫ, которые часто меняются, RAG обычно дешевле и быстрее в поддержке; fine-tuning остается для задач ФОРМЫ и стиля. (Это инженерный компромисс, а не абсолют: считайте на своих объемах - см. главу production.)
+Дообучение (fine-tuning) требует собрать dataset, запустить обучение и повторять это при каждом обновлении данных - это отдельный цикл работы и расходов ([developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)). RAG же добавляет один шаг retrieval перед обычным вызовом модели и индексирует новые документы инкрементально. Когда задача - дать модели ФАКТЫ, которые часто меняются, RAG обычно дешевле и быстрее в поддержке; fine-tuning остается для задач ФОРМЫ и стиля. (Это инженерный компромисс, а не абсолют: считайте на своих объемах - см. главу production.)
 
 Ниже - интерактивная двухдорожечная трассировка одного запроса. **Track A (без RAG):** запрос идет прямо в модель -> устаревший или выдуманный ответ. **Track B (с RAG):** запрос сначала наполняет box контекста найденными чанками, и только ПОСЛЕ этого появляется заземленный ответ. Основной путь - Track B; некоторые узлы открываются дриллом (semantic zoom камеры) в подробность. Заземленный зеленый ответ никогда не рисуется до того, как retrieval завершен - это и есть дидактический смысл motion. Без JS обе дорожки показаны статической inline-SVG-схемой с полным текстом.
 
@@ -71,9 +71,9 @@ RAG хранит знания ВНЕ модели - во внешнем инде
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)
-- Anthropic. Models overview (model families, training cutoff). [docs.anthropic.com/en/docs/about-claude/models](https://docs.anthropic.com/en/docs/about-claude/models)
-- Anthropic. Messages API. [docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)
-- OpenAI. Fine-tuning guide (cost/lifecycle contrast). [platform.openai.com/docs/guides/fine-tuning](https://platform.openai.com/docs/guides/fine-tuning)
+- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)
+- Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
+- OpenAI. Fine-tuning guide (cost/lifecycle contrast). [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)
 
 ## Попробуйте сами
 

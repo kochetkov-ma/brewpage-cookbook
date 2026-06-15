@@ -31,7 +31,7 @@
  *
  * KEY PARITY: per page, the key set here MUST equal the set of data-pk attributes
  * stamped on that page's <article class="chapter-prose"> (and the handoff key set).
- * Counts: what-rag 37, why-rag 33, production 43, chunking 90, embedding 56,
+ * Counts: what-rag 40, why-rag 31, production 42, chunking 90, embedding 56,
  * assemble-context 34, search 33, vector-store 36, evaluation 36, generation 35,
  * payload-anatomy 53. index has NO entry (Atlas MAP landing, no chapter prose).
  */
@@ -53,7 +53,7 @@ const PROSE_RU = {
       html: 'Именно это делает RAG: находит релевантные фрагменты ваших данных и подмешивает их в запрос, после чего модель отвечает по ним. Архитектуру ввели Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>). Вот тот же вызов, но уже с retrieval - минимальный рабочий RAG на реальных API:',
     },
     "problem.p3": {
-      html: 'Тут видны все три шага: retrieval (cosine -> top chunk), augmented (chunk в промпте), generation (ответ модели). Формы вызовов реальные: OpenAI Embeddings (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>) и Anthropic Messages (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).',
+      html: 'Тут видны все три шага: retrieval (cosine -> top chunk), augmented (chunk в промпте), generation (ответ модели). Формы вызовов реальные: OpenAI Embeddings (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>) и Anthropic Messages (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>).',
     },
     "three.h2": { t: "Что такое RAG: три слова" },
     "three.p1": {
@@ -74,7 +74,7 @@ const PROSE_RU = {
     "not.h2": { t: "Чего RAG не делает" },
     "not.p1": { t: "RAG часто путают с соседними вещами. Четкие границы:" },
     "not.li1": {
-      html: '<strong>Это не дообучение (fine-tuning).</strong> Fine-tuning меняет веса модели на ваших примерах; RAG веса не трогает вообще - он лишь подает данные во время запроса. Fine-tuning учит модель ФОРМЕ и стилю, RAG дает ей ФАКТЫ (см. разграничение в руководстве OpenAI по fine-tuning, <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). Чтобы добавить новый документ, в RAG достаточно его заиндексировать, а не переобучать модель.',
+      html: '<strong>Это не дообучение (fine-tuning).</strong> Fine-tuning меняет веса модели на ваших примерах; RAG веса не трогает вообще - он лишь подает данные во время запроса. Fine-tuning учит модель ФОРМЕ и стилю, RAG дает ей ФАКТЫ (см. разграничение в руководстве OpenAI по оптимизации модели, которое теперь покрывает и fine-tuning, <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a>). Чтобы добавить новый документ, в RAG достаточно его заиндексировать, а не переобучать модель.',
     },
     "not.li2": {
       html: '<strong>Это не просто большое контекстное окно.</strong> "Запихнем все документы в prompt" не масштабируется и вредит: модели хуже используют информацию в середине длинного контекста - эффект "lost in the middle" (Liu et al., 2023, <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>). RAG подает модели только небольшой top-k релевантных кусков.',
@@ -90,7 +90,7 @@ const PROSE_RU = {
       html: "<strong>chunking</strong> - режем документы на чанки retrieval-размера.",
     },
     "anatomy.li2": {
-      html: "<strong>embedding</strong> - каждый чанк -> вектор фиксированной длины (dim 1536).",
+      html: "<strong>embedding</strong> - каждый чанк -> вектор фиксированной длины (размерность зависит от модели, например 1536 для text-embedding-3-small - см. руководство OpenAI Embeddings).",
     },
     "anatomy.li3": {
       html: "<strong>vector-store</strong> - векторы в индекс, готовый к поиску ближайших соседей.",
@@ -115,13 +115,13 @@ const PROSE_RU = {
       html: 'Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>',
     },
     "sources.li3": {
-      html: 'OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>',
+      html: 'OpenAI. Embeddings guide. <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>',
     },
     "sources.li4": {
-      html: 'OpenAI. Fine-tuning guide (RAG vs fine-tuning contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>',
+      html: 'OpenAI. Model optimization guide (покрывает fine-tuning; контраст RAG и fine-tuning). <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a>',
     },
     "sources.li5": {
-      html: 'Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>',
+      html: 'Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>',
     },
     "try.h2": { t: "Попробуйте сами" },
     "try.li1": {
@@ -159,18 +159,18 @@ const PROSE_RU = {
 
     "problem.h2": { t: "Проблема: модель устаревает и не знает вашего" },
     "problem.p1": {
-      html: 'Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.',
+      html: 'Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.',
     },
     "problem.p2": {
       t: "RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:",
     },
     "problem.p3": {
-      html: 'Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).',
+      html: 'Track B никогда не пишет ответ, пока контекст не подставлен: сначала retrieval, потом генерация. Форма вызова - реальный Anthropic Messages API (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>).',
     },
     "fails.h2": { t: "Почему обычная модель не справляется" },
     "fails.p1": { t: 'Две причины, обе структурные, а не "плохо спросили":' },
     "fails.li1": {
-      html: '<strong>Training cutoff.</strong> После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>).',
+      html: '<strong>Training cutoff.</strong> После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>).',
     },
     "fails.li2": {
       html: "<strong>Нет приватных данных.</strong> Ваши внутренние документы не были и не будут в общедоступном обучающем корпусе, поэтому любой ответ о них без retrieval - догадка.",
@@ -185,7 +185,7 @@ const PROSE_RU = {
     },
     "cost.h2": { t: "Стоимость: RAG против дообучения" },
     "cost.p1": {
-      html: 'Дообучение (fine-tuning) требует собрать dataset, запустить обучение и повторять это при каждом обновлении данных - это отдельный цикл работы и расходов (<a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). RAG же добавляет один шаг retrieval перед обычным вызовом модели и индексирует новые документы инкрементально. Когда задача - дать модели ФАКТЫ, которые часто меняются, RAG обычно дешевле и быстрее в поддержке; fine-tuning остается для задач ФОРМЫ и стиля. (Это инженерный компромисс, а не абсолют: считайте на своих объемах - см. главу production.)',
+      html: 'Дообучение (fine-tuning) требует собрать dataset, запустить обучение и повторять это при каждом обновлении данных - это отдельный цикл работы и расходов (см. руководство OpenAI по оптимизации модели, которое покрывает и fine-tuning, <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a>). RAG же добавляет один шаг retrieval перед обычным вызовом модели и индексирует новые документы инкрементально. Когда задача - дать модели ФАКТЫ, которые часто меняются, RAG обычно дешевле и быстрее в поддержке; fine-tuning остается для задач ФОРМЫ и стиля. (Это инженерный компромисс, а не абсолют: считайте на своих объемах - см. главу production.)',
     },
     "cost.p2": {
       html: 'Выше - интерактивная двухдорожечная трассировка одного запроса. <strong>Track A (без RAG):</strong> запрос идет прямо в модель -> устаревший или выдуманный ответ. <strong>Track B (с RAG):</strong> запрос сначала наполняет box контекста найденными чанками, и только ПОСЛЕ этого появляется заземленный ответ. Основной путь - Track B; некоторые узлы открываются дриллом (semantic zoom камеры) в подробность. Заземленный зеленый ответ никогда не рисуется до того, как retrieval завершен - это и есть дидактический смысл motion. Без JS обе дорожки показаны статической inline-SVG-схемой с полным текстом.',
@@ -198,13 +198,13 @@ const PROSE_RU = {
       html: 'Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Models overview (model families, training cutoff). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
     },
     "sources.li4": {
-      html: 'Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>',
+      html: 'Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>',
     },
     "sources.li5": {
-      html: 'OpenAI. Fine-tuning guide (cost/lifecycle contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>',
+      html: 'OpenAI. Model optimization guide (покрывает fine-tuning; контраст по стоимости и жизненному циклу). <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a>',
     },
     "try.h2": { t: "Попробуйте сами" },
     "try.li1": {
@@ -253,7 +253,7 @@ const PROSE_RU = {
     },
     "cost.h2": { t: "Скорость и стоимость запроса" },
     "cost.p1": {
-      html: 'Каждый запрос платит за токены входа (инструкция + контекст + вопрос) и выхода (ответ). Цена считается по тарифу вендора за токены - например, публичный <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">Anthropic pricing</a> задает отдельную цену за входные и выходные токены. Отсюда два рычага: меньше контекста (бюджет токенов из главы про сборку контекста) и короче ответ.',
+      html: 'Каждый запрос платит за токены входа (инструкция + контекст + вопрос) и выхода (ответ). Цена считается по тарифу вашего поставщика за токены - например, страница <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">цен Anthropic</a> задает отдельную цену за входные и выходные токены; подставьте тариф вашего поставщика. Отсюда два рычага: меньше контекста (бюджет токенов из главы про сборку контекста) и короче ответ.',
     },
     "cost.p2": {
       html: "Третий рычаг - <strong>кеш</strong>. Одинаковые вопросы не должны заново платить за генерацию; <code>TTLCache</code> выше отдает готовый ответ, а TTL не дает кешу отдавать устаревшее после обновления данных. Отдельно кеш эмбеддинга запроса снимает повторный вызов эмбеддера на тот же текст.",
@@ -315,7 +315,7 @@ const PROSE_RU = {
       html: 'Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>',
     },
     "sources.li2": {
-      html: 'Anthropic. Pricing (цена за входные/выходные токены). <a href="https://www.anthropic.com/pricing" target="_blank" rel="noopener">anthropic.com/pricing</a>',
+      html: 'Anthropic. Pricing (цена за входные/выходные токены). <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener">platform.claude.com pricing</a>',
     },
     "sources.li3": {
       html: 'Pinecone. Metadata filtering (access via metadata). <a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">docs.pinecone.io</a>',
@@ -385,7 +385,7 @@ const PROSE_RU = {
       html: "Размер чанка можно считать в символах, а можно - в токенах, и это не косметическая разница. Символьный счет прост: длина строки в Python - это <code>len(text)</code>, никаких зависимостей. Но настоящий бюджет, в который упирается RAG, измеряется не в символах, а в токенах: и окно контекста модели, и счет за вызов считаются в токенах. Один токен - это в среднем кусок слова, и для разных языков соотношение символов к токенам разное (кириллица обычно дает больше токенов на тот же текст, чем латиница). Поэтому чанк в 1000 символов может неожиданно не влезть в токен-бюджет шага сборки контекста.",
     },
     "parts.p4": {
-      html: 'Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует <code>tiktoken</code> - токенизатор ее моделей (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI, tiktoken</a>; <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>); LangChain оборачивает его в <code>TokenTextSplitter</code>, который режет по токенам, а не по символам (<a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">LangChain, split by token</a>). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.',
+      html: 'Поэтому продакшен-сплиттеры считают именно токены тем же токенизатором, что и целевая модель. OpenAI публикует <code>tiktoken</code> - токенизатор ее моделей (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI, tiktoken</a>; <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>); LangChain оборачивает его в <code>TokenTextSplitter</code>, который режет по токенам, а не по символам (<a href="https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter" target="_blank" rel="noopener">LangChain, split by token</a>). Любую стратегию из каталога ниже можно реализовать как символьную (просто и без зависимостей) или как токенную (точнее по бюджету модели); единица счета - это ортогональная ручка к выбору сплиттера. В примерах ниже для наглядности счет символьный, но в продакшене ту же логику запускают по токенам.',
     },
     "catalog.h2": { t: "Стратегии реза: каталог" },
     "catalog.p1": {
@@ -424,7 +424,7 @@ const PROSE_RU = {
       t: "recursive (separator hierarchy): рез по приоритету разделителей",
     },
     "catalog.recursive.p1": {
-      html: '<strong>Как работает.</strong> Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит <code>size</code>. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель. Это стратегия по умолчанию в LangChain <code>RecursiveCharacterTextSplitter</code> (<a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">LangChain, RecursiveCharacterTextSplitter</a>).',
+      html: '<strong>Как работает.</strong> Режем по приоритетному списку разделителей - сначала по самым крупным (двойной перевод строки = абзац), потом по более мелким (перевод строки, предложение, пробел), пока каждый кусок не влезет в лимит <code>size</code>. Если кусок все еще больше лимита, к нему рекурсивно применяется следующий разделитель. Это стратегия по умолчанию в LangChain <code>RecursiveCharacterTextSplitter</code> (<a href="https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter" target="_blank" rel="noopener">LangChain, RecursiveCharacterTextSplitter</a>).',
     },
     "catalog.recursive.p2": {
       html: "<strong>Когда применять.</strong> Универсальный выбор по умолчанию для прозы: аккуратные границы по абзацам и предложениям, но ни один чанк не превышает лимит. Почти всегда лучше голого fixed-size при той же низкой цене.",
@@ -445,7 +445,7 @@ const PROSE_RU = {
       html: '<strong>Когда применять.</strong> Есть явная структура, которую ценно сохранить: документация с заголовками, код, транскрипты с репликами. Time cost выше fixed-size из-за этапа сегментации или разбора (<a href="https://www.pinecone.io/learn/chunking-strategies/" target="_blank" rel="noopener">Pinecone, Chunking strategies</a>).',
     },
     "catalog.structure.bq1": {
-      html: 'Это упрощенная версия идеи LangChain <code>MarkdownHeaderTextSplitter</code>: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Для предложений и AST кода обертка та же, меняется только парсер.',
+      html: 'Это упрощенная версия идеи LangChain <code>MarkdownHeaderTextSplitter</code>: режем по заголовкам и кладем уровень/текст заголовка в метаданные чанка (<a href="https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Для предложений и AST кода обертка та же, меняется только парсер.',
     },
     "catalog.structure.p3": {
       t: "Анимация: резы ложатся только на концы предложений и после заголовка, никогда внутри фразы.",
@@ -457,7 +457,7 @@ const PROSE_RU = {
       html: "<strong>Как работает.</strong> Частный, но очень частый случай structure-aware: документ уже размечен заголовками Markdown (<code>#</code>, <code>##</code>, ...). Режем по заголовкам, каждую секцию делаем чанком, а уровень и текст заголовка кладем в метаданные. Так чанк всегда совпадает с логической секцией, а в метаданных видно его место в иерархии документа.",
     },
     "catalog.markdown.p2": {
-      html: '<strong>Когда применять.</strong> Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру (<a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Рабочий Python для этой стратегии дан выше, в разделе structure-aware (функция <code>markdown_header_chunks</code>).',
+      html: '<strong>Когда применять.</strong> Документация, README, базы знаний в Markdown - все, где автор уже расставил структуру (<a href="https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter" target="_blank" rel="noopener">LangChain, MarkdownHeaderTextSplitter</a>). Рабочий Python для этой стратегии дан выше, в разделе structure-aware (функция <code>markdown_header_chunks</code>).',
     },
     "catalog.markdown.p3": {
       t: "Схема: каждая секция между заголовками # становится отдельным чанком; уровень заголовка едет в метаданные.",
@@ -469,7 +469,7 @@ const PROSE_RU = {
       html: "<strong>Как работает.</strong> Разводим единицу поиска и единицу контекста. Документ режется дважды: на мелкие дочерние чанки (точное попадание в запрос) и на крупные родительские (широкий контекст). В векторный индекс кладутся только мелкие чанки, но у каждого хранится ссылка на родителя. На поиске вы находите мелкий чанк, а в контекст модели подкладываете его крупного родителя.",
     },
     "catalog.parent.p2": {
-      html: '<strong>Когда применять.</strong> Когда мелкие чанки выигрывают на поиске, но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска (<a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">LangChain, ParentDocumentRetriever</a>).',
+      html: '<strong>Когда применять.</strong> Когда мелкие чанки выигрывают на поиске, но в ответе нужен более широкий кусок, чем нашлось. Это снимает главный минус мелкой нарезки - узкий контекст - без потери точности поиска (<a href="https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever" target="_blank" rel="noopener">LangChain, ParentDocumentRetriever</a>).',
     },
     "catalog.parent.p3": {
       t: "Схема: мелкие дочерние чанки в индексе ссылаются на крупного родителя; на попадание возвращается родитель (small-to-big).",
@@ -551,22 +551,22 @@ const PROSE_RU = {
       html: 'Gunther et al., 2024. Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models. <a href="https://arxiv.org/abs/2409.04701" target="_blank" rel="noopener">arxiv.org/abs/2409.04701</a>',
     },
     "sources.li4": {
-      html: 'LangChain. RecursiveCharacterTextSplitter. <a href="https://python.langchain.com/docs/how_to/recursive_text_splitter/" target="_blank" rel="noopener">recursive_text_splitter</a>',
+      html: 'LangChain. RecursiveCharacterTextSplitter. <a href="https://reference.langchain.com/python/langchain-text-splitters/character/RecursiveCharacterTextSplitter" target="_blank" rel="noopener">reference.langchain.com RecursiveCharacterTextSplitter</a>',
     },
     "sources.li5": {
-      html: 'LangChain. Split by token. <a href="https://python.langchain.com/docs/how_to/split_by_token/" target="_blank" rel="noopener">split_by_token</a>',
+      html: 'LangChain. Split by token. <a href="https://reference.langchain.com/python/langchain-text-splitters/base/TokenTextSplitter" target="_blank" rel="noopener">reference.langchain.com TokenTextSplitter</a>',
     },
     "sources.li6": {
-      html: 'LangChain. MarkdownHeaderTextSplitter. <a href="https://python.langchain.com/docs/how_to/markdown_header_metadata_splitter/" target="_blank" rel="noopener">markdown_header_metadata_splitter</a>',
+      html: 'LangChain. MarkdownHeaderTextSplitter. <a href="https://reference.langchain.com/python/langchain-text-splitters/markdown/MarkdownHeaderTextSplitter" target="_blank" rel="noopener">reference.langchain.com MarkdownHeaderTextSplitter</a>',
     },
     "sources.li7": {
-      html: 'LangChain. ParentDocumentRetriever. <a href="https://python.langchain.com/docs/how_to/parent_document_retriever/" target="_blank" rel="noopener">parent_document_retriever</a>',
+      html: 'LangChain. ParentDocumentRetriever. <a href="https://reference.langchain.com/python/langchain-classic/retrievers/parent_document_retriever/ParentDocumentRetriever" target="_blank" rel="noopener">reference.langchain.com ParentDocumentRetriever</a>',
     },
     "sources.li8": {
       html: 'OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a>',
     },
     "sources.li9": {
-      html: 'OpenAI. Embeddings guide. <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>',
+      html: 'OpenAI. Embeddings guide. <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>',
     },
     "sources.li10": {
       html: 'Anthropic. Contextual Retrieval. <a href="https://www.anthropic.com/news/contextual-retrieval" target="_blank" rel="noopener">anthropic.com/news/contextual-retrieval</a>',
@@ -603,40 +603,40 @@ const PROSE_RU = {
   embedding: {
     __title: "Эмбеддинг: превращаем фрагмент в вектор - RAG С НУЛЯ",
     __description:
-      "Эмбеддинг: каждый фрагмент один раз превращается в вектор фиксированной длины (dim 1536). Косинусная близость = близость смысла, плотные / разреженные / гибридные векторы, выбор модели. Интерактивная анимация chunk -> вектор - BrewPage Cookbook.",
+      "Эмбеддинг: каждый фрагмент один раз превращается в вектор, кодирующий смысл (размерность зависит от модели). Косинусная близость = близость смысла, плотные / разреженные / гибридные векторы, выбор модели. Интерактивная анимация chunk -> вектор - BrewPage Cookbook.",
     __ogTitle: "Эмбеддинг: превращаем фрагмент в вектор",
     __ogDesc:
-      "Эмбеддинг: каждый фрагмент один раз превращается в вектор фиксированной длины (dim 1536). Косинусная близость = близость смысла, плотные / разреженные / гибридные векторы, выбор модели. Интерактивная анимация chunk -> вектор - BrewPage Cookbook.",
+      "Эмбеддинг: каждый фрагмент один раз превращается в вектор, кодирующий смысл (размерность зависит от модели). Косинусная близость = близость смысла, плотные / разреженные / гибридные векторы, выбор модели. Интерактивная анимация chunk -> вектор - BrewPage Cookbook.",
 
     "problem.h2": { t: "Проблема" },
     "problem.p1": {
       t: 'У вас есть фрагменты - куски текста из прошлой главы. Вопрос пользователя тоже текст, но другими словами: "как вернуть деньги" против фрагмента "политика возврата средств". Сравнение строк здесь не работает: общих слов почти нет, а смысл один и тот же. Нужен способ искать по смыслу, а не по буквам.',
     },
     "problem.p2": {
-      html: 'Решение - эмбеддинг (embedding): каждый фрагмент превращаем в вектор, числовой код его смысла, где близость векторов отражает близость смысла (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это второй шаг конвейера: после того как документ нарезан на фрагменты, каждый фрагмент один раз превращается в вектор, и дальше эти векторы идут в индекс.',
+      html: 'Решение - эмбеддинг (embedding): каждый фрагмент превращаем в вектор, числовой код его смысла, где близость векторов отражает близость смысла (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это второй шаг конвейера: после того как документ нарезан на фрагменты, каждый фрагмент один раз превращается в вектор, и дальше эти векторы идут в индекс.',
     },
     "problem.p3": {
       t: "Вот весь шаг целиком - реальный вызов API, который превращает список фрагментов в список векторов:",
     },
     "problem.p4": {
-      t: "После этого у вас три вектора длины 1536 - по одному на фрагмент. Сам текст напрямую сравнивать больше не нужно: вся дальнейшая работа идет с числами.",
+      t: "После этого у вас три вектора фиксированной длины, заданной моделью (1536 для text-embedding-3-small) - по одному на фрагмент. Сам текст напрямую сравнивать больше не нужно: вся дальнейшая работа идет с числами.",
     },
     "what.h2": { t: "Что такое вектор здесь" },
     "what.p1": {
-      html: "Вектор - это упорядоченный список чисел фиксированной длины <code>dim</code>. Модель-эмбеддер отображает текст в точку в <code>dim</code>-мерном пространстве так, чтобы тексты похожего смысла оказывались рядом. Например, OpenAI <code>text-embedding-3-small</code> выдает векторы длины 1536 (<a href=\"https://platform.openai.com/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). Именно поэтому у каждого вектора стоит <code>dim: 1536</code>.",
+      html: "Вектор - это упорядоченный список чисел фиксированной длины <code>dim</code>. Модель-эмбеддер отображает текст в точку в <code>dim</code>-мерном пространстве так, чтобы тексты похожего смысла оказывались рядом. Размерность зависит от модели; например, OpenAI <code>text-embedding-3-small</code> на момент написания выдает векторы длины 1536 (<a href=\"https://developers.openai.com/api/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). Именно поэтому у каждого вектора в этом примере стоит <code>dim: 1536</code>.",
     },
     "what.p2": {
       t: "Размерность - это не случайное число: ее задает модель, и она одинакова для всех векторов одной модели. Смешивать векторы разных моделей нельзя - они живут в разных пространствах, и сравнивать их бессмысленно.",
     },
     "what.p3": {
-      html: 'Важно: числа в поле <code>values</code> в живом примере - это короткие заглушки для макета (по три значения на вектор), а не настоящий эмбеддинг. Настоящий вектор имеет все 1536 компонент; показывать их целиком бессмысленно, поэтому анимация показывает только сам факт "фрагмент -&gt; вектор", а не сырые числа.',
+      html: 'Важно: числа в поле <code>values</code> в живом примере - это короткие заглушки для макета (по три значения на вектор), а не настоящий эмбеддинг. Настоящий вектор имеет все компоненты, заданные моделью (1536 для text-embedding-3-small); показывать их целиком бессмысленно, поэтому анимация показывает только сам факт "фрагмент -&gt; вектор", а не сырые числа.',
     },
     "cos.h2": { t: "Почему близость векторов = близость смысла" },
     "cos.p1": {
-      html: "После того как фрагменты стали векторами, \"похожесть\" измеряют геометрически - чаще всего через косинусную близость (cosine similarity), косинус угла между векторами (<a href=\"https://platform.openai.com/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). Чем меньше угол, тем ближе смысл. Значение косинуса лежит в диапазоне от -1 до 1; для текстовых эмбеддингов на практике работает диапазон примерно 0..1, где 1 - совпадение смысла, а около 0 - тексты про разное.",
+      html: "После того как фрагменты стали векторами, \"похожесть\" измеряют геометрически - чаще всего через косинусную близость (cosine similarity), косинус угла между векторами (<a href=\"https://developers.openai.com/api/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). Чем меньше угол, тем ближе смысл. Значение косинуса лежит в диапазоне от -1 до 1; для текстовых эмбеддингов на практике работает диапазон примерно 0..1, где 1 - совпадение смысла, а около 0 - тексты про разное.",
     },
     "cos.p2": {
-      html: "Почему именно 0..1, а не весь диапазон от -1 до 1: текстовые эмбеддинги обычно нормируют по длине (L2-нормализация) - каждый вектор приводят к единичной длине (<a href=\"https://platform.openai.com/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). У нормированных векторов косинус совпадает со скалярным произведением (dot product), поэтому ранжировать по скалярному произведению - то же самое, что по косинусу, но дешевле: не нужно делить на нормы, которые и так равны единице.",
+      html: "Почему именно 0..1, а не весь диапазон от -1 до 1: текстовые эмбеддинги обычно нормируют по длине (L2-нормализация) - каждый вектор приводят к единичной длине (<a href=\"https://developers.openai.com/api/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>). У нормированных векторов косинус совпадает со скалярным произведением (dot product), поэтому ранжировать по скалярному произведению - то же самое, что по косинусу, но дешевле: не нужно делить на нормы, которые и так равны единице.",
     },
     "cos.p3": {
       t: "Вот как косинусная близость двух векторов считается вручную - без библиотек, чтобы была видна формула:",
@@ -663,7 +663,7 @@ const PROSE_RU = {
     },
     "dense.h2": { t: "Разреженные, плотные и гибридные векторы" },
     "dense.p1": {
-      html: 'Эмбеддинги из трансформера - <strong>плотные</strong> (dense) векторы: все 1536 компонент заполнены числами, и каждая кодирует часть смысла (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>). Им противопоставлены <strong>разреженные</strong> (sparse) представления вроде TF-IDF или BM25, где вектор - это веса по словарю и почти все компоненты равны нулю. Разреженный поиск по-прежнему выигрывает на точном совпадении терминов и редких токенах (артикулы, имена, коды), где важна именно буква слова (<a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">Robertson &amp; Zaragoza, 2009, BM25</a>). Поэтому на практике часто применяют <strong>гибридный поиск</strong> (hybrid retrieval): разреженный (BM25) и плотный (dense) объединяют, чтобы поймать и точные термины, и смысл.',
+      html: 'Эмбеддинги из трансформера - <strong>плотные</strong> (dense) векторы: все их компоненты (число зависит от модели) заполнены числами, и каждая кодирует часть смысла (<a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">Reimers &amp; Gurevych, 2019, Sentence-BERT</a>). Им противопоставлены <strong>разреженные</strong> (sparse) представления вроде TF-IDF или BM25, где вектор - это веса по словарю и почти все компоненты равны нулю. Разреженный поиск по-прежнему выигрывает на точном совпадении терминов и редких токенах (артикулы, имена, коды), где важна именно буква слова (BM25; <a href="https://nlp.stanford.edu/IR-book/" target="_blank" rel="noopener">Stanford IR Book, открытый справочник по IR</a>). Поэтому на практике часто применяют <strong>гибридный поиск</strong> (hybrid retrieval): разреженный (BM25) и плотный (dense) объединяют, чтобы поймать и точные термины, и смысл.',
     },
     "more.h2": { t: "Дополнительно: что еще умеют эмбеддинги" },
     "more.li1": {
@@ -683,7 +683,7 @@ const PROSE_RU = {
       t: "Модель эмбеддингов - это выбор, который напрямую определяет качество поиска:",
     },
     "model.li1": {
-      html: "<strong>Размерность.</strong> Больше <code>dim</code> - обычно больше точности, но дороже хранение и медленнее поиск. <code>text-embedding-3-small</code> дает 1536 компонент; некоторые модели позволяют урезать размерность ради экономии (<a href=\"https://platform.openai.com/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>).",
+      html: "<strong>Размерность.</strong> Больше <code>dim</code> - обычно больше точности, но дороже хранение и медленнее поиск. Размерность зависит от модели (например, <code>text-embedding-3-small</code> на момент написания дает 1536 компонент); некоторые модели позволяют урезать размерность ради экономии (<a href=\"https://developers.openai.com/api/docs/guides/embeddings\" target=\"_blank\" rel=\"noopener\">OpenAI Embeddings guide</a>).",
     },
     "model.li2": {
       html: "<strong>Язык и домен.</strong> Модель должна понимать язык и терминологию ваших документов. Общие модели хороши широко; узкий домен иногда требует специально обученной модели.",
@@ -703,13 +703,13 @@ const PROSE_RU = {
     },
     "sources.h2": { t: "Источники" },
     "sources.li1": {
-      html: 'OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2-нормализация к единичной длине, параметр dimensions). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>',
+      html: 'OpenAI. Embeddings guide (text-embedding-3-small, dim=1536, cosine similarity, L2-нормализация к единичной длине, параметр dimensions). <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>',
     },
     "sources.li2": {
       html: 'Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a>',
     },
     "sources.li3": {
-      html: 'Robertson &amp; Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <a href="https://www.nowpublishers.com/article/Details/INR-019" target="_blank" rel="noopener">nowpublishers.com/article/Details/INR-019</a>',
+      html: 'Robertson &amp; Zaragoza, 2009. The Probabilistic Relevance Framework: BM25 and Beyond. <a href="https://nlp.stanford.edu/IR-book/" target="_blank" rel="noopener">nlp.stanford.edu/IR-book (открытый справочник по IR)</a>',
     },
     "sources.li4": {
       html: 'Kusupati et al., 2022. Matryoshka Representation Learning. <a href="https://arxiv.org/abs/2205.13147" target="_blank" rel="noopener">arxiv.org/abs/2205.13147</a>',
@@ -786,7 +786,7 @@ const PROSE_RU = {
     },
     "budget.h2": { t: "Сколько контекста влезает" },
     "budget.p1": {
-      html: 'У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Например, семейство Claude работает с окном в 200 000 токенов (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic, Models overview</a>). Это кажется огромным, но бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.',
+      html: 'У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Размеры окна контекста зависят от модели - актуальные лимиты см. в обзоре моделей Anthropic (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic, Models overview</a>). Даже когда окно большое, бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.',
     },
     "budget.p2": {
       html: 'Токен - это не слово и не символ; это единица, на которые токенизатор режет текст (части слов, знаки). Считать надо именно токены, а не символы - поэтому в коде выше <code>count_tokens</code> использует настоящий токенизатор <code>tiktoken</code> (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI tiktoken</a>), а не <code>len(text)</code>. Большое окно не бесплатно: каждый лишний токен контекста - это деньги и задержка в каждом запросе (об этом - глава про продакшен).',
@@ -813,7 +813,7 @@ const PROSE_RU = {
       html: 'Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Models overview (context window). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview (context window). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
     },
     "sources.li4": {
       html: 'OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a>',
@@ -856,7 +856,7 @@ const PROSE_RU = {
       t: 'Пользователь спрашивает: "как вернуть деньги за покупку". А в ваших документах нужный фрагмент называется "политика возврата средств" - ни слова "деньги", ни слова "вернуть" в нем нет. Полнотекстовый поиск по ключевым словам здесь промахнется: общих слов почти нет, а ответ лежит именно в этом фрагменте.',
     },
     "problem.p2": {
-      html: 'Решение - поиск по смыслу (semantic search): запрос превращаем в вектор той же моделью, что и фрагменты, и ищем в индексе top-k фрагментов (top-k - несколько самых близких, обычно 3..10), ближайших к нему по косинусной близости (cosine - косинус угла между векторами, чем он ближе к 1, тем ближе смысл) (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Этот шаг собирает все предыдущие в один живой запрос:',
+      html: 'Решение - поиск по смыслу (semantic search): запрос превращаем в вектор той же моделью, что и фрагменты, и ищем в индексе top-k фрагментов (top-k - несколько самых близких, обычно 3..10), ближайших к нему по косинусной близости (cosine - косинус угла между векторами, чем он ближе к 1, тем ближе смысл) (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Этот шаг собирает все предыдущие в один живой запрос:',
     },
     "problem.p3": {
       t: 'Фрагмент "политика возврата средств" приходит первым, хотя слов из запроса в нем нет - потому что сравниваются смыслы, а не строки.',
@@ -867,7 +867,7 @@ const PROSE_RU = {
     },
     "qvec.h2": { t: "Запрос -&gt; вектор запроса" },
     "qvec.p1": {
-      html: 'Первый шаг живого поиска - превратить текст запроса в вектор той же моделью эмбеддингов, что использовалась для фрагментов (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это критично: если запрос превратить в вектор одной моделью, а фрагменты - другой, они окажутся в разных пространствах, и косинусная близость между ними ничего не будет значить. В коде выше это шаг 1 в функции <code>retrieve</code>.',
+      html: 'Первый шаг живого поиска - превратить текст запроса в вектор той же моделью эмбеддингов, что использовалась для фрагментов (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">OpenAI Embeddings guide</a>). Это критично: если запрос превратить в вектор одной моделью, а фрагменты - другой, они окажутся в разных пространствах, и косинусная близость между ними ничего не будет значить. В коде выше это шаг 1 в функции <code>retrieve</code>.',
     },
     "topk.h2": { t: "Top-k ближайших по косинусу" },
     "topk.p1": {
@@ -892,7 +892,7 @@ const PROSE_RU = {
     },
     "sources.h2": { t: "Источники" },
     "sources.li1": {
-      html: 'OpenAI. Embeddings guide (вектор запроса, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>',
+      html: 'OpenAI. Embeddings guide (вектор запроса, cosine similarity). <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>',
     },
     "sources.li2": {
       html: 'Reimers &amp; Gurevych, 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks (bi- против cross-encoder). <a href="https://arxiv.org/abs/1908.10084" target="_blank" rel="noopener">arxiv.org/abs/1908.10084</a>',
@@ -968,7 +968,7 @@ const PROSE_RU = {
       html: "При поиске вы просите не один самый близкий вектор, а <strong>top-k</strong> - несколько ближайших (часто k=3..10). Это дает модели немного запасных кусков на случай, если самый ближайший не полностью покрывает вопрос.",
     },
     "topk.p2": {
-      html: 'Вместе с вектором в базе хранятся <strong>метаданные</strong> (metadata) - источник, раздел, дата, права доступа. Фильтры по метаданным сужают поиск до нужного подмножества перед тем, как искать ближайших: например, только документы этого отдела или только то, что свежее определенной даты (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). В коде выше это <code>filter={"section": "vozvrat"}</code>.',
+      html: 'Вместе с вектором в базе хранятся <strong>метаданные</strong> (metadata) - источник, раздел, дата, права доступа. Фильтры по метаданным сужают поиск до подходящего подмножества вместе с поиском ближайших соседей - вместо сканирования всего индекса: например, только документы этого отдела или только то, что свежее определенной даты (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). В коде выше это <code>filter={"section": "vozvrat"}</code>.',
     },
     "scale.h2": { t: "Масштаб: миллионы фрагментов без перебора" },
     "scale.p1": {
@@ -1061,7 +1061,7 @@ const PROSE_RU = {
       t: "Точный retrieve еще не гарантирует хороший ответ: модель может правильно найти куски, но ответить неполно, не по делу или добавив выдумку. Качество ответа меряет другая группа метрик.",
     },
     "quality.p2": {
-      html: 'Для RAG их формализует фреймворк <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS (Es et al., 2023)</a>: он предлагает <strong>faithfulness</strong> (насколько ответ заземлен на выданном контексте - мера против галлюцинаций из главы про генерацию), <strong>answer relevance</strong> (отвечает ли ответ именно на вопрос) и <strong>context relevance/precision</strong> (насколько выданный контекст относится к вопросу). RAGAS оценивает эти аспекты автоматически, без ручной разметки каждого ответа.',
+      html: 'Для RAG их формализует фреймворк <a href="https://arxiv.org/abs/2309.15217" target="_blank" rel="noopener">RAGAS (Es et al., 2023)</a>: он предлагает <strong>faithfulness</strong> (насколько ответ заземлен на выданном контексте - мера против галлюцинаций из главы про генерацию), <strong>answer relevance</strong> (отвечает ли ответ именно на вопрос) и <strong>релевантность контекста</strong> (context relevance - насколько выданный контекст относится к вопросу; в библиотеке ragas эта метрика называется <code>context_precision</code>). RAGAS оценивает эти аспекты автоматически, без ручной разметки каждого ответа.',
     },
     "golden.h2": { t: "Золотой набор вопросов" },
     "golden.p1": {
@@ -1146,7 +1146,7 @@ const PROSE_RU = {
       t: "Вот рабочий вызов на Python через Anthropic SDK. Промпт собран на предыдущей стадии; здесь важны три вещи: жесткая системная инструкция, подписанные источники в контексте и разбор цитат из ответа.",
     },
     "solution.p2": {
-      html: 'Модель и форма вызова - по <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; имя модели при запуске сверьте с <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.',
+      html: 'Модель и форма вызова - по <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; имя модели при запуске сверьте с <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.',
     },
     "instructions.h2": { t: "Инструкции: отвечай только по контексту" },
     "instructions.p1": {
@@ -1174,7 +1174,7 @@ const PROSE_RU = {
       t: 'Тон и формат задаются в той же инструкции: "отвечай кратко списком", "верни JSON с полями answer и sources". Формат - часть контракта с вашим UI.',
     },
     "stream.p2": {
-      html: 'Стриминг улучшает восприятие: вместо ожидания целого ответа токены прибывают по мере генерации, и пользователь видит текст сразу. Anthropic Messages API отдает поток через server-sent events (<a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); функция <code>generate_stream</code> выше именно это и делает. Важно для заземления: зеленый "готовый" ответ в UI не показываем как финальный, пока генерация не завершилась и цитаты не проверили - частичный текст может еще дописать источник. Выше - интерактивный разбор: откройте узел ответа, наведитесь на утверждение и проследите связь до его куска-источника. Без JS страница показывает ответ с цитатами, список источников и случай честного отказа.',
+      html: 'Стриминг улучшает восприятие: вместо ожидания целого ответа токены прибывают по мере генерации, и пользователь видит текст сразу. Anthropic Messages API отдает поток через server-sent events (<a href="https://platform.claude.com/docs/en/api/messages-streaming" target="_blank" rel="noopener">Anthropic streaming</a>); функция <code>generate_stream</code> выше именно это и делает. Важно для заземления: зеленый "готовый" ответ в UI не показываем как финальный, пока генерация не завершилась и цитаты не проверили - частичный текст может еще дописать источник. Выше - интерактивный разбор: откройте узел ответа, наведитесь на утверждение и проследите связь до его куска-источника. Без JS страница показывает ответ с цитатами, список источников и случай честного отказа.',
     },
     "sources.h2": { t: "Источники" },
     "sources.li1": {
@@ -1184,13 +1184,13 @@ const PROSE_RU = {
       html: 'Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <a href="https://arxiv.org/abs/2202.03629" target="_blank" rel="noopener">arxiv.org/abs/2202.03629</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>',
+      html: 'Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>',
     },
     "sources.li4": {
-      html: 'Anthropic. Streaming Messages. <a href="https://docs.anthropic.com/en/api/messages-streaming" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages-streaming</a>',
+      html: 'Anthropic. Streaming Messages. <a href="https://platform.claude.com/docs/en/api/messages-streaming" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages-streaming</a>',
     },
     "sources.li5": {
-      html: 'Anthropic. Models overview. <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview. <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
     },
     "try.h2": { t: "Попробуйте сами" },
     "try.li1": {
@@ -1231,33 +1231,33 @@ const PROSE_RU = {
       t: "Вы прошли весь маршрут - чанки, эмбеддинги, поиск, сборка контекста, генерация. Каждая глава показывала свою стадию отдельно. Но в живой системе все они сходятся в одну вещь: HTTP-запрос к LLM и ответ от нее. Это обычный JSON. И пока вы не увидите этот JSON целиком, с каждым полем на своем месте, RAG остается набором отдельных идей, а не одним механизмом.",
     },
     "problem.p2": {
-      html: 'Здесь мы разбираем один реальный обмен с моделью: запрос, который вы шлете, и ответ, который приходит. Поля настоящие - это формат Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). Каждый функциональный блок размечен дважды: что он делает технически и какую роль играет в конвейере RAG. Это та самая сборка retrieve-augment-generate из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), но уже не на схеме, а в байтах, которые уходят по проводу.',
+      html: 'Здесь мы разбираем один реальный обмен с моделью: запрос, который вы шлете, и ответ, который приходит. Поля настоящие - это формат Anthropic Messages API (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>). Каждый функциональный блок размечен дважды: что он делает технически и какую роль играет в конвейере RAG. Это та самая сборка retrieve-augment-generate из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), но уже не на схеме, а в байтах, которые уходят по проводу.',
     },
     "pipeline.h2": { t: "Один payload сквозь весь конвейер" },
     "pipeline.p1": {
-      html: 'RAG-запрос к Anthropic Messages API устроен так: вы кладете инструкции-заземление в <code>system</code>, собранный контекст и вопрос - в <code>messages</code>, а сам поиск выражаете как вызов инструмента (<code>tools</code> плюс <code>tool_choice</code>) (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). Модель отвечает не одним текстом, а массивом блоков <code>content</code>: рассуждение (<code>thinking</code>), запрос на поиск (<code>tool_use</code>) и финальный текст. Поле <code>stop_reason</code> говорит, почему модель остановилась, а <code>usage</code> - сколько токенов это стоило (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).',
+      html: 'RAG-запрос к Anthropic Messages API устроен так: вы кладете инструкции-заземление в <code>system</code>, собранный контекст и вопрос - в <code>messages</code>, а сам поиск выражаете как вызов инструмента (<code>tools</code> плюс <code>tool_choice</code>) (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>). Модель отвечает не одним текстом, а массивом блоков <code>content</code>: рассуждение (<code>thinking</code>), запрос на поиск (<code>tool_use</code>) и финальный текст. Поле <code>stop_reason</code> говорит, почему модель остановилась, а <code>usage</code> - сколько токенов это стоило (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>).',
     },
     "pipeline.p2": {
       html: "Выше - реальный обмен из четырех ходов: вы шлете вопрос с описанием инструмента поиска, модель просит вызвать поиск (<code>tool_use</code>), вы возвращаете найденные чанки (<code>tool_result</code>), модель пишет заземленный ответ.",
     },
     "pipeline.h3a": { t: "Ход 1. Запрос: вопрос плюс описание инструмента поиска" },
     "pipeline.p3": {
-      html: '<code>system</code> - это слой заземления (grounding): жесткая инструкция отвечать только по найденному и честно признавать пробел (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). В терминах RAG это и есть инструкция стадии generation из главы generation.html. <code>tools</code> описывает поиск как функцию, которую модель может вызвать - это объявление шага retrieve из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), выраженное в схеме tool use (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>tool_choice: auto</code> отдает модели решение, нужен ли поиск (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>thinking</code> включает расширенное рассуждение с бюджетом токенов (<a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a>).',
+      html: '<code>system</code> - это слой заземления (grounding): жесткая инструкция отвечать только по найденному и честно признавать пробел (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>). В терминах RAG это и есть инструкция стадии generation из главы generation.html. <code>tools</code> описывает поиск как функцию, которую модель может вызвать - это объявление шага retrieve из статьи Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>), выраженное в схеме tool use (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview</a>). <code>tool_choice: auto</code> отдает модели решение, нужен ли поиск (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview</a>). <code>thinking</code> включает расширенное рассуждение с бюджетом токенов (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/extended-thinking</a>).',
     },
     "pipeline.h3b": { t: "Ход 2. Ответ: модель рассуждает и просит вызвать поиск" },
     "pipeline.p4": {
-      html: 'Блок <code>thinking</code> - это рассуждение модели перед действием; в RAG это видимый план стадии retrieve, а не финальный ответ (<a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a>). Блок <code>tool_use</code> - это и есть запрос на поиск: модель просит вызвать <code>search_docs</code> с конкретным <code>query</code> и <code>top_k</code> (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). <code>stop_reason: tool_use</code> - управляющий сигнал: модель остановилась не потому, что закончила, а потому, что ждет результат инструмента; ваш код обязан выполнить поиск и вернуть результат (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). <code>usage</code> - сигнал бюджета и стоимости: <code>input_tokens</code> и <code>output_tokens</code> за этот ход (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>); в RAG раздутый <code>input_tokens</code> - первый признак, что собранный контекст слишком велик (см. assemble-context.html).',
+      html: 'Блок <code>thinking</code> - это рассуждение модели перед действием; в RAG это видимый план стадии retrieve, а не финальный ответ (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/extended-thinking</a>). Блок <code>tool_use</code> - это и есть запрос на поиск: модель просит вызвать <code>search_docs</code> с конкретным <code>query</code> и <code>top_k</code> (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview</a>). <code>stop_reason: tool_use</code> - управляющий сигнал: модель остановилась не потому, что закончила, а потому, что ждет результат инструмента; ваш код обязан выполнить поиск и вернуть результат (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>). <code>usage</code> - сигнал бюджета и стоимости: <code>input_tokens</code> и <code>output_tokens</code> за этот ход (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>); в RAG раздутый <code>input_tokens</code> - первый признак, что собранный контекст слишком велик (см. assemble-context.html).',
     },
     "pipeline.h3c": { t: "Ход 3. Запрос с tool_result: возвращаем найденные чанки" },
     "pipeline.p5": {
-      html: 'Ваш код запускает поиск (стадия retrieve: запрос -&gt; вектор -&gt; top-k по косинусу, как в search.html), затем продолжает тот же разговор, добавляя ответ ассистента и блок <code>tool_result</code> с найденными чанками. Форма вектора и метрика косинуса - из OpenAI Embeddings guide (<a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>).',
+      html: 'Ваш код запускает поиск (стадия retrieve: запрос -&gt; вектор -&gt; top-k по косинусу, как в search.html), затем продолжает тот же разговор, добавляя ответ ассистента и блок <code>tool_result</code> с найденными чанками. Форма вектора и метрика косинуса - из OpenAI Embeddings guide (<a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>).',
     },
     "pipeline.p6": {
-      html: '<code>tool_result</code> - это возврат стадии retrieve в разговор: связан с запросом по <code>tool_use_id</code>, несет найденные чанки как текст (<a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>). Внутри каждого чанка - метаданные стадий конвейера: <code>source</code>/<code>section</code>/<code>date</code> приходят из чанкинга (chunking.html), а <code>cosine</code>/<code>rank</code> - из поиска (search.html, метрика косинуса по OpenAI Embeddings guide, <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>). Этот блок и есть Augmented-шаг из Lewis et al., 2020: найденное подкладывается в контекст модели перед генерацией (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>).',
+      html: '<code>tool_result</code> - это возврат стадии retrieve в разговор: связан с запросом по <code>tool_use_id</code>, несет найденные чанки как текст (<a href="https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview</a>). Внутри каждого чанка - метаданные стадий конвейера: <code>source</code>/<code>section</code>/<code>date</code> приходят из чанкинга (chunking.html), а <code>cosine</code>/<code>rank</code> - из поиска (search.html, метрика косинуса по OpenAI Embeddings guide, <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>). Этот блок и есть Augmented-шаг из Lewis et al., 2020: найденное подкладывается в контекст модели перед генерацией (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>).',
     },
     "pipeline.h3d": { t: "Ход 4. Заземленный ответ модели" },
     "pipeline.p7": {
-      html: 'Здесь <code>content</code> - один блок <code>text</code>: финальный заземленный ответ со ссылкой на <code>source</code>, как требовала инструкция в <code>system</code>. Это стадия Generation из Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>); связь с конкретными полями описана в generation.html. <code>stop_reason: end_turn</code> - управляющий сигнал, что модель закончила сама, а не из-за лимита (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>). <code>usage.input_tokens</code> вырос с 412 до 638 - это цена подложенного контекста: тот самый бюджетный сигнал, по которому в assemble-context.html решают, что обрезать.',
+      html: 'Здесь <code>content</code> - один блок <code>text</code>: финальный заземленный ответ со ссылкой на <code>source</code>, как требовала инструкция в <code>system</code>. Это стадия Generation из Lewis et al., 2020 (<a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>); связь с конкретными полями описана в generation.html. <code>stop_reason: end_turn</code> - управляющий сигнал, что модель закончила сама, а не из-за лимита (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>). <code>usage.input_tokens</code> вырос с 412 до 638 - это цена подложенного контекста: тот самый бюджетный сигнал, по которому в assemble-context.html решают, что обрезать.',
     },
     "map.h2": { t: "Карта блоков: функция и роль в RAG" },
     "map.p1": {
@@ -1323,19 +1323,19 @@ const PROSE_RU = {
     },
     "sources.h2": { t: "Источники" },
     "sources.li1": {
-      html: 'Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>',
+      html: 'Anthropic. Messages API reference (model, max_tokens, system, messages, content blocks, stop_reason, stop_sequence, usage). <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>',
     },
     "sources.li2": {
-      html: 'Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <a href="https://docs.anthropic.com/en/api/tool-use" target="_blank" rel="noopener">docs.anthropic.com/en/api/tool-use</a>',
+      html: 'Anthropic. Tool use (tools, tool_choice, tool_use, tool_result, tool_use_id, input_schema). <a href="https://platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/tool-use/overview</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Extended thinking (thinking blocks, budget_tokens). <a href="https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">docs.anthropic.com/en/docs/build-with-claude/extended-thinking</a>',
+      html: 'Anthropic. Extended thinking (thinking blocks, budget_tokens). <a href="https://platform.claude.com/docs/en/docs/build-with-claude/extended-thinking" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/build-with-claude/extended-thinking</a>',
     },
     "sources.li4": {
       html: 'Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a>',
     },
     "sources.li5": {
-      html: 'OpenAI. Embeddings guide (vector shape, cosine similarity). <a href="https://platform.openai.com/docs/guides/embeddings" target="_blank" rel="noopener">platform.openai.com/docs/guides/embeddings</a>',
+      html: 'OpenAI. Embeddings guide (vector shape, cosine similarity). <a href="https://developers.openai.com/api/docs/guides/embeddings" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/embeddings</a>',
     },
     "try.h2": { t: "Попробуйте сами" },
     "try.li1": {
@@ -1380,9 +1380,9 @@ const PROSE_RU = {
       "Inert data file: no <script>, no on*= handlers, no javascript: URLs.",
     ],
     keyCounts: {
-      "what-rag": 37,
-      "why-rag": 33,
-      production: 43,
+      "what-rag": 40,
+      "why-rag": 31,
+      production: 42,
       chunking: 90,
       embedding: 56,
       "assemble-context": 34,

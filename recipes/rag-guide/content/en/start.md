@@ -24,7 +24,7 @@ from anthropic import Anthropic
 client = Anthropic()  # ANTHROPIC_API_KEY iz okruzheniya
 
 resp = client.messages.create(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-4-6",
     max_tokens=512,
     messages=[
         {"role": "user", "content": "Skolko dnej otpuska u sotrudnika na ispytatelnom sroke?"}
@@ -33,7 +33,7 @@ resp = client.messages.create(
 print(resp.content[0].text)  # pravdopodobno, no ne fakt iz VASHEJ politiki
 ```
 
-The shape of the call is the real Anthropic Messages API ([docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)). The whole rest of the recipe adds a retrieval step before this call so that your context lands in `content`.
+The shape of the call is the real Anthropic Messages API ([platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)). The whole rest of the recipe adds a retrieval step before this call so that your context lands in `content`.
 
 ## What you get at the end of the path
 
@@ -66,7 +66,7 @@ This is the full route in walking order. Each stop is a separate chapter; the fi
 ## Sources
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
-- Anthropic. Messages API. [docs.anthropic.com/en/api/messages](https://docs.anthropic.com/en/api/messages)
+- Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
 
 (Technical sources for each stage live in the corresponding chapters: chunking, embedding, vector-store, search, generation, evaluation.)
 

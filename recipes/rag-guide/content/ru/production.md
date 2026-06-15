@@ -27,8 +27,8 @@ app = FastAPI()
 answer_cache = TTLCache(maxsize=10_000, ttl=3600)
 
 # Cena za 1M tokenov - svery'te s pricing vendora pered raschetom.
-PRICE_IN_PER_MTOK = 3.00
-PRICE_OUT_PER_MTOK = 15.00
+PRICE_IN_PER_MTOK = 3.00   # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)
+PRICE_OUT_PER_MTOK = 15.00  # USD/1M -- podstavte tarif vashego postavshchika (sm. stranicu cen Anthropic)
 
 def cost_usd(tokens_in, tokens_out):
     return (tokens_in / 1e6) * PRICE_IN_PER_MTOK + (tokens_out / 1e6) * PRICE_OUT_PER_MTOK
@@ -56,7 +56,7 @@ def ask(question: str, user=Depends(current_user)):
 
 ## Скорость и стоимость запроса
 
-Каждый запрос платит за токены входа (инструкция + контекст + вопрос) и выхода (ответ). Цена считается по тарифу вендора за токены - например, публичный [Anthropic pricing](https://www.anthropic.com/pricing) задает отдельную цену за входные и выходные токены. Отсюда два рычага: меньше контекста (бюджет токенов из главы про сборку контекста) и короче ответ.
+Каждый запрос платит за токены входа (инструкция + контекст + вопрос) и выхода (ответ). Цена считается по тарифу вендора за токены - например, публичный [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing) задает отдельную цену за входные и выходные токены. Отсюда два рычага: меньше контекста (бюджет токенов из главы про сборку контекста) и короче ответ.
 
 Третий рычаг - **кеш**. Одинаковые вопросы не должны заново платить за генерацию; `TTLCache` выше отдает готовый ответ, а TTL не дает кешу отдавать устаревшее после обновления данных. Отдельно кеш эмбеддинга запроса снимает повторный вызов эмбеддера на тот же текст.
 
@@ -98,7 +98,7 @@ RAG быстро развивается: гибридный поиск (смыс
 ## Источники
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
-- Anthropic. Pricing (цена за входные/выходные токены). <https://www.anthropic.com/pricing>
+- Anthropic. Pricing (цена за входные/выходные токены). <https://platform.claude.com/docs/en/about-claude/pricing>
 - Pinecone. Metadata filtering (access via metadata). <https://docs.pinecone.io/guides/index-data/indexing-overview#metadata>
 
 ## Попробуйте сами

@@ -264,25 +264,25 @@
 
     <!-- ============ NO-JS fallback: static index facts + top-k list ============ -->
     <div class="no-js-only">
-      <p class="legend-hint">Включите JavaScript, чтобы открыть интерактивную карту индекса: точки, косинусные кольца, семантический зум в метаданные соседа.</p>
+      <p class="legend-hint">Enable JavaScript to open the interactive index map: points, cosine rings, semantic zoom into a neighbour's metadata. Below is the same query and top-k, static.</p>
       <div class="card static-card">
-        <h2 class="static-card__head">Запрос</h2>
-        <p class="qline">"как вернуть деньги за покупку" -&gt; вектор запроса (dim 1536), поиск ANN по косинусу, k = 3.</p>
+        <h2 class="static-card__head">Query</h2>
+        <p class="qline">"how to get my money back for a purchase" -&gt; query vector (dim 1536), ANN search by cosine, k = 3.</p>
       </div>
       <div class="card static-card">
-        <h2 class="static-card__head">top-k по косинусу (k = 3)</h2>
+        <h2 class="static-card__head">top-k by cosine (k = 3)</h2>
         <ol class="ranklist ranklist--static">
-          <li class="near shown"><span class="rk">#1</span><span class="rtxt">политика возврата средств - faq.md / section vozvrat</span><span class="rcos">0.91</span></li>
-          <li class="near shown"><span class="rk">#2</span><span class="rtxt">гарантия на электронику - faq.md / section garantiya</span><span class="rcos">0.85</span></li>
-          <li class="near shown"><span class="rk">#3</span><span class="rtxt">обмен товара - faq.md / section vozvrat</span><span class="rcos">0.78</span></li>
+          <li class="near shown"><span class="rk">#1</span><span class="rtxt">refund policy - faq.md / section vozvrat</span><span class="rcos">0.91</span></li>
+          <li class="near shown"><span class="rk">#2</span><span class="rtxt">electronics warranty - faq.md / section garantiya</span><span class="rcos">0.85</span></li>
+          <li class="near shown"><span class="rk">#3</span><span class="rtxt">product exchange - faq.md / section vozvrat</span><span class="rcos">0.78</span></li>
         </ol>
-        <div class="cut">граница top-k (k = 3)</div>
+        <div class="cut">top-k boundary (k = 3)</div>
         <ol class="ranklist ranklist--static">
-          <li class="far shown"><span class="rk">#4</span><span class="rtxt">доставка по городу</span><span class="rcos">0.24</span></li>
-          <li class="far shown"><span class="rk">#5</span><span class="rtxt">бонусная программа</span><span class="rcos">0.19</span></li>
-          <li class="far shown"><span class="rk">#6</span><span class="rtxt">режим работы магазина</span><span class="rcos">0.12</span></li>
+          <li class="far shown"><span class="rk">#4</span><span class="rtxt">city delivery</span><span class="rcos">0.24</span></li>
+          <li class="far shown"><span class="rk">#5</span><span class="rtxt">loyalty program</span><span class="rcos">0.19</span></li>
+          <li class="far shown"><span class="rk">#6</span><span class="rtxt">store opening hours</span><span class="rcos">0.12</span></li>
         </ol>
-        <p class="meta static-card__meta">Рядом с каждым вектором база хранит метаданные (source / section / date / access); фильтр по ним сужает поиск до поиска ближайших.</p>
+        <p class="meta static-card__meta">Next to each vector the store keeps metadata (source / section / date / access); a filter over it narrows the search down to a nearest-neighbour lookup.</p>
       </div>
     </div>
   </section>
@@ -299,7 +299,7 @@
       <p data-pk="problem.p2">The solution is a vector store: a specialized storage that holds vectors and can quickly find nearest neighbours without comparing the query against the whole archive. Here is what the store step plus search look like using a vector-database client:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="vector-store-upsert-query">
         <figcaption class="code-block__cap" data-i18n data-ru="Vektornaya baza: upsert vektorov s metadata, zatem poisk top-k blizhajshih s filtrom po metadata." data-en="Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.">Vector store: upsert vectors with metadata, then search the top-k nearest with a metadata filter.</figcaption>
-        <pre><code># pip install pinecone-client openai
+        <pre><code># pip install pinecone openai
 from pinecone import Pinecone
 from openai import OpenAI
 
@@ -327,8 +327,8 @@ res = index.query(
     include_metadata=True,
     filter={"section": "vozvrat"},   # metadata-fil'tr
 )
-for m in res["matches"]:
-    print(m["id"], round(m["score"], 3), m["metadata"]["section"])</code></pre>
+for m in res.matches:
+    print(m.id, round(m.score, 3), m.metadata["section"])</code></pre>
         <ol class="code-annot-list no-js-only">
           <li><strong>Clients and index</strong> -- The OpenAI client for embeddings and the docs index in Pinecone - the vector store.</li>
           <li><strong>embed helper</strong> -- A helper: text -> vector with the same model for both store and search.</li>
@@ -342,7 +342,7 @@ for m in res["matches"]:
 
     <section aria-labelledby="pr-why">
       <h2 id="pr-why" data-pk="why.h2">Why a separate database</h2>
-      <p data-pk="why.p1">A vector database solves two tasks at once: it <strong>stores</strong> millions of vectors and <strong>searches</strong> among them for the nearest by meaning. An ordinary database searches by exact equality or by keywords; a vector database searches by geometric closeness in <code>dim</code>-dimensional space, that is, by meaning (<a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">Pinecone, vector database basics</a>).</p>
+      <p data-pk="why.p1">A vector database solves two tasks at once: it <strong>stores</strong> millions of vectors and <strong>searches</strong> among them for the nearest by meaning (<a href="https://docs.pinecone.io/guides/get-started/overview" target="_blank" rel="noopener">Pinecone, vector database basics</a>). An ordinary database searches by exact equality or by keywords; a vector database searches by geometric closeness in <code>dim</code>-dimensional space, that is, by meaning (<a href="https://www.pinecone.io/learn/vector-database/" target="_blank" rel="noopener">Pinecone, what is a vector database</a>).</p>
       <p data-pk="why.p2">This is exactly what was missing at the search step: fast semantic search over the whole archive without letter-by-letter comparison.</p>
     </section>
 
@@ -355,7 +355,7 @@ for m in res["matches"]:
     <section aria-labelledby="pr-topk">
       <h2 id="pr-topk" data-pk="topk.h2">Top-k and metadata filters</h2>
       <p data-pk="topk.p1">In a search you ask not for the single closest vector but for the <strong>top-k</strong> - several nearest ones (often k=3..10). This gives the model a few spare pieces in case the closest one does not fully cover the question.</p>
-      <p data-pk="topk.p2">Together with the vector, the database stores <strong>metadata</strong> - source, section, date, access rights. Metadata filters narrow the search to the needed subset before searching for the nearest: for example, only documents from this department or only what is fresher than a certain date (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). In the code above this is <code>filter={"section": "vozvrat"}</code>.</p>
+      <p data-pk="topk.p2">Together with the vector, the database stores <strong>metadata</strong> - source, section, date, access rights. Metadata filters narrow the search to a matching subset in combination with the nearest-neighbour search - rather than scanning the whole index: for example, only documents from this department or only what is fresher than a certain date (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). In the code above this is <code>filter={"section": "vozvrat"}</code>.</p>
     </section>
 
     <section aria-labelledby="pr-scale">

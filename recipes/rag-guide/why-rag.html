@@ -247,7 +247,7 @@
             <div class="node cmp-node cmp-node--llmA shown">
               <span class="cmp-node__k">LLM - weights only</span>
               <span class="cmp-node__t">An answer from frozen knowledge</span>
-              <span class="cmp-node__d">training cutoff: <span class="mono">trained up to 2024-06</span>. No fresh source - the answer is assembled from the weights.</span>
+              <span class="cmp-node__d">training cutoff: <span class="mono">trained up to [cutoff date]</span>. Cutoff dates vary by model; see the Anthropic models overview. No fresh source - the answer is assembled from the weights.</span>
               <span class="freezetag shown">weights frozen - no retrieval</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#a55a35" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
@@ -272,7 +272,7 @@
             <div class="node cmp-node shown">
               <span class="cmp-node__k">Embedding</span>
               <span class="cmp-node__t">Question -&gt; vector</span>
-              <span class="cmp-node__d">the text is encoded into a vector of dimension <span class="mono">1536</span> for meaning-based search</span>
+              <span class="cmp-node__d">the text is encoded into a dense vector (dimension depends on the model, e.g. 1536 for text-embedding-3-small) for meaning-based search</span>
             </div>
             <div class="conn shown" aria-hidden="true"><svg width="10" height="20"><line x1="5" y1="0" x2="5" y2="20" stroke="#4a6f6a" stroke-width="1.4" stroke-dasharray="3 4"/></svg></div>
             <div class="node cmp-node shown">
@@ -317,7 +317,7 @@
 
     <section aria-labelledby="pr-problem">
       <h2 id="pr-problem" data-pk="problem.h2">The problem: the model goes stale and does not know yours</h2>
-      <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
+      <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
       <p data-pk="problem.p2">RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="why-rag-two-track">
       <figcaption class="code-block__cap" data-i18n data-ru="Odin vopros dvumja putjami: bez RAG (iz pamjati) i s RAG (zazemlennyj po chunku)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).</figcaption>
@@ -336,7 +336,7 @@ def ask(context=None):
     else:
         prompt = question
     r = client.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-4-6",  # current model -- see the models overview
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -356,14 +356,14 @@ print("S RAG: ", ask(context=retrieved))</code></pre>
         <li><strong>Track B: with RAG</strong> -- Retrieval supplies a real chunk first, then it goes into the context and the answer is grounded on it. The answer is never written before the context is substituted in.</li>
       </ol>
       </figure>
-      <p data-pk="problem.p3">Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API (<a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a>).</p>
+      <p data-pk="problem.p3">Track B never writes the answer until the context is substituted in: retrieval first, then generation. The call shape is the real Anthropic Messages API (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>).</p>
     </section>
 
     <section aria-labelledby="pr-fails">
       <h2 id="pr-fails" data-pk="fails.h2">Why an ordinary model cannot cope</h2>
       <p data-pk="fails.p1">Two reasons, both structural rather than "you asked badly":</p>
       <ul>
-        <li data-pk="fails.li1"><strong>Training cutoff.</strong> After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview (<a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a>).</li>
+        <li data-pk="fails.li1"><strong>Training cutoff.</strong> After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>).</li>
         <li data-pk="fails.li2"><strong>No private data.</strong> Your internal documents were not and will not be in the public training corpus, so any answer about them without retrieval is a guess.</li>
       </ul>
     </section>
@@ -380,7 +380,7 @@ print("S RAG: ", ask(context=retrieved))</code></pre>
 
     <section aria-labelledby="pr-cost">
       <h2 id="pr-cost" data-pk="cost.h2">Cost: RAG versus fine-tuning</h2>
-      <p data-pk="cost.p1">Fine-tuning requires collecting a dataset, running training, and repeating that at every data update - a separate cycle of work and expense (<a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a>). RAG, by contrast, adds one retrieval step before an ordinary model call and indexes new documents incrementally. When the task is to give the model FACTS that change often, RAG is usually cheaper and faster to maintain; fine-tuning stays for tasks of FORM and style. (This is an engineering trade-off, not an absolute: do the math on your own volumes - see the production chapter.)</p>
+      <p data-pk="cost.p1">Fine-tuning requires collecting a dataset, running training, and repeating that at every data update - a separate cycle of work and expense (see the OpenAI model-optimization guide, which covers fine-tuning, <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a>). RAG, by contrast, adds one retrieval step before an ordinary model call and indexes new documents incrementally. When the task is to give the model FACTS that change often, RAG is usually cheaper and faster to maintain; fine-tuning stays for tasks of FORM and style. (This is an engineering trade-off, not an absolute: do the math on your own volumes - see the production chapter.)</p>
       <p data-pk="cost.p2">Below is an interactive two-track trace of one request. <strong>Track A (without RAG):</strong> the request goes straight to the model -&gt; a stale or fabricated answer. <strong>Track B (with RAG):</strong> the request first fills the context box with the retrieved chunks, and only AFTER that does the grounded answer appear. The main path is Track B; some nodes open by drill (semantic-zoom camera) into detail. The grounded green answer is never drawn before retrieval is complete - that is the didactic meaning of the motion. With JS off, both tracks are shown as a static inline-SVG schematic with the full text.</p>
     </section>
 
@@ -389,9 +389,9 @@ print("S RAG: ", ask(context=retrieved))</code></pre>
       <ul>
         <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
         <li data-pk="sources.li2">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
-        <li data-pk="sources.li3">Anthropic. Models overview (model families, training cutoff). <a href="https://docs.anthropic.com/en/docs/about-claude/models" target="_blank" rel="noopener">docs.anthropic.com/en/docs/about-claude/models</a></li>
-        <li data-pk="sources.li4">Anthropic. Messages API. <a href="https://docs.anthropic.com/en/api/messages" target="_blank" rel="noopener">docs.anthropic.com/en/api/messages</a></li>
-        <li data-pk="sources.li5">OpenAI. Fine-tuning guide (cost/lifecycle contrast). <a href="https://platform.openai.com/docs/guides/fine-tuning" target="_blank" rel="noopener">platform.openai.com/docs/guides/fine-tuning</a></li>
+        <li data-pk="sources.li3">Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a></li>
+        <li data-pk="sources.li4">Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a></li>
+        <li data-pk="sources.li5">OpenAI. Model-optimization guide (covers fine-tuning; cost/lifecycle contrast). <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a></li>
       </ul>
     </section>
 
