@@ -1,0 +1,215 @@
+# Publish the RAG Guide recipe to brewpage.app on a release tag.
+#
+# Trigger: pushing an unprefixed semver tag (vX.Y.Z) OR a manual dispatch.
+# Flow:   checkout -> setup-node -> stamp version -> read .brewpage-site.json
+#         -> stamp live URLs into the pages -> stage the publish-scope bundle
+#         (apply .brewpageignore, since brewpage-action does NOT filter) ->
+#         publish as a multi-file SITE UPDATE (PUT, stable link) ->
+#         build the release body from recipes/index.json -> create the Release.
+#
+# Bundling decision (REQUIRED note): brewpage-action@v1.1.1 walks the given
+# `path` directory recursively and uploads EVERY file it finds -- it does NOT
+# honor `.brewpageignore` and has no `files`/`paths`/`archive`/exclude input
+# (verified against the action's action.yml + src/api.ts walkFiles()). The repo
+# folder recipes/rag-guide/ carries ~137 files (manuscript md, mockups, .claude
+# state, build scripts) that must NOT ship and would blow the site caps
+# (< 100 files / < 20 MB). So we PRE-BUNDLE: rsync the recipe into a staging dir
+# applying the exact exclude set from recipes/rag-guide/.brewpageignore, then
+# point the action at the staged dir. Audited published set: 84 files / 1.69 MB.
+
+name: Publish recipe
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+# Least privilege: only the Release-creation step needs write; nothing else.
+permissions:
+  contents: write
+
+# Never run two publishes at once: they fight over the same brewpage resource.
+# Do NOT cancel-in-progress here -- a publish is a side-effecting PUT and must
+# finish; queue instead so a later tag waits for the running publish.
+concurrency:
+  group: publish-recipe
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish RAG Guide + create release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.3 # exact: actions/checkout latest release (verified via gh api)
+        with:
+          fetch-depth: 0 # full history so stamp-version git describe sees the tag
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0 # exact: actions/setup-node latest release (verified via gh api)
+        with:
+          node-version: '24'
+
+      - name: Stamp version
+        env:
+          REF_NAME: ${{ github.ref_name }} # the pushed tag, e.g. v0.1.1 (or branch on dispatch)
+        run: |
+          set -euo pipefail
+          node .claude/scripts/stamp-version.mjs --version "${REF_NAME}"
+
+      - name: Read .brewpage-site.json
+        id: site
+        # recipes/rag-guide/.brewpage-site.json is committed by the release-engineer
+        # bootstrap BEFORE any tag is pushed, so at runtime it exists. Fields:
+        # namespace, id, link. We surface them via $GITHUB_OUTPUT (no secrets here).
+        run: |
+          set -euo pipefail
+          SITE_FILE="recipes/rag-guide/.brewpage-site.json"
+          if [ ! -f "${SITE_FILE}" ]; then
+            echo "::error file=${SITE_FILE}::missing .brewpage-site.json -- the publish target (namespace/id/link) is unknown. It must be committed before tagging."
+            exit 1
+          fi
+          NAMESPACE="$(jq -er '.namespace' "${SITE_FILE}")"
+          ID="$(jq -er '.id' "${SITE_FILE}")"
+          LINK="$(jq -er '.link' "${SITE_FILE}")"
+          {
+            echo "namespace=${NAMESPACE}"
+            echo "id=${ID}"
+            echo "link=${LINK}"
+          } >> "${GITHUB_OUTPUT}"
+          echo "Publishing to namespace=${NAMESPACE} id=${ID}"
+
+      - name: Stamp live URLs into pages + sitemap
+        # stamp-url.mjs (authored by release-engineer) reads .brewpage-site.json
+        # and replaces REPLACE_AT_PUBLISH across pages, sitemap and recipes/index.json.
+        run: |
+          set -euo pipefail
+          node .claude/scripts/stamp-url.mjs
+
+      - name: Stage publish-scope bundle (apply .brewpageignore)
+        id: bundle
+        # brewpage-action does not filter, so we materialise the exact publish set
+        # here. The exclude list mirrors recipes/rag-guide/.brewpageignore 1:1.
+        # rsync is preinstalled on ubuntu-latest. After staging we assert the caps
+        # (< 100 files, < 20 MB, < 5 MB per file) so a future content sprawl fails
+        # loudly instead of silently shipping cruft or busting limits.
+        run: |
+          set -euo pipefail
+          SRC="recipes/rag-guide/"
+          DEST="${RUNNER_TEMP}/rag-guide-site"
+          rm -rf "${DEST}"
+          mkdir -p "${DEST}"
+          rsync -a \
+            --exclude='.claude/' \
+            --exclude='*.log' \
+            --exclude='content/' \
+            --exclude='mokups/' \
+            --exclude='*.md' \
+            --exclude='*.py' \
+            --exclude='scripts/' \
+            --exclude='shared/components/' \
+            --exclude='*.bak' \
+            --exclude='*~' \
+            --exclude='*.swp' \
+            --exclude='*.swo' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
+            --exclude='.gitkeep' \
+            --exclude='.brewpageignore' \
+            --exclude='shared/og/og-rag-guide.svg' \
+            "${SRC}" "${DEST}/"
+
+          FILE_COUNT="$(find "${DEST}" -type f | wc -l | tr -d ' ')"
+          TOTAL_BYTES="$(du -sk "${DEST}" | cut -f1)" # KiB
+          LARGEST_BYTES="$(find "${DEST}" -type f -printf '%s\n' | sort -nr | head -1)"
+          echo "staged files=${FILE_COUNT}  totalKiB=${TOTAL_BYTES}  largestBytes=${LARGEST_BYTES}"
+
+          if [ "${FILE_COUNT}" -ge 100 ]; then
+            echo "::error::staged ${FILE_COUNT} files -- exceeds the 100-file site cap. Tighten .brewpageignore + this step's excludes."
+            exit 1
+          fi
+          if [ "${FILE_COUNT}" -eq 0 ]; then
+            echo "::error::staged 0 files -- bundle is empty, refusing to publish."
+            exit 1
+          fi
+          if [ "${TOTAL_BYTES}" -ge 20480 ]; then
+            echo "::error::staged ${TOTAL_BYTES} KiB -- exceeds the 20 MB site cap."
+            exit 1
+          fi
+          if [ "${LARGEST_BYTES}" -ge 5242880 ]; then
+            echo "::error::largest staged file ${LARGEST_BYTES} bytes -- exceeds the 5 MB per-file cap."
+            exit 1
+          fi
+          echo "dir=${DEST}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish to brewpage.app (site update)
+        id: brewpage
+        # Pinned EXACT to v1.1.1 (annotated tag -> commit 781b5e7). NOT @v1.
+        # The action calls core.setSecret(owner-token) before any emission, so its
+        # owner-token output is masked. We never read/echo that output. The input
+        # owner-token is a GitHub secret and is auto-masked by the runner.
+        uses: kochetkov-ma/brewpage-action@v1.1.1
+        with:
+          path: ${{ steps.bundle.outputs.dir }}
+          kind: site
+          namespace: public
+          ttl-days: '30'
+          mode: update
+          update-id: ${{ steps.site.outputs.id }}
+          entry: index.html
+          owner-token: ${{ secrets.BREWPAGE_OWNER_TOKEN_RAG_GUIDE }}
+
+      - name: Build release body
+        id: body
+        # Live link is built from the .brewpage-site.json id: https://brewpage.app/public/<id>.
+        # Each recipe in recipes/index.json lists its title + live URL (field: liveUrl,
+        # stamped by stamp-url.mjs). The action's url output is also recorded.
+        env:
+          LIVE_ID: ${{ steps.site.outputs.id }}
+          ACTION_URL: ${{ steps.brewpage.outputs.url }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          LIVE_LINK="https://brewpage.app/public/${LIVE_ID}"
+          BODY_FILE="${RUNNER_TEMP}/release-body.md"
+
+          {
+            echo "## BrewPage Cookbook ${REF_NAME}"
+            echo ""
+            echo "This release just published the RAG Guide live to brewpage.app:"
+            echo ""
+            echo "  ${LIVE_LINK}"
+            echo ""
+            echo "### Recipes in this release"
+            echo ""
+          } > "${BODY_FILE}"
+
+          # Every recipe from the index (title + its stamped live URL).
+          jq -r '.recipes[] | "- " + .title + " -- " + .liveUrl' recipes/index.json >> "${BODY_FILE}"
+
+          {
+            echo ""
+            echo "Published URL (from brewpage-action): ${ACTION_URL}"
+            echo ""
+            echo "---"
+            echo ""
+            echo "### Ecosystem"
+            echo ""
+            echo "- BrewPage platform -- https://brewpage.app"
+            echo "- Contract / coordination repo -- https://github.com/kochetkov-ma/brewpage-openapi"
+          } >> "${BODY_FILE}"
+
+          echo "file=${BODY_FILE}" >> "${GITHUB_OUTPUT}"
+          echo "----- release body -----"
+          cat "${BODY_FILE}"
+
+      - name: Create GitHub Release
+        # Only fire on a real tag push; a manual workflow_dispatch publishes the
+        # site (above) but does not cut a Release (no tag to attach it to).
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v3.0.0 # exact: softprops/action-gh-release latest release (verified via gh api)
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.body.outputs.file }}
