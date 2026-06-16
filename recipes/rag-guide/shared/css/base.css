@@ -840,24 +840,38 @@ a.site-header__brand { text-decoration: none; }
 /* tighten the status text on narrow legend cards so it never wraps/clips */
 .legend-list .cs-status { letter-spacing: 0.02em; }
 
-/* mobile vertical route. The left padding (--sp-4) reserves room for the left
-   half of the percent medallion, which straddles each card's left edge (no
-   connector line -- the medallion negative-margin equals half its width). */
+/* mobile vertical route. The medallion is taken OUT OF FLOW and absolutely
+   positioned against each card (the card is its containing block) so its center
+   pins exactly to the card's left border edge, independent of any padding. The
+   <ol> left padding (--sp-4 = 24px) reserves room to the LEFT of the card for
+   the outer half of the 34px medallion (17px), so it never clips the ol edge.
+   The card's own left padding is enlarged to (17px + --sp-2) so the inner half
+   of the medallion overlaps blank padding and never collides with the text. */
 .mobile-route { margin-top: var(--sp-1); position: relative; z-index: 2; }
 .mobile-route ol { list-style: none; margin: 0; padding: 0 0 0 var(--sp-4); position: relative; }
 .mobile-route li { position: relative; margin: 0 0 6px; }
 .mobile-route .mpin {
+  position: relative; /* containing block for the absolutely-pinned medallion */
   min-height: 52px;
-  padding: var(--sp-2) 14px;
+  /* left padding = half the 34px medallion (17px) + a gap so .cs-name clears it */
+  padding: var(--sp-2) 14px var(--sp-2) calc(17px + var(--sp-2));
   gap: 14px;
   font-size: 0.94rem;
 }
 .mobile-route .mpin:hover { background: var(--c-surface-3); border-color: var(--c-accent-3); }
-/* medallion centered on the card's left edge: a 34px circle pulled left by half
-   its width sits its center exactly on the card border. */
+/* medallion pinned ON the card's left border edge. Out of flow, absolutely
+   positioned in the card (the containing block). left = -1px (the card border
+   width) places the circle's local x-origin on the card's OUTER border edge;
+   translate(-50%,-50%) then drops the circle's CENTER exactly on that edge and
+   vertically centers it on the card. The 34px circle therefore straddles the
+   edge with its 17px inner half over the card's enlarged left padding. */
 .mobile-route .mnum {
+  position: absolute;
+  left: calc(-1 * var(--bw-1));
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
   width: 34px; height: 34px;
-  margin-left: -17px;
   font-size: 0.66rem;
   box-shadow: 0 1px 3px var(--c-drop-shadow), inset 0 0 0 1px var(--c-plate-ring);
 }
@@ -1399,12 +1413,14 @@ a.site-header__brand { text-decoration: none; }
 
   .progress-strip { font-size: 0.64rem; gap: var(--sp-2); padding: 11px 14px; letter-spacing: 0.08em; }
   /* mobile route cards: let the status pill wrap below the name on very narrow
-     screens (320px) so it never clips/overflows; medallion stays on row 1 */
-  .mobile-route .mpin { flex-wrap: wrap; row-gap: 4px; padding: 10px 12px; }
+     screens (320px) so it never clips/overflows; medallion stays on row 1.
+     Keep the enlarged left padding (17px half-medallion + --sp-2) so the
+     out-of-flow medallion never overlaps text at narrow widths. */
+  .mobile-route .mpin { flex-wrap: wrap; row-gap: 4px; padding: 10px 12px 10px calc(17px + var(--sp-2)); }
   .mobile-route .cs-name { flex: 1 1 60%; }
-  /* align the wrapped status pill under the name: medallion in-flow advance
-     (34px width - 17px negative margin) + the card's column gap. */
-  .mobile-route .cs-status { margin-left: calc(34px - 17px + 14px); letter-spacing: 0.04em; }
+  /* medallion is out of flow, so the wrapped status pill aligns under .cs-name
+     at the card's content-start (the enlarged left padding) -- no offset. */
+  .mobile-route .cs-status { margin-left: 0; letter-spacing: 0.04em; }
   .field-note { margin: 0 -2px; }
   .field-note .fn-head { flex-wrap: wrap; padding: 14px var(--sp-3) var(--sp-2); }
   .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
