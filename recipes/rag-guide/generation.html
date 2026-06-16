@@ -109,7 +109,7 @@
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
-      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map" style="display:inline-flex;text-decoration:none">
+      <a href="index.html" data-i18n-aria aria-label="To the route map" data-aria-ru="К карте маршрута" data-aria-en="To the route map">
         <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
           <circle cx="50" cy="50" r="46" fill="none" stroke="#5c4a32" stroke-width="2"/>
           <circle cx="50" cy="50" r="40" fill="none" stroke="#5c4a32" stroke-width="1" stroke-dasharray="3 4"/>
@@ -123,7 +123,7 @@
         <div class="sub" data-i18n="brandSub" data-ru="Глава VI - Генерация" data-en="Plate VI - Generation">Plate VI - Generation</div>
       </div>
     </div>
-    <div class="site-header__nav">
+    <div class="page-toolbar site-header__nav">
       <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
       <div class="search-box js-only" data-component="search-box"
            data-index-src="shared/data/search-index.json">
@@ -133,12 +133,13 @@
                placeholder="Search chapters" autocomplete="off" spellcheck="false"
                data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
                role="combobox" aria-autocomplete="list" aria-expanded="false"
-               aria-controls="rag-search-results" />
+               aria-controls="rag-search-results"
+               aria-label="Search the guide" data-i18n-aria data-aria-ru="Поиск по руководству" data-aria-en="Search the guide" />
         <ul id="rag-search-results" class="search-box__results"
             data-slot="results" role="listbox"
-            data-i18n-aria="searchResults" data-aria-ru="Результаты поиска" data-aria-en="Search results"
-            aria-label="Search results" hidden></ul>
+            aria-label="Search results" data-i18n-aria data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
       </div>
+      <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
       <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
         <span class="bm-arrow" aria-hidden="true">&larr;</span>
         <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>

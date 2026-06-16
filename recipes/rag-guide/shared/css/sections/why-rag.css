@@ -24,8 +24,12 @@
 
 /* ===========================================================
    BACK-TO-MAP CRUMB (page header trail back to index.html)
+   Scoped to nav.back-to-map (the BREADCRUMB element) so this NEVER bleeds onto
+   the top toolbar's a.back-to-map button control (which keeps its base.css
+   button shell + .page-toolbar alignment). Two distinct controls share the
+   .back-to-map name; the element-qualified selector keeps them decoupled.
    =========================================================== */
-.back-to-map {
+nav.back-to-map {
   display: flex;
   align-items: center;
   gap: var(--sp-0);
@@ -34,7 +38,7 @@
   font-size: var(--fs-0);
   letter-spacing: 0.04em;
 }
-.back-to-map .crumb-link {
+nav.back-to-map .crumb-link {
   color: var(--c-link);
   text-decoration: none;
   border-bottom: var(--bw-1) dotted var(--c-link);
@@ -43,10 +47,10 @@
   display: inline-flex;
   align-items: center;
 }
-.back-to-map .crumb-link:hover { color: var(--c-link-hover); border-bottom-color: var(--c-link-hover); }
-.back-to-map .crumb-link:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 1px; }
-.back-to-map .crumb-current { color: var(--c-link-hover); font-weight: var(--fw-bold); }
-.back-to-map .sep { color: var(--c-border); user-select: none; }
+nav.back-to-map .crumb-link:hover { color: var(--c-link-hover); border-bottom-color: var(--c-link-hover); }
+nav.back-to-map .crumb-link:focus-visible { outline: var(--bw-2) solid var(--c-focus); outline-offset: 1px; }
+nav.back-to-map .crumb-current { color: var(--c-link-hover); font-weight: var(--fw-bold); }
+nav.back-to-map .sep { color: var(--c-border); user-select: none; }
 
 /* ===========================================================
    QUESTION LEAD (shared question + stale-memory note)
@@ -78,14 +82,22 @@
 
 /* ===========================================================
    TWO-TRACK GRID
+   The live (JS) path mounts the two .track sections DIRECTLY into the
+   [data-slot="tracks"] host (comparison.js does not wrap them in a .tracks
+   grid), so the host itself must carry the grid + gap -- otherwise the panels
+   stack as plain blocks with no separation and visually touch. The no-JS
+   fallback keeps its own .tracks wrapper. Both share one rule below.
+   The top margin gives the first panel's .track__tag pill (top: -11px) room so
+   it is not clipped under the progress strip / .plate overflow:hidden.
    =========================================================== */
-.tracks {
+.tracks,
+[data-slot="tracks"] {
   position: relative;
   z-index: 2;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-4);
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-5);
 }
 .track {
   position: relative;
@@ -459,7 +471,8 @@ body.drilling .tracks .cmp-node[data-drill] { visibility: hidden; }
    MOBILE -- tracks stack vertically; must hold at 390 AND 320
    =========================================================== */
 @media (max-width: 760px) {
-  .tracks { grid-template-columns: 1fr; gap: var(--sp-5); }
+  .tracks,
+  [data-slot="tracks"] { grid-template-columns: 1fr; gap: var(--sp-5); }
   .tk-grid { grid-template-columns: 1fr; }
   .cmp-node__t, .cmp-node__d, .cmp-question, .track__sub, .tk__body {
     overflow-wrap: anywhere;
@@ -470,7 +483,8 @@ body.drilling .tracks .cmp-node[data-drill] { visibility: hidden; }
   .drill-card { padding: var(--sp-3) var(--sp-3); }
 }
 @media (max-width: 400px) {
-  .tracks { gap: var(--sp-4); }
+  .tracks,
+  [data-slot="tracks"] { gap: var(--sp-4); }
   .cmp-question { font-size: var(--fs-1); padding: var(--sp-1) var(--sp-2); }
   .drill-stage { width: 96vw; }
   .drill-card { padding: var(--sp-3) var(--sp-2); }

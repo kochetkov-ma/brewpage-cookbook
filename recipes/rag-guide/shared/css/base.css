@@ -108,8 +108,13 @@ a { color: var(--c-link); }
   align-items: center;
   gap: 18px;
 }
-/* right-hand header cluster: back-to-map control + lang-toggle, grouped so
-   the always-visible back-to-map sits next to the language switch. */
+/* right-hand header cluster (canonical .page-toolbar; .site-header__nav kept as
+   a back-compat alias): the ONE aligned top toolbar row -- search box +
+   always-visible back-to-map control + lang-toggle, in that fixed order. One
+   flex row, center cross-axis, token gap; all three controls are min-height:44px
+   so they sit on one baseline identically on every stage page. Canonical markup:
+   shared/components/page-toolbar.html. */
+.page-toolbar,
 .site-header__nav {
   display: flex;
   align-items: center;
@@ -155,6 +160,11 @@ a.site-header__brand:focus-visible,
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
+/* brand-as-link never underlines; the seal-wrapping inner anchor (div.brand
+   pattern) is an inline-flex box so the seal keeps its size. Replaces the
+   former per-page inline styles so the header markup carries class hooks only. */
+a.site-header__brand { text-decoration: none; }
+.site-header__brand > a { display: inline-flex; text-decoration: none; }
 
 /* ---------- back-to-map control (sections only; always visible) ----------
    A prominent, always-visible header control that returns to the main Atlas
@@ -830,17 +840,11 @@ a.site-header__brand:focus-visible,
 /* tighten the status text on narrow legend cards so it never wraps/clips */
 .legend-list .cs-status { letter-spacing: 0.02em; }
 
-/* mobile vertical route */
+/* mobile vertical route. The left padding (--sp-4) reserves room for the left
+   half of the percent medallion, which straddles each card's left edge (no
+   connector line -- the medallion negative-margin equals half its width). */
 .mobile-route { margin-top: var(--sp-1); position: relative; z-index: 2; }
 .mobile-route ol { list-style: none; margin: 0; padding: 0 0 0 var(--sp-4); position: relative; }
-.mobile-route ol::before {
-  content: "";
-  position: absolute;
-  left: 9px; top: 6px; bottom: 6px;
-  width: 0;
-  border-left: 2.4px dashed var(--c-route);
-  opacity: 0.85;
-}
 .mobile-route li { position: relative; margin: 0 0 6px; }
 .mobile-route .mpin {
   min-height: 52px;
@@ -849,9 +853,11 @@ a.site-header__brand:focus-visible,
   font-size: 0.94rem;
 }
 .mobile-route .mpin:hover { background: var(--c-surface-3); border-color: var(--c-accent-3); }
+/* medallion centered on the card's left edge: a 34px circle pulled left by half
+   its width sits its center exactly on the card border. */
 .mobile-route .mnum {
   width: 34px; height: 34px;
-  margin-left: -27px;
+  margin-left: -17px;
   font-size: 0.66rem;
   box-shadow: 0 1px 3px var(--c-drop-shadow), inset 0 0 0 1px var(--c-plate-ring);
 }
@@ -1396,7 +1402,9 @@ a.site-header__brand:focus-visible,
      screens (320px) so it never clips/overflows; medallion stays on row 1 */
   .mobile-route .mpin { flex-wrap: wrap; row-gap: 4px; padding: 10px 12px; }
   .mobile-route .cs-name { flex: 1 1 60%; }
-  .mobile-route .cs-status { margin-left: calc(34px + 14px); letter-spacing: 0.04em; }
+  /* align the wrapped status pill under the name: medallion in-flow advance
+     (34px width - 17px negative margin) + the card's column gap. */
+  .mobile-route .cs-status { margin-left: calc(34px - 17px + 14px); letter-spacing: 0.04em; }
   .field-note { margin: 0 -2px; }
   .field-note .fn-head { flex-wrap: wrap; padding: 14px var(--sp-3) var(--sp-2); }
   .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
@@ -1485,21 +1493,21 @@ pre.code-block__pre code {
 
 /* ---- context-annotation (CA) line-range region over code ----
    hoverable/focusable marker spanning one or more code lines.
-   subtle plate-fg underline + faint wash; >=44px effective hit
-   target via line-height/padding; themed focus ring (never UA).
+   At REST it is visually plain (no underline, no wash) so annotated
+   code reads as ordinary code; the affordance lights up only on
+   :hover (wash reveal) and :focus-visible (themed ring), and the
+   popover still shows. cursor: help + the hit-target geometry stay
+   so the region remains discoverable + clears the >=44px hit area.
    When the region wraps block .cl rows it becomes a block band so
-   the wash + ring cover a contiguous rectangle, not ragged inline
-   fragments. min-height floors the hit area when the band is short
-   (a single-line band still clears it via line-height + padding). */
+   the hover wash + ring cover a contiguous rectangle, not ragged
+   inline fragments. min-height floors the hit area when the band is
+   short (a single-line band still clears it via line-height/padding). */
 .ca-region {
   cursor: help;
   border-radius: var(--radius-sm);
   padding: 2px 3px;
   margin: 0 -3px;
   line-height: 1.6;
-  text-decoration: underline dotted var(--c-code-key);
-  text-underline-offset: 3px;
-  background: var(--c-accent-1-soft);
 }
 .ca-region:has(.cl) {
   display: block;

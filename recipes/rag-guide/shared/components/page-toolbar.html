@@ -1,0 +1,56 @@
+<!--
+  page-toolbar.html -- canonical TOP toolbar row for every chapter/stage page
+  (copy-in source of truth). Sits inside .site-header as the right-hand cluster,
+  AFTER the .site-header__brand block. ONE flex row holding, in this fixed order:
+    1. the client-side full-text search box (.search-box, .js-only),
+    2. the always-visible "to the map" control (a.back-to-map -> index.html),
+    3. the RU/EN lang-toggle.
+
+  ALIGNMENT: the wrapper is .page-toolbar (display:flex; align-items:center;
+  gap via token) defined in base.css. All three controls share min-height:44px
+  so they center on one baseline identically on every page. The toolbar OWNS
+  the .page-toolbar class so a section file's breadcrumb .back-to-map override
+  can never bleed into it (base.css scopes the toolbar control as
+  .page-toolbar .back-to-map). Do NOT add inline styles here.
+
+  HARD RULE: this block must be byte-identical on every stage page. Only the
+  brand block ABOVE it (page title / sub) is per-page; the toolbar never drifts.
+
+  Hooks the JS relies on (DO NOT rename):
+    [data-component="search-box"] + [data-slot="results"] + .search-box__input
+      -> search.js / site-search.js
+    [data-component="lang-toggle"] + button[data-lang]  -> i18n lang switch
+    [data-i18n] (data-ru/data-en)        -> textContent localization
+    [data-i18n-aria] (data-aria-ru/-en)  -> aria-label localization
+    [data-i18n-ph] (data-ph-ru/-en)      -> input placeholder localization
+
+  data-index-src is RELATIVE TO THE PAGE: root chapter pages use
+  "shared/data/search-index.json"; variant pages under variants/<name>/ would
+  use "../../shared/data/search-index.json".
+-->
+<div class="page-toolbar site-header__nav">
+  <!-- client-side full-text site search (search.js); index loaded locally, zero external requests -->
+  <div class="search-box js-only" data-component="search-box"
+       data-index-src="shared/data/search-index.json">
+    <label class="visually-hidden" for="rag-search"
+           data-i18n="searchLabel" data-ru="Поиск по руководству" data-en="Search the guide">Search the guide</label>
+    <input id="rag-search" class="search-box__input" type="search"
+           placeholder="Search chapters" autocomplete="off" spellcheck="false"
+           data-i18n-ph="searchPh" data-ph-ru="Поиск по главам" data-ph-en="Search chapters"
+           role="combobox" aria-autocomplete="list" aria-expanded="false"
+           aria-controls="rag-search-results"
+           aria-label="Search the guide" data-i18n-aria data-aria-ru="Поиск по руководству" data-aria-en="Search the guide" />
+    <ul id="rag-search-results" class="search-box__results"
+        data-slot="results" role="listbox"
+        aria-label="Search results" data-i18n-aria data-aria-ru="Результаты поиска" data-aria-en="Search results" hidden></ul>
+  </div>
+  <!-- always-visible back-to-map control (returns to the Atlas map, any drill level) -->
+  <a class="back-to-map" href="index.html" data-i18n-aria aria-label="Back to the route map" data-aria-ru="Вернуться к карте маршрута" data-aria-en="Back to the route map">
+    <span class="bm-arrow" aria-hidden="true">&larr;</span>
+    <span data-i18n="backToMap" data-ru="К карте" data-en="To the map">To the map</span>
+  </a>
+  <div class="lang-toggle" data-component="lang-toggle" role="group" aria-label="Language / Язык">
+    <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+    <button type="button" data-lang="en" class="active" aria-pressed="true">EN</button>
+  </div>
+</div>

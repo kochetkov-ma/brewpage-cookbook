@@ -73,17 +73,17 @@
   display: inline;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  /* a quiet underline cue + transparent tint, lit on hover/focus */
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-color: rgba(232, 220, 192, 0.45);
+  /* plain at rest over code (no underline, no tint); the affordance is
+     lit only on hover/focus/selected so the payload reads as clean code */
+  text-decoration: none;
   text-underline-offset: 3px;
   background: transparent;
   transition: background var(--dur-1) var(--ease-1), text-decoration-color var(--dur-1) var(--ease-1);
 }
 .pl-hook:hover {
   background: rgba(176, 138, 62, 0.22);
-  text-decoration-color: var(--c-accent-2);
+  text-decoration: underline dotted var(--c-accent-2);
+  text-underline-offset: 3px;
 }
 /* themed focus ring (rust via --c-focus), NEVER blue UA outline */
 .pl-hook:focus { outline: none; }
@@ -94,7 +94,8 @@
 }
 .pl-hook.selected {
   background: rgba(176, 138, 62, 0.3);
-  text-decoration-color: var(--c-focus);
+  text-decoration: underline dotted var(--c-focus);
+  text-underline-offset: 3px;
 }
 
 /* ---- the camera stage (drilldown-zoom toggles .zoomed on the stage) ---- */
