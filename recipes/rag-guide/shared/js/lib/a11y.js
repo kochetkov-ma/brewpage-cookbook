@@ -111,6 +111,7 @@ export function init(rootEl, config) {
   }
 
   let clearTimer = null;
+  let rafId = null;
 
   return {
     /** Announce a message via the live region. */
@@ -118,8 +119,9 @@ export function init(rootEl, config) {
       if (!region) return;
       region.textContent = "";
       // Re-set on the next frame so repeated identical messages still fire.
-      requestAnimationFrame(() => {
-        region.textContent = message;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (region) region.textContent = message;
       });
       if (clearTimer) clearTimeout(clearTimer);
       clearTimer = setTimeout(() => {
@@ -128,6 +130,8 @@ export function init(rootEl, config) {
     },
     destroy() {
       if (clearTimer) clearTimeout(clearTimer);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
       if (region && region.parentNode) region.parentNode.removeChild(region);
       region = null;
     },

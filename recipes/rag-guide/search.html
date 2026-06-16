@@ -209,7 +209,10 @@
         <!-- the plate growToFit target = the plot frame; the panel grows it -->
         <div class="plot-frame" data-component="plate">
           <svg class="plot" data-component="vector-map" data-slot="stage" viewBox="0 0 520 420" role="img"
-               aria-label="2D-проекция векторного пространства: точка запроса в центре, ближайшие документы зелёные, далёкие серые. Все точки можно открыть.">
+               data-i18n-aria
+               aria-label="2D projection of the vector space: the query point at the center, nearest documents green, far ones grey. Every point opens."
+               data-aria-ru="2D-проекция векторного пространства: точка запроса в центре, ближайшие документы зелёные, далёкие серые. Все точки можно открыть."
+               data-aria-en="2D projection of the vector space: the query point at the center, nearest documents green, far ones grey. Every point opens.">
             <!-- vector-map.js renders the graticule, cosine rings, axis caption,
                  top-k links and all drillable points here on load.
                  NO-JS fallback (static labelled plot) lives below in .no-js-only. -->
@@ -220,15 +223,15 @@
 
         <!-- scale bar + legend -->
         <div class="scalebar">
-          <span class="sb-cap">косинусная близость</span>
+          <span class="sb-cap" data-i18n data-ru="косинусная близость" data-en="cosine closeness">cosine closeness</span>
           <span class="sb-track" aria-hidden="true">
             <span class="sb-seg a"></span><span class="sb-seg b"></span>
             <span class="sb-seg c"></span><span class="sb-seg d"></span>
           </span>
           <span class="sb-cap">1.0 &rarr; 0.0</span>
           <span class="vmap-legend">
-            <span class="lg"><span class="sw g"></span> ближние (top-k)</span>
-            <span class="lg"><span class="sw r"></span> дальние</span>
+            <span class="lg"><span class="sw g"></span> <span data-i18n data-ru="ближние (top-k)" data-en="near (top-k)">near (top-k)</span></span>
+            <span class="lg"><span class="sw r"></span> <span data-i18n data-ru="дальние" data-en="far">far</span></span>
           </span>
         </div>
       </div>
@@ -236,45 +239,44 @@
       <!-- ============ SIDE RAIL ============ -->
       <aside class="vmap-rail" data-slot="rail">
         <div class="card">
-          <h2>Запрос &rarr; вектор</h2>
-          <p class="qline">"Сколько дней отпуска в году?"</p>
+          <h2 data-i18n data-ru="Запрос &rarr; вектор" data-en="Query &rarr; vector">Query &rarr; vector</h2>
+          <p class="qline" data-i18n data-ru="&quot;Сколько дней отпуска в году?&quot;" data-en="&quot;how many vacation days per year?&quot;">"how many vacation days per year?"</p>
           <p class="embed-step" data-slot="embed-step" aria-live="polite">текст -&gt; токены -&gt; вектор</p>
           <div class="tokrow" data-slot="tokrow" aria-hidden="true">
-            <span class="tok">сколько</span><span class="tok">дней</span><span class="tok">отпуска</span><span class="tok">в</span><span class="tok">году</span>
+            <span class="tok" data-i18n data-ru="сколько" data-en="how">how</span><span class="tok" data-i18n data-ru="дней" data-en="many">many</span><span class="tok" data-i18n data-ru="отпуска" data-en="vacation">vacation</span><span class="tok" data-i18n data-ru="в" data-en="days">days</span><span class="tok" data-i18n data-ru="году" data-en="per year">per year</span>
           </div>
-          <p class="vread"><span class="vlbl">поисковый вектор (dim 1536):</span><br>
+          <p class="vread"><span class="vlbl" data-i18n data-ru="поисковый вектор (dim 1536):" data-en="query vector (dim 1536):">query vector (dim 1536):</span><br>
             <span class="qvec" data-slot="qvec">[0.81, -0.12, 0.47, 0.05, -0.33, 0.19, ...]</span></p>
-          <p class="meta">Запрос превращается в <b>поисковый вектор</b> той же размерности, что и фрагменты в индексе. Каждый фрагмент уже хранится как вектор - сравнение идёт <b>числами, а не словами</b>.</p>
+          <p class="meta"><span data-i18n data-ru="Запрос превращается в" data-en="The query turns into a">The query turns into a</span> <b data-i18n data-ru="поисковый вектор" data-en="query vector">query vector</b> <span data-i18n data-ru="той же размерности, что и фрагменты в индексе. Каждый фрагмент уже хранится как вектор - сравнение идёт" data-en="of the same dimension as the fragments in the index. Every fragment is already stored as a vector - the comparison runs">of the same dimension as the fragments in the index. Every fragment is already stored as a vector - the comparison runs</span> <b data-i18n data-ru="числами, а не словами" data-en="with numbers, not words">with numbers, not words</b>.</p>
         </div>
 
         <div class="callout">
-          <p class="ctag">Поиск по словам промахнулся бы здесь</p>
-          <p>В лучшем совпадении нет слова <span class="cw">"отпуск"</span> - только
-            <span class="cg">"ежегодный оплачиваемый отдых"</span>. Keyword-поиск его бы пропустил;
-            семантический находит по близости векторов.</p>
+          <p class="ctag" data-i18n data-ru="Поиск по словам промахнулся бы здесь" data-en="A keyword search would miss here">A keyword search would miss here</p>
+          <p><span data-i18n data-ru="В лучшем совпадении нет слова" data-en="The best match has no word">The best match has no word</span> <span class="cw" data-i18n data-ru="&quot;отпуск&quot;" data-en="&quot;vacation&quot;">"vacation"</span> -
+            <span data-i18n data-ru="только" data-en="only">only</span> <span class="cg" data-i18n data-ru="&quot;ежегодный оплачиваемый отдых&quot;" data-en="&quot;annual paid leave&quot;">"annual paid leave"</span>. <span data-i18n data-ru="Keyword-поиск его бы пропустил; семантический находит по близости векторов." data-en="A keyword search would skip it; semantic search finds it by vector closeness.">A keyword search would skip it; semantic search finds it by vector closeness.</span></p>
         </div>
 
         <div class="card">
-          <h2>kNN - ранжирование по косинусу <span class="kbadge">k = 3</span></h2>
+          <h2><span data-i18n data-ru="kNN - ранжирование по косинусу" data-en="kNN - ranking by cosine">kNN - ranking by cosine</span> <span class="kbadge">k = 3</span></h2>
           <ol class="ranklist" data-slot="ranklist">
-            <li class="near"><span class="rk">#1</span><span class="rtxt">ежегодный оплачиваемый отдых - 28 дней</span><span class="rcos">0.92</span></li>
-            <li class="near"><span class="rk">#2</span><span class="rtxt">дни отдыха можно перенести</span><span class="rcos">0.86</span></li>
-            <li class="near"><span class="rk">#3</span><span class="rtxt">отгулы за переработку</span><span class="rcos">0.74</span></li>
-            <li class="far"><span class="rk">#4</span><span class="rtxt">командировочные расходы</span><span class="rcos">0.21</span></li>
-            <li class="far"><span class="rk">#5</span><span class="rtxt">оплата проезда</span><span class="rcos">0.19</span></li>
-            <li class="far"><span class="rk">#6</span><span class="rtxt">пропуск на вход в офис</span><span class="rcos">0.14</span></li>
+            <li class="near"><span class="rk">#1</span><span class="rtxt" data-i18n data-ru="ежегодный оплачиваемый отдых - 28 дней" data-en="annual paid leave - 28 days">annual paid leave - 28 days</span><span class="rcos">0.92</span></li>
+            <li class="near"><span class="rk">#2</span><span class="rtxt" data-i18n data-ru="дни отдыха можно перенести" data-en="rest days may be carried over">rest days may be carried over</span><span class="rcos">0.86</span></li>
+            <li class="near"><span class="rk">#3</span><span class="rtxt" data-i18n data-ru="отгулы за переработку" data-en="time off in lieu for overtime">time off in lieu for overtime</span><span class="rcos">0.74</span></li>
+            <li class="far"><span class="rk">#4</span><span class="rtxt" data-i18n data-ru="командировочные расходы" data-en="business travel expenses">business travel expenses</span><span class="rcos">0.21</span></li>
+            <li class="far"><span class="rk">#5</span><span class="rtxt" data-i18n data-ru="оплата проезда" data-en="transport reimbursement">transport reimbursement</span><span class="rcos">0.19</span></li>
+            <li class="far"><span class="rk">#6</span><span class="rtxt" data-i18n data-ru="пропуск на вход в офис" data-en="office entry pass">office entry pass</span><span class="rcos">0.14</span></li>
           </ol>
-          <div class="cut">граница top-k</div>
-          <p class="meta">Модель видит только <b>top-k</b> ближайших фрагментов, а не весь архив.</p>
+          <div class="cut" data-i18n data-ru="граница top-k" data-en="top-k boundary">top-k boundary</div>
+          <p class="meta"><span data-i18n data-ru="Модель видит только" data-en="The model sees only the">The model sees only the</span> <b data-i18n data-ru="top-k" data-en="top-k">top-k</b> <span data-i18n data-ru="ближайших фрагментов, а не весь архив." data-en="nearest fragments, not the whole archive.">nearest fragments, not the whole archive.</span></p>
         </div>
       </aside>
     </div>
 
     <div class="vmap-foot">
-      <b>Как читать карту.</b> Документы заранее разбиты на фрагменты и сохранены в индексе как векторы (<code>dim 1536</code>).
-      Запрос превращается в вектор; <b>kNN / поиск ближайших соседей</b> (часто приближённый, <code>ANN</code>) возвращает несколько лучших по
-      <b>косинусной близости</b>. Плоскость - это 2D-<b>проекция</b> высокоразмерного пространства: реальная близость считается в 1536 измерениях.
-      Кликните точку (включая дальние), чтобы заглянуть внутрь - семантический зум покажет данные фрагмента или причину, почему он не вошёл в top-k.
+      <b data-i18n data-ru="Как читать карту." data-en="How to read the map.">How to read the map.</b> <span data-i18n data-ru="Документы заранее разбиты на фрагменты и сохранены в индексе как векторы (" data-en="Documents are split into fragments in advance and stored in the index as vectors (">Documents are split into fragments in advance and stored in the index as vectors (</span><code>dim 1536</code><span data-i18n data-ru=")." data-en=").">).</span>
+      <span data-i18n data-ru="Запрос превращается в вектор;" data-en="The query turns into a vector;">The query turns into a vector;</span> <b data-i18n data-ru="kNN / поиск ближайших соседей" data-en="kNN / nearest-neighbour search">kNN / nearest-neighbour search</b> <span data-i18n data-ru="(часто приближённый," data-en="(often approximate,">(often approximate,</span> <code>ANN</code><span data-i18n data-ru=") возвращает несколько лучших по" data-en=") returns a few best by">) returns a few best by</span>
+      <b data-i18n data-ru="косинусной близости" data-en="cosine closeness">cosine closeness</b>. <span data-i18n data-ru="Плоскость - это 2D-" data-en="The plane is a 2D">The plane is a 2D</span><b data-i18n data-ru="проекция" data-en="projection">projection</b> <span data-i18n data-ru="высокоразмерного пространства: реальная близость считается в 1536 измерениях." data-en="of a high-dimensional space: the real closeness is computed across 1536 dimensions.">of a high-dimensional space: the real closeness is computed across 1536 dimensions.</span>
+      <span data-i18n data-ru="Кликните точку (включая дальние), чтобы заглянуть внутрь - семантический зум покажет данные фрагмента или причину, почему он не вошёл в top-k." data-en="Click a point (including distant ones) to look inside - semantic zoom shows the fragment's data, or why it did not make the top-k.">Click a point (including distant ones) to look inside - semantic zoom shows the fragment's data, or why it did not make the top-k.</span>
     </div>
 
     <!-- ============ NO-JS fallback: static labelled plot data + kNN list ============ -->
@@ -403,7 +405,7 @@ for cid, score, text in retrieve("how to get a refund for a purchase"):
     <section class="about-recipe" aria-labelledby="pr-about">
       <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="index.html">BrewPage Cookbook</a>.</li>
         <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
         <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>

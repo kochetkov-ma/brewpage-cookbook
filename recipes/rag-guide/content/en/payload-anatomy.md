@@ -17,7 +17,7 @@ Here we take apart one real exchange with the model: the request you send and th
 
 A RAG request to the Anthropic Messages API is arranged like this: you put the grounding instructions in `system`, the assembled context and the question in `messages`, and you express the search itself as a tool call (`tools` plus `tool_choice`) (<https://platform.claude.com/docs/en/api/messages>). The model answers not with a single text but with an array of `content` blocks: reasoning (`thinking`), a search request (`tool_use`), and the final text. The `stop_reason` field tells why the model stopped, and `usage` - how many tokens it cost (<https://platform.claude.com/docs/en/api/messages>).
 
-Below is a real exchange of three turns: you send the question with a description of the search tool, the model asks to call the search (`tool_use`), you return the found chunks (`tool_result`), the model writes a grounded answer.
+Below is a real exchange of four turns: you send the question with a description of the search tool, the model asks to call the search (`tool_use`), you return the found chunks (`tool_result`), the model writes a grounded answer.
 
 ### Turn 1. Request: the question plus a description of the search tool
 

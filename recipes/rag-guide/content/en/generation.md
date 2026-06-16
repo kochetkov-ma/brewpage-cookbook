@@ -55,7 +55,7 @@ def generate_stream(prompt: str):
             yield text
 ```
 
-The model and the call shape follow the [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); check the model name at launch against the [Models overview](https://platform.claude.com/docs/en/docs/about-claude/models). Any vendor with a chat API will do - what matters is not the names but the three techniques below.
+The model and the call shape follow the [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); check the model name at launch against the [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview). Any vendor with a chat API will do - what matters is not the names but the three techniques below.
 
 ## Instructions: answer only from the context
 
@@ -91,7 +91,7 @@ In the static (no-JS) view, the host shows the answer where each claim is follow
 - Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <https://arxiv.org/abs/2202.03629>
 - Anthropic. Messages API. <https://platform.claude.com/docs/en/api/messages>
 - Anthropic. Streaming Messages. <https://platform.claude.com/docs/en/api/messages-streaming>
-- Anthropic. Models overview. <https://platform.claude.com/docs/en/docs/about-claude/models>
+- Anthropic. Models overview. <https://platform.claude.com/docs/en/about-claude/models/overview>
 
 ## Try it yourself
 

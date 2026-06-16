@@ -89,7 +89,7 @@ export function init(rootEl, config) {
   if (rootEl) {
     clear(rootEl);
     rootEl.setAttribute("data-chunk-anim", mode);
-    scene = build(rootEl, params, caption);
+    scene = build(rootEl, params, caption, lang);
 
     // timeline.js mounts its controls onto the .timeline shell + drives the clock.
     const tlShell = el("div", { class: "timeline chunk-anim__timeline" });
@@ -137,7 +137,7 @@ function clamp01(progress, atEnd) {
 // mode: fixed -- cuts at 0, size, 2*size, ... drawn one per step via scaleY.
 // ---------------------------------------------------------------------------
 
-function buildFixed(rootEl, params, caption) {
+function buildFixed(rootEl, params, caption, lang) {
   const text = String(params.text || "");
   const size = Math.max(1, params.size || 60);
   const { stage } = sceneShell(rootEl, caption, "chunk-anim--fixed");
@@ -155,10 +155,12 @@ function buildFixed(rootEl, params, caption) {
 
   const steps = cuts.map((idx, i) => ({
     id: "cut-" + i,
-    caption: "Рез на позиции " + idx,
+    caption: lang === "en" ? "Cut at position " + idx : "Рез на позиции " + idx,
     duration: STEP_MS,
   }));
-  if (steps.length === 0) steps.push({ id: "none", caption: "Один чанк", duration: STEP_MS });
+  if (steps.length === 0) {
+    steps.push({ id: "none", caption: lang === "en" ? "One chunk" : "Один чанк", duration: STEP_MS });
+  }
 
   function render(step, progress, atEnd) {
     const p = clamp01(progress, atEnd);
@@ -179,7 +181,7 @@ function buildFixed(rootEl, params, caption) {
 // mode: sliding -- a translucent window translateX-slides by step=size-overlap.
 // ---------------------------------------------------------------------------
 
-function buildSliding(rootEl, params, caption) {
+function buildSliding(rootEl, params, caption, lang) {
   const text = String(params.text || "");
   const size = Math.max(1, params.size || 50);
   const overlap = Math.max(0, Math.min(size - 1, params.overlap || 0));
@@ -200,11 +202,17 @@ function buildSliding(rootEl, params, caption) {
   line.appendChild(win);
   line.appendChild(ov);
 
-  const steps = starts.map((s, i) => ({
-    id: "win-" + i,
-    caption: "Окно [" + s + ", " + Math.min(s + size, text.length) + ")",
-    duration: STEP_MS,
-  }));
+  const steps = starts.map((s, i) => {
+    const end = Math.min(s + size, text.length);
+    return {
+      id: "win-" + i,
+      caption:
+        lang === "en"
+          ? "Window [" + s + ", " + end + ")"
+          : "Окно [" + s + ", " + end + ")",
+      duration: STEP_MS,
+    };
+  });
 
   function geom(start) {
     const from = charEls[start];
@@ -255,7 +263,7 @@ function buildSliding(rootEl, params, caption) {
 // cuts at the next separator level for the pieces that still exceed `size`.
 // ---------------------------------------------------------------------------
 
-function buildRecursive(rootEl, params, caption) {
+function buildRecursive(rootEl, params, caption, lang) {
   const text = String(params.text || "");
   const separators = Array.isArray(params.separators) ? params.separators : ["\n\n", "\n", " ", ""];
   const size = Math.max(1, params.size || 70);
@@ -277,10 +285,15 @@ function buildRecursive(rootEl, params, caption) {
 
   const steps = levels.map((lvl, i) => ({
     id: "lvl-" + i,
-    caption: "Уровень " + i + ": рез по " + describeSep(separators[i]),
+    caption:
+      lang === "en"
+        ? "Level " + i + ": cut by " + describeSep(separators[i], lang)
+        : "Уровень " + i + ": рез по " + describeSep(separators[i], lang),
     duration: STEP_MS,
   })).filter((_, i) => levels[i].length > 0);
-  if (steps.length === 0) steps.push({ id: "lvl-0", caption: "Один чанк", duration: STEP_MS });
+  if (steps.length === 0) {
+    steps.push({ id: "lvl-0", caption: lang === "en" ? "One chunk" : "Один чанк", duration: STEP_MS });
+  }
 
   function render(step, progress, atEnd) {
     const p = clamp01(progress, atEnd);
@@ -345,11 +358,12 @@ function dedupeSorted(arr) {
   return Array.from(new Set(arr)).sort((a, b) => a - b);
 }
 
-function describeSep(sep) {
-  if (sep === "\n\n") return "абзацам";
-  if (sep === "\n") return "строкам";
-  if (sep === " ") return "словам";
-  if (sep === "") return "символам";
+function describeSep(sep, lang) {
+  const en = lang === "en";
+  if (sep === "\n\n") return en ? "paragraphs" : "абзацам";
+  if (sep === "\n") return en ? "lines" : "строкам";
+  if (sep === " ") return en ? "words" : "словам";
+  if (sep === "") return en ? "characters" : "символам";
   return JSON.stringify(sep);
 }
 
@@ -358,7 +372,7 @@ function describeSep(sep) {
 // positions are briefly opacity-flagged then skipped.
 // ---------------------------------------------------------------------------
 
-function buildStructure(rootEl, params, caption) {
+function buildStructure(rootEl, params, caption, lang) {
   const text = String(params.text || "");
   const boundaries = (Array.isArray(params.boundaries) ? params.boundaries : []).filter((i) => i > 0 && i < text.length);
   const forbidden = (Array.isArray(params.forbidden) ? params.forbidden : []).filter((i) => i > 0 && i < text.length);
@@ -375,10 +389,15 @@ function buildStructure(rootEl, params, caption) {
   // Keep it simple and didactic: one step per boundary, forbidden flagged alongside.
   const steps = boundaries.map((idx, i) => ({
     id: "b-" + i,
-    caption: "Рез на границе предложения (" + idx + ")",
+    caption:
+      lang === "en"
+        ? "Cut at sentence boundary (" + idx + ")"
+        : "Рез на границе предложения (" + idx + ")",
     duration: STEP_MS,
   }));
-  if (steps.length === 0) steps.push({ id: "b-0", caption: "Нет границ", duration: STEP_MS });
+  if (steps.length === 0) {
+    steps.push({ id: "b-0", caption: lang === "en" ? "No boundaries" : "Нет границ", duration: STEP_MS });
+  }
 
   function render(step, progress, atEnd) {
     const p = clamp01(progress, atEnd);
@@ -404,7 +423,7 @@ function buildStructure(rootEl, params, caption) {
 // where a bar is below threshold a cut appears on the next beat.
 // ---------------------------------------------------------------------------
 
-function buildSemantic(rootEl, params, caption) {
+function buildSemantic(rootEl, params, caption, lang) {
   const sentences = Array.isArray(params.sentences) ? params.sentences : [];
   const sims = Array.isArray(params.sims) ? params.sims : [];
   const threshold = typeof params.threshold === "number" ? params.threshold : 0.5;
@@ -437,8 +456,22 @@ function buildSemantic(rootEl, params, caption) {
 
   // two-phase: phase A grows all similarity bars; phase B reveals cuts where below threshold.
   const steps = [
-    { id: "sim", caption: "Считаем близость соседних предложений", duration: STEP_MS },
-    { id: "cut", caption: "Рез там, где близость падает ниже порога", duration: STEP_MS },
+    {
+      id: "sim",
+      caption:
+        lang === "en"
+          ? "Measure similarity of neighbouring sentences"
+          : "Считаем близость соседних предложений",
+      duration: STEP_MS,
+    },
+    {
+      id: "cut",
+      caption:
+        lang === "en"
+          ? "Cut where similarity falls below the threshold"
+          : "Рез там, где близость падает ниже порога",
+      duration: STEP_MS,
+    },
   ];
 
   function render(step, progress, atEnd) {

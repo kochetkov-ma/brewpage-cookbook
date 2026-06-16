@@ -55,7 +55,7 @@ def generate_stream(prompt: str):
             yield text
 ```
 
-Модель и форма вызова - по [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); имя модели при запуске сверьте с [Models overview](https://platform.claude.com/docs/en/docs/about-claude/models). Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.
+Модель и форма вызова - по [Anthropic Messages API](https://platform.claude.com/docs/en/api/messages); имя модели при запуске сверьте с [Models overview](https://platform.claude.com/docs/en/about-claude/models/overview). Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.
 
 ## Инструкции: отвечай только по контексту
 
@@ -91,7 +91,7 @@ RAG снижает галлюцинации, подкладывая провер
 - Ji et al., 2023. Survey of Hallucination in Natural Language Generation. <https://arxiv.org/abs/2202.03629>
 - Anthropic. Messages API. <https://platform.claude.com/docs/en/api/messages>
 - Anthropic. Streaming Messages. <https://platform.claude.com/docs/en/api/messages-streaming>
-- Anthropic. Models overview. <https://platform.claude.com/docs/en/docs/about-claude/models>
+- Anthropic. Models overview. <https://platform.claude.com/docs/en/about-claude/models/overview>
 
 ## Попробуйте сами
 

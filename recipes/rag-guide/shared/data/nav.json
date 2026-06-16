@@ -85,23 +85,6 @@
       }
     },
     {
-      "id": "search",
-      "slug": "search",
-      "href": "search.html",
-      "ru": {
-        "label": "Как работает поиск по документам",
-        "blurb": "Сначала находим релевантные куски текста, потом показываем их модели. Поиск идет не по точным словам, а по смыслу запроса.",
-        "pts": ["Все документы заранее складываем в индекс", "Запрос пользователя превращается в поисковый запрос", "Возвращаем несколько лучших совпадений по смыслу", "Модель видит только эти куски, а не весь архив"],
-        "ex": "Спросили про отпуск - нашлись пункты политики об отпусках, даже без слова отпуск."
-      },
-      "en": {
-        "label": "How document retrieval works",
-        "blurb": "First find the relevant text, then show it to the model. The search goes by meaning, not by exact words.",
-        "pts": ["All documents are placed into an index ahead of time", "The user query is turned into a search", "Return a few of the best matches by meaning", "The model sees only those pieces, not the whole archive"],
-        "ex": "Ask about leave and the leave policy clauses surface, even without that exact word."
-      }
-    },
-    {
       "id": "chunking",
       "slug": "chunking",
       "href": "chunking.html",
@@ -150,6 +133,23 @@
         "blurb": "Vectors live in a special store and we search it for the closest in meaning. That is fast semantic search across the whole archive.",
         "pts": ["A vector DB stores vectors and finds the nearest ones", "Nearest-neighbour search returns the top similar chunks", "Metadata filters narrow it down: only this section or date", "Scales to millions of chunks without scanning everything"],
         "ex": "From 100000 chunks, pull the 5 closest to the question in milliseconds."
+      }
+    },
+    {
+      "id": "search",
+      "slug": "search",
+      "href": "search.html",
+      "ru": {
+        "label": "Как работает поиск по документам",
+        "blurb": "Сначала находим релевантные куски текста, потом показываем их модели. Поиск идет не по точным словам, а по смыслу запроса.",
+        "pts": ["Все документы заранее складываем в индекс", "Запрос пользователя превращается в поисковый запрос", "Возвращаем несколько лучших совпадений по смыслу", "Модель видит только эти куски, а не весь архив"],
+        "ex": "Спросили про отпуск - нашлись пункты политики об отпусках, даже без слова отпуск."
+      },
+      "en": {
+        "label": "How document retrieval works",
+        "blurb": "First find the relevant text, then show it to the model. The search goes by meaning, not by exact words.",
+        "pts": ["All documents are placed into an index ahead of time", "The user query is turned into a search", "Return a few of the best matches by meaning", "The model sees only those pieces, not the whole archive"],
+        "ex": "Ask about leave and the leave policy clauses surface, even without that exact word."
       }
     },
     {

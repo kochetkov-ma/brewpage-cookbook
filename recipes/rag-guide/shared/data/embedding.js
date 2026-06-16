@@ -54,13 +54,13 @@ const B = (ru, en) => ({ ru, en });
 // RU is real Cyrillic, EN is real English (canonical sample corpus shared across
 // the guide). JS-rendered data => Cyrillic here is correct.
 const DOC_RU =
+  "Политика возврата средств: вернуть товар можно в течение 30 дней. " +
   "Гарантия на электронику составляет 12 месяцев с даты покупки. " +
-  "Командировки оформляются через портал не позднее чем за 3 дня. " +
-  "Больничный оплачивается с первого дня.";
+  "Доставка по городу занимает один рабочий день.";
 const DOC_EN =
+  "The refund policy: a product may be returned within 30 days. " +
   "The warranty on electronics is 12 months from the date of purchase. " +
-  "Business trips are arranged through the portal no later than 3 days in advance. " +
-  "Sick leave is paid from the first day.";
+  "City delivery takes one business day.";
 
 export default {
   _schema: {
@@ -96,33 +96,33 @@ export default {
   },
 
   // chunks tile the active-lang doc.text exactly. Offsets per language:
-  //   RU: [0,62) [62,125) [125,163)   EN: [0,68) [68,148) [148,186)
+  //   RU: [0,66) [66,128) [128,174)   EN: [0,61) [61,129) [129,166)
   chunks: [
     {
       id: "c1",
       fromChar: B(0, 0),
-      toChar: B(62, 68),
+      toChar: B(66, 61),
+      text: B(
+        "Политика возврата средств: вернуть товар можно в течение 30 дней. ",
+        "The refund policy: a product may be returned within 30 days. "
+      ),
+    },
+    {
+      id: "c2",
+      fromChar: B(66, 61),
+      toChar: B(128, 129),
       text: B(
         "Гарантия на электронику составляет 12 месяцев с даты покупки. ",
         "The warranty on electronics is 12 months from the date of purchase. "
       ),
     },
     {
-      id: "c2",
-      fromChar: B(62, 68),
-      toChar: B(125, 148),
-      text: B(
-        "Командировки оформляются через портал не позднее чем за 3 дня. ",
-        "Business trips are arranged through the portal no later than 3 days in advance. "
-      ),
-    },
-    {
       id: "c3",
-      fromChar: B(125, 148),
-      toChar: B(163, 186),
+      fromChar: B(128, 129),
+      toChar: B(174, 166),
       text: B(
-        "Больничный оплачивается с первого дня.",
-        "Sick leave is paid from the first day."
+        "Доставка по городу занимает один рабочий день.",
+        "City delivery takes one business day."
       ),
     },
   ],

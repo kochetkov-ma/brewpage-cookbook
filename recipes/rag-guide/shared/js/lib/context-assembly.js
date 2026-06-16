@@ -95,7 +95,7 @@ export function init(rootEl, config) {
     clear(rootEl);
     rootEl.classList.add("ca-root");
 
-    rootEl.appendChild(el("h3", { class: "ca-title", text: "Сборка контекста" }));
+    rootEl.appendChild(el("h3", { class: "ca-title", text: ui.title || "Assemble context" }));
 
     // controls
     const controls = el("div", { class: "ca-controls" });
@@ -141,7 +141,7 @@ export function init(rootEl, config) {
     // stage: pool of ranked chunks + the prompt template
     const stage = el("div", { class: "ca-stage" });
 
-    const pool = el("div", { class: "ca-pool", attrs: { "data-slot": "pool", role: "list", "aria-label": "найденные куски" } });
+    const pool = el("div", { class: "ca-pool", attrs: { "data-slot": "pool", role: "list", "aria-label": ui.poolLabel || "retrieved chunks" } });
     const prompt = el("div", { class: "ca-prompt", attrs: { "data-slot": "prompt" } });
 
     stage.append(pool, prompt);

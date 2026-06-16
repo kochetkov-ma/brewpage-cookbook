@@ -163,6 +163,11 @@ function boot() {
       initProgress(progressHost, {
         mainPath: MAIN_PATH,
         total: MAIN_PATH.length,
+        labels: {
+          count: (n, t) =>
+            i18n.getLocale() === "en" ? `Visited ${n} / ${t}` : `Пройдено ${n} / ${t}`,
+          done: i18n.getLocale() === "en" ? "Route complete" : "Маршрут пройден",
+        },
         // persist REAL chapter completion + the progress FRACTION so the map
         // paints 3 states AND a per-chapter percent on return.
         onChange: (state) => {

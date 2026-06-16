@@ -8,7 +8,7 @@
 
 ## Проблема: модель устаревает и не знает вашего
 
-Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.
+Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели ([platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.
 
 RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:
 
@@ -48,7 +48,7 @@ Track B никогда не пишет ответ, пока контекст н�
 
 Две причины, обе структурные, а не "плохо спросили":
 
-- **Training cutoff.** После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)).
+- **Training cutoff.** После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей ([platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)).
 - **Нет приватных данных.** Ваши внутренние документы не были и не будут в общедоступном обучающем корпусе, поэтому любой ответ о них без retrieval - догадка.
 
 ## Свежие и приватные данные без переобучения
@@ -71,7 +71,7 @@ RAG хранит знания ВНЕ модели - во внешнем инде
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)
-- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)
+- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)
 - Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
 - OpenAI. Fine-tuning guide (cost/lifecycle contrast). [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)
 

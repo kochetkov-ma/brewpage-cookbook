@@ -127,6 +127,8 @@ const data = {
     order: ["by-score", "by-edges"],
     defaultOrder: "by-score",
     ui: {
+      title: "Сборка контекста",
+      poolLabel: "найденные куски",
       budgetSliderLabel: "max_context_tokens",
       orderToggleLabel: "Порядок кусков",
       orderByScore: "по score",
@@ -196,6 +198,8 @@ const data = {
     order: ["by-score", "by-edges"],
     defaultOrder: "by-score",
     ui: {
+      title: "Assemble context",
+      poolLabel: "retrieved chunks",
       budgetSliderLabel: "max_context_tokens",
       orderToggleLabel: "Chunk order",
       orderByScore: "by score",

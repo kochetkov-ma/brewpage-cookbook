@@ -139,7 +139,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -159,7 +159,7 @@ const PROSE_RU = {
 
     "problem.h2": { t: "Проблема: модель устаревает и не знает вашего" },
     "problem.p1": {
-      html: 'Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.',
+      html: 'Обычная модель обучена до некоторой даты (training cutoff) и после этого заморожена: о событиях и документах позже этой даты она не знает ничего. Например, обзор моделей Anthropic прямо указывает дату отсечки обучающих данных для каждой модели (<a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>). Плюс она никогда не видела ваших приватных документов. Итог - два источника ошибок: устаревшие факты и выдумки про ваши данные.',
     },
     "problem.p2": {
       t: "RAG убирает оба одним ходом: нужный факт подается в момент запроса из вашего свежего индекса. Сравните два пути одного и того же вопроса - без RAG и с RAG:",
@@ -170,7 +170,7 @@ const PROSE_RU = {
     "fails.h2": { t: "Почему обычная модель не справляется" },
     "fails.p1": { t: 'Две причины, обе структурные, а не "плохо спросили":' },
     "fails.li1": {
-      html: '<strong>Training cutoff.</strong> После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>).',
+      html: '<strong>Training cutoff.</strong> После даты отсечки модель не знает нового; обновить инструкцию = снова трогать модель. Даты отсечки публикуются в обзоре моделей (<a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>).',
     },
     "fails.li2": {
       html: "<strong>Нет приватных данных.</strong> Ваши внутренние документы не были и не будут в общедоступном обучающем корпусе, поэтому любой ответ о них без retrieval - догадка.",
@@ -198,7 +198,7 @@ const PROSE_RU = {
       html: 'Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>',
     },
     "sources.li4": {
       html: 'Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a>',
@@ -222,7 +222,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -336,7 +336,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -590,7 +590,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -742,7 +742,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -786,10 +786,10 @@ const PROSE_RU = {
     },
     "budget.h2": { t: "Сколько контекста влезает" },
     "budget.p1": {
-      html: 'У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Размеры окна контекста зависят от модели - актуальные лимиты см. в обзоре моделей Anthropic (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">Anthropic, Models overview</a>). Даже когда окно большое, бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.',
+      html: 'У модели есть твердый предел - окно контекста (context window), максимум токенов на входе и выходе вместе. Размеры окна контекста зависят от модели - актуальные лимиты см. в обзоре моделей Anthropic (<a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">Anthropic, Models overview</a>). Даже когда окно большое, бюджет токенов под контекст всегда меньше окна: часть места занимают инструкция, вопрос, история диалога и место под ответ.',
     },
     "budget.p2": {
-      html: 'Токен - это не слово и не символ; это единица, на которые токенизатор режет текст (части слов, знаки). Считать надо именно токены, а не символы - поэтому в коде выше <code>count_tokens</code> использует настоящий токенизатор <code>tiktoken</code> (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI tiktoken</a>), а не <code>len(text)</code>. Большое окно не бесплатно: каждый лишний токен контекста - это деньги и задержка в каждом запросе (об этом - глава про продакшен).',
+      html: 'Токен - это не слово и не символ; это единица, на которые токенизатор режет текст (части слов, знаки). Считать надо именно токены, а не символы - поэтому в коде выше <code>count_tokens</code> использует настоящий токенизатор <code>tiktoken</code> (<a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">OpenAI tiktoken</a>), а не <code>len(text)</code>. Важно: tiktoken - токенизатор OpenAI и лишь быстрое офлайн-приближение; для Claude он неточен, поэтому для точного подсчета под Claude используйте API Anthropic <code>client.messages.count_tokens()</code> (<a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>). Большое окно не бесплатно: каждый лишний токен контекста - это деньги и задержка в каждом запросе (об этом - глава про продакшен).',
     },
     "order.h2": { t: "Порядок и приоритет кусков" },
     "order.p1": {
@@ -813,7 +813,7 @@ const PROSE_RU = {
       html: 'Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a>',
     },
     "sources.li3": {
-      html: 'Anthropic. Models overview (context window). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview (context window). <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>',
     },
     "sources.li4": {
       html: 'OpenAI. tiktoken (tokenizer). <a href="https://github.com/openai/tiktoken" target="_blank" rel="noopener">github.com/openai/tiktoken</a>',
@@ -834,7 +834,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -922,7 +922,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -968,7 +968,7 @@ const PROSE_RU = {
       html: "При поиске вы просите не один самый близкий вектор, а <strong>top-k</strong> - несколько ближайших (часто k=3..10). Это дает модели немного запасных кусков на случай, если самый ближайший не полностью покрывает вопрос.",
     },
     "topk.p2": {
-      html: 'Вместе с вектором в базе хранятся <strong>метаданные</strong> (metadata) - источник, раздел, дата, права доступа. Фильтры по метаданным сужают поиск до подходящего подмножества вместе с поиском ближайших соседей - вместо сканирования всего индекса: например, только документы этого отдела или только то, что свежее определенной даты (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). В коде выше это <code>filter={"section": "vozvrat"}</code>.',
+      html: 'Вместе с вектором в базе хранятся <strong>метаданные</strong> (metadata) - источник, раздел, дата, права доступа. Фильтры по метаданным сужают поиск до подходящего подмножества вместе с поиском ближайших соседей - вместо сканирования всего индекса: например, только документы этого отдела или только то, что свежее определенной даты (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). В коде выше это <code>filter={"section": "возврат"}</code>.',
     },
     "scale.h2": { t: "Масштаб: миллионы фрагментов без перебора" },
     "scale.p1": {
@@ -1006,7 +1006,7 @@ const PROSE_RU = {
       html: "Откройте интерактив ann-topk-drill: найдите узел-запрос и пройдите по нарисованному query path к его top-k соседям. Сделайте drill (semantic zoom) в одного из выбранных соседей и посмотрите его <code>cosine</code> и <code>metadata</code>.",
     },
     "try.li2": {
-      html: 'Сравните, что вернется с фильтром по метаданным и без него: в коде выше уберите <code>filter={"section": "refund"}</code> и посмотрите, как меняется набор top-k.',
+      html: 'Сравните, что вернется с фильтром по метаданным и без него: в коде выше уберите <code>filter={"section": "возврат"}</code> и посмотрите, как меняется набор top-k.',
     },
     "try.li3": {
       t: 'Прикиньте, нужна ли векторная база вашему случаю: сколько у вас фрагментов и ищете вы по смыслу или по точному совпадению - сверьтесь с разделом "Когда векторная база не нужна".',
@@ -1017,7 +1017,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -1113,7 +1113,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -1146,7 +1146,7 @@ const PROSE_RU = {
       t: "Вот рабочий вызов на Python через Anthropic SDK. Промпт собран на предыдущей стадии; здесь важны три вещи: жесткая системная инструкция, подписанные источники в контексте и разбор цитат из ответа.",
     },
     "solution.p2": {
-      html: 'Модель и форма вызова - по <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; имя модели при запуске сверьте с <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">Models overview</a>. Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.',
+      html: 'Модель и форма вызова - по <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">Anthropic Messages API</a>; имя модели при запуске сверьте с <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">Models overview</a>. Подойдет любой вендор с чат-API - важны не имена, а три приема ниже.',
     },
     "instructions.h2": { t: "Инструкции: отвечай только по контексту" },
     "instructions.p1": {
@@ -1190,7 +1190,7 @@ const PROSE_RU = {
       html: 'Anthropic. Streaming Messages. <a href="https://platform.claude.com/docs/en/api/messages-streaming" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages-streaming</a>',
     },
     "sources.li5": {
-      html: 'Anthropic. Models overview. <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>',
+      html: 'Anthropic. Models overview. <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>',
     },
     "try.h2": { t: "Попробуйте сами" },
     "try.li1": {
@@ -1208,7 +1208,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
@@ -1353,7 +1353,7 @@ const PROSE_RU = {
     },
     "about.h2": { t: "Об этом рецепте" },
     "about.li1": {
-      html: 'Часть <a href="../../README.md">BrewPage Cookbook</a>.',
+      html: 'Часть <a href="index.html">BrewPage Cookbook</a>.',
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',

@@ -75,9 +75,9 @@ Set the instruction explicitly and firmly: "answer only from the context; if the
 
 ## How much context fits
 
-The model has a hard limit - the context window, the maximum tokens on input and output together. For example, the Claude family works with a window of 200,000 tokens ([Anthropic, Models overview](https://platform.claude.com/docs/en/docs/about-claude/models)). That seems huge, but the token budget for context is always smaller than the window: part of the space is taken by the instruction, the question, the dialogue history, and room for the answer.
+The model has a hard limit - the context window, the maximum tokens on input and output together. For example, the Claude family works with a window of 200,000 tokens ([Anthropic, Models overview](https://platform.claude.com/docs/en/about-claude/models/overview)). That seems huge, but the token budget for context is always smaller than the window: part of the space is taken by the instruction, the question, the dialogue history, and room for the answer.
 
-A token is not a word and not a character; it is the unit into which the tokenizer cuts text (parts of words, punctuation). You must count tokens, not characters - that is why in the code above `count_tokens` uses a real tokenizer, `tiktoken` ([OpenAI tiktoken](https://github.com/openai/tiktoken)), rather than `len(text)`. A large window is not free: every extra context token is money and latency on every request (more on this in the production chapter).
+A token is not a word and not a character; it is the unit into which the tokenizer cuts text (parts of words, punctuation). You must count tokens, not characters - that is why in the code above `count_tokens` uses a real tokenizer, `tiktoken` ([OpenAI tiktoken](https://github.com/openai/tiktoken)), rather than `len(text)`. Note: tiktoken is an OpenAI tokenizer and a fast offline approximation only; it is not exact for Claude, so for precise Claude counts use the Anthropic `client.messages.count_tokens()` API ([Anthropic Messages API](https://platform.claude.com/docs/en/api/messages)). A large window is not free: every extra context token is money and latency on every request (more on this in the production chapter).
 
 ## Order and priority of the pieces
 
@@ -109,7 +109,7 @@ In the static (no-JS) view, the host shows the already-assembled prompt block wi
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <https://arxiv.org/abs/2005.11401>
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <https://arxiv.org/abs/2307.03172>
-- Anthropic. Models overview (context window). <https://platform.claude.com/docs/en/docs/about-claude/models>
+- Anthropic. Models overview (context window). <https://platform.claude.com/docs/en/about-claude/models/overview>
 - OpenAI. tiktoken (tokenizer). <https://github.com/openai/tiktoken>
 
 ## Try it yourself

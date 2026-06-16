@@ -198,7 +198,10 @@
       <div>
         <div class="plot-frame" data-component="plate">
           <svg class="plot" data-component="vector-map" data-slot="stage" viewBox="0 0 520 420" role="img"
-               aria-label="2D-проекция индекса векторов: точка запроса в центре, top-k ближайших соседей зелёные, далёкие серые. Все точки можно открыть, чтобы увидеть их косинус и метаданные.">
+               data-i18n-aria
+               aria-label="2D projection of the vector index: the query point sits at the center, the top-k nearest neighbours are green and distant ones grey. Every point opens to reveal its cosine and metadata."
+               data-aria-ru="2D-проекция индекса векторов: точка запроса в центре, top-k ближайших соседей зелёные, далёкие серые. Все точки можно открыть, чтобы увидеть их косинус и метаданные."
+               data-aria-en="2D projection of the vector index: the query point sits at the center, the top-k nearest neighbours are green and distant ones grey. Every point opens to reveal its cosine and metadata.">
             <!-- vector-map.js renders the graticule, cosine rings, axis caption,
                  query -> top-k links and all drillable index points here on load.
                  NO-JS fallback (static index facts + top-k list) lives below in .no-js-only. -->
@@ -207,15 +210,15 @@
         </div>
 
         <div class="scalebar">
-          <span class="sb-cap">косинусная близость</span>
+          <span class="sb-cap" data-i18n data-ru="косинусная близость" data-en="cosine closeness">cosine closeness</span>
           <span class="sb-track" aria-hidden="true">
             <span class="sb-seg a"></span><span class="sb-seg b"></span>
             <span class="sb-seg c"></span><span class="sb-seg d"></span>
           </span>
           <span class="sb-cap">1.0 &rarr; 0.0</span>
           <span class="vmap-legend">
-            <span class="lg"><span class="sw g"></span> top-k (ближние)</span>
-            <span class="lg"><span class="sw r"></span> отсечённые (дальние)</span>
+            <span class="lg"><span class="sw g"></span> <span data-i18n data-ru="top-k (ближние)" data-en="top-k (near)">top-k (near)</span></span>
+            <span class="lg"><span class="sw r"></span> <span data-i18n data-ru="отсечённые (дальние)" data-en="cut off (far)">cut off (far)</span></span>
           </span>
         </div>
       </div>
@@ -223,44 +226,44 @@
       <!-- ============ SIDE RAIL ============ -->
       <aside class="vmap-rail" data-slot="rail">
         <div class="card">
-          <h2>Запрос &rarr; вектор</h2>
-          <p class="qline">"как вернуть деньги за покупку"</p>
+          <h2 data-i18n data-ru="Запрос &rarr; вектор" data-en="Query &rarr; vector">Query &rarr; vector</h2>
+          <p class="qline" data-i18n data-ru="&quot;как вернуть деньги за покупку&quot;" data-en="&quot;how to get my money back for a purchase&quot;">"how to get my money back for a purchase"</p>
           <p class="embed-step" data-slot="embed-step" aria-live="polite">текст -&gt; токены -&gt; вектор</p>
           <div class="tokrow" data-slot="tokrow" aria-hidden="true">
-            <span class="tok">как</span><span class="tok">вернуть</span><span class="tok">деньги</span><span class="tok">за</span><span class="tok">покупку</span>
+            <span class="tok" data-i18n data-ru="как" data-en="how">how</span><span class="tok" data-i18n data-ru="вернуть" data-en="to get">to get</span><span class="tok" data-i18n data-ru="деньги" data-en="my money">my money</span><span class="tok" data-i18n data-ru="за" data-en="back for a">back for a</span><span class="tok" data-i18n data-ru="покупку" data-en="purchase">purchase</span>
           </div>
-          <p class="vread"><span class="vlbl">вектор запроса (dim 1536):</span><br>
+          <p class="vread"><span class="vlbl" data-i18n data-ru="вектор запроса (dim 1536):" data-en="query vector (dim 1536):">query vector (dim 1536):</span><br>
             <span class="qvec" data-slot="qvec">[0.80, -0.11, 0.46, 0.06, -0.34, 0.20, ...]</span></p>
-          <p class="meta">База хранит каждый фрагмент как <b>вектор</b> и ищет ближайших к вектору запроса по косинусу - <b>числами, а не словами</b>, и без перебора всего архива (ANN).</p>
+          <p class="meta"><span data-i18n data-ru="База хранит каждый фрагмент как" data-en="The store keeps every fragment as a">The store keeps every fragment as a</span> <b data-i18n data-ru="вектор" data-en="vector">vector</b> <span data-i18n data-ru="и ищет ближайших к вектору запроса по косинусу -" data-en="and looks for the nearest to the query vector by cosine -">and looks for the nearest to the query vector by cosine -</span> <b data-i18n data-ru="числами, а не словами" data-en="with numbers, not words">with numbers, not words</b><span data-i18n data-ru=", и без перебора всего архива (ANN)." data-en=", and without scanning the whole archive (ANN).">, and without scanning the whole archive (ANN).</span></p>
         </div>
 
         <div class="callout">
-          <p class="ctag">Фильтр по метаданным</p>
-          <p>Рядом с вектором база хранит <span style="font-style:normal">source / section / date / access</span>.
-            Фильтр <code>filter={"section": "refund"}</code> сужает поиск до нужного подмножества <b>перед</b> поиском ближайших.</p>
+          <p class="ctag" data-i18n data-ru="Фильтр по метаданным" data-en="Metadata filter">Metadata filter</p>
+          <p><span data-i18n data-ru="Рядом с вектором база хранит" data-en="Next to the vector the store keeps">Next to the vector the store keeps</span> <span style="font-style:normal">source / section / date / access</span>.
+            <span data-i18n data-ru="Фильтр" data-en="The filter">The filter</span> <code>filter={"section": "refund"}</code> <span data-i18n data-ru="сужает поиск до нужного подмножества" data-en="narrows the search to the matching subset">narrows the search to the matching subset</span> <b data-i18n data-ru="перед" data-en="before">before</b> <span data-i18n data-ru="поиском ближайших." data-en="the nearest-neighbour lookup.">the nearest-neighbour lookup.</span></p>
         </div>
 
         <div class="card">
-          <h2>top-k по косинусу <span class="kbadge">k = 3</span></h2>
+          <h2><span data-i18n data-ru="top-k по косинусу" data-en="top-k by cosine">top-k by cosine</span> <span class="kbadge">k = 3</span></h2>
           <ol class="ranklist" data-slot="ranklist">
-            <li class="near"><span class="rk">#1</span><span class="rtxt">политика возврата средств</span><span class="rcos">0.91</span></li>
-            <li class="near"><span class="rk">#2</span><span class="rtxt">гарантия на электронику</span><span class="rcos">0.85</span></li>
-            <li class="near"><span class="rk">#3</span><span class="rtxt">обмен товара</span><span class="rcos">0.78</span></li>
-            <li class="far"><span class="rk">#4</span><span class="rtxt">доставка по городу</span><span class="rcos">0.24</span></li>
-            <li class="far"><span class="rk">#5</span><span class="rtxt">бонусная программа</span><span class="rcos">0.19</span></li>
-            <li class="far"><span class="rk">#6</span><span class="rtxt">режим работы магазина</span><span class="rcos">0.12</span></li>
+            <li class="near"><span class="rk">#1</span><span class="rtxt" data-i18n data-ru="политика возврата средств" data-en="refund policy">refund policy</span><span class="rcos">0.91</span></li>
+            <li class="near"><span class="rk">#2</span><span class="rtxt" data-i18n data-ru="гарантия на электронику" data-en="electronics warranty">electronics warranty</span><span class="rcos">0.85</span></li>
+            <li class="near"><span class="rk">#3</span><span class="rtxt" data-i18n data-ru="обмен товара" data-en="product exchange">product exchange</span><span class="rcos">0.78</span></li>
+            <li class="far"><span class="rk">#4</span><span class="rtxt" data-i18n data-ru="доставка по городу" data-en="city delivery">city delivery</span><span class="rcos">0.24</span></li>
+            <li class="far"><span class="rk">#5</span><span class="rtxt" data-i18n data-ru="бонусная программа" data-en="loyalty program">loyalty program</span><span class="rcos">0.19</span></li>
+            <li class="far"><span class="rk">#6</span><span class="rtxt" data-i18n data-ru="режим работы магазина" data-en="store opening hours">store opening hours</span><span class="rcos">0.12</span></li>
           </ol>
-          <div class="cut">граница top-k (k = 3)</div>
-          <p class="meta">Возвращаются только <b>top-k</b> ближайших; всё ниже границы отсечено.</p>
+          <div class="cut" data-i18n data-ru="граница top-k (k = 3)" data-en="top-k boundary (k = 3)">top-k boundary (k = 3)</div>
+          <p class="meta"><span data-i18n data-ru="Возвращаются только" data-en="Only the">Only the</span> <b data-i18n data-ru="top-k" data-en="top-k">top-k</b> <span data-i18n data-ru="ближайших; всё ниже границы отсечено." data-en="nearest are returned; everything below the boundary is cut off.">nearest are returned; everything below the boundary is cut off.</span></p>
         </div>
       </aside>
     </div>
 
     <div class="vmap-foot">
-      <b>Как читать карту.</b> Каждый фрагмент хранится в индексе как вектор (<code>dim 1536</code>) вместе с метаданными.
-      Запрос превращается в вектор; <b>поиск ближайших соседей</b> (приближённый, <code>ANN</code>, через граф <code>HNSW</code>) возвращает
-      <b>top-k</b> лучших по <b>косинусной близости</b> за логарифмическое число шагов вместо полного перебора.
-      Кликните точку (включая дальние), чтобы заглянуть внутрь - семантический зум покажет косинус и метаданные соседа или причину, почему он не вошёл в top-k.
+      <b data-i18n data-ru="Как читать карту." data-en="How to read the map.">How to read the map.</b> <span data-i18n data-ru="Каждый фрагмент хранится в индексе как вектор (" data-en="Every fragment is stored in the index as a vector (">Every fragment is stored in the index as a vector (</span><code>dim 1536</code><span data-i18n data-ru=") вместе с метаданными." data-en=") together with its metadata.">) together with its metadata.</span>
+      <span data-i18n data-ru="Запрос превращается в вектор;" data-en="The query turns into a vector;">The query turns into a vector;</span> <b data-i18n data-ru="поиск ближайших соседей" data-en="nearest-neighbour search">nearest-neighbour search</b> <span data-i18n data-ru="(приближённый," data-en="(approximate,">(approximate,</span> <code>ANN</code><span data-i18n data-ru=", через граф" data-en=", via an">, via an</span> <code>HNSW</code> <span data-i18n data-ru="граф) возвращает" data-en="graph) returns the">graph) returns the</span>
+      <b data-i18n data-ru="top-k" data-en="top-k">top-k</b> <span data-i18n data-ru="лучших по" data-en="best by">best by</span> <b data-i18n data-ru="косинусной близости" data-en="cosine closeness">cosine closeness</b> <span data-i18n data-ru="за логарифмическое число шагов вместо полного перебора." data-en="in a logarithmic number of steps instead of a full scan.">in a logarithmic number of steps instead of a full scan.</span>
+      <span data-i18n data-ru="Кликните точку (включая дальние), чтобы заглянуть внутрь - семантический зум покажет косинус и метаданные соседа или причину, почему он не вошёл в top-k." data-en="Click a point (including distant ones) to look inside - semantic zoom shows the neighbour's cosine and metadata, or why it did not make the top-k.">Click a point (including distant ones) to look inside - semantic zoom shows the neighbour's cosine and metadata, or why it did not make the top-k.</span>
     </div>
 
     <!-- ============ NO-JS fallback: static index facts + top-k list ============ -->
@@ -356,7 +359,7 @@ for m in res.matches:
     <section aria-labelledby="pr-topk">
       <h2 id="pr-topk" data-pk="topk.h2">Top-k and metadata filters</h2>
       <p data-pk="topk.p1">In a search you ask not for the single closest vector but for the <strong>top-k</strong> - several nearest ones (often k=3..10). This gives the model a few spare pieces in case the closest one does not fully cover the question.</p>
-      <p data-pk="topk.p2">Together with the vector, the database stores <strong>metadata</strong> - source, section, date, access rights. Metadata filters narrow the search to a matching subset in combination with the nearest-neighbour search - rather than scanning the whole index: for example, only documents from this department or only what is fresher than a certain date (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). In the code above this is <code>filter={"section": "vozvrat"}</code>.</p>
+      <p data-pk="topk.p2">Together with the vector, the database stores <strong>metadata</strong> - source, section, date, access rights. Metadata filters narrow the search to a matching subset in combination with the nearest-neighbour search - rather than scanning the whole index: for example, only documents from this department or only what is fresher than a certain date (<a href="https://docs.pinecone.io/guides/index-data/indexing-overview#metadata" target="_blank" rel="noopener">Pinecone, metadata filtering</a>). In the code above this is <code>filter={"section": "refund"}</code>.</p>
     </section>
 
     <section aria-labelledby="pr-scale">
@@ -389,7 +392,7 @@ for m in res.matches:
       <h2 id="pr-try" data-pk="try.h2">Try it yourself</h2>
       <ul>
         <li data-pk="try.li1">Open the ann-topk-drill interaction: find the query node and walk the drawn query path to its top-k neighbours. Drill (semantic zoom) into one of the selected neighbours and look at its <code>cosine</code> and <code>metadata</code>.</li>
-        <li data-pk="try.li2">Compare what comes back with and without a metadata filter: in the code above remove <code>filter={"section": "vozvrat"}</code> and see how the top-k set changes.</li>
+        <li data-pk="try.li2">Compare what comes back with and without a metadata filter: in the code above remove <code>filter={"section": "refund"}</code> and see how the top-k set changes.</li>
         <li data-pk="try.li3">Estimate whether a vector database fits your case: how many fragments do you have, and do you search by meaning or by exact match - check against the section "When you do not need a vector database".</li>
       </ul>
     </section>
@@ -402,7 +405,7 @@ for m in res.matches:
     <section class="about-recipe" aria-labelledby="pr-about">
       <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="index.html">BrewPage Cookbook</a>.</li>
         <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
         <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>

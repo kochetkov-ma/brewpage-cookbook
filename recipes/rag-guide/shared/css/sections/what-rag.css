@@ -274,7 +274,7 @@
 .prompt .sys { color: var(--c-accent-3); }
 .prompt .ctx { color: var(--c-code-ctx); }
 .prompt .q { color: var(--c-code-q); }
-.prompt .ctx-line { display: block; opacity: 0; transform: translateY(-8px); transition: opacity 0.4s var(--ease-1), transform 0.4s cubic-bezier(0.34,1.3,0.5,1); }
+.prompt .ctx-line { display: block; opacity: 0; transform: translateY(-8px); transition: opacity 0.4s var(--ease-1), transform 0.4s var(--ease-1); }
 .assemble.run .prompt .ctx-line { opacity: 1; transform: none; }
 .budget {
   font-family: var(--font-ui);
@@ -356,7 +356,7 @@
   padding: 3px 7px;
   opacity: 0;
   transform: translateY(-7px) scale(0.85);
-  transition: opacity 0.34s var(--ease-1), transform 0.34s cubic-bezier(0.34,1.4,0.5,1);
+  transition: opacity 0.34s var(--ease-1), transform 0.34s var(--ease-1);
 }
 .embed-anim.run .embed-tokens .tok { opacity: 1; transform: none; }
 .embed-vec {

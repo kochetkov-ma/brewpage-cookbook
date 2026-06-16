@@ -317,7 +317,7 @@
 
     <section aria-labelledby="pr-problem">
       <h2 id="pr-problem" data-pk="problem.h2">The problem: the model goes stale and does not know yours</h2>
-      <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
+      <p data-pk="problem.p1">An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model (<a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.</p>
       <p data-pk="problem.p2">RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:</p>
       <figure class="code-block" data-component="code-block" data-lang="python" data-annot="why-rag-two-track">
       <figcaption class="code-block__cap" data-i18n data-ru="Один вопрос двумя путями: без RAG (из памяти) и с RAG (заземленный по чанку)." data-en="One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).">One question, two paths: without RAG (from memory) and with RAG (grounded on a chunk).</figcaption>
@@ -363,7 +363,7 @@ print("RAG:   ", ask(context=retrieved))</code></pre>
       <h2 id="pr-fails" data-pk="fails.h2">Why an ordinary model cannot cope</h2>
       <p data-pk="fails.p1">Two reasons, both structural rather than "you asked badly":</p>
       <ul>
-        <li data-pk="fails.li1"><strong>Training cutoff.</strong> After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview (<a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a>).</li>
+        <li data-pk="fails.li1"><strong>Training cutoff.</strong> After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview (<a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a>).</li>
         <li data-pk="fails.li2"><strong>No private data.</strong> Your internal documents were not and will not be in the public training corpus, so any answer about them without retrieval is a guess.</li>
       </ul>
     </section>
@@ -389,7 +389,7 @@ print("RAG:   ", ask(context=retrieved))</code></pre>
       <ul>
         <li data-pk="sources.li1">Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. <a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">arxiv.org/abs/2005.11401</a></li>
         <li data-pk="sources.li2">Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. <a href="https://arxiv.org/abs/2307.03172" target="_blank" rel="noopener">arxiv.org/abs/2307.03172</a></li>
-        <li data-pk="sources.li3">Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/docs/about-claude/models" target="_blank" rel="noopener">platform.claude.com/docs/en/docs/about-claude/models</a></li>
+        <li data-pk="sources.li3">Anthropic. Models overview (model families, training cutoff). <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener">platform.claude.com/docs/en/about-claude/models/overview</a></li>
         <li data-pk="sources.li4">Anthropic. Messages API. <a href="https://platform.claude.com/docs/en/api/messages" target="_blank" rel="noopener">platform.claude.com/docs/en/api/messages</a></li>
         <li data-pk="sources.li5">OpenAI. Model-optimization guide (covers fine-tuning; cost/lifecycle contrast). <a href="https://developers.openai.com/api/docs/guides/model-optimization" target="_blank" rel="noopener">developers.openai.com/api/docs/guides/model-optimization</a></li>
       </ul>
@@ -412,7 +412,7 @@ print("RAG:   ", ask(context=retrieved))</code></pre>
     <section class="about-recipe" aria-labelledby="pr-about">
       <h2 id="pr-about" data-pk="about.h2">About this recipe</h2>
       <ul>
-        <li data-pk="about.li1">Part of the <a href="../../README.md">BrewPage Cookbook</a>.</li>
+        <li data-pk="about.li1">Part of the <a href="index.html">BrewPage Cookbook</a>.</li>
         <li data-pk="about.li2">Published live at <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.</li>
         <li data-pk="about.li3">BrewPage API contract source: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.</li>
       </ul>

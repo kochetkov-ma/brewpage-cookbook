@@ -101,7 +101,7 @@ print(report)
 
 <!-- IE-BRIEF: element=metric-at-k-eval-calculator | purpose=дать читателю почувствовать как precision@k и recall@k меняются при изменении k на реальном золотом sample, и сравнить before/after | inputs=NET-NEW default-export shared/data/evaluation.js { golden:[{q, relevant_ids[], retrieved_ids[]}] (3-5 вопросов вшиты, retrieved_ids per run для before/after), kRange:{min:1,max:10,default}, runs:["before","after"] }; slider k; тумблер before/after | host=[data-component="metric-eval-calculator"]; optional drill в один вопрос через [data-component="drilldown-host"] | recipe-path=NET-NEW shared/js/lib/eval-calculator.js (init(rootEl,{data})=>{destroy()}; чистый расчет precision@k/recall@k + bar render) + drilldown-zoom.js для зума в один вопрос (видно какие из top-k попали в relevant) | animation=при движении слайдера k столбцы precision@k и recall@k пересчитываются (width/transform tween); попадания в top-k подсвечиваются зеленым акцентом как earned; before/after - две дорожки рядом; transform/opacity и gated width only, IO-gated, reduced-motion сразу показывает итоговые столбцы; mobile 390/320 дорожки stack; NO mascot dot -->
 
-В статичном (без JS) виде хост показывает разобранную золотую таблицу: вопрос, его relevant-id, выданный top-k и посчитанные precision@k/recall@k для нескольких значений k.
+Выше - интерактивный калькулятор precision@k / recall@k над золотым набором. Слайдер k пересчитывает обе метрики, тумблер before/after сравнивает две дорожки на одном фиксированном наборе, а попадания в top-k подсвечиваются зеленым по мере того, как вы их находите. Без JS страница показывает разобранную золотую таблицу с теми же расчетами.
 
 ## Источники
 

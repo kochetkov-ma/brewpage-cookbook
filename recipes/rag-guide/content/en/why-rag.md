@@ -8,7 +8,7 @@
 
 ## The problem: the model goes stale and does not know yours
 
-An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.
+An ordinary model is trained up to some date (the training cutoff) and frozen after that: about events and documents later than that date it knows nothing. For example, the Anthropic models overview explicitly states the training-data cutoff date for each model ([platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)). On top of that, it has never seen your private documents. The result is two sources of error: stale facts and fabrications about your data.
 
 RAG removes both in one move: the needed fact is fed at request time from your fresh index. Compare two paths of the same question - without RAG and with RAG:
 
@@ -48,7 +48,7 @@ Track B never writes the answer until the context is substituted in: retrieval f
 
 Two reasons, both structural rather than "you asked badly":
 
-- **Training cutoff.** After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview ([platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)).
+- **Training cutoff.** After the cutoff date the model does not know anything new; updating its knowledge means touching the model again. The cutoff dates are published in the models overview ([platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)).
 - **No private data.** Your internal documents were not and will not be in the public training corpus, so any answer about them without retrieval is a guess.
 
 ## Fresh and private data without retraining
@@ -71,7 +71,7 @@ Below is an interactive two-track trace of one request. **Track A (without RAG):
 
 - Lewis et al., 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. [arxiv.org/abs/2005.11401](https://arxiv.org/abs/2005.11401)
 - Liu et al., 2023. Lost in the Middle: How Language Models Use Long Contexts. [arxiv.org/abs/2307.03172](https://arxiv.org/abs/2307.03172)
-- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/docs/about-claude/models](https://platform.claude.com/docs/en/docs/about-claude/models)
+- Anthropic. Models overview (model families, training cutoff). [platform.claude.com/docs/en/about-claude/models/overview](https://platform.claude.com/docs/en/about-claude/models/overview)
 - Anthropic. Messages API. [platform.claude.com/docs/en/api/messages](https://platform.claude.com/docs/en/api/messages)
 - OpenAI. Fine-tuning guide (cost/lifecycle contrast). [developers.openai.com/api/docs/guides/model-optimization](https://developers.openai.com/api/docs/guides/model-optimization)
 

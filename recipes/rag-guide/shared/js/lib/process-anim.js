@@ -192,7 +192,22 @@ function buildScene(rootEl, data) {
     // advanced (the embed branch never ran if the user seeked straight to store
     // under reduced motion). Drive every already-visible card's --p to the end
     // value so both the animated and the reduced-motion paths rest at --p: 1.
+    //
+    // Under reduced motion timeline.js calls applyAt(steps.length) ONCE, so only
+    // the last step ("store") branch runs and the split/embed branches never set
+    // the doc-chunk SPANS or chunk CARDS to "done" -- the source-text highlights
+    // would stay "pending". Drive the FULL terminal state across every chunk and
+    // vector so the reduced-motion end state matches the animated end state. The
+    // load-bearing line is the doc-chunk SPANS -> "done" (the chunk CARDS are
+    // already forced visible by CSS under reduced motion, but the spans are not).
     if (atEnd) {
+      chunks.forEach((c) => {
+        if (chunkSpans[c.id]) chunkSpans[c.id].dataset.state = "done";
+        if (chunkCards[c.id]) chunkCards[c.id].dataset.state = "done";
+      });
+      vectors.forEach((v) => {
+        if (vecCards[v.id]) vecCards[v.id].dataset.state = "stored";
+      });
       snapVisibleProgress();
     }
   }
