@@ -1326,6 +1326,17 @@ a.site-header__brand { text-decoration: none; }
 }
 .site-footer .colophon-rule { width: min(260px, 70%); height: 14px; opacity: 0.7; }
 .site-footer .colophon-note { font-style: italic; letter-spacing: 0.04em; color: var(--c-text-muted); }
+/* contribute-note -- visible open-source invite line; muted footer voice,
+   centered. Spacing comes from the .site-footer flex gap (like .colophon-note
+   / .links / .site-version -- no per-child margin). Text-only: the clickable
+   repo link lives in .links; i18n via data-i18n / data-ru / data-en. */
+.site-footer .contribute-note {
+  max-width: 46ch;
+  font-size: var(--fs-0);
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--c-text-muted);
+}
 .site-footer a {
   color: var(--c-link);
   text-decoration: none;
