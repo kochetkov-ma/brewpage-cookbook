@@ -91,6 +91,67 @@ html:not(.has-js) .js-only { display: none; }
 a { color: var(--c-link); }
 
 /* ===========================================================
+   SPONSOR STRIP + BADGE  (slim top-LEFT row, above the header)
+   -----------------------------------------------------------
+   A slim full-width row holding an Atlas-cartouche sponsor seal
+   (yasna.bot). It is the first child of .wrap, so it never
+   crowds the brand seal/title (header left) nor the lang-toggle
+   / page-toolbar (header right). Structure + tokens only; every
+   color/size/font/motion is a var(--...). Left-aligned at all
+   widths; the label may hide on the narrowest screen (the link
+   itself always stays). No motion beyond a token-timed hover.
+   =========================================================== */
+.sponsor-strip {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: var(--sp-3);
+}
+.sponsor-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  max-width: 100%;
+  padding: var(--sp-0) var(--sp-2);
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  line-height: var(--lh-tight);
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+  text-decoration: none;
+  background: var(--c-surface-2);
+  border: var(--bw-1) solid var(--c-border);
+  border-left: var(--bw-2) solid var(--c-accent-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+  transition:
+    color var(--dur-1) var(--ease-1),
+    border-color var(--dur-1) var(--ease-1),
+    box-shadow var(--dur-1) var(--ease-1);
+}
+.sponsor-badge:hover {
+  color: var(--c-heading);
+  border-color: var(--c-accent-3);
+}
+.sponsor-badge:focus-visible {
+  outline: var(--bw-2) solid var(--c-focus);
+  outline-offset: 2px;
+}
+.sponsor-badge__label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.sponsor-badge__brand {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
+  color: var(--c-link);
+  white-space: nowrap;
+}
+.sponsor-badge:hover .sponsor-badge__brand { color: var(--c-link-hover); }
+
+/* ===========================================================
    HEADER  (AtlasMD 3.1 compass slot lives here; 3.12 lang-toggle)
    =========================================================== */
 .site-header {
@@ -1193,6 +1254,68 @@ a.site-header__brand { text-decoration: none; }
   outline-offset: 2px;
 }
 
+/* ---- shared zoom-out placement: its OWN in-flow row between the chapter
+   header (.plate-head) and the breadcrumb controls row. A thin right-aligned
+   band; normal document flow always sits it BELOW the full (wrapped or not)
+   header and ABOVE the breadcrumb, so it can never float into the right margin
+   or overlap the node card on any page width -- the compass owns the title row
+   and is never overlapped (AtlasMD 3.1). drilldown-zoom.js still finds the
+   button by [data-slot="zoomout"] under the host root (.zoomout-row sits inside
+   .plate[data-component~="drilldown-host"]).
+
+   The why-rag modal .drill-card has no compass/header row, so its zoom-out is a
+   direct child of .drill-card and hugs the top corner. ---- */
+.zoomout-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--sp-1) 0 var(--sp-2);
+}
+.zoomout-row > .zoomout[data-slot="zoomout"] {
+  position: relative;
+}
+.drill-card > .zoomout[data-slot="zoomout"] {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  z-index: 4;
+}
+
+/* pure-CSS tooltip on hover AND keyboard focus, hidden while disabled.
+   Renders BELOW-LEFT (grows inward) so the card's overflow:hidden never
+   clips it. transform/opacity only; reduced-motion shows it instantly. */
+.zoomout-row > .zoomout[data-slot="zoomout"]::after,
+.drill-card > .zoomout[data-slot="zoomout"]::after {
+  content: attr(aria-label);
+  position: absolute;
+  top: calc(100% + var(--sp-0));
+  right: 0;
+  white-space: nowrap;
+  background: var(--c-surface);
+  border: var(--bw-1) solid var(--c-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-0) var(--sp-1);
+  color: var(--c-heading);
+  font-family: var(--font-ui);
+  font-size: var(--fs-0);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity var(--dur-1) var(--ease-1), transform var(--dur-1) var(--ease-1);
+}
+.zoomout-row > .zoomout[data-slot="zoomout"]:hover::after,
+.zoomout-row > .zoomout[data-slot="zoomout"]:focus-visible::after,
+.drill-card > .zoomout[data-slot="zoomout"]:hover::after,
+.drill-card > .zoomout[data-slot="zoomout"]:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+.zoomout-row > .zoomout[data-slot="zoomout"][disabled]::after,
+.drill-card > .zoomout[data-slot="zoomout"][disabled]::after {
+  content: none;
+}
+
 /* ===========================================================
    NODE-CARD  (AtlasMD 3.3a -- rectangular pipeline/track node)
    =========================================================== */
@@ -1381,6 +1504,9 @@ a.site-header__brand { text-decoration: none; }
 
 @media (max-width: 560px) {
   .container, .wrap { padding: 0 var(--sp-3) 80px; }
+  /* sponsor strip stays top-left + readable on mobile; trim its padding so it
+     does not push the header down. Label + brand still fit at 390px. */
+  .sponsor-strip { padding-top: var(--sp-2); }
   .site-header { padding: 22px 0 14px; gap: var(--sp-2); }
   .site-header__brand { gap: 13px; }
   .site-header__brand .seal { width: 46px; height: 46px; }
@@ -1394,6 +1520,9 @@ a.site-header__brand { text-decoration: none; }
   .plate::after, .atlas::after { inset: 9px; }
   .plate-head .title-block h1, .atlas-head .title-block h1 { font-size: 1.1rem; }
   .compass { width: 56px; height: 56px; }
+  /* zoom-out needs NO mobile override: top:100% anchors it to the header bottom
+     and right:0 hugs the header content box at every width (see the header-
+     anchored rule above). 44px tap target kept by .zoomout. */
 
   .desktop-trail { display: block; }
   .mobile-route { display: block; }
@@ -1437,6 +1566,12 @@ a.site-header__brand { text-decoration: none; }
   .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
   .field-note .fn-body { padding: var(--sp-3) 18px var(--sp-4); }
   .field-note .blurb::first-letter { font-size: 2.3em; }
+}
+
+/* narrowest screens (<=360px, e.g. 320px): drop the "Sponsored by" label so the
+   yasna.bot brand pill never crowds the edge; the link itself always stays. */
+@media (max-width: 360px) {
+  .sponsor-badge__label { display: none; }
 }
 
 /* ============================================================

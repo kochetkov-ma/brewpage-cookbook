@@ -6,7 +6,19 @@
   (the plate/atlas head), never beside the lang-toggle.
   data-i18n elements carry data-ru / data-en so text is meaningful with JS off
   and switches in place under i18n.
+
+  The .sponsor-strip is a slim top-LEFT row ABOVE the header. It carries the
+  Atlas-cartouche sponsor badge (yasna.bot). It is the first child of .wrap so it
+  never crowds the brand seal/title (header left) or the lang-toggle / page-toolbar
+  (header right), at desktop AND mobile. "Sponsored by" is i18n; "yasna.bot" is a
+  brand, verbatim, never localized. target="_blank" rel="noopener".
 -->
+<div class="sponsor-strip">
+  <a class="sponsor-badge" href="https://yasna.bot" target="_blank" rel="noopener">
+    <span class="sponsor-badge__label" data-i18n="sponsorLabel" data-ru="При поддержке" data-en="Sponsored by">Sponsored by</span>
+    <span class="sponsor-badge__brand">yasna.bot</span>
+  </a>
+</div>
 <header class="site-header" data-component="header">
   <div class="site-header__brand">
     <svg class="seal" viewBox="0 0 100 100" aria-hidden="true" focusable="false">

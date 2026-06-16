@@ -105,6 +105,14 @@
 <a class="skip-link" href="#main" data-i18n="skip" data-ru="К запуску" data-en="Skip to the rollout">Skip to the rollout</a>
 <div class="wrap">
 
+  <!-- ===================== sponsor strip (top-left; above the header) ===================== -->
+  <div class="sponsor-strip">
+    <a class="sponsor-badge" href="https://yasna.bot" target="_blank" rel="noopener">
+      <span class="sponsor-badge__label" data-i18n="sponsorLabel" data-ru="При поддержке" data-en="Sponsored by">Sponsored by</span>
+      <span class="sponsor-badge__brand">yasna.bot</span>
+    </a>
+  </div>
+
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <div class="site-header__brand">
@@ -383,9 +391,9 @@ def ask(question: str, user=Depends(current_user)):
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
-      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
-      <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-cookbook" target="_blank" rel="noopener">brewpage-cookbook</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://yasna.bot" target="_blank" rel="noopener">yasna.bot</a>
     </div>
     <div class="contribute-note" data-i18n="contributeNote" data-ru="Open-source -- форкайте, заводите issue или присылайте pull request. Контрибьюции приветствуются." data-en="Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.">Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.</div>
     <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.3">v0.1.3</a></div>

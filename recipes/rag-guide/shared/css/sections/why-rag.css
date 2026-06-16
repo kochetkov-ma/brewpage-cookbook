@@ -376,7 +376,8 @@ button.cmp-node.next-step { border-color: var(--c-accent-3); }
   padding: var(--sp-4) var(--sp-4) var(--sp-4);
 }
 
-/* breadcrumb + zoom-out share one row inside the card head */
+/* breadcrumb row inside the card head (zoom-out moved out to the shared
+   top-right card position -- base.css .drill-card > .zoomout) */
 .drill-card .drill-toolbar {
   display: flex;
   align-items: center;
@@ -385,7 +386,6 @@ button.cmp-node.next-step { border-color: var(--c-accent-3); }
   margin-bottom: var(--sp-2);
 }
 .drill-card .drill-toolbar .breadcrumb { flex: 1 1 auto; }
-.drill-card .drill-toolbar .zoomout { margin-left: auto; }
 
 /* the rendered detail body */
 .drill-detail__h {

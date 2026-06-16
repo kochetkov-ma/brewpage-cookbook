@@ -351,6 +351,11 @@ function rewriteStaticText(loc) {
     const val = node.getAttribute("data-" + loc);
     if (val != null) node.textContent = val;
   });
+  // aria-label localization: [data-i18n-aria] carries data-aria-ru / data-aria-en.
+  qsa("[data-i18n-aria]").forEach((node) => {
+    const val = node.getAttribute("data-aria-" + loc);
+    if (val != null) node.setAttribute("aria-label", val);
+  });
 }
 
 if (document.readyState === "loading") {

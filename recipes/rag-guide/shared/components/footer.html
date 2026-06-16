@@ -1,8 +1,8 @@
 <!--
   footer.html -- shared footer colophon partial (AtlasMD 3.12, copy-in source of truth).
-  HARD RULE: must carry BOTH mandatory ecosystem cross-links --
-    https://brewpage.app  AND  https://github.com/kochetkov-ma/brewpage-openapi
-  (target="_blank" rel="noopener"). A page missing either link is NOT done.
+  HARD RULE: the footer .links set is now brewpage.app + brewpage-cookbook + yasna.bot
+  (target="_blank" rel="noopener"). A page missing any of these links is NOT done.
+  OpenAPI footer link removed per explicit user override of CLAUDE.md section 10 (2026-06-16).
   Semantic landmark, class hooks only, NO inline styles, NO literal colors.
 -->
 <footer class="site-footer" data-component="footer">
@@ -17,9 +17,9 @@
   <div class="links">
     <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
     <span class="sep" aria-hidden="true">&bull;</span>
-    <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
-    <span class="sep" aria-hidden="true">&bull;</span>
     <a href="https://github.com/kochetkov-ma/brewpage-cookbook" target="_blank" rel="noopener">brewpage-cookbook</a>
+    <span class="sep" aria-hidden="true">&bull;</span>
+    <a href="https://yasna.bot" target="_blank" rel="noopener">yasna.bot</a>
   </div>
   <div class="contribute-note" data-i18n="contributeNote" data-ru="Open-source -- форкайте, заводите issue или присылайте pull request. Контрибьюции приветствуются." data-en="Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.">Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.</div>
   <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.3">v0.1.3</a></div>

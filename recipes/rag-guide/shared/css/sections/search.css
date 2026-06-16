@@ -25,7 +25,7 @@
   position: relative;
   z-index: 2;
 }
-.vmap-toolbar .zoomout { margin-left: auto; }
+/* zoom-out moved to the shared top-right card position (base.css .plate > .zoomout) */
 
 /* ---- layout: plot + side rail ---- */
 .vmap-grid {

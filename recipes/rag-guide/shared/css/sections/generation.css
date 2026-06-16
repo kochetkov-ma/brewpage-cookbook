@@ -31,7 +31,7 @@
   border-bottom: var(--bw-1) solid var(--c-border);
 }
 .drill-controls .breadcrumb { flex: 1 1 auto; min-width: 0; }
-.drill-controls .zoomout { margin-left: auto; }
+/* zoom-out moved to the shared top-right card position (base.css .plate > .zoomout) */
 
 /* ---- the camera stage + level-0 overview node ---- */
 .stage { position: relative; border-radius: var(--radius-md); }

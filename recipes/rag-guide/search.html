@@ -106,6 +106,14 @@
 <a class="skip-link" href="#main" data-i18n="skip" data-ru="К карте векторного пространства" data-en="Skip to the vector space map">Skip to the vector space map</a>
 <div class="wrap">
 
+  <!-- ===================== sponsor strip (top-left; above the header) ===================== -->
+  <div class="sponsor-strip">
+    <a class="sponsor-badge" href="https://yasna.bot" target="_blank" rel="noopener">
+      <span class="sponsor-badge__label" data-i18n="sponsorLabel" data-ru="При поддержке" data-en="Sponsored by">Sponsored by</span>
+      <span class="sponsor-badge__brand">yasna.bot</span>
+    </a>
+  </div>
+
   <!-- ===================== header (compass NOT here; AtlasMD 3.1) ===================== -->
   <header class="site-header" data-component="header">
     <a class="site-header__brand" href="index.html" data-i18n-aria aria-label="To the RAG ATLAS route map" data-aria-ru="К карте маршрута RAG С НУЛЯ" data-aria-en="To the RAG ATLAS route map">
@@ -178,11 +186,10 @@
       </svg>
     </div>
 
-    <!-- toolbar row: breadcrumb + zoom-out (SEPARATE row, never the compass row) -->
-    <div class="vmap-toolbar">
-      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
-        <span class="crumb-current" aria-current="step">Space map</span>
-      </nav>
+    <!-- zoom-out (lens-minus): own in-flow row BELOW the header, ABOVE the
+         breadcrumb toolbar. Right-aligned band (base.css .zoomout-row); normal
+         flow keeps it clear of the compass + node card on any header height. -->
+    <div class="zoomout-row">
       <button type="button" class="zoomout" data-slot="zoomout" data-i18n-aria aria-label="Zoom out one level" data-aria-ru="Отдалить на уровень выше" data-aria-en="Zoom out one level" disabled>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -191,6 +198,13 @@
           <line x1="7" y1="10.5" x2="14" y2="10.5"/>
         </svg>
       </button>
+    </div>
+
+    <!-- toolbar row: breadcrumb (SEPARATE row, never the compass row) -->
+    <div class="vmap-toolbar">
+      <nav class="breadcrumb" data-slot="crumbs" data-i18n-aria aria-label="Zoom level" data-aria-ru="Уровень масштаба" data-aria-en="Zoom level">
+        <span class="crumb-current" aria-current="step">Space map</span>
+      </nav>
     </div>
 
     <!-- earned-progress strip: MAIN PATH = query + the top-k near points (the kNN
@@ -429,9 +443,9 @@ for cid, score, text in retrieve("how to get a refund for a purchase"):
       <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>
       <span class="sep" aria-hidden="true">&bull;</span>
-      <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>
-      <span class="sep" aria-hidden="true">&bull;</span>
       <a href="https://github.com/kochetkov-ma/brewpage-cookbook" target="_blank" rel="noopener">brewpage-cookbook</a>
+      <span class="sep" aria-hidden="true">&bull;</span>
+      <a href="https://yasna.bot" target="_blank" rel="noopener">yasna.bot</a>
     </div>
     <div class="contribute-note" data-i18n="contributeNote" data-ru="Open-source -- форкайте, заводите issue или присылайте pull request. Контрибьюции приветствуются." data-en="Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.">Open-source -- fork it, open an issue, or send a pull request. Contributions welcome.</div>
     <div class="site-version" data-component="site-version"><span data-i18n="versionLabel" data-en="Version" data-ru="&#1042;&#1077;&#1088;&#1089;&#1080;&#1103;">Version</span> <a class="version-value" href="https://github.com/kochetkov-ma/brewpage-cookbook/releases/tag/v0.1.3">v0.1.3</a></div>
