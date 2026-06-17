@@ -144,9 +144,6 @@ const PROSE_RU = {
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
     },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
-    },
   },
 
   "why-rag": {
@@ -226,9 +223,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 
@@ -340,9 +334,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 
@@ -595,9 +586,6 @@ const PROSE_RU = {
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
     },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
-    },
   },
 
   embedding: {
@@ -747,9 +735,6 @@ const PROSE_RU = {
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
     },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
-    },
   },
 
   "assemble-context": {
@@ -839,9 +824,6 @@ const PROSE_RU = {
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
     },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
-    },
   },
 
   search: {
@@ -926,9 +908,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 
@@ -1021,9 +1000,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 
@@ -1118,9 +1094,6 @@ const PROSE_RU = {
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
     },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
-    },
   },
 
   generation: {
@@ -1212,9 +1185,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 
@@ -1357,9 +1327,6 @@ const PROSE_RU = {
     },
     "about.li2": {
       html: 'Опубликовано живым на <a href="https://brewpage.app" target="_blank" rel="noopener">brewpage.app</a>.',
-    },
-    "about.li3": {
-      html: 'Источник контракта BrewPage API: <a href="https://github.com/kochetkov-ma/brewpage-openapi" target="_blank" rel="noopener">brewpage-openapi</a>.',
     },
   },
 

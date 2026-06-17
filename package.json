@@ -1,6 +1,6 @@
 {
   "name": "brewpage-cookbook",
-  "version": "0.1.3",
+  "version": "0.1.9",
   "private": true,
   "description": "BrewPage Cookbook -- interactive recipes for AI artifact workflows, published live on brewpage.app.",
   "license": "Apache-2.0",

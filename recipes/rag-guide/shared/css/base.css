@@ -1520,9 +1520,33 @@ a.site-header__brand { text-decoration: none; }
   .plate::after, .atlas::after { inset: 9px; }
   .plate-head .title-block h1, .atlas-head .title-block h1 { font-size: 1.1rem; }
   .compass { width: 56px; height: 56px; }
-  /* zoom-out needs NO mobile override: top:100% anchors it to the header bottom
-     and right:0 hugs the header content box at every width (see the header-
-     anchored rule above). 44px tap target kept by .zoomout. */
+
+  /* FIX (mobile <=560px): zoom-out shares the compass's horizontal line.
+     Chosen approach -- the title-block (h1 + tagline) flows full-width at the
+     top of .plate-head, then a reserved 56px-tall BAND is opened below it via
+     padding-bottom. The compass (pointer-events:none + decorative, so absolute
+     placement traps no clicks) is pinned to the BOTTOM-LEFT of that band, and
+     the in-flow .zoomout-row rides UP into the same band so its 44px button
+     centers vertically against the 56px compass at the row's right end. Result
+     on one line: [ compass .... zoomout ]. They CANNOT overlap -- the compass
+     hugs the LEFT edge (left:0) and the button is right-aligned
+     (justify-content:flex-end) at the far end of a full-width row; at 320px the
+     56px compass + 44px button = 100px, well under the content width, so no
+     collision at 390px or 320px. The title text sits ABOVE the band, never
+     under the compass. Breadcrumb stays in flow below; node card untouched.
+     Desktop (>=561px) is byte-identical (these rules are mobile-only). */
+  .plate-head { padding-bottom: 56px; }
+  .plate-head .compass {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+  }
+  .zoomout-row {
+    margin-top: calc(-1 * (56px + var(--sp-1)));
+    margin-bottom: var(--sp-1);
+    align-items: center;
+    min-height: 56px;
+  }
 
   .desktop-trail { display: block; }
   .mobile-route { display: block; }
@@ -1566,6 +1590,19 @@ a.site-header__brand { text-decoration: none; }
   .field-note h4 { font-size: 1.08rem; flex: 1 1 100%; order: 3; }
   .field-note .fn-body { padding: var(--sp-3) 18px var(--sp-4); }
   .field-note .blurb::first-letter { font-size: 2.3em; }
+
+  /* FIX (mobile <=560px): footer links read cleanly with no orphaned bullets.
+     With uppercase + letter-spacing the 3 links + 2 bullet .sep would wrap
+     unevenly and leave a stray bullet at a line edge. On mobile we drop the
+     .sep bullets entirely and stack the links into their own centered lines
+     (column flow), so each of brewpage.app / brewpage-cookbook / yasna.bot
+     sits on one tidy centered line. Desktop (>=561px) keeps the inline row +
+     bullets unchanged (mobile-only rules). */
+  .site-footer .links {
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .site-footer .links .sep { display: none; }
 }
 
 /* narrowest screens (<=360px, e.g. 320px): drop the "Sponsored by" label so the
