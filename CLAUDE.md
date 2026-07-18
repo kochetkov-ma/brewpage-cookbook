@@ -17,6 +17,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 | Cookbook architecture (stack, repo layout, recipe lifecycle, publish pipeline, release flow) | scaffold/build/stack, pipeline, release decisions | `docs/cookbook-architecture.md` |
 | Recipe authoring (voice, structure template, citation, handoff brief, Definition of Done) | writing/editing any recipe content | `docs/recipe-authoring.md` |
 | RAG Guide design system (Atlas tokens, component catalog, lib decomposition, as-built module map, do-not rules) | building/editing the RAG Guide site or its theme/components | `recipes/rag-guide/AtlasMD.md` |
+| Social-posting assets (channels incl. LinkedIn, per-channel rules, ready-to-publish post drafts) -- git-ignored, not published | writing/editing any social post (LinkedIn etc.) for a recipe | `posting/CLAUDE.md` |
 
 Per-recipe editorial plans live as per-task design specs in `.claude/features/specs/<TASK-ID>.md` (e.g. `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`), authored by `CA` and linked from the matching task card.
 
