@@ -1,44 +1,13 @@
 #!/usr/bin/env node
-// stamp-url.mjs -- stamp the real BrewPage site id/link into the RAG Guide SEO
-// surfaces after publish.
-//
-// WHAT IT DOES
-//   1. Reads recipes/rag-guide/.brewpage-site.json (created by the publish
-//      bootstrap step) of shape:
-//        { "namespace": "public", "id": "<10-char-id>",
-//          "link": "https://brewpage.app/public/<id>" }
-//   2. Replaces the placeholder token REPLACE_AT_PUBLISH with the real site id
-//      everywhere it occurs across the 12 RAG Guide pages + sitemap.xml.
-//      In EVERY committed surface the placeholder is the bare id segment inside
-//      a URL path (e.g. https://brewpage.app/public/REPLACE_AT_PUBLISH/...),
-//      so a single token -> id swap correctly covers canonical, og:url,
-//      og:image, twitter:image, hreflang alternates, JSON-LD url/@id/image,
-//      breadcrumb items, the WebSite urlTemplate and the sitemap <loc>s.
-//   3. Updates recipes/index.json so the rag-guide entry carries a `liveLink`
-//      field of form https://brewpage.app/public/<id> (the full link straight
-//      from .brewpage-site.json -- ONE source of truth: this script owns the
-//      fill). The legacy `liveUrl` field is stamped to the SAME
-//      https://brewpage.app/public/<id> form so there is one correct URL form
-//      everywhere (the publish workflow reads liveUrl for the release body).
-//
-// ZERO DEPENDENCIES: node:fs / node:path / node:url only.
-//
-// IDEMPOTENT: anchors on the literal token REPLACE_AT_PUBLISH. A second run
-// (token already gone) is a clean no-op that reports "nothing to stamp". If the
-// real id is already present it is detected and re-stamping is skipped. Running
-// twice yields byte-identical files.
-//
-// USAGE
-//   node .claude/scripts/stamp-url.mjs --dry-run   # report only, change nothing
-//   node .claude/scripts/stamp-url.mjs             # apply + report per-file counts
-//
-// Exit codes: 0 ok (incl. clean no-op) | 1 error (e.g. site.json missing).
+// Stamp placeholder URL bases from the required server link; preserve published URLs.
+// Node built-ins only; --dry-run reports without writes, repeated runs preserve bytes.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TOKEN = "REPLACE_AT_PUBLISH";
+const PLACEHOLDER_BASE = `https://brewpage.app/public/${TOKEN}`;
 
 // repo root = two levels up from .claude/scripts/
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -86,10 +55,17 @@ function readSite() {
   }
   const id = typeof site.id === "string" ? site.id.trim() : "";
   if (!id) fail(`${SITE_JSON} is missing a non-empty string "id".`);
-  const link =
-    typeof site.link === "string" && site.link.trim()
-      ? site.link.trim()
-      : `https://brewpage.app/public/${id}`;
+  const link = typeof site.link === "string" ? site.link.trim() : "";
+  if (!link) fail(`${SITE_JSON} is missing a non-empty server "link". Nothing was changed.`);
+  let url;
+  try {
+    url = new URL(link);
+  } catch {
+    fail(`${SITE_JSON} has an invalid server "link". Nothing was changed.`);
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || link.includes(TOKEN)) {
+    fail(`${SITE_JSON} requires a clean HTTPS server "link". Nothing was changed.`);
+  }
   return { id, link };
 }
 
@@ -97,11 +73,11 @@ function countToken(s) {
   return s.split(TOKEN).length - 1;
 }
 
-// Replace bare-id token occurrences with the real id in one file's text.
-function stampPages(id, dryRun) {
+// Replace full placeholder bases; unknown token contexts fail before any page write.
+function stampPages(link, dryRun) {
   const results = [];
   let total = 0;
-  let alreadyStamped = false;
+  const changes = [];
   for (const rel of PAGES) {
     const path = join(RECIPE_DIR, rel);
     if (!existsSync(path)) {
@@ -110,22 +86,21 @@ function stampPages(id, dryRun) {
     }
     const before = readFileSync(path, "utf8");
     const count = countToken(before);
-    if (count > 0 && before.includes(`/public/${id}`)) alreadyStamped = true;
-    if (count > 0 && !dryRun) {
-      const after = before.split(TOKEN).join(id);
-      writeFileSync(path, after);
-    }
+    const after = before.replaceAll(PLACEHOLDER_BASE, (base, offset) => {
+      const suffix = before[offset + base.length];
+      return suffix === "/" ? link.replace(/\/$/, "") : link;
+    });
+    if (after.includes(TOKEN)) fail(`${rel} has an unsupported placeholder context. Nothing was changed.`);
+    if (count > 0) changes.push({ path, after });
     total += count;
     results.push({ rel, count });
   }
-  return { results, total, alreadyStamped };
+  if (!dryRun) for (const { path, after } of changes) writeFileSync(path, after);
+  return { results, total };
 }
 
-// Ensure index.json rag-guide entry carries liveLink = full link AND liveUrl =
-// the SAME https://brewpage.app/public/<id> form (one correct URL form
-// everywhere; the publish workflow reads liveUrl for the release body).
-// Preserves trailing newline. Returns { changed, replacements }.
-function stampIndex(id, link, dryRun) {
+// Index links copy the complete server link for either routing cohort.
+function stampIndex(link, dryRun) {
   if (!existsSync(INDEX_JSON)) return { changed: false, replacements: 0, missing: true };
   const raw = readFileSync(INDEX_JSON, "utf8");
   const hadTrailingNl = raw.endsWith("\n");
@@ -144,9 +119,7 @@ function stampIndex(id, link, dryRun) {
         r.liveLink = link;
         replacements += 1;
       }
-      // legacy liveUrl: stamp to the SAME /public/<id> link form (one correct
-      // form everywhere). Covers both the REPLACE_AT_PUBLISH placeholder and
-      // the old bare https://brewpage.app/<id> (no /public/) form.
+      // Keep legacy consumers on the same server-returned URL.
       if (typeof r.liveUrl === "string" && r.liveUrl !== link) {
         r.liveUrl = link;
         replacements += 1;
@@ -170,8 +143,8 @@ function main() {
   console.log(`stamp-url: mode = ${dryRun ? "DRY-RUN (no writes)" : "APPLY"}`);
   console.log("");
 
-  const pages = stampPages(id, dryRun);
-  const idx = stampIndex(id, link, dryRun);
+  const pages = stampPages(link, dryRun);
+  const idx = stampIndex(link, dryRun);
 
   console.log("Pages (recipes/rag-guide/):");
   for (const r of pages.results) {
@@ -192,13 +165,7 @@ function main() {
 
   const grandTotal = pages.total + (idx.replacements || 0);
   if (grandTotal === 0) {
-    if (pages.alreadyStamped) {
-      console.log(
-        `stamp-url: nothing to stamp -- id "${id}" already present, no "${TOKEN}" left. No-op.`,
-      );
-    } else {
-      console.log(`stamp-url: nothing to stamp -- no "${TOKEN}" found anywhere. No-op.`);
-    }
+    console.log(`stamp-url: nothing to stamp -- no "${TOKEN}" found anywhere. No-op.`);
   } else {
     console.log(
       `stamp-url: ${dryRun ? "planned" : "applied"} ${grandTotal} replacement(s) ` +

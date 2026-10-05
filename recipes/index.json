@@ -3,8 +3,8 @@
     "purpose": "Recipe index for the BrewPage Cookbook. One row per recipe; consumed by the repo README and (future) cookbook landing.",
     "shape": "recipes[]: { slug, title, status, lang[], dir, liveUrl, liveLink, description, crossLinks{ platform, ecosystem } }",
     "rules": [
-      "liveUrl is a placeholder until a recipe is published; the real short URL is assigned by BrewPage at publish and pasted back here.",
-      "liveLink is the canonical https://brewpage.app/public/<id> URL; filled from recipes/<slug>/.brewpage-site.json by .claude/scripts/stamp-url.mjs at publish. Until then it carries the REPLACE_AT_PUBLISH placeholder.",
+      "liveUrl is a placeholder until publication; it then copies the exact BrewPage server link, matching liveLink.",
+      "liveLink copies the exact server link from recipes/<slug>/.brewpage-site.json via .claude/scripts/stamp-url.mjs at publish: OLD apex links or NEW native host roots, never a URL reconstructed from the ID. Until then it carries the REPLACE_AT_PUBLISH placeholder.",
       "crossLinks are mandatory on every recipe (mandatory cross-link rule): both platform and ecosystem must be present.",
       "Consumers must skip every _-prefixed key.",
       "status in { scaffold, staged, live }."

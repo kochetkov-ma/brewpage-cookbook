@@ -5,7 +5,7 @@
 > Every non-obvious number and endpoint below is traceable to a source file -- see the **Sources** section at the end.
 > Facts not confirmable in source are marked `(verify in <file>)`. Do not treat unmarked claims as guesses.
 
-Last updated: 2026-06-04
+Delivery compatibility updated: 2026-10-05; other snapshot values require re-verification.
 
 > **Source of truth = the LIVE platform.** Re-verify against these before relying on any value:
 > - `https://brewpage.app/api/openapi.yaml` (REST contract)
@@ -21,7 +21,7 @@ Last updated: 2026-06-04
 BrewPage is a free instant hosting service for HTML pages, Markdown documents, AI artifacts, key-value data, JSON documents, multi-file sites, and files. Returns a short, shareable HTTPS link. No registration required.
 [S1 lines 5-7; S5 lines 3-7]
 
-REST base: `https://brewpage.app`. Second domain `brewdata.app` is identical content (`brewdata.app`, `www.brewpage.app`, `www.brewdata.app` all 301 → `brewpage.app`; canonical host is `brewpage.app`).
+REST/owner API base: `https://brewpage.app`. Share URLs may use the apex or a publication-specific content host; always copy the returned `link`.
 [S2 servers; S1 §Project; S5 line 6]
 
 **Positioning (verbatim from platform CLAUDE.md):** core edge is completely **free**, **faster**, and **AI/agent-friendly**. Top competitor: **`static.app`** (steep pricing). [S1 §Project "Positioning"]
@@ -41,7 +41,7 @@ BrewPage groups its API by content type (OpenAPI `tags`). [S2 tags block, lines 
 | **KV** | Key-value store, up to 1000 keys per store, no version history. | `POST /api/kv` (creates store + first key) | `GET /api/kv/{ns}/{id}/{key}` | `PUT /api/kv/{ns}/{id}/{key}` (upsert key) | `DELETE /api/kv/{ns}/{id}/{key}` (one key) · `DELETE /api/kv/{ns}/{id}` (whole store) |
 | **JSON** | Stored JSON document (raw JSON body). | `POST /api/json` | `GET /api/json/{ns}/{id}` | `PUT /api/json/{ns}/{id}` | `DELETE /api/json/{ns}/{id}` |
 | **File** | Single uploaded file (multipart `file`). Inline preview for images/PDF/media. | `POST /api/files` | `GET /api/files/{ns}/{id}` or `GET /{ns}/{id}` | -- (no PUT; delete + recreate) | `DELETE /api/files/{ns}/{id}` |
-| **Multi-file site** | Multi-file HTML bundle (ZIP archive **or** parallel `files` + `paths` arrays). Relative links between files work. | `POST /api/sites` | `GET /{ns}/{id}` (entry) · `GET /{ns}/{id}/{sub}` (sub-page) | `PUT /api/sites/{ns}/{id}` (full-replace republish; keeps URL + id) | `DELETE /api/sites/{ns}/{id}` |
+| **Multi-file site** | Multi-file HTML bundle (ZIP archive **or** parallel `files` + `paths` arrays). Relative links between files work. | `POST /api/sites` | Server-returned `link`; OLD apex paths or NEW native content host | `PUT /api/sites/{ns}/{id}` (full-replace republish; keeps URL + id) | `DELETE /api/sites/{ns}/{id}` |
 
 Sources: HTML create/get/put/delete [S2 lines 852-983, 383-532]; Markdown via `format` query [S2 lines 904-911]; KV [S2 lines 644-745, 98-250, 1377-1455]; JSON [S2 lines 251-382, 746-851]; Files [S2 lines 984-1108, 1516-1603]; Sites (ZIP or `files`+`paths`, full-replace `PUT`) [S2 lines 1604-1831; S5 lines 18-25].
 
@@ -51,17 +51,31 @@ Notes relevant to recipes:
 - **Updating a shared link.** HTML / JSON / KV support `PUT` to replace content while keeping the same short URL. **Sites also support `PUT /api/sites/{ns}/{id}`** -- a full-replace republish that swaps the entire file set while keeping the same URL + id (requires `X-Owner-Token`; accepts the same ZIP archive or `files`+`paths` body as create). This is the canonical way to update a published recipe; DELETE-then-POST mints a new id/URL and should be avoided. [S2 lines 1830-1895; S2 lines 432-441; S5 line 74]
 - **Immutable on HTML update:** tags, password, format, filename, showTopBar -- to change those, delete and recreate. [S2 lines 436-441; S5 line 74]
 - **HTML also accepts raw bodies.** Besides `application/json` (`{"content":"..."}`), `POST /api/html` accepts raw `text/*` (HTML, Markdown, YAML, XML, CSV, code) and `application/octet-stream` (binary auto-routes to `/api/files`). [S2 lines 856-952; S5 line 13]
-- **Raw bytes for embeds.** On a short URL, `?raw=1` bypasses the SPA shell and streams the original Content-Type -- required for `<video src>`, `<audio src>`, `<iframe src>` for PDF, and similar browser-native embeds. `?dl=1` forces download. [S2 lines 1109-1166]
+- **Raw bytes for embeds.** OLD short URLs retain `?raw=1`/`?dl=1` behavior. NEW native roots preserve file MIME semantics; `raw`/`inline` do not bypass NEW sandbox/download protections. [S2 publication delivery and short-link paths]
+
+### OLD and NEW delivery compatibility
+
+OLD publications have no `routingCohort=new-v1` metadata and retain their historical links, rendering and access behavior. The existing RAG Guide descriptor and its apex canonical/OG/sitemap URLs remain unchanged; compatibility work does not migrate or republish it.
+
+NEW creation supports `X-Delivery-Mode: path|subdomain`. Sites and non-public publications require `subdomain`; explicit `path` is rejected. Public non-sites default to `path` and may choose `subdomain`, independently of password protection. Ordinary PUT preserves hosting; OLD publications cannot switch modes.
+
+Use the server `link` unchanged. Host identity is separate from the resource ID; never derive a host or append `/public/<id>`. NEW site roots end in `/`; child pages, assets, directory indexes and root-relative paths resolve natively on that host. Missing files return 404 with no SPA fallback; platform APIs and injected platform navigation/badges are absent.
+
+NEW native responses carry `X-Robots-Tag: noindex` and have no native sitemap or SEO alias, even for public unprotected publications listed in the gallery. OLD apex SEO behavior remains unchanged. Namespace/password visibility rules do not promise search indexing on a native host.
+
+Share protected NEW publications with the clean returned `link`. Browser unlock uses trusted top-level navigation through `unlock.brewpage.app`, followed by a resource-scoped host-only reader session. Never place passwords or owner tokens in NEW share URLs. Automated password reads and owner operations use apex API headers; OLD query-password compatibility is not the NEW browser unlock flow.
+
+Source: [REST publication-delivery contract](https://github.com/kochetkov-ma/brewpage-openapi/blob/main/openapi/openapi.yaml), verified against the local coordination contract and platform public `llms-full.txt`.
 
 ---
 
 ## 3. Namespaces and the privacy boundary
 
-Every resource lives in a **namespace** (`ns`). The namespace plus a 10-character `id` form the short URL `/{ns}/{id}`. [S2 lines 1109-1140; S5 line 63]
+Every resource lives in a **namespace** (`ns`). OLD short links use `/{ns}/{id}`; NEW links depend on delivery mode and must be copied from the server. Namespace and resource ID still address the apex management API. [S2 publication delivery]
 
 - **Default namespace is literally `public`.** Omitting `?ns=...` puts content into the `public` namespace. [S2 lines 10-26]
-- **Privacy boundary -- only `public/` is shared/indexed.** A resource is public (listed on the brewpage.app homepage gallery, returned by `GET /api/gallery`, and indexable by search engines) **only when both** `ns` is omitted/equals `public` **and** no password is set. A custom namespace **or** an `X-Password` makes it private -- excluded from the gallery and from the sitemap. [S1 §Privacy "Only `public/` NS shared"; S2 lines 10-26; S5 lines 36-48]
-- **Custom namespace format:** `[a-z0-9-]{3,32}`, auto-created on first use. [S2 lines 26, 684-691]
+- **Privacy boundary -- only `public/` is shared.** Gallery eligibility requires `public` and no password. Custom namespaces and protected publications are excluded from gallery/sitemap discovery. NEW native hosts remain `noindex` regardless of public gallery eligibility. [S2 publication delivery; S5 privacy]
+- **Custom namespace format:** `[a-z0-9-]{1,32}`, auto-created on first use. [S2 namespace contract]
 - **The direct short URL stays reachable** by anyone who knows it, regardless of namespace -- privacy means "not listed / not indexed", not "secret". [S2 lines 22-23; S5 line 47]
 - **Collision** on `ns+id` → server returns `409 Conflict`; retry with a different `id` or omit `id` to let the server generate one. [S2 lines 27, 1217-1218]
 
@@ -145,7 +159,7 @@ For an authoring agent: the OpenAPI YAML at `/api/openapi.yaml` is the canonical
 
 ## 8. SEO / gallery / sitemap -- what makes a recipe discoverable
 
-A recipe appears on the public homepage gallery and in the XML sitemap **only when all three hold**:
+OLD apex recipes qualify for public gallery/sitemap discovery under these conditions. NEW native hosts retain `noindex` and no native sitemap/SEO alias:
 
 1. it is in the `public` namespace, **and**
 2. it has **no password**, **and**
@@ -154,9 +168,9 @@ A recipe appears on the public homepage gallery and in the XML sitemap **only wh
 [S1 §Privacy + §Limits; S5 lines 36-48; S6 seo.md]
 
 - **Gallery (`GET /api/gallery`).** Lists `public`-namespace, no-password pages with optional case-insensitive search over title/tags; paginated; `sort=date|views`. Custom-namespace or password-protected items are excluded. [S2 lines 1456-1515; S5 lines 39-42]
-- **Sitemap 21-day threshold.** A page enters the public sitemap only when it is public, has no password, and has a TTL of at least 21 days -- i.e. a public item with TTL **< 21 days is excluded from the sitemap**. Note: the 21-day bar is the **sitemap** gate; gallery listing itself is governed by the public-namespace + no-password rule, not the 21-day threshold.
+- **OLD apex sitemap 21-day threshold.** Public, unprotected OLD pages require TTL of at least 21 days for sitemap inclusion. This threshold does not override NEW native `noindex` or create a native sitemap. Gallery eligibility uses namespace/password filters independently.
 
-**Recipe guidance:** for a recipe you want indexed by search engines, publish to `public`, no password, and set `ttl=30` (the maximum) so it clears the 21-day sitemap threshold comfortably and lives the full retention window. For a recipe only reachable by direct link, use a custom namespace and/or a password.
+**Recipe guidance:** OLD apex recipes retain their existing SEO links and sitemap behavior. NEW sites require native subdomains and remain `noindex`; `public`, no password and `ttl=30` do not override that policy. Custom namespaces are unlisted, while passwords provide access protection.
 
 ---
 

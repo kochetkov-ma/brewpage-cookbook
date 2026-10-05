@@ -125,10 +125,18 @@ Pushing a `vX.Y.Z` tag runs the workflow:
 
 1. **stamp-version** (`.claude/scripts/stamp-version.mjs`) from the tag.
 2. **read `.brewpage-site.json`** -> `namespace` / `id` / `link` via `$GITHUB_OUTPUT`.
-3. **stamp-url** (`.claude/scripts/stamp-url.mjs`) -- replaces `REPLACE_AT_PUBLISH` with the real id across pages + `sitemap.xml` + `recipes/index.json`.
+3. **stamp-url** (`.claude/scripts/stamp-url.mjs`) -- requires the descriptor's server `link` and replaces complete placeholder URL bases across pages + `sitemap.xml`; copies that link to both index URL fields. Root, child, asset and query URLs retain their suffixes for OLD apex links or NEW trailing-slash native roots. Already-published URLs are preserved; repeated stamping is byte-identical.
 4. **stage + zip** -- materialise the `.brewpageignore`-filtered set into a staging dir, assert the caps, **ZIP it**.
 5. **publish** -- `brewpage-action` publishes the **zip** via PUT, `mode: update`, `update-id: <id>`, `ttl-days: 30`. The link stays stable.
-6. **create GitHub Release** -- body carries the live link + the `recipes/index.json` manifest + both ecosystem cross-links. `github.ref_name` drives the tag/name; the workflow creates no tags/commits itself.
+6. **create GitHub Release** -- body uses `steps.brewpage.outputs.url` as its live link, with the recipe manifest and ecosystem cross-links. It refuses an empty output and never reconstructs a link from the ID. `github.ref_name` drives the tag/name; the workflow creates no tags/commits itself.
+
+### Delivery cohorts
+
+The existing RAG Guide is OLD: preserve its descriptor, ID, apex canonical/OG URLs and sitemap. Technical compatibility commits do not republish or migrate it; `main` pushes do not trigger publication.
+
+NEW sites require `subdomain` delivery, even in `public`; explicit `path` is rejected. Save the exact server `link`, including its root trailing slash. Native child/asset/directory paths work on the publication host, with 404 for missing files and no SPA fallback or injected platform UI. Never derive the host from the resource ID.
+
+NEW native hosts are `noindex`, without a native sitemap/SEO alias; a public gallery listing does not imply indexing. Protected NEW links stay clean and unlock through trusted top-level navigation at `unlock.brewpage.app`; passwords/owner tokens never belong in share URLs. Management stays on the apex API. See [platform delivery compatibility](./brewpage-platform.md#old-and-new-delivery-compatibility).
 
 > **CRITICAL gotcha -- hand the action a `.zip`, never a directory.** Pointing the action at a directory triggers its `files[]`+`paths[]` array-upload mode, which the brewpage.app site endpoint rejects with a misleading **HTTP 413** ("max 25 MB per file") even for a ~1.8 MB bundle. The zip-archive upload mode is accepted (POST 201 create / PUT 200 update). The workflow zips the staged bundle before calling the action. (`brewpage-action@v1.1.1` sends a single `archive` field when `path` ends in `.zip`.)
 

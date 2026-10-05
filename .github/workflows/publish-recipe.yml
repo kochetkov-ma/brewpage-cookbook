@@ -54,7 +54,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6.4.0 # exact: actions/setup-node latest release (verified via gh api)
         with:
-          node-version: '24'
+          node-version: '24.21.0'
 
       - name: Stamp version
         env:
@@ -182,16 +182,13 @@ jobs:
 
       - name: Build release body
         id: body
-        # Live link is built from the .brewpage-site.json id: https://brewpage.app/public/<id>.
-        # Each recipe in recipes/index.json lists its title + live URL (field: liveUrl,
-        # stamped by stamp-url.mjs). The action's url output is also recorded.
+        # Server-returned action URL is authoritative for either routing cohort.
         env:
-          LIVE_ID: ${{ steps.site.outputs.id }}
-          ACTION_URL: ${{ steps.brewpage.outputs.url }}
+          LIVE_LINK: ${{ steps.brewpage.outputs.url }}
           REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          LIVE_LINK="https://brewpage.app/public/${LIVE_ID}"
+          : "${LIVE_LINK:?brewpage-action returned no server URL}"
           BODY_FILE="${RUNNER_TEMP}/release-body.md"
 
           {
@@ -210,7 +207,7 @@ jobs:
 
           {
             echo ""
-            echo "Published URL (from brewpage-action): ${ACTION_URL}"
+            echo "Published URL (from brewpage-action): ${LIVE_LINK}"
             echo ""
             echo "---"
             echo ""
