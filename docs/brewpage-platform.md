@@ -36,10 +36,10 @@ BrewPage groups its API by content type (OpenAPI `tags`). [S2 tags block, lines 
 
 | Content type | What it is | Create | Read (short URL) | Update | Delete |
 |---|---|---|---|---|---|
-| **HTML** | Single HTML page (sanitized on save). | `POST /api/html` | `GET /{ns}/{id}` or `GET /api/html/{ns}/{id}` | `PUT /api/html/{ns}/{id}` | `DELETE /api/html/{ns}/{id}` |
+| **HTML** | Single HTML page. | `POST /api/html` | Server-returned `link` or `GET /api/html/{ns}/{id}` | `PUT /api/html/{ns}/{id}` | `DELETE /api/html/{ns}/{id}` |
 | **Markdown** | Markdown rendered to styled HTML. Same endpoint group as HTML -- select with `?format=markdown` (or `md`). | `POST /api/html?format=markdown` | same as HTML | `PUT /api/html/{ns}/{id}` | `DELETE /api/html/{ns}/{id}` |
 | **KV** | Key-value store, up to 1000 keys per store, no version history. | `POST /api/kv` (creates store + first key) | `GET /api/kv/{ns}/{id}/{key}` | `PUT /api/kv/{ns}/{id}/{key}` (upsert key) | `DELETE /api/kv/{ns}/{id}/{key}` (one key) · `DELETE /api/kv/{ns}/{id}` (whole store) |
-| **JSON** | Stored JSON document (raw JSON body). | `POST /api/json` | `GET /api/json/{ns}/{id}` | `PUT /api/json/{ns}/{id}` | `DELETE /api/json/{ns}/{id}` |
+| **JSON** | Arbitrary JSON value, including objects, arrays, scalars and null. | `POST /api/json` | `GET /api/json/{ns}/{id}` | `PUT /api/json/{ns}/{id}` | `DELETE /api/json/{ns}/{id}` |
 | **File** | Single uploaded file (multipart `file`). Inline preview for images/PDF/media. | `POST /api/files` | `GET /api/files/{ns}/{id}` or `GET /{ns}/{id}` | -- (no PUT; delete + recreate) | `DELETE /api/files/{ns}/{id}` |
 | **Multi-file site** | Multi-file HTML bundle (ZIP archive **or** parallel `files` + `paths` arrays). Relative links between files work. | `POST /api/sites` | Server-returned `link`; OLD apex paths or NEW native content host | `PUT /api/sites/{ns}/{id}` (full-replace republish; keeps URL + id) | `DELETE /api/sites/{ns}/{id}` |
 
@@ -49,7 +49,7 @@ Notes relevant to recipes:
 
 - **Single page vs multi-file site.** One-file recipe → `POST /api/html`. Recipe that ships multiple HTML/CSS/JS assets (the typical built cookbook recipe) → `POST /api/sites` as a ZIP or `files`+`paths` bundle; entry file is auto-detected (`index.html` preferred) or set with `?entry=`. [S2 lines 1604-1705; S5 lines 18-22]
 - **Updating a shared link.** HTML / JSON / KV support `PUT` to replace content while keeping the same short URL. **Sites also support `PUT /api/sites/{ns}/{id}`** -- a full-replace republish that swaps the entire file set while keeping the same URL + id (requires `X-Owner-Token`; accepts the same ZIP archive or `files`+`paths` body as create). This is the canonical way to update a published recipe; DELETE-then-POST mints a new id/URL and should be avoided. [S2 lines 1830-1895; S2 lines 432-441; S5 line 74]
-- **Immutable on HTML update:** tags, password, format, filename, showTopBar -- to change those, delete and recreate. [S2 lines 436-441; S5 line 74]
+- **HTML update:** tags, password, filename and showTopBar remain unchanged. Format may be supplied on PUT; the JSON body field takes precedence over the query parameter. [S2 HTML update contract]
 - **HTML also accepts raw bodies.** Besides `application/json` (`{"content":"..."}`), `POST /api/html` accepts raw `text/*` (HTML, Markdown, YAML, XML, CSV, code) and `application/octet-stream` (binary auto-routes to `/api/files`). [S2 lines 856-952; S5 line 13]
 - **Raw bytes for embeds.** OLD short URLs retain `?raw=1`/`?dl=1` behavior. NEW native roots preserve file MIME semantics; `raw`/`inline` do not bypass NEW sandbox/download protections. [S2 publication delivery and short-link paths]
 
@@ -59,9 +59,9 @@ OLD publications have no `routingCohort=new-v1` metadata and retain their histor
 
 NEW creation supports `X-Delivery-Mode: path|subdomain`. Sites and non-public publications require `subdomain`; explicit `path` is rejected. Public non-sites default to `path` and may choose `subdomain`, independently of password protection. Ordinary PUT preserves hosting; OLD publications cannot switch modes.
 
-Use the server `link` unchanged. Host identity is separate from the resource ID; never derive a host or append `/public/<id>`. NEW site roots end in `/`; child pages, assets, directory indexes and root-relative paths resolve natively on that host. Missing files return 404 with no SPA fallback; platform APIs and injected platform navigation/badges are absent.
+Use the server `link` unchanged. Host identity is separate from the resource ID; never derive a host or append `/public/<id>`. NEW site roots end in `/`; child pages, assets, directory indexes and root-relative paths resolve natively on that host. Missing files return 404 with no SPA fallback. Authored HTML documents run without platform wrappers and may receive the read-only attribution badge; viewer content uses the platform viewer. Management APIs stay on the apex.
 
-NEW native responses carry `X-Robots-Tag: noindex` and have no native sitemap or SEO alias, even for public unprotected publications listed in the gallery. OLD apex SEO behavior remains unchanged. Namespace/password visibility rules do not promise search indexing on a native host.
+Eligible public HTML, sites and files may receive `X-Robots-Tag: all` on native hosts. Unlisted, protected or otherwise ineligible responses retain `noindex, nofollow`. Native hosts have no separate sitemap or SEO alias; crawler access restrictions apply separately. OLD apex SEO behavior remains unchanged. Public visibility does not guarantee search indexing or ranking.
 
 Share protected NEW publications with the clean returned `link`. Browser unlock uses trusted top-level navigation through `unlock.brewpage.app`, followed by a resource-scoped host-only reader session. Never place passwords or owner tokens in NEW share URLs. Automated password reads and owner operations use apex API headers; OLD query-password compatibility is not the NEW browser unlock flow.
 
@@ -74,7 +74,7 @@ Source: [REST publication-delivery contract](https://github.com/kochetkov-ma/bre
 Every resource lives in a **namespace** (`ns`). OLD short links use `/{ns}/{id}`; NEW links depend on delivery mode and must be copied from the server. Namespace and resource ID still address the apex management API. [S2 publication delivery]
 
 - **Default namespace is literally `public`.** Omitting `?ns=...` puts content into the `public` namespace. [S2 lines 10-26]
-- **Privacy boundary -- only `public/` is shared.** Gallery eligibility requires `public` and no password. Custom namespaces and protected publications are excluded from gallery/sitemap discovery. NEW native hosts remain `noindex` regardless of public gallery eligibility. [S2 publication delivery; S5 privacy]
+- **Privacy boundary -- only `public/` is shared.** Gallery eligibility requires `public` and no password. Custom namespaces and protected publications are excluded from gallery/sitemap discovery and retain native `noindex, nofollow`. Eligible public native responses may permit indexing; gallery eligibility alone does not promise it. [S2 publication delivery; S5 privacy]
 - **Custom namespace format:** `[a-z0-9-]{1,32}`, auto-created on first use. [S2 namespace contract]
 - **The direct short URL stays reachable** by anyone who knows it, regardless of namespace -- privacy means "not listed / not indexed", not "secret". [S2 lines 22-23; S5 line 47]
 - **Collision** on `ns+id` → server returns `409 Conflict`; retry with a different `id` or omit `id` to let the server generate one. [S2 lines 27, 1217-1218]
@@ -90,15 +90,15 @@ Ground-truth limits (verbatim from platform CLAUDE.md `## Limits` table). [S1 §
 | Resource | Limit |
 |---|---|
 | HTML | 5 MB, TTL def 15d / max 30d |
-| KV value | 1 MB, 1000 keys/NS, TTL def 15d / max 30d |
-| JSON doc | 1 MB, 10 000 docs/collection, TTL def 15d / max 30d |
+| KV value | 1 MB, 1000 keys/store, TTL def 15d / max 30d |
+| JSON doc | 1 MB, 10 000 docs/NS, TTL def 15d / max 30d |
 | File | 5 MB (video 20 MB, audio 5 MB), 1000 files/NS, TTL def 15d / max 30d |
 | Site bundle | 20 MB total, 100 files/site, 5 MB per file, TTL def 15d / max 30d |
 | DB | 10 MB, 5s query timeout |
-| Rate: uploads | 60/hr/IP |
+| Rate: uploads | Operation- and namespace-specific; consult current API contract |
 | Rate: reads | 300/min/IP |
 
-**TTL (retention).** `ttl` (days) applies to html, markdown, json, kv, files, and sites. Default `15`, range `1..30` (max `30`). Resources auto-delete after expiry; expired content is removed nightly with no recovery. [S2 lines 29-32, 698-707; S5 lines 66-69, 131] Since v1.49.0 the `ttl` query string also accepts a suffixed form like `30d` or `30 days`. [S2 lines 800-806]
+**TTL (retention).** `ttl` (days) applies to html, markdown, json, kv, files, and sites. Default `15`, normal requested range `1..30`, subject to owner-specific effective limits. Site PUT retains the original expiry; separately eligible automatic extension may change it. Treat the returned `expiresAt` as authoritative. Expired resources become unavailable and are removed by cleanup. The `ttl` query also accepts a suffixed form such as `30d` or `30 days`. [S2 TTL contract]
 
 **Recipe sizing implication:** a built multi-file recipe must fit **20 MB total / 100 files / 5 MB per file**. Keep heavy media (video/large images) as separate `/api/files` uploads referenced by URL rather than bundled, since the site bundle ceiling is the binding constraint.
 
@@ -106,8 +106,8 @@ Ground-truth limits (verbatim from platform CLAUDE.md `## Limits` table). [S1 §
 
 ## 5. Rate limits
 
-- **Uploads:** 60 per hour per IP. **Reads:** 300 per minute per IP. [S1 §Limits]
-- Rate limits apply to the `/api/**` endpoints. Publish under your own identifiable User-Agent and stay within 60 uploads/hr.
+- **Uploads:** operation- and namespace-specific limits apply. **Reads:** the documented default is 300 per minute per IP; current configuration and owner policy govern effective limits.
+- Rate limits apply to `/api/**` endpoints. Publish under your own identifiable User-Agent and follow the current API contract rather than assuming one upload quota for every operation.
 - Exceeding a limit returns **HTTP 429**. [S2 lines 740-745, 978-983, 1745-1750]
 - **`User-Agent` is REQUIRED on every request**, format `AgentName/version` (e.g. `Claude/4.5`, `MyBot/2.1`). Anonymous or spoofed UAs may be rate-limited, rejected, or flagged. [S2 lines 47-51; S5 lines 50-53]
 - Every request (publish and read) is logged server-side (IP, UA, method, path, status, latency) with 30-day retention. [S2 lines 53-59; S5 lines 55-59]
@@ -159,18 +159,18 @@ For an authoring agent: the OpenAPI YAML at `/api/openapi.yaml` is the canonical
 
 ## 8. SEO / gallery / sitemap -- what makes a recipe discoverable
 
-OLD apex recipes qualify for public gallery/sitemap discovery under these conditions. NEW native hosts retain `noindex` and no native sitemap/SEO alias:
+Public gallery/sitemap discovery and native response indexing are separate. Eligible public native HTML, sites and files may permit indexing, without a separate native sitemap/SEO alias. Basic public discovery requirements are:
 
 1. it is in the `public` namespace, **and**
 2. it has **no password**, **and**
-3. its **TTL is at least the sitemap threshold of 21 days** (sitemap only).
+3. its **remaining TTL exceeds the configured sitemap threshold** (sitemap only; other eligibility requirements also apply).
 
 [S1 §Privacy + §Limits; S5 lines 36-48; S6 seo.md]
 
 - **Gallery (`GET /api/gallery`).** Lists `public`-namespace, no-password pages with optional case-insensitive search over title/tags; paginated; `sort=date|views`. Custom-namespace or password-protected items are excluded. [S2 lines 1456-1515; S5 lines 39-42]
-- **OLD apex sitemap 21-day threshold.** Public, unprotected OLD pages require TTL of at least 21 days for sitemap inclusion. This threshold does not override NEW native `noindex` or create a native sitemap. Gallery eligibility uses namespace/password filters independently.
+- **Apex sitemap retention.** Inclusion requires remaining TTL above the configured threshold, rather than a fixed initial TTL. Native indexing uses its own response policy; sitemap inclusion does not create a native sitemap or guarantee indexing. Gallery eligibility uses namespace/password filters independently.
 
-**Recipe guidance:** OLD apex recipes retain their existing SEO links and sitemap behavior. NEW sites require native subdomains and remain `noindex`; `public`, no password and `ttl=30` do not override that policy. Custom namespaces are unlisted, while passwords provide access protection.
+**Recipe guidance:** OLD apex recipes retain their existing SEO links and sitemap behavior. NEW sites require native subdomains; eligible public sites may permit indexing, but `public`, no password and `ttl=30` do not guarantee it. Custom namespaces are unlisted, while passwords provide access protection.
 
 ---
 
@@ -190,7 +190,7 @@ Cookbook recipes are interactive and often embed third-party widgets (videos, co
 ## Caveats / facts not fully confirmable in source
 
 - **CLI and Action release status / versions** -- intentionally not asserted here. The platform `llms.txt` advertises only the MCP server (`brewpage-mcp`) and the Claude Code `brewdoc:publish` skill as tooling [S5 lines 89-96]; the `brewpage` CLI and `brewpage-action` are described as ecosystem modules in the cookbook's own CLAUDE.md/README ("once released"). Confirm current status in `ecosystem.md`. (verify in `ecosystem.md`)
-- **`POST /api/html` identical-repost behaviour** -- per the public `llms.txt`/`llms-full.txt`, an identical repost (same content) to the `public` namespace without a password may be silently merged within ~24h: the create call returns the existing resource (status `201`, body unchanged) instead of a new short URL [S5 lines 76-78; S4 lines 78-87]. Agents should treat `PUT /api/html/{ns}/{id}` with the original `X-Owner-Token` as the canonical way to republish/update a resource, rather than relying on repost behaviour.
+- **Create and update identity.** A create response may refer to an existing publication. Preserve its returned identity and link. Use `PUT /api/html/{ns}/{id}` with the original `X-Owner-Token` to update a specific owned publication.
 
 ---
 

@@ -134,17 +134,15 @@ Pushing a `vX.Y.Z` tag runs the workflow:
 
 The existing RAG Guide is OLD: preserve its descriptor, ID, apex canonical/OG URLs and sitemap. Technical compatibility commits do not republish or migrate it; `main` pushes do not trigger publication.
 
-NEW sites require `subdomain` delivery, even in `public`; explicit `path` is rejected. Save the exact server `link`, including its root trailing slash. Native child/asset/directory paths work on the publication host, with 404 for missing files and no SPA fallback or injected platform UI. Never derive the host from the resource ID.
+NEW sites require `subdomain` delivery, even in `public`; explicit `path` is rejected. Save the exact server `link`, including its root trailing slash. Native child/asset/directory paths work on the publication host, with 404 for missing files and no SPA fallback. Authored HTML/site documents have no wrapper, injected base or platform navigation, but may receive the enabled read-only attribution badge; other content uses the platform viewer. Never derive the host from the resource ID.
 
-NEW native hosts are `noindex`, without a native sitemap/SEO alias; a public gallery listing does not imply indexing. Protected NEW links stay clean and unlock through trusted top-level navigation at `unlock.brewpage.app`; passwords/owner tokens never belong in share URLs. Management stays on the apex API. See [platform delivery compatibility](./brewpage-platform.md#old-and-new-delivery-compatibility).
+Unlisted, protected or otherwise ineligible NEW native responses carry `noindex`; eligible public HTML, sites and files may permit indexing, without a native sitemap/SEO alias. A public gallery listing does not guarantee indexing. Protected NEW links stay clean and unlock through trusted top-level navigation at `unlock.brewpage.app`; passwords/owner tokens never belong in share URLs. Management stays on the apex API. See [platform delivery compatibility](./brewpage-platform.md#old-and-new-delivery-compatibility).
 
-> **CRITICAL gotcha -- hand the action a `.zip`, never a directory.** Pointing the action at a directory triggers its `files[]`+`paths[]` array-upload mode, which the brewpage.app site endpoint rejects with a misleading **HTTP 413** ("max 25 MB per file") even for a ~1.8 MB bundle. The zip-archive upload mode is accepted (POST 201 create / PUT 200 update). The workflow zips the staged bundle before calling the action. (`brewpage-action@v1.1.1` sends a single `archive` field when `path` ends in `.zip`.)
+The API accepts ZIP archives or repeated `files` and matching `paths` multipart fields. The cookbook keeps ZIP transport after applying its original publish exclusions; `brewpage-action@v1.1.1` sends one `archive` field for a `.zip` input.
 
-> **Platform-contract gap (flagged to platform owners):** PUT `/api/sites/{ns}/{id}` can return 413 on the array-upload path though the openapi contract models only 400/403/404/410/415/429; the cookbook uses zip to avoid it.
+### Link permanence / TTL
 
-### Link permanence / TTL (renew-on-release)
-
-BrewPage caps `ttl` at **30 days** and **auto-deletes at expiry**. Each publish sets `ttl=30`, so the stable link survives **only if a release happens at least every 30 days** (renew-on-release). There is **no scheduled cron renewal** currently. Current expiry: **2026-07-15** -- the next release before then keeps the link alive.
+BrewPage defaults to **15 days** and normally caps requested `ttl` at **30 days**, subject to the owner's effective limits. Site PUT retains the original expiry: the workflow's `ttl-days: 30` does not renew the publication. Treat the returned `expiresAt` as authoritative, including any separately eligible automatic extension. This repository has **no scheduled renewal**.
 
 ### Owner tokens & secrets
 
@@ -165,18 +163,19 @@ The repo folder `recipes/<slug>/` carries more than the live site: manuscript (`
 
 ## 6. Release flow
 
-A **tag drives every publish**: pushing an unprefixed `vX.Y.Z` tag runs the §5 workflow (publish + GitHub Release). PR/merge to `main` alone does **not** publish -- it only lands content; the publish happens when the next tag is pushed (this also renews the 30-day TTL, see §5).
+A **tag drives every release publish**: pushing an unprefixed `vX.Y.Z` tag runs the workflow (publish + GitHub Release). PR/merge to `main` alone does **not** publish. Manual dispatch requires an explicit existing `vX.Y.Z` release tag in the `version` input and republishes that tag's source without creating a release. The workflow checks out the requested tag even when dispatched from `main`; it never labels untagged branch content as a release. PUT does not renew TTL.
 
 | Event | What happens |
 |---|---|
 | **PR merged to `main`** | Lands content. No publish, no tag. |
-| **`vX.Y.Z` tag pushed** | Runs `publish-recipe.yml`: site UPDATE via `brewpage-action` (stable link) + GitHub Release. Also renews TTL. |
+| **`vX.Y.Z` tag pushed** | Runs `publish-recipe.yml`: site UPDATE via `brewpage-action` (stable link, original expiry) + GitHub Release. |
+| **Manual dispatch with `version: vX.Y.Z`** | Republishes the existing tagged snapshot; missing, malformed or mismatched tags fail before publication. |
 
 **Tag format:** **unprefixed `vX.Y.Z`** -- `v0.1.0`, `v1.0.0` -- matching the rest of the BrewPage ecosystem. The workflow consumes `github.ref_name` and creates **no** tags/commits itself.
 
-**Local tag flow (human/manager, outside CI):** one chained command -- check last tag -> `git tag vX.Y.Z` -> add/commit -> push commit + tag together (`git push origin main && git push origin vX.Y.Z`).
+**Local tag flow (human/manager, outside CI):** discover tags and select the version, then use one fail-fast chain for staging, commit, push, annotated tag creation on that commit and tag push. Never tag the previous commit before staging the release changes.
 
-**Version handling:** the tag is the single source of truth; `stamp-version.mjs` stamps it at CI time -- do not hand-edit any version file.
+**Version handling:** the tag is the single source of truth; the workflow validates the existing tag at HEAD before invoking `stamp-version.mjs --version vX.Y.Z`. The guard lives in the workflow so older tagged stamper snapshots remain compatible. Local use may add `--require-head-tag` for the same tag guard. Do not hand-edit any version file. Local development stamping may still use a dev fallback; production publication cannot.
 
 ---
 
