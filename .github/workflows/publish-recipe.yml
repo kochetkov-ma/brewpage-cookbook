@@ -16,11 +16,8 @@
 # (< 100 files / < 20 MB). So we PRE-BUNDLE: rsync the recipe into a staging dir
 # applying the exact exclude set from recipes/rag-guide/.brewpageignore, then ZIP
 # that dir and point the action at the .zip. Audited published set: 85 files /
-# ~1.8 MB. We hand the action a .zip (not the dir) because the site endpoint's
-# parallel files[]+paths[] array upload trips an edge HTTP 413 for this bundle
-# ("max 25 MB per file", though it is ~1.8 MB) -- the .zip `archive` upload mode
-# is accepted (verified POST 201 / PUT 200 live). brewpage-action@v1.1.1 sends a
-# single `archive` field when `path` ends in .zip.
+# ~1.8 MB. The API supports ZIP archives and repeated files/paths fields.
+# This workflow keeps the ZIP transport and original publish exclusions.
 
 name: Publish recipe
 
@@ -29,6 +26,11 @@ on:
     tags:
       - 'v*.*.*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Existing release tag to republish (vX.Y.Z); publishes that tag, not the selected branch'
+        required: true
+        type: string
 
 # Least privilege: only the Release-creation step needs write; nothing else.
 permissions:
@@ -50,6 +52,7 @@ jobs:
         uses: actions/checkout@v6.0.3 # exact: actions/checkout latest release (verified via gh api)
         with:
           fetch-depth: 0 # full history so stamp-version git describe sees the tag
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v6.4.0 # exact: actions/setup-node latest release (verified via gh api)
@@ -59,9 +62,27 @@ jobs:
       - name: Stamp version
         env:
           REF_NAME: ${{ github.ref_name }} # the pushed tag, e.g. v0.1.1 (or branch on dispatch)
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          node .claude/scripts/stamp-version.mjs --version "${REF_NAME}"
+          if [ "${EVENT_NAME}" = workflow_dispatch ]; then
+            VERSION="${RELEASE_VERSION}"
+          else
+            VERSION="${REF_NAME}"
+          fi
+          if [[ ! "${VERSION}" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Publishing requires an existing vX.Y.Z release tag."
+            exit 1
+          fi
+          TAG_COMMIT="$(git rev-parse --verify "refs/tags/${VERSION}^{commit}")"
+          HEAD_COMMIT="$(git rev-parse HEAD)"
+          if [ "${TAG_COMMIT}" != "${HEAD_COMMIT}" ]; then
+            echo "::error::Requested release tag must point to checked-out HEAD."
+            exit 1
+          fi
+          # Older release snapshots also expose --version; validation stays in this workflow.
+          node .claude/scripts/stamp-version.mjs --version "${VERSION}"
 
       - name: Read .brewpage-site.json
         id: site
@@ -147,15 +168,7 @@ jobs:
             exit 1
           fi
 
-          # Pack the staged set into a single .zip. The brewpage.app multi-file
-          # site endpoint REJECTS the parallel files[]+paths[] multipart array
-          # upload for this bundle with HTTP 413 ("Upload too large; max 25 MB
-          # per file") even though the bundle is ~1.8 MB / 85 files -- the array
-          # mode trips an edge multipart limit, NOT a real size cap. The .zip
-          # `archive` upload mode (the contract's primary documented mode) is
-          # accepted (verified: POST 201 / PUT 200 against the live API with this
-          # exact bundle). brewpage-action@v1.1.1 buildSiteForm() sends a single
-          # `archive` field whenever `path` ends in .zip, so we hand it the zip.
+          # ZIP preserves the staged manifest; the API also supports repeated files/paths.
           ZIP="${DEST}.zip"
           rm -f "${ZIP}"
           ( cd "${DEST}" && zip -q -r -X "${ZIP}" . )
@@ -175,6 +188,7 @@ jobs:
           kind: site
           namespace: public
           ttl-days: '30'
+          # PUT retains the original expiry; ttl-days does not renew this site.
           mode: update
           update-id: ${{ steps.site.outputs.id }}
           entry: index.html
@@ -224,7 +238,7 @@ jobs:
       - name: Create GitHub Release
         # Only fire on a real tag push; a manual workflow_dispatch publishes the
         # site (above) but does not cut a Release (no tag to attach it to).
-        if: github.ref_type == 'tag'
+        if: github.event_name == 'push' && github.ref_type == 'tag'
         uses: softprops/action-gh-release@v3.0.0 # exact: softprops/action-gh-release latest release (verified via gh api)
         with:
           tag_name: ${{ github.ref_name }}

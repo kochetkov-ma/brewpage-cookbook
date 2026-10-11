@@ -41,15 +41,23 @@ const PACKAGE_JSON_PATH = join(REPO_ROOT, "package.json");
 
 // --- tiny arg parser --------------------------------------------------------
 function parseArgs(argv) {
-  const out = { version: null, dryRun: false };
+  const out = { version: null, dryRun: false, requireHeadTag: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--dry-run") {
       out.dryRun = true;
+    } else if (a === "--require-head-tag") {
+      out.requireHeadTag = true;
     } else if (a === "--version") {
       out.version = argv[++i];
+      if (!out.version || out.version.startsWith("--")) {
+        throw new Error("--version requires a semantic version.");
+      }
     } else if (a.startsWith("--version=")) {
       out.version = a.slice("--version=".length);
+      if (!out.version) {
+        throw new Error("--version requires a semantic version.");
+      }
     } else if (a === "--help" || a === "-h") {
       out.help = true;
     } else {
@@ -64,10 +72,11 @@ function usage() {
     "stamp-version.mjs -- stamp the version into version.json, package.json, footers.",
     "",
     "Usage:",
-    "  node .claude/scripts/stamp-version.mjs [--version vX.Y.Z] [--dry-run]",
+    "  node .claude/scripts/stamp-version.mjs [--version vX.Y.Z] [--require-head-tag] [--dry-run]",
     "",
     "Options:",
     "  --version vX.Y.Z   Override the derived version (CLI takes precedence).",
+    "  --require-head-tag Require an existing vX.Y.Z tag at HEAD before publishing.",
     "  --dry-run          Print what would change; write nothing.",
     "  --help, -h         Show this help.",
     "",
@@ -115,6 +124,9 @@ function deriveVersion(cliVersion) {
 function normalize(raw, source) {
   const trimmed = raw.trim();
   const semver = trimmed.replace(/^v/, "");
+  if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(semver)) {
+    throw new Error("Expected a semantic version, received: " + raw);
+  }
   const tagVersion = trimmed.startsWith("v") ? trimmed : "v" + trimmed;
   return { tagVersion, semver, source };
 }
@@ -222,6 +234,16 @@ function main() {
   }
 
   const { tagVersion, semver, source } = deriveVersion(args.version);
+  if (args.requireHeadTag) {
+    if (!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tagVersion)) {
+      throw new Error("Publishing requires an existing vX.Y.Z release tag.");
+    }
+    const taggedCommit = gitTry(["rev-parse", "--verify", "refs/tags/" + tagVersion + "^{commit}"]);
+    const headCommit = gitTry(["rev-parse", "HEAD"]);
+    if (!taggedCommit || taggedCommit !== headCommit) {
+      throw new Error("Publishing requires " + tagVersion + " to point to HEAD.");
+    }
+  }
   const commit = gitCommit();
   const date = gitDate();
 
