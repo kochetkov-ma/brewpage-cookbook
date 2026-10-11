@@ -176,6 +176,42 @@ jobs:
           echo "dir=${DEST}" >> "${GITHUB_OUTPUT}"
           echo "zip=${ZIP}" >> "${GITHUB_OUTPUT}"
 
+      - name: Read existing site retention
+        env:
+          OWNER_TOKEN: ${{ secrets.BREWPAGE_OWNER_TOKEN_RAG_GUIDE }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const site = JSON.parse(readFileSync('recipes/rag-guide/.brewpage-site.json', 'utf8'));
+          if (site.namespace !== 'public' || !/^[A-Za-z0-9]{10}$/.test(site.id)) {
+            throw new Error('Retention preflight requires the supplied public site target');
+          }
+          const link = new URL(site.link);
+          if (typeof site.link !== 'string' || link.protocol !== 'https:' || link.username || link.password ||
+              link.search || link.hash || !(link.hostname === 'brewpage.app' || link.hostname.endsWith('.brewpage.app'))) {
+            throw new Error('Retention preflight requires the stored server link');
+          }
+          const token = process.env.OWNER_TOKEN;
+          if (!token) throw new Error('Retention preflight requires the existing owner credential');
+          const response = await fetch(`https://brewpage.app/api/sites/public/${site.id}`, {
+            method: 'GET',
+            headers: { 'X-Owner-Token': token, Accept: 'application/json' },
+            signal: AbortSignal.timeout(15000),
+          }).catch(() => { throw new Error('Retention metadata request failed'); });
+          if (response.status !== 200) throw new Error(`Retention metadata read failed (HTTP ${response.status})`);
+          const metadata = await response.json().catch(() => { throw new Error('Retention metadata was not valid JSON'); });
+          if (metadata.namespace !== 'public' || metadata.id !== site.id ||
+              typeof metadata.expiresAt !== 'string' || !Number.isFinite(Date.parse(metadata.expiresAt))) {
+            throw new Error('Retention metadata must match the target and contain its original expiry');
+          }
+          // Metadata has no link field; use the stored creation-response link verbatim.
+          writeFileSync(join(process.env.RUNNER_TEMP, 'site-retention.json'), JSON.stringify({
+            id: site.id, namespace: site.namespace, expiresAt: metadata.expiresAt, link: site.link,
+          }), { mode: 0o600 });
+          NODE
+
       - name: Publish to brewpage.app (site update)
         id: brewpage
         # Pinned EXACT to v1.1.1 (annotated tag -> commit 781b5e7). NOT @v1.
@@ -193,6 +229,29 @@ jobs:
           update-id: ${{ steps.site.outputs.id }}
           entry: index.html
           owner-token: ${{ secrets.BREWPAGE_OWNER_TOKEN_RAG_GUIDE }}
+
+      - name: Verify site update preserves retention and server link
+        env:
+          UPDATED_ID: ${{ steps.brewpage.outputs.id }}
+          UPDATED_NAMESPACE: ${{ steps.brewpage.outputs.namespace }}
+          UPDATED_EXPIRY: ${{ steps.brewpage.outputs.expires-at }}
+          UPDATED_LINK: ${{ steps.brewpage.outputs.url }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const original = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, 'site-retention.json'), 'utf8'));
+          if (process.env.UPDATED_ID !== original.id || process.env.UPDATED_NAMESPACE !== original.namespace) {
+            throw new Error('Site update returned a different resource');
+          }
+          if (!process.env.UPDATED_EXPIRY || process.env.UPDATED_EXPIRY !== original.expiresAt) {
+            throw new Error('Site update did not retain the original expiry');
+          }
+          if (!process.env.UPDATED_LINK || process.env.UPDATED_LINK !== original.link) {
+            throw new Error('Site update did not retain the stored server link');
+          }
+          NODE
 
       - name: Build release body
         id: body
