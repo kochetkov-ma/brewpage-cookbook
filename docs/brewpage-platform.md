@@ -122,7 +122,7 @@ Three ways to publish, lowest-level first:
 
 2. **`brewpage` CLI** -- ecosystem module (command-line publisher). [cookbook README §"Where this fits"; cookbook `.claude/agents/brewpage-platform-expert.md`] Release status: **see `ecosystem.md`** -- do not assert a version here.
 
-3. **`brewpage-action` GitHub Action** (`kochetkov-ma/brewpage-action`) -- ecosystem module; preferred path for CI publishing once released, with this cookbook as its first production consumer (dogfood). [cookbook `CLAUDE.md` lines 107, cookbook README §"Where this fits"] Release status: **see `ecosystem.md`** -- do not assert a version here.
+3. **`brewpage-action` GitHub Action** (`kochetkov-ma/brewpage-action`) -- ecosystem module; released and in use: the preferred path for CI publishing, with this cookbook as its first production consumer (dogfood). [cookbook `CLAUDE.md` §6, cookbook README §"Publishing"] Release status: **see `ecosystem.md`** -- do not assert a version here.
 
 > For both the CLI and the Action, treat them as ecosystem modules and reference `ecosystem.md` for their current release state and exact invocation. Until confirmed released, the REST API in §2 is the reliable fallback.
 
@@ -189,7 +189,7 @@ Cookbook recipes are interactive and often embed third-party widgets (videos, co
 
 ## Caveats / facts not fully confirmable in source
 
-- **CLI and Action release status / versions** -- intentionally not asserted here. The platform `llms.txt` advertises only the MCP server (`brewpage-mcp`) and the Claude Code `brewdoc:publish` skill as tooling [S5 lines 89-96]; the `brewpage` CLI and `brewpage-action` are described as ecosystem modules in the cookbook's own CLAUDE.md/README ("once released"). Confirm current status in `ecosystem.md`. (verify in `ecosystem.md`)
+- **CLI and Action release status / versions** -- intentionally not asserted here. The platform `llms.txt` advertises only the MCP server (`brewpage-mcp`) and the Claude Code `brewdoc:publish` skill as tooling [S5 lines 89-96]; the cookbook's own CLAUDE.md/README describe `brewpage-action` as released and in use and the `brewpage` CLI as planned, not on npm. Confirm current status in `ecosystem.md`. (verify in `ecosystem.md`)
 - **Create and update identity.** A create response may refer to an existing publication. Preserve its returned identity and link. Use `PUT /api/html/{ns}/{id}` with the original `X-Owner-Token` to update a specific owned publication.
 
 ---

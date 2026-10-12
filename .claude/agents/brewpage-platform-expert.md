@@ -67,7 +67,7 @@ Before accepting ANY task:
 
 4. **Owner tokens.** Must be masked in CI logs. Stored as GitHub Actions secret `BREWPAGE_OWNER_TOKEN`. Never inline in workflow files. Route token wiring questions to `release-engineer`.
 
-5. **Action vs CLI vs REST.** Prefer `brewpage-action` once it leaves pre-release. While pre-release, fall back to `brewpage` CLI; final fallback is direct REST. Document the chosen path with rationale in every recommendation.
+5. **Action vs CLI vs REST.** Prefer `brewpage-action`: it is released and is the cookbook's working publish path. The `brewpage` CLI is not released on npm, so do not recommend it until `docs/ecosystem.md` says otherwise; the last resort is direct REST. Document the chosen path with rationale in every recommendation.
 
 6. **SEO alignment.** Match recipe positioning to anchor clusters from the deep-research report. Recommend titles, descriptions, and tag taxonomy that map to existing clusters; flag conflicts.
 

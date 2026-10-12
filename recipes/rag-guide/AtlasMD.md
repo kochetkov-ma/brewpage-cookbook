@@ -29,7 +29,7 @@ Atlas = a warm antique-cartography / engineering-plate SKIN over SERIOUS RAG con
 | 7 | Earned progress only | progress is EARNED by traversing the section MAIN PATH (section 4.1). Strip starts neutral 0/total; current/next marker is faint rust "вы здесь", NEVER pre-green. |
 | 8 | Themed selection, never blue | selected/active/focus = the canonical themed sepia/rust/gold ring (section 3.13). Default blue focus ring is FORBIDDEN everywhere. |
 | 9 | Self-contained, zero deps | no webfonts, no external requests, no CDN, no diagram library; inline SVG + system font stacks only. If a dep ever became unavoidable: pin exact `X.Y.Z` per `.claude/rules/versions.md`. |
-| 10 | i18n-ready, RU default | RU default (`<html lang="ru">`); EN via `i18n.js`. Static text carries `data-ru`/`data-en` (meaningful with JS off); data is `{ ru, en }`. |
+| 10 | i18n-ready, EN default | EN default (`<html lang="en">`); RU via `i18n.js` (language toggle or `?lang=ru`). Static text carries `data-ru`/`data-en` (meaningful with JS off); data is `{ ru, en }`. |
 
 ---
 
@@ -368,7 +368,7 @@ recipes/rag-guide/
 |--------|---------------------------|
 | `dom.js` | toolbox: `qs/qsa/el/svg/append/clear/on/listeners/fetchJson/stripMeta`; `init` no-op |
 | `a11y.js` | `prefersReducedMotion`, `onReducedMotionChange`, `focusable`, `focusTrap`, `onEscape`; `init(host,{politeness})` mounts a scoped `.announce` aria-live -> `{ announce(msg), destroy }` |
-| `i18n.js` | active-lang store (RU default from `<html lang>`): `getLocale/setLocale/subscribe/t`; fires `lang:change`; `init(html,{locale?})` |
+| `i18n.js` | active-lang store (EN default; init order `?lang`, stored choice, `<html lang>`, then `en`): `getLocale/setLocale/subscribe/t`; fires `lang:change`; `init(html,{locale?})` |
 | `chapter-state.js` | guarded localStorage 3-state chapter persistence (4.2); named exports only |
 
 ### 5.3 Page glue (`shared/js/pages/*.js`)

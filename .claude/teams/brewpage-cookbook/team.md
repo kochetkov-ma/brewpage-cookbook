@@ -3,9 +3,9 @@
 | Field | Value |
 |-------|-------|
 | Created | 2026-05-21 |
-| Last update | 2026-06-04 |
-| Agents planned | 6 |
-| Agents active | 6 |
+| Last update | 2026-10-12 |
+| Agents planned | 8 |
+| Agents active | 8 |
 | Project | `~/IdeaProjects/brewpage-cookbook` |
 | Repo | https://github.com/kochetkov-ma/brewpage-cookbook |
 | Phase | ACTIVE |
@@ -42,14 +42,16 @@ Active agents -- scaffolded at `.claude/agents/<name>.md`. Source of truth for t
 | `site-builder` | Static-site scaffold (plain HTML + vanilla JS + one hand-written CSS file, no framework, no build step), shared header/footer partial, base.css, recipe folder layout, recipe content schema, client-side search wiring, pin-exact CDN deps | Owns the static-site scaffold. Builds the index, shared header/footer, base.css with CSS variables, optional search.js. Defines local preview + direct publish. Wires the recipe content schema. | scaffold, static html, layout, header, footer, base.css, css variables, preview, recipe layout, content schema, client-side search, vanilla js, cdn pin | active | 2026-06-04 |
 | `interactive-engineer` | Interactive elements in vanilla JS -- C4 drill-down, mini-games, sandboxes, embedding visualiser, code playgrounds (no framework, no UI library) | Builds and maintains every interactive element across recipes in plain vanilla JS (ES modules). Diagrams are inline SVG or static images. Owns the reusable vanilla-JS bits under `assets/js/` (shared in `assets/js/lib/`). | c4, svg diagram, drill-down, mini-game, sandbox, visualiser, slider, embedding map, interactive, vanilla js, es module | active | 2026-06-04 |
 | `brewpage-platform-expert` | Read-only adviser: BrewPage REST API + CLI + MCP server + SEO/growth context | Explains how to publish correctly, how namespaces/owner-tokens/passwords work, when to use multi-file vs. single-file publish, and how to align recipes with the growth story documented in `brewpage-openapi/.claude/features/deep-research-report.md`. Never edits content directly. | publish-site, namespace, owner-token, password, ttl-days, brewpage-action, brewpage cli, mcp, anchor cluster, seo, AI artifact hosting | active | 2026-05-21 |
-| `release-engineer` | `.github/workflows/*.yml`, tag flow, `brewpage-action` integration, secret management | Owns CI/CD. Publishes the static recipe folder DIRECTLY to brewpage.app on push to main and on tags -- no npm build, no `dist/`. Mechanism order: `brewpage-action`, then `brewpage` CLI, then direct REST. Pins GitHub Actions to exact versions; tags are unprefixed `vX.Y.Z`. Masks owner tokens. | github actions, workflow, ci, cd, tag, release, brewpage-action, secret, BREWPAGE_OWNER_TOKEN, publish step | active | 2026-06-04 |
-| `task-tracker` | `.claude/features/**` task board (read+write within `features/` ONLY) | Cross-cutting bookkeeping. Owns the canonical task board: claims tasks (`todo -> progress`), records owners/deps, and closes shipped work with a `vX.Y.Z` tag + SHA. Bookend procedure in `.claude/features/TRACKER.md`. The other five agents never hand-edit `features/`. | task board, claim, progress, close, tag, sha, board, tracker, status, backlog | active | 2026-06-04 |
+| `release-engineer` | `.github/workflows/*.yml`, tag flow, `brewpage-action` integration, secret management | Owns CI/CD. Publishes the static recipe folder DIRECTLY to brewpage.app when an unprefixed `vX.Y.Z` tag is pushed; a push to `main` publishes nothing -- no npm build, no `dist/`. Mechanism: `brewpage-action` (released, pinned to an exact version); the `brewpage` CLI is not released; direct REST is the last resort. Pins GitHub Actions to exact versions; tags are unprefixed `vX.Y.Z`. Masks owner tokens. | github actions, workflow, ci, cd, tag, release, brewpage-action, secret, BREWPAGE_OWNER_TOKEN, publish step | active | 2026-06-04 |
+| `task-tracker` | `.claude/features/**` task board (read+write within `features/` ONLY) | Cross-cutting bookkeeping. Owns the canonical task board: claims tasks (`todo -> progress`), records owners/deps, and closes shipped work with a `vX.Y.Z` tag + SHA. Bookend procedure in `.claude/features/TRACKER.md`. The other seven agents never hand-edit `features/`. | task board, claim, progress, close, tag, sha, board, tracker, status, backlog | active | 2026-06-04 |
+| `recipe-site-architect` | `recipes/<slug>/{shared,variants,content}`: shared lib, `base.css`, themes, component partials, page glue | Builds on the shared-lib + theme-as-a-file site architecture once the generic scaffold exists: composes pages from shared component partials, `base.css` classes and the lib `init(root, config)` modules; adds sections, themes and interactivity wiring. | shared lib, base.css, theme, css token, component partial, page glue, data contract, no-js fallback, add section, add theme | active | 2026-06-13 |
+| `github-actions-engineer` | GitHub Actions across the brewpage-* ecosystem: `.github/workflows/*.yml`, custom node24 actions (`action.yml` + `dist/`), reusable and composite workflows, release/tag flows, Marketplace publishing; `brewpage-action` machinery | Designs, writes, reviews and debugs workflows and actions. The cookbook's own recipe-publish pipeline stays with `release-engineer`. | github actions, workflow, action.yml, composite action, reusable workflow, workflow_call, matrix, cache, concurrency, permissions, check-dist, release.yml, marketplace | active | 2026-06-13 |
 
 ## Read-only vs. write agents
 
 - `brewpage-platform-expert` is **read-only**. It returns findings/recommendations and never edits files. The manager dispatches resulting edits to the appropriate write agent.
 - `task-tracker` is a **scoped writer**: it reads anywhere but writes ONLY inside `.claude/features/**`. It owns the canonical task board; no other agent hand-edits `features/`.
-- The remaining four agents (`cookbook-author`, `site-builder`, `interactive-engineer`, `release-engineer`) own writes within their product domain and delegate every board transition to `task-tracker`.
+- The remaining six agents (`cookbook-author`, `site-builder`, `recipe-site-architect`, `interactive-engineer`, `release-engineer`, `github-actions-engineer`) own writes within their product domain and delegate every board transition to `task-tracker`.
 
 ## Build order (for first recipe)
 
@@ -96,7 +98,7 @@ Per-agent activity will be tracked at `.claude/teams/brewpage-cookbook/trace.jso
 
 When `/brewcode:teams` or `/brewcode:agents` is run against this file:
 
-- Default model: `opus` for all six agents.
+- Default model: `opus` for all eight agents.
 - Tooling: each write agent gets `Read, Edit, Write, Glob, Grep, Bash`; the read-only `brewpage-platform-expert` gets `Read, Grep, Glob, Bash` only. `task-tracker` gets write tools but is scoped to `.claude/features/**` by its instructions.
 - Place generated agent files under `.claude/agents/<name>.md`.
 - Each agent's description should be specific enough to delegate reliably (see triggers column above).

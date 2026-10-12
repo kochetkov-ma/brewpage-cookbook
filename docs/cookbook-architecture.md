@@ -67,7 +67,7 @@ brewpage-cookbook/
     features/            -- task board (canonical work list) + per-task tracking
     rules/               -- auto-loaded coding/content/version rules
     teams/brewpage-cookbook/
-      team.md            -- agent team definition (6 agents)
+      team.md            -- agent team definition (8 agents)
 ```
 
 Two parallel "plan" surfaces, with distinct scopes:

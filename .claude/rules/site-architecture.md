@@ -69,7 +69,7 @@ Rules: every contract documents its schema in-file. JSON files carry a `_schema`
 
 ## 8. i18n-ready
 
-- `i18n.js` holds an active-lang store, RU default. Labels are data-driven (glossary + data contracts carry `{ ru, en }`); prose hooks via `[data-term]`.
+- `i18n.js` holds an active-lang store, EN default (`<html lang="en">`; RU through the toggle or `?lang=ru`). Labels are data-driven (glossary + data contracts carry `{ ru, en }`); prose hooks via `[data-term]`.
 - "i18n-ready" = the data + lang store exist and consumers resolve by active lang. Full EN page-doubling is a later build-out, NOT required for ready state.
 
 ## 9. Dependencies + versions

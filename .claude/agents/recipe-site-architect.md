@@ -86,7 +86,7 @@ Host contract carried via `data-*`: `data-component="<name>"` (mount target), `d
 |--------|--------------|--------------------|
 | `dom.js` | toolbox: `qs/qsa/el/svg/append/clear/on/listeners/fetchJson/stripMeta`; `init()` is a no-op handle | -- |
 | `a11y.js` | focus trap/restore, `onEscape`, `prefersReducedMotion`/`onReducedMotionChange`, `focusable`; `init` mounts a scoped aria-live announcer (`.announce`) | `{ announce?, politeness? }` |
-| `i18n.js` | singleton active-lang store (RU default from `<html lang>`), `getLocale/setLocale/subscribe/t`; fires `lang:change` | `{ locale? }` |
+| `i18n.js` | singleton active-lang store (EN default; init order `?lang`, stored choice, `<html lang>`, then `en`), `getLocale/setLocale/subscribe/t`; fires `lang:change` | `{ locale? }` |
 | `drilldown.js` | `[data-component="drilldown-host"]`; renders C4 tree from `diagram-data.js` into `[data-slot="svg"]`, breadcrumb/back, keyboard nav, announce | `{ dataSrc, stage, onSelect? }` (defaults read `data-diagram-src`/`data-stage`) |
 | `timeline.js` | generic step driver on ONE rAF clock; gates on IntersectionObserver + reduced-motion; updates `.timeline__progress/__caption/__step` | `{ steps, render, autoplay?, speed?, onStep? }` |
 | `process-anim.js` | worked-example renderer built ON `timeline.js`; renders doc -> chunks -> vectors on `[data-component="worked-example"]` / `[data-slot="anim"]` | `{ data? \| dataSrc }` |

@@ -127,7 +127,7 @@ Run at session start or when `backlog/` exceeds ~10 items. For each `backlog/*.m
 
 ### Close a task (reconcile)
 1. Move `progress/<ID>.md` -> `closed/<ID>.md`. Set `status: closed`, bump `updated`.
-2. Append outcome + REL to `## Notes`: the unprefixed `vX.Y.Z` tag + commit SHA. Cookbook tags are UNPREFIXED `vX.Y.Z` (e.g. `v0.1.0`) -- content-only PRs ship on merge; a tag marks a curated milestone such as a complete recipe going live.
+2. Append outcome + REL to `## Notes`: the unprefixed `vX.Y.Z` tag + commit SHA. Cookbook tags are UNPREFIXED `vX.Y.Z` (e.g. `v0.1.0`) -- a merge to `main` publishes nothing; every publish runs from a pushed tag.
 3. Remove from Progress table, add to Closed (recent) with `closed in = vX.Y.Z`; adjust counts; drop from current-focus; touch `STATUS.md`.
 
 ## Bookend rule (claim / close)

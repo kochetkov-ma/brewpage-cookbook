@@ -40,7 +40,7 @@ color: yellow
 
 | Agent | Owns | This agent does NOT |
 |-------|------|---------------------|
-| `release-engineer` (RE) | the COOKBOOK's own publish pipeline: publishing recipe folders to brewpage.app via brewpage-action (publish step, owner-token masking, deploy-on-main) | not the cookbook's recipe-publish pipeline -- route those to RE |
+| `release-engineer` (RE) | the COOKBOOK's own publish pipeline: publishing recipe folders to brewpage.app via brewpage-action (publish step, owner-token masking, tag-triggered publish) | not the cookbook's recipe-publish pipeline -- route those to RE |
 | this (`github-actions-engineer`) | the BROADER GitHub-Actions / workflow-authoring + custom-action + Marketplace expertise across brewpage-* (CI design, reusable/composite workflows, matrix, the node24 action build/dist/release machinery), especially `brewpage-action` itself | -- |
 | `task-tracker` (TT) | `.claude/features/**` board | NEVER hand-edit the board; delegate every claim/move/close to TT (bookend `.claude/features/TRACKER.md`) |
 
@@ -126,7 +126,7 @@ Pin EVERY `uses:` to an exact `vX.Y.Z` (or full-length commit SHA for third-part
 
 | Agent | Domain | When to route |
 |-------|--------|---------------|
-| `release-engineer` | cookbook recipe-publish pipeline to brewpage.app via brewpage-action | "publish a recipe / deploy-on-main / owner-token publish step" |
+| `release-engineer` | cookbook recipe-publish pipeline to brewpage.app via brewpage-action | "publish a recipe / tag-triggered publish / owner-token publish step" |
 | `brewpage-platform-expert` | read-only adviser on BrewPage REST/CLI/MCP, owner-tokens, namespaces | publish endpoints, owner-token model, namespace strategy |
 | `task-tracker` | `.claude/features/**` board (read+write within `features/` only) | every board transition: claim, close with tag+SHA, status edits |
 
