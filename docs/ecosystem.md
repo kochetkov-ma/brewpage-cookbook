@@ -23,21 +23,22 @@ GitHub URLs follow `https://github.com/kochetkov-ma/<repo>`. Every URL below is 
 |---|---|---|---|---|---|
 | `brewpage-app` | Proprietary platform: HTML/KV/JSON/file hosting backend (Spring/Kotlin) + frontend + infra. Serves `brewpage.app`. | `~/IdeaProjects/brewpage-app` | **yes** | `github.com/kochetkov-ma/brewpage-app` (inferred -- not named in ECOSYSTEM-PLAN.md; the platform itself, kept private) | RELEASED (live platform) |
 | `brewpage-openapi` | **Coordination layer.** OpenAPI contract (source of truth), released `mcp-server` (npm `brewpage-mcp`), Astro doc site, agents/skills, master plan, module stubs. | `~/IdeaProjects/brewpage-openapi` | **yes** | [github.com/kochetkov-ma/brewpage-openapi](https://github.com/kochetkov-ma/brewpage-openapi) | RELEASED |
-| `brewpage-cookbook` | **This repo.** Interactive recipes for AI artifact workflows, published live on BrewPage. One module / dogfood consumer. | `~/IdeaProjects/brewpage-cookbook` | **yes** | [github.com/kochetkov-ma/brewpage-cookbook](https://github.com/kochetkov-ma/brewpage-cookbook) | SCAFFOLD (`modules/cookbook/`, Phase P1, task #11) |
+| `brewpage-cookbook` | **This repo.** Interactive recipes for AI artifact workflows, published live on BrewPage. One module / dogfood consumer. | `~/IdeaProjects/brewpage-cookbook` | **yes** | [github.com/kochetkov-ma/brewpage-cookbook](https://github.com/kochetkov-ma/brewpage-cookbook) | LIVE -- RAG Guide published, tag-driven releases (`modules/cookbook/`, Phase P1, task #11) |
 
 #### Confirmed-local repos not part of the BrewPage publishing ecosystem
 
-These exist locally and are named in the project memory's "confirmed-real" list, but they are **not** listed in `ECOSYSTEM-PLAN.md` and are not BrewPage modules. Listed here only for completeness so they are not mistaken for ecosystem modules.
+These exist locally and are named in the project memory's "confirmed-real" list (`brewdoc` was added later, confirmed by `ls -d` and its public GitHub repo), but they are **not** listed in `ECOSYSTEM-PLAN.md` and are not BrewPage modules. Listed here only for completeness so they are not mistaken for ecosystem modules.
 
 | Repo | Purpose | Local path | Local exists? | GitHub URL | Status |
 |---|---|---|---|---|---|
-| `brewcode-app` | Separate product: private infra repo for Brewcode (`brewcode.app`) -- VPS/deploy/ops. Sibling, not a BrewPage module. | `~/IdeaProjects/brewcode-app` | **yes** | `github.com/kochetkov-ma/brewcode-app` (inferred -- not in ECOSYSTEM-PLAN.md) | out of ecosystem scope |
+| `brewcode-app` | Separate product: private infra repo for Brewcode and its site [brewcode.app](https://brewcode.app), the hub site of the Brew product family -- VPS/deploy/ops. Sibling, not a BrewPage module. | `~/IdeaProjects/brewcode-app` | **yes** | `github.com/kochetkov-ma/brewcode-app` (inferred -- not in ECOSYSTEM-PLAN.md) | out of ecosystem scope |
 | `claude-brewcode` | Separate product: Claude Code plugin / marketplace (`doc-claude.brewcode.app`). Sibling, not a BrewPage module. | `~/IdeaProjects/claude-brewcode` | **yes** | [github.com/kochetkov-ma/claude-brewcode](https://github.com/kochetkov-ma/claude-brewcode) (confirmed via repo README badges) | out of ecosystem scope |
 | `brewai-hub` | Separate product: "Speech Hub" self-hosted STT API. Unrelated to BrewPage hosting / publishing. | `~/IdeaProjects/brewai-hub` | **yes** | `github.com/kochetkov-ma/brewai-hub` (inferred -- not in ECOSYSTEM-PLAN.md) | out of ecosystem scope |
+| `brewdoc` | Separate product: **brewdoc CLI** -- standalone command-line tool for deterministic document-to-Markdown conversion for agent systems, PyPI [`brewdoc`](https://pypi.org/project/brewdoc/). Not the brewdoc plugin, which is a Claude Code plugin shipped in `claude-brewcode`. Sibling, not a BrewPage module. | `~/IdeaProjects/brewdoc` | **yes** | [github.com/kochetkov-ma/brewdoc](https://github.com/kochetkov-ma/brewdoc) (confirmed -- public repo) | out of ecosystem scope |
 
 ### Planned modules (stubs in `brewpage-openapi/modules/`)
 
-Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirmed present (listed via `ls -d`). None has a standalone local repo: each `ls -d ~/IdeaProjects/<repo>` returned MISSING. The "Future repo" / GitHub URL comes straight from the `ECOSYSTEM-PLAN.md` Repo-map table. Status = the phase / task from that table.
+Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirmed present (listed via `ls -d`). Only `action` has a standalone repo (`brewpage-action`, released); for every other module `ls -d ~/IdeaProjects/<repo>` returned MISSING. The "Future repo" / GitHub URL comes straight from the `ECOSYSTEM-PLAN.md` Repo-map table. Status = the phase / task from that table.
 
 | Module | Purpose / channel | Stub path (local, confirmed) | Standalone repo exists locally? | GitHub URL (future repo) | Status |
 |---|---|---|---|---|---|
@@ -45,16 +46,16 @@ Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirm
 | `client-ts` | TS client library, npm `brewpage-client`. | `~/IdeaProjects/brewpage-openapi/modules/client-ts/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-client-ts` | PLANNED P1 (task #1) |
 | `cli-node` | Node CLI, npm `brewpage`. | `~/IdeaProjects/brewpage-openapi/modules/cli-node/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-cli` | PLANNED P1 (task #3) |
 | `ext-vscode` | VS Code extension (VS Marketplace + Open VSX). | `~/IdeaProjects/brewpage-openapi/modules/ext-vscode/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-vscode` | PLANNED P1 (task #6) |
-| `action` | GitHub Action (Actions Marketplace), `@v1`. **Cookbook's publish dependency.** | `~/IdeaProjects/brewpage-openapi/modules/action/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-action` | PLANNED P1 (task #8) |
+| `action` | GitHub Action (Actions Marketplace), `@v1`. **Cookbook's publish dependency.** | `~/IdeaProjects/brewpage-openapi/modules/action/` | **yes** (`~/IdeaProjects/brewpage-action`) | [github.com/kochetkov-ma/brewpage-action](https://github.com/kochetkov-ma/brewpage-action) | RELEASED (P1, task #8) |
 | `client-python` | Python client, PyPI `brewpage-client`. | `~/IdeaProjects/brewpage-openapi/modules/client-python/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-client-python` | PLANNED P2 (task #2) |
 | `cli-python` | Python CLI, PyPI `brewpage`. | `~/IdeaProjects/brewpage-openapi/modules/cli-python/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-cli-python` | PLANNED P2 (task #4) |
 | `ext-chrome` | Browser extension (Chrome Web Store + Edge + AMO). | `~/IdeaProjects/brewpage-openapi/modules/ext-chrome/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-chrome` | PLANNED P2 (task #7) |
 | `cli-homebrew` | Homebrew tap, `brew install kochetkov-ma/tap/brewpage`. Repo named `homebrew-tap` (Homebrew naming requirement). | `~/IdeaProjects/brewpage-openapi/modules/cli-homebrew/` | no (stub-only) | `github.com/kochetkov-ma/homebrew-tap` | PLANNED P2 (task #5) |
 | `docs-user` | User-facing docs site (Astro, GitHub Pages). | `~/IdeaProjects/brewpage-openapi/modules/docs-user/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-docs` | PLANNED P2 (task #9) |
 | `hf-space` | HuggingFace Space (static SDK), P3 backlink surface. | `~/IdeaProjects/brewpage-openapi/modules/hf-space/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-hf-space` | PLANNED P3 (task #10) |
-| `cookbook` | Reference stub for **this** repo (`brewpage-cookbook`). | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | dev repo IS `brewpage-cookbook` (see Live repos) | [github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook) | SCAFFOLD / PLANNED P1 (task #11) |
+| `cookbook` | Reference stub for **this** repo (`brewpage-cookbook`). | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | dev repo IS `brewpage-cookbook` (see Live repos) | [github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook) | LIVE (P1, task #11) |
 
-> **Inference flags.** `brewpage-app`, `brewcode-app`, `brewai-hub` GitHub URLs are **inferred** from the `kochetkov-ma/<repo>` convention -- not named in `ECOSYSTEM-PLAN.md`. `claude-brewcode` is confirmed (its own README links to `github.com/kochetkov-ma/claude-brewcode`). All planned-module GitHub URLs are **explicit** in the `ECOSYSTEM-PLAN.md` Repo-map table.
+> **Inference flags.** `brewpage-app`, `brewcode-app`, `brewai-hub` GitHub URLs are **inferred** from the `kochetkov-ma/<repo>` convention -- not named in `ECOSYSTEM-PLAN.md`. `claude-brewcode` is confirmed (its own README links to `github.com/kochetkov-ma/claude-brewcode`); `brewdoc` and `brewpage-action` are confirmed public repos. All planned-module GitHub URLs are **explicit** in the `ECOSYSTEM-PLAN.md` Repo-map table.
 
 ## Where the cookbook fits
 
@@ -64,7 +65,7 @@ The cookbook is an **independent, P1 module** and the ecosystem's **first produc
 cookbook  (independent -- consumes brewpage-action for publish; first production consumer / dogfood)
 ```
 
-**Publish path.** Recipes are authored here as **plain static HTML with a little vanilla JavaScript** (no build step), then **published to `brewpage.app`** as hosted multi-file sites -- the static folder ships exactly as authored. The intended publish mechanism is the GitHub Action **`brewpage-action`** (`modules/action/`, planned P1) -- i.e. the cookbook eats the ecosystem's own dog food. Both `brewpage-action` and the `brewpage` CLI (`modules/cli-node/`, planned P1) are not yet released, so **today the only working publish path is a direct REST call** against the OpenAPI contract; switch to the Action (preferred), then the CLI, once they ship. The cookbook's own `README.md` already states this: it publishes "via `brewpage-action` (once released) or the `brewpage` CLI."
+**Publish path.** Recipes are authored here as **plain static HTML with a little vanilla JavaScript** (no build step), then **published to `brewpage.app`** as hosted multi-file sites -- the static folder ships exactly as authored. The publish mechanism is the GitHub Action **`brewpage-action`** (`modules/action/`, released) -- i.e. the cookbook eats the ecosystem's own dog food: pushing an unprefixed `vX.Y.Z` tag runs `.github/workflows/publish-recipe.yml`, which calls the Action pinned to an exact version; a push to `main` publishes nothing. The `brewpage` CLI (`modules/cli-node/`, planned P1) is not yet released, so the fallback order is the Action (in use), then the CLI once it ships, then a direct REST call against the OpenAPI contract.
 
 The cookbook depends on **only two external surfaces**:
 1. **The platform** -- [https://brewpage.app](https://brewpage.app) -- the host for every recipe.
