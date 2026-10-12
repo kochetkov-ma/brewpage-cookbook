@@ -1,6 +1,6 @@
 # BrewPage Cookbook
 
-Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and games, each built as a self-contained interactive artifact and published live on [brewpage.app](https://brewpage.app). It is a standalone editorial brand under the BrewPage ecosystem (in the spirit of the [anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) and Stripe Press), not a docs folder or a marketing site. The target is roughly 40 recipes over time. Status: **SCAFFOLD** (pre-release, no production tag yet). Bootstrapped 2026-05-21.
+Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and games, each built as a self-contained interactive artifact and published live on [brewpage.app](https://brewpage.app). It is a standalone editorial brand under the BrewPage ecosystem (in the spirit of the [anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) and Stripe Press), not a docs folder or a marketing site. The target is roughly 40 recipes over time. Status: **LIVE** -- the first recipe is published, and each release is an unprefixed `vX.Y.Z` tag ([releases](https://github.com/kochetkov-ma/brewpage-cookbook/releases)). Bootstrapped 2026-05-21.
 
 ## Recipe index
 
@@ -8,9 +8,9 @@ The machine-readable index is [`recipes/index.json`](./recipes/index.json).
 
 | Recipe | Status | Languages | Live URL | Source |
 |--------|--------|-----------|----------|--------|
-| **RAG Guide** | Staged (publish pending) | RU (default), EN-ready | _assigned at publish_ -- placeholder `https://brewpage.app/REPLACE_AT_PUBLISH` | [`recipes/rag-guide/`](./recipes/rag-guide/) |
+| **RAG Guide** | Live | EN (default), RU | https://brewpage.app/public/FsOfbLP4df | [`recipes/rag-guide/`](./recipes/rag-guide/) |
 
-[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (RU default, EN-ready). It doubles as the production dogfood for the publish pipeline. The built site is staged and verified; the live URL is assigned when it is published to BrewPage.
+[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (EN default, RU via the language toggle). It doubles as the production dogfood for the publish pipeline. It is live at https://brewpage.app/public/FsOfbLP4df and is republished on every release tag.
 
 Every recipe page back-links to both ecosystem surfaces (mandatory cross-link rule):
 
@@ -38,12 +38,14 @@ The canonical work list is the task board at [`.claude/features/board.md`](./.cl
 
 ## Agents
 
-Six domain agents live under [`.claude/agents/`](./.claude/agents/), each owning one slice of the work:
+Eight domain agents live under [`.claude/agents/`](./.claude/agents/), each owning one slice of the work:
 
 - [`cookbook-author`](./.claude/agents/cookbook-author.md) -- recipe content owner: plans, drafts, edits and ships recipe prose, voice and citations.
 - [`site-builder`](./.claude/agents/site-builder.md) -- builds and owns the site platform: scaffold, shared layouts, content schema, search wiring and dependencies.
 - [`interactive-engineer`](./.claude/agents/interactive-engineer.md) -- builds every interactive element (C4 drill-downs, mini-games, sandboxes, visualisers) and the reusable component library.
+- [`recipe-site-architect`](./.claude/agents/recipe-site-architect.md) -- builds recipe sites on the shared library: component partials, themes, page glue and data contracts.
 - [`release-engineer`](./.claude/agents/release-engineer.md) -- owns CI/CD: GitHub Actions workflows, the tag flow, the publish step and secret masking.
+- [`github-actions-engineer`](./.claude/agents/github-actions-engineer.md) -- deep GitHub Actions authoring: workflows, custom actions, release and tag flows.
 - [`brewpage-platform-expert`](./.claude/agents/brewpage-platform-expert.md) -- read-only adviser on the BrewPage REST/CLI/MCP/action surfaces, namespaces, owner tokens and TTL; routes edits to the write agents.
 - [`task-tracker`](./.claude/agents/task-tracker.md) -- owns the task board: claims, moves and closes tasks, grooms the backlog, and keeps everything in sync.
 
@@ -63,17 +65,17 @@ There is no bundler, no compile step, and no `dist/`: a recipe is a self-contain
 
 ## Publishing
 
-Every push to `main` publishes the recipe's static folder directly to BrewPage as a multi-file site -- there is no build step (a recipe is a multi-file bundle, so it must fit 20 MB total / 100 files / 5 MB per file). The publish mechanism is chosen in preference order, falling back only as needed:
+Pushing an unprefixed `vX.Y.Z` tag runs the [publish workflow](./.github/workflows/publish-recipe.yml), which publishes the recipe's static folder directly to BrewPage as a multi-file site and creates a GitHub Release -- there is no build step (a recipe is a multi-file bundle, so it must fit 20 MB total / 100 files / 5 MB per file). A push to `main` publishes nothing. The publish mechanism is chosen in preference order, falling back only as needed:
 
-1. **`brewpage-action`** -- preferred; this repo is its first production consumer (dogfood). [`kochetkov-ma/brewpage-action`](https://github.com/kochetkov-ma/brewpage-action), once released.
-2. **`brewpage` CLI** -- `npx brewpage publish-site ./recipes/<slug>`, while the action is pre-release.
+1. **`brewpage-action`** -- in use; this repo is its first production consumer (dogfood). [`kochetkov-ma/brewpage-action`](https://github.com/kochetkov-ma/brewpage-action), pinned to an exact version in the workflow.
+2. **`brewpage` CLI** -- `npx brewpage publish-site ./recipes/<slug>`; planned, not yet released on npm.
 3. **Direct REST** against `https://brewpage.app` -- last resort.
 
-Each recipe has its own BrewPage owner token, stored as a masked GitHub repo secret and injected at CI time. Owner tokens are never committed and are not recoverable. Content-only changes ship to the live URL on merge; a tag (unprefixed `vX.Y.Z`) marks a curated milestone.
+Each recipe has its own BrewPage owner token, stored as a masked GitHub repo secret and injected at CI time. Owner tokens are never committed and are not recoverable. Merging to `main` only lands content; the live URL changes when a tag (unprefixed `vX.Y.Z`) is pushed.
 
 ## Where this fits
 
-This repository is **one module** in the BrewPage ecosystem. It knows about only two external surfaces: the live platform at [brewpage.app](https://brewpage.app) (the publish target) and the coordination repo [`brewpage-openapi`](https://github.com/kochetkov-ma/brewpage-openapi), which holds the REST contract (the source of truth) and the master ecosystem plan every module consumes. All other modules -- CLIs, extensions, clients, the Action, the MCP server -- are coordinated through `brewpage-openapi` and are intentionally invisible from here. A reference stub for this module lives in the coordination repo at [`modules/cookbook/`](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook). The full repo map is in [`docs/ecosystem.md`](./docs/ecosystem.md).
+This repository is **one module** in the BrewPage ecosystem. It knows about only two external surfaces: the live platform at [brewpage.app](https://brewpage.app) (the publish target) and the coordination repo [`brewpage-openapi`](https://github.com/kochetkov-ma/brewpage-openapi), which holds the REST contract (the source of truth) and the master ecosystem plan every module consumes. All other modules -- CLIs, extensions, clients, the MCP server -- are coordinated through `brewpage-openapi` and are intentionally invisible from here; the one exception is the Action, which the publish workflow uses. A reference stub for this module lives in the coordination repo at [`modules/cookbook/`](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook). The full repo map is in [`docs/ecosystem.md`](./docs/ecosystem.md).
 
 ## Layout
 
@@ -87,12 +89,14 @@ brewpage-cookbook/
     ecosystem.md               -- ecosystem & repo map
     cookbook-architecture.md   -- stack, layout, pipeline, release flow
     recipe-authoring.md        -- voice, structure, Definition of Done
-  features/              -- per-recipe editorial plans
-    01-rag-guide.md
   recipes/               -- one self-contained static folder per recipe (HTML/CSS/JS/assets)
-    rag-guide.md               -- first recipe (prose draft; becomes rag-guide/ once built)
+    index.json                 -- machine-readable recipe index
+    rag-guide/                 -- first recipe (the live site source)
+    rag-guide.md               -- first recipe's prose draft
+  .github/workflows/
+    publish-recipe.yml   -- tag-triggered publish + GitHub Release
   .claude/
-    agents/              -- six domain agents
+    agents/              -- eight domain agents
     features/            -- task board (canonical work list) + tracking procedure
     rules/               -- auto-loaded version/content/docs/task/privacy rules
     teams/brewpage-cookbook/

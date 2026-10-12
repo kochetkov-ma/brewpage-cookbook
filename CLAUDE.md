@@ -6,7 +6,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 
 ## 1. Identity
 
-**BP Cookbook** -- standalone editorial brand under the BP ecosystem (precedent: `anthropic-cookbook`, Stripe Press). Open-source collection of **interactive recipes** (guides, demos, mini-apps, games) for AI artifact workflows. Each recipe = self-contained folder of plain static HTML + a little vanilla JS, published **live on `brewpage.app`** as a multi-file site -- no build step. Own release cadence, independent of the BP REST contract. Target **~40 recipes** over time; first = long-form **RAG Guide** (dogfood for the publish pipeline). Status: **SCAFFOLD** (pre-release, no prod tag yet). Repo: `kochetkov-ma/brewpage-cookbook`. Bootstrapped 2026-05-21.
+**BP Cookbook** -- standalone editorial brand under the BP ecosystem (precedent: `anthropic-cookbook`, Stripe Press). Open-source collection of **interactive recipes** (guides, demos, mini-apps, games) for AI artifact workflows. Each recipe = self-contained folder of plain static HTML + a little vanilla JS, published **live on `brewpage.app`** as a multi-file site -- no build step. Own release cadence, independent of the BP REST contract. Target **~40 recipes** over time; first = long-form **RAG Guide** (dogfood for the publish pipeline). Status: **LIVE** -- RAG Guide published at `https://brewpage.app/public/FsOfbLP4df`; releases are unprefixed `vX.Y.Z` tags, each with a GitHub Release (latest: `git describe --tags --abbrev=0`). Repo: `kochetkov-ma/brewpage-cookbook`. Bootstrapped 2026-05-21.
 
 ## 2. Doc Index (lazy-load)
 
@@ -21,7 +21,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 
 Per-recipe editorial plans live as per-task design specs in `.claude/features/specs/<TASK-ID>.md` (e.g. `.claude/features/specs/T-RECIPE-RAG-GUIDE.md`), authored by `CA` and linked from the matching task card.
 
-`AtlasMD.md` is the canonical RAG Guide design-system doc (supersedes `mokups/DESIGN-ATLAS.md`, kept only as the landing derivation note). `RATING.md`, the metro variant, and the rejected mockups were dropped. Site draft lives at `recipes/rag-guide/`: `index.html` Atlas MAP landing + 3 section pages (`what-rag.html`, `why-rag.html`, `search.html`) on the shared `shared/` lib (css themes + component partials + `js/lib` modules + `js/pages` glue).
+`AtlasMD.md` is the canonical RAG Guide design-system doc (supersedes `mokups/DESIGN-ATLAS.md`, kept only as the landing derivation note). `RATING.md`, the metro variant, and the rejected mockups were dropped. The live site source is `recipes/rag-guide/`: `index.html` Atlas MAP landing + 11 chapter pages (`what-rag.html`, `why-rag.html`, `search.html`, ...) on the shared `shared/` lib (css themes + component partials + `js/lib` modules + `js/pages` glue).
 
 ## 3. Task tracking flow
 
@@ -35,12 +35,13 @@ Per-recipe editorial plans live as per-task design specs in `.claude/features/sp
 
 ## 4. Agent index
 
-Seven agents under `.claude/agents/`. All model `opus`. `TT` owns the board; `brewpage-platform-expert` is read-only (no Edit/Write); the other five own writes in their domain and delegate every board move to `TT`.
+Eight agents under `.claude/agents/`. All model `opus`. `TT` owns the board; `brewpage-platform-expert` is read-only (no Edit/Write); the other six own writes in their domain and delegate every board move to `TT`.
 
 | Agent | Role | When to use |
 |-------|------|-------------|
 | `CA` | Recipe content -- plans, drafts, edits, ships `recipes/**` + `.claude/features/specs/**`; voice + citations | recipe content, draft, outline, edit, voice, source, citation, editorial pass |
 | `SB` | Site scaffold + shared static structure; shared layout HTML, the one CSS file, search wiring, CDN deps | scaffold, layout, shared html, css, client-side search, dependency, cdn, css-variables decision |
+| `recipe-site-architect` | Shared-lib + theme-as-a-file site work once the scaffold exists; composes pages from component partials, `base.css` classes and lib `init(root, config)` modules; owns `recipes/<slug>/{shared,variants,content}` | shared lib, base.css, theme, css token, component partial, page glue, data contract, no-js fallback, add section, add theme |
 | `IE` | Builds every interactive element (C4 drill-down, mini-games, sandboxes, visualisers); reusable vanilla-JS snippets | interactive, component, c4, svg, drill-down, mini-game, sandbox, visualiser, slider, playground |
 | `brewpage-platform-expert` | **Read-only adviser** on BP REST/CLI/MCP/action, namespaces, owner-tokens, TTL, SEO/growth; routes edits to write agents | publish-site, namespace, owner-token, password, ttl, brewpage-action, brewpage cli, mcp, anchor cluster, seo |
 | `RE` | CI/CD -- `.github/workflows/*.yml`, tag flow, brewpage-action integration, secret masking, version sync; COOKBOOK recipe-publish to brewpage.app | publish step, deploy-on-main, owner-token publish, recipe publish pipeline |
@@ -70,18 +71,18 @@ Each recipe = a **self-contained folder of static files** published directly to 
 
 ## 6. Publishing pipeline + release flow
 
-**Pipeline:** every push to `main` -> publish the recipe's **static folder directly** to BP **as a multi-file site** (no build, no `dist/`). Site limits the folder must fit: 20 MB total / 100 files / 5 MB per file.
+**Pipeline:** pushing an unprefixed `vX.Y.Z` tag runs `.github/workflows/publish-recipe.yml` -> publishes the recipe's **static folder directly** to BP **as a multi-file site update** (no build, no `dist/`; `.brewpageignore`-filtered, zipped) and creates a GitHub Release. Manual `workflow_dispatch` republishes an existing tag without a Release. A push to `main` triggers **nothing**. Site limits the folder must fit: 20 MB total / 100 files / 5 MB per file.
 
 **Publish mechanism (preference order, fall back as needed):**
-1. `brewpage-action` -- preferred (dogfood; this repo is its first production consumer); `kochetkov-ma/brewpage-action@v1`, used once released.
-2. `brewpage` CLI -- `npx brewpage publish-site ./recipes/<slug>`, while action is pre-release.
+1. `brewpage-action` -- in use (dogfood; this repo is its first production consumer); `kochetkov-ma/brewpage-action` pinned to an exact `vX.Y.Z` in the workflow, never `@v1`.
+2. `brewpage` CLI -- `npx brewpage publish-site ./recipes/<slug>`; fallback only once it is released.
 3. Direct REST against `https://brewpage.app` -- last resort.
 
-> **Reality (as of 2026-06-04):** `brewpage-action` and the `brewpage` CLI are planned, not yet released -- so today the only working publish path is **direct REST**. Re-check `docs/ecosystem.md` for release status before relying on the Action/CLI.
+> **Reality (as of 2026-10-12):** `brewpage-action` is released and is the working publish path. The `brewpage` CLI is still planned -- not on npm (`registry.npmjs.org/brewpage` answers 404). Re-check `docs/ecosystem.md` for release status before relying on the CLI.
 
 **Owner tokens:** each recipe has its own BP owner token, stored as GitHub repo secret `BREWPAGE_OWNER_TOKEN_<RECIPE>`, injected at CI time, masked in logs. **Never commit owner tokens** (never in source, logs, or recipe content); not recoverable.
 
-**Release flow:** content-only PRs ship straight to live URL on merge (no tag); a tag marks a curated milestone (e.g. a complete recipe ships). Tags are **unprefixed `vX.Y.Z`** (`v0.1.0`, `v1.0.0`), matching the BP ecosystem. Do **not** hand-edit `package.json` `version` -- CI (once installed) overwrites it from the tag.
+**Release flow:** a merge to `main` only lands content -- nothing reaches the live URL without a tag; every publish runs from a tagged commit. Tags are **unprefixed `vX.Y.Z`** (`v0.1.0`, `v1.0.0`), matching the BP ecosystem. Do **not** hand-edit `package.json` `version` -- the publish workflow stamps it from the tag inside the CI checkout (`.claude/scripts/stamp-version.mjs`) and commits nothing back, so the committed value can lag the latest tag.
 
 ## 7. Ecosystem & links
 
