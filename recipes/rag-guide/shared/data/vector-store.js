@@ -14,7 +14,7 @@
  * The page glue imports THIS module (default export) and passes it as
  * config.data to vector-map.init -- NOT fetched via data-*-src. RU-first; every
  * user-visible string is now { ru, en } so the i18n store (i18n.js) resolves by
- * active language (RU default). EN sourced from content/en/vector-store.md.
+ * active language (EN default). EN sourced from content/en/vector-store.md.
  * ASCII punctuation only, incl. inside Cyrillic. Trusted static copy (no user
  * input): text/vector MAY carry inline <mark> for an emphasized span.
  *

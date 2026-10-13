@@ -150,7 +150,7 @@ function boot() {
   track(initProseI18n(document, { ruData: PROSE_RU, slug: "embedding" }));
   // header full-text site search (client-side, zero external requests) --------
   track(initSiteSearch(document, {}));
-  // i18n store (RU default from <html lang>)
+  // i18n store (EN default from <html lang>)
   track(initI18n(document.documentElement, {}));
 
   // annotated code blocks (highlight + hover/focus popover layer + no-JS ol).

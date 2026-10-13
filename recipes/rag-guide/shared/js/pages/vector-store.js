@@ -119,7 +119,7 @@ function boot() {
   track(initProseI18n(document, { ruData: PROSE_RU, slug: "vector-store" }));
   // header full-text site search (client-side, zero external requests) --------
   track(initSiteSearch(document, {}));
-  // i18n store (restores persisted locale; default RU from <html lang>)
+  // i18n store (restores persisted locale; default EN from <html lang>)
   track(initI18n(document.documentElement, {}));
 
   // lang-toggle wiring FIRST so the toggle is operable + chrome translated even

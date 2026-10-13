@@ -9,7 +9,7 @@
  * Drilled into the Embedding node via drilldown-zoom.js; the page glue imports
  * THIS module (default export) and hands it as config.data to process-anim init
  * -- NOT fetched via data-*-src. RU-first; every copy field is { ru, en } so the
- * i18n store (i18n.js) resolves by active language (RU default). ASCII
+ * i18n store (i18n.js) resolves by active language (EN default). ASCII
  * punctuation only, incl. inside Cyrillic. Code-ish text (chunk bodies, vector
  * readouts) stays ASCII-Latin to mirror the chapter's runnable Python.
  *

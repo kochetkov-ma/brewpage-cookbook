@@ -50,7 +50,7 @@ async function boot() {
   const stops = Array.isArray(data.stops) ? data.stops : [];
   const ui = data.ui || {};
 
-  // active-language helpers (RU default, from <html lang>) ----------------
+  // active-language helpers (EN default, from <html lang>) ----------------
   const langStops = () =>
     stops.map((s) => {
       const loc = i18n.getLocale();

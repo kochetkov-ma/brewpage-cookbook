@@ -4,7 +4,7 @@
  * Consumed by shared/js/lib/pipeline.js. Seeds harvested from the approved
  * etalon (mokups/etalon/what-rag.html DRILL/DATA copy). RU-first; every
  * user-visible string is now { ru, en } so the i18n store (i18n.js) resolves by
- * active language (RU default). EN sourced from content/en/what-rag.md. ASCII
+ * active language (EN default). EN sourced from content/en/what-rag.md. ASCII
  * punctuation only, incl. inside Cyrillic.
  *
  * SHAPE

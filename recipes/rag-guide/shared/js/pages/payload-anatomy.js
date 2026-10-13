@@ -278,7 +278,7 @@ function boot() {
   track(initProseI18n(document, { ruData: PROSE_RU, slug: "payload-anatomy" }));
   // header full-text site search (client-side, zero external requests) --------
   track(initSiteSearch(document, {}));
-  // i18n store (RU default from <html lang>)
+  // i18n store (EN default from <html lang>)
   track(i18n.init(document.documentElement, {}));
 
   // a11y live-region announcer (scoped)

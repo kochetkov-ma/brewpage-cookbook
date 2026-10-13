@@ -6,7 +6,7 @@
  *
  * Seeds harvested from the approved etalon (mokups/etalon/search.html DATA).
  * RU-first; every user-visible string is now { ru, en } so the i18n store
- * (i18n.js) resolves by active language (RU default). EN sourced from
+ * (i18n.js) resolves by active language (EN default). EN sourced from
  * content/en/search.md. ASCII punctuation only, incl. inside Cyrillic.
  * Trusted static copy (no user input): `text`/`vector` MAY carry inline <mark>
  * for the matched span.
