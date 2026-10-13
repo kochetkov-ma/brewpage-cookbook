@@ -38,7 +38,7 @@ These exist locally and are named in the project memory's "confirmed-real" list 
 
 ### Planned modules (stubs in `brewpage-openapi/modules/`)
 
-Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirmed present (listed via `ls -d`). Only `action` has a standalone repo (`brewpage-action`, released); for every other module `ls -d ~/IdeaProjects/<repo>` returned MISSING. The "Future repo" / GitHub URL comes straight from the `ECOSYSTEM-PLAN.md` Repo-map table. Status = the phase / task from that table.
+Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirmed present (listed via `ls -d`). Only `action` (`brewpage-action`, released) and `cookbook` (this repo, released) have a standalone repo; for every other module `ls -d ~/IdeaProjects/<repo>` returned MISSING. The "Future repo" / GitHub URL comes straight from the `ECOSYSTEM-PLAN.md` Repo-map table. Status = the phase / task from that table.
 
 | Module | Purpose / channel | Stub path (local, confirmed) | Standalone repo exists locally? | GitHub URL (future repo) | Status |
 |---|---|---|---|---|---|
@@ -53,7 +53,7 @@ Each is a **reference stub** under `brewpage-openapi/modules/<name>/` -- confirm
 | `cli-homebrew` | Homebrew tap, `brew install kochetkov-ma/tap/brewpage`. Repo named `homebrew-tap` (Homebrew naming requirement). | `~/IdeaProjects/brewpage-openapi/modules/cli-homebrew/` | no (stub-only) | `github.com/kochetkov-ma/homebrew-tap` | PLANNED P2 (task #5) |
 | `docs-user` | User-facing docs site (Astro, GitHub Pages). | `~/IdeaProjects/brewpage-openapi/modules/docs-user/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-docs` | PLANNED P2 (task #9) |
 | `hf-space` | HuggingFace Space (static SDK), P3 backlink surface. | `~/IdeaProjects/brewpage-openapi/modules/hf-space/` | no (stub-only) | `github.com/kochetkov-ma/brewpage-hf-space` | PLANNED P3 (task #10) |
-| `cookbook` | Reference stub for **this** repo (`brewpage-cookbook`). | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | dev repo IS `brewpage-cookbook` (see Live repos) | [github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook) | LIVE (P1, task #11) |
+| `cookbook` | Reference stub for **this** repo (`brewpage-cookbook`). | `~/IdeaProjects/brewpage-openapi/modules/cookbook/` | dev repo IS `brewpage-cookbook` (see Live repos) | [github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook) | RELEASED (P1, task #11) |
 
 > **Inference flags.** `brewpage-app`, `brewcode-app`, `brewai-hub` GitHub URLs are **inferred** from the `kochetkov-ma/<repo>` convention -- not named in `ECOSYSTEM-PLAN.md`. `claude-brewcode` is confirmed (its own README links to `github.com/kochetkov-ma/claude-brewcode`); `brewdoc` and `brewpage-action` are confirmed public repos. All planned-module GitHub URLs are **explicit** in the `ECOSYSTEM-PLAN.md` Repo-map table.
 

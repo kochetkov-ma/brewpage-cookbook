@@ -57,7 +57,7 @@ Deliberately the simplest stack -- plain static HTML, no framework, no build ste
 
 - **Plain static HTML** -- one file per page; about 90% of a recipe is just HTML.
 - **Minimal vanilla JavaScript (ES modules)** -- added only where real interactivity is needed.
-- **One small hand-written CSS file** -- styling via CSS variables; no Tailwind, no component library.
+- **Small hand-written CSS files** -- a shared base, a theme file of CSS variables and one stylesheet per section; no Tailwind, no component library.
 - **Inline SVG or static images** -- for diagrams, drawn by hand or exported once, not generated at build time.
 - **Tiny vanilla JS over a small JSON index** -- in-browser client-side search, if a recipe needs it.
 

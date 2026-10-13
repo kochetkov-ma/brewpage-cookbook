@@ -25,7 +25,7 @@ Per-recipe editorial plans live as per-task design specs in `.claude/features/sp
 
 ## 3. Task tracking flow
 
-`.claude/features/board.md` = **canonical task list + status**. Folder == status: `backlog/` → `todo/` → `progress/` (task file MANDATORY) → `closed/`; `specs/` holds per-task design specs. No root `TODO.md` -- never create one. Ship-state prose = `.claude/features/STATUS.md` (board links it, no duplication). IDs: UPPER-KEBAB `<PREFIX>-<DOMAIN>-<SLUG>` (`T-`/`BUG-`/`M-`/`EPIC-`; domain in `{RECIPE, PLATFORM, CONTENT, INTERACTIVE, CI, DOCS, SEO}`).
+`.claude/features/board.md` = **canonical task list + status**. Folder == status: `backlog/` -> `todo/` -> `progress/` (task file MANDATORY) -> `closed/`; `specs/` holds per-task design specs. No root `TODO.md` -- never create one. Ship-state prose = `.claude/features/STATUS.md` (board links it, no duplication). IDs: UPPER-KEBAB `<PREFIX>-<DOMAIN>-<SLUG>` (`T-`/`BUG-`/`M-`/`EPIC-`; domain in `{RECIPE, PLATFORM, CONTENT, INTERACTIVE, CI, DOCS, SEO}`).
 
 **Bookend rule (`.claude/rules/tasks.md` R1/R2):**
 - **R1 / FIRST sub-task -> claim:** move file `todo/ -> progress/`, set `status: progress` + `owner`, bump `updated`, move board row Todo->Progress, fix counts + current focus.
@@ -40,7 +40,7 @@ Eight agents under `.claude/agents/`. All model `opus`. `TT` owns the board; `br
 | Agent | Role | When to use |
 |-------|------|-------------|
 | `CA` | Recipe content -- plans, drafts, edits, ships `recipes/**` + `.claude/features/specs/**`; voice + citations | recipe content, draft, outline, edit, voice, source, citation, editorial pass |
-| `SB` | Site scaffold + shared static structure; shared layout HTML, the one CSS file, search wiring, CDN deps | scaffold, layout, shared html, css, client-side search, dependency, cdn, css-variables decision |
+| `SB` | Site scaffold + shared static structure; shared layout HTML, the base CSS, search wiring, CDN deps | scaffold, layout, shared html, css, client-side search, dependency, cdn, css-variables decision |
 | `recipe-site-architect` | Shared-lib + theme-as-a-file site work once the scaffold exists; composes pages from component partials, `base.css` classes and lib `init(root, config)` modules; owns `recipes/<slug>/{shared,variants,content}` | shared lib, base.css, theme, css token, component partial, page glue, data contract, no-js fallback, add section, add theme |
 | `IE` | Builds every interactive element (C4 drill-down, mini-games, sandboxes, visualisers); reusable vanilla-JS snippets | interactive, component, c4, svg, drill-down, mini-game, sandbox, visualiser, slider, playground |
 | `brewpage-platform-expert` | **Read-only adviser** on BP REST/CLI/MCP/action, namespaces, owner-tokens, TTL, SEO/growth; routes edits to write agents | publish-site, namespace, owner-token, password, ttl, brewpage-action, brewpage cli, mcp, anchor cluster, seo |
@@ -52,13 +52,13 @@ Team definition (source of truth for roles, build order, expansion): `.claude/te
 
 ## 5. Stack (simplest plain-HTML; no build step)
 
-Deliberately the simplest stack: **plain static HTML + minimal vanilla JavaScript (ES modules) + ONE small hand-written CSS file.** No framework, no bundler, no build step, no MDX, no TypeScript-strict requirement. About **90% of a recipe is plain HTML**; vanilla JS is added only where real interactivity is needed.
+Deliberately the simplest stack: **plain static HTML + minimal vanilla JavaScript (ES modules) + a few small hand-written CSS files.** No framework, no bundler, no build step, no MDX, no TypeScript-strict requirement. About **90% of a recipe is plain HTML**; vanilla JS is added only where real interactivity is needed.
 
 | Layer | Choice |
 |-------|--------|
 | Markup | Plain static HTML (one file per page) |
 | Interactivity | Minimal vanilla JavaScript, ES modules (`<script type="module">`) |
-| Styling | ONE small hand-written CSS file using CSS variables |
+| Styling | Small hand-written CSS files under `shared/css/`: `base.css`, one theme file of CSS variables, one stylesheet per section |
 | Diagrams | Inline SVG or static images |
 | Client-side search (if any) | Tiny vanilla JS over a small JSON index |
 | Build | None -- files ship exactly as authored |

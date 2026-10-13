@@ -20,17 +20,17 @@ This repository is **one module** in the BrewPage ecosystem. It knows about only
 
 ## 2. Stack
 
-The stack is deliberately the **simplest possible**: plain static HTML, a little vanilla JavaScript, and one hand-written CSS file. There is **no framework, no bundler, and no build step** -- recipes ship exactly as authored. About **90% of a recipe is plain HTML**; vanilla JS is added only where real interactivity is needed.
+The stack is deliberately the **simplest possible**: plain static HTML, a little vanilla JavaScript, and a few small hand-written CSS files. There is **no framework, no bundler, and no build step** -- recipes ship exactly as authored. About **90% of a recipe is plain HTML**; vanilla JS is added only where real interactivity is needed.
 
 | Layer | Choice | Role |
 |---|---|---|
 | Markup | **Plain static HTML** | One `.html` file per page; the bulk of every recipe |
 | Interactivity | **Minimal vanilla JavaScript (ES modules)** | `<script type="module">`; added only where real interactivity is needed |
-| Styling | **One small hand-written CSS file** | CSS variables for theming; no utility framework, no component library |
+| Styling | **Small hand-written CSS files** | A shared `base.css`, one theme file of CSS variables and one stylesheet per section under `shared/css/`; no utility framework, no component library |
 | Diagrams | **Inline SVG or static images** | Drill-down diagrams drawn by hand or exported once; no diagram build step |
 | Client-side search | **Tiny vanilla JS over a small JSON index** | In-browser full-text search across a recipe; no server round-trip, no search build |
 
-No `package.json`, no MDX, no TypeScript-strict requirement. There is nothing to install at scaffold time beyond writing the shared layout HTML and the single CSS file.
+No MDX, no TypeScript-strict requirement. The root `package.json` is metadata only (name, version, links -- no dependencies, no scripts), so there is nothing to install at scaffold time beyond writing the shared layout HTML and the CSS.
 
 ### Version pinning discipline
 
@@ -54,17 +54,22 @@ brewpage-cookbook/
   CLAUDE.md              -- project identity for Claude Code (LLM-facing)
   LICENSE                -- Apache-2.0
   .gitignore
+  package.json           -- metadata only; `version` is stamped from the tag in CI
   docs/                  -- engineering & authoring references
+    brewpage-platform.md       -- platform reference (publish, limits, embeds)
+    ecosystem.md               -- ecosystem & repo map
     cookbook-architecture.md   -- this file
     recipe-authoring.md        -- voice + Definition of Done
-  features/              -- per-recipe plans (one short plan per recipe, written before drafting)
-    01-rag-guide.md
   recipes/               -- one self-contained static folder per recipe (HTML/CSS/JS/assets)
+    index.json                 -- machine-readable recipe index
     rag-guide/
       index.html
+  .github/workflows/
+    publish-recipe.yml   -- tag-triggered publish + GitHub Release
   .claude/
     agents/              -- domain agents (cookbook-author, site-builder, interactive-engineer, ...)
     features/            -- task board (canonical work list) + per-task tracking
+      specs/             -- per-recipe plans (one design spec per recipe, written before drafting)
     rules/               -- auto-loaded coding/content/version rules
     teams/brewpage-cookbook/
       team.md            -- agent team definition (8 agents)
@@ -73,7 +78,7 @@ brewpage-cookbook/
 Two parallel "plan" surfaces, with distinct scopes:
 
 - **`.claude/features/specs/<TASK-ID>.md`** -- per-task editorial design specs, one per recipe (goal, scope, milestones, open questions, Definition of Done). Authored by `cookbook-author`, linked from the matching task card. Written before drafting.
-- **`.claude/features/`** -- the operational **task board** (canonical work list across the whole repo); `specs/` holds the per-task design specs above. See §8.
+- **`.claude/features/`** -- the operational **task board** (canonical work list across the whole repo); `specs/` holds the per-task design specs above. See section 8.
 
 ---
 
@@ -89,7 +94,7 @@ PLAN                          AUTHOR                       PUBLISH
 ```
 
 1. **Plan** -- write `.claude/features/specs/<TASK-ID>.md`: goal, audience, scope, interactivity targets, milestones, open questions, Definition of Done.
-2. **Author** -- build the recipe directly as static files in `recipes/<slug>/`: `index.html` (and any further `.html` pages), the shared CSS file, vanilla-JS modules for any interactivity, and inline-SVG / image assets. There is no intermediate format and nothing to compile; what you write is what ships.
+2. **Author** -- build the recipe directly as static files in `recipes/<slug>/`: `index.html` (and any further `.html` pages), the shared CSS, vanilla-JS modules for any interactivity, and inline-SVG / image assets. There is no intermediate format and nothing to compile; what you write is what ships.
 3. **Publish** -- the static folder is published to BrewPage as a multi-file site (see section 5).
 4. **Mark SHIPPED** -- when the recipe is live, mark its `.claude/features/specs/<TASK-ID>.md` plan `SHIPPED`, add/refresh its entry in the `README.md` recipe index and the `recipes/` table, and pin the live URL.
 
@@ -153,11 +158,11 @@ BrewPage defaults to **15 days** and normally caps requested `ttl` at **30 days*
 
 The repo folder `recipes/<slug>/` carries more than the live site: manuscript (`content/`), mockups (`mokups/`), design docs (`*.md`), build scripts (`*.py`), agent state (`.claude/`), and authoring-time HTML partials (`shared/components/`). `brewpage-action` does **not** filter, so the workflow pre-bundles. Publishing the raw folder would blow past the BrewPage site caps (**<= 100 files / 20 MB total / 5 MB per file**).
 
-- **Filter file:** each recipe carries a **`recipes/<slug>/.brewpageignore`** (gitignore-style globs) listing DEV-ONLY paths to exclude; everything else ships. Excluded files stay in git, they just do not upload. The workflow's `rsync --exclude` set mirrors it 1:1.
+- **Filter file:** each recipe carries a **`recipes/<slug>/.brewpageignore`** (gitignore-style globs) listing DEV-ONLY paths to exclude; everything else ships. Excluded files stay in git, they just do not upload. The workflow's `rsync --exclude` set mirrors it 1:1 and also drops the `.brewpageignore` file itself.
 - **Procedure (what the workflow applies):** stage the filtered set -> assert caps (**count < 100**, **total < 20 MB**, **max single < 5 MB**, and **not empty**); fail loudly otherwise -> **zip the staged set** -> hand the `.zip` to the action.
 - **What is excluded** (every depth): `.claude/`, `content/`, `mokups/`, all `*.md`, all `*.py`, `scripts/`, `*.log`, `*.bak`/editor junk, `.gitkeep`, `.brewpageignore`, **`shared/components/`** (authoring-time copy-in partials -- inlined into each page; nothing fetches them at runtime), and design-source `*.svg` whose rasterized counterpart is what the site references (`shared/og/og-rag-guide.svg`; **`favicon.svg` is kept** -- pages reference it).
-- **What is kept** (audited against actual runtime imports/fetches): all `*.html` pages, `shared/css/**`, `shared/js/**`, `shared/data/**`, `shared/og/*.png|ico`, `favicon.*`, `sitemap.xml`.
-- **RAG Guide as built (2026-06-15):** filtered published set = **84 files / ~1.72 MB / largest single < 5 MB** -- all three caps satisfied with margin.
+- **What is kept** (audited against actual runtime imports/fetches): all `*.html` pages, `shared/css/**`, `shared/js/**`, `shared/data/**`, `shared/og/*.png|ico`, `favicon.*`, `sitemap.xml`. The committed non-secret `.brewpage-site.json` descriptor is not excluded, so it ships too.
+- **RAG Guide as published (`v0.1.11`):** filtered published set = **85 files / ~1.8 MB / largest single ~0.17 MB** -- all three caps satisfied with margin. Each run logs the current figures as `staged files=...`.
 
 ---
 
@@ -193,5 +198,5 @@ Every recipe must include at least one interactive element. Each element is a sm
 
 ## 8. Canonical work list & authoring reference
 
-- **Task board (canonical work list):** [`.claude/features/board.md`](../.claude/features/board.md). Single source of truth for what work is in flight across the repo; folder/status conventions and the tracking procedure live alongside it under `.claude/features/`. Per-recipe editorial plans live as per-task design specs under `.claude/features/specs/` (`.claude/features/specs/<TASK-ID>.md`; see §3).
+- **Task board (canonical work list):** [`.claude/features/board.md`](../.claude/features/board.md). Single source of truth for what work is in flight across the repo; folder/status conventions and the tracking procedure live alongside it under `.claude/features/`. Per-recipe editorial plans live as per-task design specs under `.claude/features/specs/` (`.claude/features/specs/<TASK-ID>.md`; see section 3).
 - **Recipe authoring (voice + Definition of Done):** [`docs/recipe-authoring.md`](./recipe-authoring.md) -- the editorial standard every recipe must meet (concrete-problem opening, real working code, at least one interactive element, cited sources, a "try it yourself" / "next steps" close, and the per-recipe DoD).
