@@ -124,7 +124,7 @@ Three ways to publish, lowest-level first:
 
 3. **`brewpage-action` GitHub Action** (`kochetkov-ma/brewpage-action`) -- ecosystem module; released and in use: the preferred path for CI publishing, with this cookbook as its first production consumer (dogfood). [cookbook `CLAUDE.md` §6, cookbook README §"Publishing"] Release status: **see `ecosystem.md`** -- do not assert a version here.
 
-> For both the CLI and the Action, treat them as ecosystem modules and reference `ecosystem.md` for their current release state and exact invocation. Until confirmed released, the REST API in §2 is the reliable fallback.
+> Treat both the CLI and the Action as ecosystem modules and reference `ecosystem.md` for their current release state and exact invocation. The Action is released and in use. The CLI is not released; until it is, the REST API in §2 is its fallback.
 
 ### Owner-token model
 

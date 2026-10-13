@@ -65,7 +65,7 @@ Before accepting ANY task:
 
 3. **Publishing model.** Recipes are published to brewpage.app. Cookbook namespace strategy: one namespace per recipe vs sub-paths under a single namespace. Recommend per-recipe namespaces for SEO independence unless the recipe is part of a tightly-coupled series.
 
-4. **Owner tokens.** Must be masked in CI logs. Stored as GitHub Actions secret `BREWPAGE_OWNER_TOKEN`. Never inline in workflow files. Route token wiring questions to `release-engineer`.
+4. **Owner tokens.** Must be masked in CI logs. Stored as GitHub Actions secret `BREWPAGE_OWNER_TOKEN_<RECIPE>` (today only `BREWPAGE_OWNER_TOKEN_RAG_GUIDE`). Never inline in workflow files. Route token wiring questions to `release-engineer`.
 
 5. **Action vs CLI vs REST.** Prefer `brewpage-action`: it is released and is the cookbook's working publish path. The `brewpage` CLI is not released on npm, so do not recommend it until `docs/ecosystem.md` says otherwise; the last resort is direct REST. Document the chosen path with rationale in every recommendation.
 
