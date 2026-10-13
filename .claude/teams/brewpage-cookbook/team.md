@@ -21,7 +21,7 @@
 
 ## Stack (decided)
 
-Plain static HTML + minimal vanilla JS (ES modules) + one hand-written CSS file. NO framework (no Astro/React/Vue), NO bundler, NO build step, NO MDX, NO UI library. Around 90 percent of a recipe is plain HTML; vanilla JS only where interactivity is genuinely needed. Each recipe is a self-contained folder (`index.html` + `assets/` for `css/`, `js/`, `img/`) published DIRECTLY to BrewPage as a multi-file site -- no `dist/`, no compile. Any third-party JS/CSS comes from a CDN pinned to an exact version per `.claude/rules/versions.md`.
+Plain static HTML + minimal vanilla JS (ES modules) + a few small hand-written CSS files (`base.css`, one theme file of CSS variables, one stylesheet per section). NO framework (no Astro/React/Vue), NO bundler, NO build step, NO MDX, NO UI library. Around 90 percent of a recipe is plain HTML; vanilla JS only where interactivity is genuinely needed. Each recipe is a self-contained folder (one `.html` file per page + a `shared/` library with `css/`, `components/`, `data/`, `js/`, `og/`) published DIRECTLY to BrewPage as a multi-file site (`.brewpageignore`-filtered, zipped) -- no `dist/`, no compile. Any third-party JS/CSS comes from a CDN pinned to an exact version per `.claude/rules/versions.md`.
 
 ## Mission
 
@@ -36,7 +36,7 @@ Ship interactive recipes -- guides, demos, mini-apps, games -- published live on
 | `docs/cookbook-architecture.md` | Stack, repo layout, publishing pipeline, release flow | `site-builder`, `release-engineer` |
 | `docs/recipe-authoring.md` | Recipe voice + structure + Definition-of-Done + handoff-brief format | `cookbook-author` (primary), `interactive-engineer` |
 
-Auto-loaded rules live in `.claude/rules/` (`versions.md`, `content.md`, `docs.md`, `tasks.md`). The canonical task board is `.claude/features/board.md` (procedure `.claude/features/TRACKER.md`).
+Auto-loaded rules live in `.claude/rules/` (index: `CLAUDE.md` section 8). The canonical task board is `.claude/features/board.md` (procedure `.claude/features/TRACKER.md`).
 
 ## Shared Agent Contract
 Load this before task acceptance. Gate Domain/Duplicate/Best: Mismatch/duplicate/better -> refuse+owner/link+return; accept -> trace took, execute only owned surfaces; exclusions win.
@@ -53,8 +53,8 @@ Active agents -- scaffolded at `.claude/agents/<name>.md`. Source of truth for t
 | Agent | Domain | Mission | Status | Updated | Kind | Version | Triggers |
 | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- |
 | `cookbook-author` | `recipes/**`, `features/**`, content voice, outline, editorial decisions | Owns recipe content as static HTML (no MDX). Plans, drafts, edits, ships content. Describes interactivity and hands a brief to `interactive-engineer`. Cites sources. Enforces voice and structure documented in `CLAUDE.md`. | active | 2026-06-04 | domain | - | recipe content, draft, outline, edit, static html, copy, voice, source, citation, editorial pass |
-| `site-builder` | Static-site scaffold (plain HTML + vanilla JS + one hand-written CSS file, no framework, no build step), shared header/footer partial, base.css, recipe folder layout, recipe content schema, client-side search wiring, pin-exact CDN deps | Owns the static-site scaffold. Builds the index, shared header/footer, base.css with CSS variables, optional search.js. Defines local preview + direct publish. Wires the recipe content schema. | active | 2026-06-04 | domain | - | scaffold, static html, layout, header, footer, base.css, css variables, preview, recipe layout, content schema, client-side search, vanilla js, cdn pin |
-| `interactive-engineer` | Interactive elements in vanilla JS -- C4 drill-down, mini-games, sandboxes, embedding visualiser, code playgrounds (no framework, no UI library) | Builds and maintains every interactive element across recipes in plain vanilla JS (ES modules). Diagrams are inline SVG or static images. Owns the reusable vanilla-JS bits under `assets/js/` (shared in `assets/js/lib/`). | active | 2026-06-04 | domain | - | c4, svg diagram, drill-down, mini-game, sandbox, visualiser, slider, embedding map, interactive, vanilla js, es module |
+| `site-builder` | Static-site scaffold (plain HTML + vanilla JS + a few small hand-written CSS files, no framework, no build step), shared header/footer partial, base.css, recipe folder layout, recipe content schema, client-side search wiring, pin-exact CDN deps | Owns the static-site scaffold. Builds the index, shared header/footer, base.css with CSS variables, optional search.js. Defines local preview + direct publish. Wires the recipe content schema. | active | 2026-06-04 | domain | - | scaffold, static html, layout, header, footer, base.css, css variables, preview, recipe layout, content schema, client-side search, vanilla js, cdn pin |
+| `interactive-engineer` | Interactive elements in vanilla JS -- C4 drill-down, mini-games, sandboxes, embedding visualiser, code playgrounds (no framework, no UI library) | Builds and maintains every interactive element across recipes in plain vanilla JS (ES modules). Diagrams are inline SVG or static images. Owns the reusable vanilla-JS lib modules under `recipes/<slug>/shared/js/lib/` (wired onto pages by the glue in `shared/js/pages/`). | active | 2026-06-04 | domain | - | c4, svg diagram, drill-down, mini-game, sandbox, visualiser, slider, embedding map, interactive, vanilla js, es module |
 | `brewpage-platform-expert` | Read-only adviser: BrewPage REST API + CLI + MCP server + SEO/growth context | Explains how to publish correctly, how namespaces/owner-tokens/passwords work, when to use multi-file vs. single-file publish, and how to align recipes with the growth story documented in `brewpage-openapi/.claude/features/deep-research-report.md`. Never edits content directly. | active | 2026-05-21 | domain | - | publish-site, namespace, owner-token, password, ttl-days, brewpage-action, brewpage cli, mcp, anchor cluster, seo, AI artifact hosting |
 | `release-engineer` | `.github/workflows/*.yml`, tag flow, `brewpage-action` integration, secret management | Owns CI/CD. Publishes the static recipe folder DIRECTLY to brewpage.app when an unprefixed `vX.Y.Z` tag is pushed; a push to `main` publishes nothing -- no npm build, no `dist/`. Mechanism: `brewpage-action` (released, pinned to an exact version); the `brewpage` CLI is not released; direct REST is the last resort. Pins GitHub Actions to exact versions; tags are unprefixed `vX.Y.Z`. Masks owner tokens. | active | 2026-06-04 | domain | - | github actions, workflow, ci, cd, tag, release, brewpage-action, secret, BREWPAGE_OWNER_TOKEN, publish step |
 | `task-tracker` | `.claude/features/**` task board (read+write within `features/` ONLY) | Cross-cutting bookkeeping. Owns the canonical task board: claims tasks (`todo -> progress`), records owners/deps, and closes shipped work with a `vX.Y.Z` tag + SHA. Bookend procedure in `.claude/features/TRACKER.md`. The other seven agents never hand-edit `features/`. | active | 2026-06-04 | domain | - | task board, claim, progress, close, tag, sha, board, tracker, status, backlog |
@@ -88,7 +88,7 @@ Add a new agent when a recipe surfaces a clear, recurring role gap (e.g. `c4-dia
 
 Procedure:
 
-1. Add a row to **Planned agents** above with name, domain, mission, triggers.
+1. Add a row to the **Agents** table above with name, domain, mission, triggers.
 2. Run `/brewcode:agents create <name>` (or `/brewcode:teams update`) to scaffold the `.md`.
 3. When active, flip `Status` to `active` and add an `Updated` date.
 
@@ -106,14 +106,14 @@ If a recipe needs to demonstrate a sibling module (CLI, extension, Action), link
 
 ## Activity log
 
-Per-agent activity will be tracked at `.claude/teams/brewpage-cookbook/trace.jsonl` once agents land.
+The active agents record per-agent activity in `.claude/teams/brewpage-cookbook/trace.jsonl` through `trace-ops.sh` (optional, best effort). The file is git-ignored, so the log stays per-machine.
 
 ## Notes for the scaffolding skill
 
 When `/brewcode:teams` or `/brewcode:agents` is run against this file:
 
 - Default model: `opus` for all eight agents.
-- Tooling: each write agent gets `Read, Edit, Write, Glob, Grep, Bash`; the read-only `brewpage-platform-expert` gets `Read, Grep, Glob, Bash` only. `task-tracker` gets write tools but is scoped to `.claude/features/**` by its instructions.
+- Tooling: each write agent gets `Read, Edit, Write, Glob, Grep, Bash` (`github-actions-engineer` also `WebFetch, WebSearch`); the read-only `brewpage-platform-expert` gets `Read, Grep, Glob, Bash` only. `task-tracker` gets write tools but is scoped to `.claude/features/**` by its instructions.
 - Place generated agent files under `.claude/agents/<name>.md`.
 - Each agent's description should be specific enough to delegate reliably (see triggers column above).
 - Cross-link every agent back to this `team.md` in its frontmatter description.

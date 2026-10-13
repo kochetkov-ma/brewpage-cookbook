@@ -4,18 +4,19 @@
 # Flow:   checkout -> setup-node -> stamp version -> read .brewpage-site.json
 #         -> stamp live URLs into the pages -> stage the publish-scope bundle
 #         (apply .brewpageignore, since brewpage-action does NOT filter) ->
-#         publish as a multi-file SITE UPDATE (PUT, stable link) ->
-#         build the release body from recipes/index.json -> create the Release.
+#         read retention -> publish as a multi-file SITE UPDATE (PUT, stable
+#         link) -> verify expiry + link unchanged -> build the release body
+#         from recipes/index.json -> create the Release.
 #
 # Bundling decision (REQUIRED note): brewpage-action@v1.1.1 walks the given
 # `path` directory recursively and uploads EVERY file it finds -- it does NOT
 # honor `.brewpageignore` and has no `files`/`paths`/`archive`/exclude input
 # (verified against the action's action.yml + src/api.ts walkFiles()). The repo
-# folder recipes/rag-guide/ carries ~137 files (manuscript md, mockups, .claude
-# state, build scripts) that must NOT ship and would blow the site caps
+# folder recipes/rag-guide/ carries 134 files at v0.1.11; its dev-only part
+# (manuscript md, mockups, build scripts) must NOT ship and would blow the site caps
 # (< 100 files / < 20 MB). So we PRE-BUNDLE: rsync the recipe into a staging dir
 # applying the exact exclude set from recipes/rag-guide/.brewpageignore, then ZIP
-# that dir and point the action at the .zip. Audited published set: 85 files /
+# that dir and point the action at the .zip. Published set at v0.1.11: 85 files /
 # ~1.8 MB. The API supports ZIP archives and repeated files/paths fields.
 # This workflow keeps the ZIP transport and original publish exclusions.
 
@@ -116,10 +117,11 @@ jobs:
       - name: Stage publish-scope bundle (apply .brewpageignore)
         id: bundle
         # brewpage-action does not filter, so we materialise the exact publish set
-        # here. The exclude list mirrors recipes/rag-guide/.brewpageignore 1:1.
-        # rsync is preinstalled on ubuntu-latest. After staging we assert the caps
-        # (< 100 files, < 20 MB, < 5 MB per file) so a future content sprawl fails
-        # loudly instead of silently shipping cruft or busting limits.
+        # here. The exclude list mirrors recipes/rag-guide/.brewpageignore 1:1 plus
+        # that file itself (not read here: edit both). rsync is preinstalled on
+        # ubuntu-latest. After staging we assert the caps (< 100 files, < 20 MB,
+        # < 5 MB per file) so a future content sprawl fails loudly instead of
+        # silently shipping cruft or busting limits.
         run: |
           set -euo pipefail
           SRC="recipes/rag-guide/"

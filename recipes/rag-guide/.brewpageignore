@@ -1,21 +1,21 @@
 # .brewpageignore -- publish-scope filter for the RAG Guide static bundle.
 #
-# Purpose: the repo folder carries manuscript + scaffold + dev tooling (~137 files),
+# Purpose: the repo folder carries manuscript + scaffold + dev tooling (134 files at v0.1.11),
 # which blows past the BrewPage site caps (< 100 files / < 20 MB total / < 5 MB per file).
 # This file lists DEV-ONLY paths to exclude so only the live static site is published.
 # It is repo-keeping vs publish-scope: excluded files STAY in git, they just do not ship.
 #
 # Syntax: gitignore-style globs. A leading-and-trailing slash-free name matches at any
-# depth. The CI bundler (direct REST today; brewpage-action / brewpage CLI later) applies
-# this file against recipes/rag-guide/ to produce the upload manifest.
+# depth. CI does not read this file: publish-recipe.yml repeats these patterns as rsync
+# --exclude flags and publishes the staged zip via brewpage-action. Edit both together.
 #
 # DO NOT exclude anything the live site fetches/imports at runtime. Audited 2026-06-14:
 #   - all 12 *.html pages, shared/css/**, shared/js/**, shared/data/** (JSON + JS the
-#     pages import or fetch), shared/og/*.png|ico|svg, sitemap.xml  -> KEPT.
+#     pages import or fetch), shared/og/*.png|ico + favicon.svg, sitemap.xml  -> KEPT.
 #   - shared/components/*.html are authoring-time copy-in partials (the markup is inlined
-#     into each page; nothing fetches them at runtime) -> EXCLUDED (see runbook).
+#     into each page; nothing fetches them at runtime) -> EXCLUDED.
 #
-# Verified final published set: 84 files / 1.69 MB / largest 0.16 MB. All caps satisfied.
+# Published set as of v0.1.11: 85 files / ~1.8 MB / largest ~0.17 MB. All caps satisfied.
 
 # --- AI/agent + tooling state (every depth) ---
 .claude/
