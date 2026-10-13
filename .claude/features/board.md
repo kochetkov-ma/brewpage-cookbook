@@ -1,6 +1,15 @@
+---
+doc_type: llm
+version: "6.5.5"
+content_version: "6.5.4"
+generated_by: "brewtools:task-board-setup"
+last_updated: "2026-10-13"
+---
+
 # BrewPage Cookbook Task Board
 
 > Canonical task list + status. Procedure: [`TRACKER.md`](TRACKER.md). New-task template: [`TASK_TEMPLATE.md`](TASK_TEMPLATE.md). Ungroomed inbox: [`backlog/`](backlog/). Ship-state prose: [`STATUS.md`](STATUS.md). Root `TODO.md` does NOT exist -- this board is the only tracker.
+> Session progress: [`PROGRESS.md`](PROGRESS.md). Shared method: [`METHODOLOGY.md`](METHODOLOGY.md). Session timer: [`ANTI-DRIFT.md`](ANTI-DRIFT.md). Derived dependency graph: [`task-graph.md`](task-graph.md) (never overrides board status/counts).
 
 ## Overall status
 

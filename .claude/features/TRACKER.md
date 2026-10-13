@@ -1,3 +1,11 @@
+---
+doc_type: llm
+version: "6.5.5"
+content_version: "6.5.4"
+generated_by: "brewtools:task-board-setup"
+last_updated: "2026-10-13"
+---
+
 # TRACKER -- BrewPage Cookbook task/feature tracker procedure
 
 > Canonical procedure for the `.claude/features/` task board. `board.md` = single source of truth for task LIST + status. A task file (when present) = source of truth for that task's DETAIL. Read this before touching any task.
@@ -15,11 +23,16 @@ Note: the repo-root `features/` directory no longer exists. Per-recipe content *
 ```
 .claude/features/
   board.md            <- DASHBOARD: overall status + index table of EVERY task (canonical list)
+  PROGRESS.md         <- SESSION progress snapshot (5 fields, overwritten in place); !=a second board
+  METHODOLOGY.md      <- domain review/test strategy; specialized in each task
+  ANTI-DRIFT.md       <- session timer lifecycle and canonical tick prompt
+  task-graph.md       <- derived active work/dependencies + latest 10 completed nodes
+  INDEX.md            <- maps the control files
   TRACKER.md          <- this procedure
   TASK_TEMPLATE.md    <- copy this to create a new task file
   STATUS.md           <- prose ship-state narrative (linked from board, not duplicated)
   backlog/            <- INBOX: ungroomed junk/ideas/dumps; not yet real tasks
-  todo/               <- accepted tasks, queued, not started (file optional here)
+  todo/               <- accepted tasks, queued, not started (file required for newly accepted tasks; legacy table-only rows get one on pickup)
   progress/           <- WIP; task file is MANDATORY here
   closed/             <- done/shipped (file optional; keep notable ones)
   specs/              <- per-task implementation/design specs (linked from task `links:`)
@@ -41,7 +54,7 @@ Folder name == task status. Task file always lives in folder matching its status
 
 | Transition | Action |
 |------------|--------|
-| backlog -> todo | groom: real, scoped task. Give id, create task file (or board row), move/author under `todo/` |
+| backlog -> todo | groom: real, scoped task. Give id, create task file (required: Methodology + Anti-drift cron), move/author under `todo/` |
 | backlog -> deleted | groom: noise, done, or out of scope. Delete backlog file. Note nothing |
 | backlog -> merge | groom: duplicates/extends existing task. Fold notes, delete backlog file |
 | todo -> progress | pick up: MOVE file into `progress/` (create from template if table-only), set `status: progress`, `owner`, `updated` |
@@ -76,13 +89,27 @@ Why this exists, what problem it solves.
 - [ ] concrete, checkable outcome 1
 - [ ] concrete, checkable outcome 2
 
+## Methodology
+Parent task: -- (empty for top-level; child work units use their parent's timer)
+Goal/acceptance evidence: (derive from Context/Acceptance and current user instructions)
+Domain method: (reference METHODOLOGY.md; specialize review strategy and reliable check commands)
+Base work: (bounded units with owner, dependencies and checkable completion evidence; include implementation, simplification, two-pass review, validation and board/timer closeout)
+
+## Anti-drift cron
+Started at: --
+Requested/effective cadence: hourly / -- (user override wins)
+Timezone: --
+Scheduler id/state: -- / prepared
+Last delivered tick/number: -- / 0
+Prompt: (write the COMPLETE task-specific plain prompt from ANTI-DRIFT.md before claim/scheduling; include task id, absolute root, paths, goal, base work and acceptance evidence)
+
 ## Notes
 Running log: decisions, blockers, links to PRs/commits/reports.
 ```
 
 Invariants:
 - `status` FM MUST equal the folder. On any move, change both.
-- Task in `progress/` MUST have a file. In `todo/`/`backlog/` a file is optional.
+- Task in `progress/` MUST have a file. A newly accepted `todo/` task MUST have a file (§11); legacy table-only todo rows get one on pickup; `backlog/` files are optional.
 - Closing: keep `updated` current, record closing version (`vX.Y.Z`, unprefixed) + commit SHA in `## Notes`.
 
 ## 5. ID convention
@@ -144,8 +171,11 @@ The `task-tracker` agent knows this loop -- invoke it to run a groom pass.
 1. Open `board.md` -> read overall status + progress table.
 2. (Optional) groom `backlog/` per §7.
 3. Pick a `todo` task (respect priority). Move to `progress/`, set owner, update board.
+   - Before the move: read `METHODOLOGY.md` + `ANTI-DRIFT.md`, fill the task's `## Methodology` (base work) and its COMPLETE unique `## Anti-drift cron` prompt; update `task-graph.md` + `PROGRESS.md` with the board; main-session `task-board` reconciles/announces its session timer (section 11).
 4. Do the work. Keep `## Notes` in the task file current.
+   - Refresh `PROGRESS.md` whenever something moves.
 5. On done: ship via the cookbook release flow (a merge to `main` only lands content; it reaches the live URL when an unprefixed `vX.Y.Z` tag is pushed). Move file to `closed/`, record closing version + commit SHA in `## Notes`, update board counts + focus, and touch `STATUS.md`.
+   - Also update `task-graph.md` + `PROGRESS.md`; main-session `task-board` stops/verifies the task's timer. Preserve all evidence before pruning old done graph rows.
 6. If new work surfaces mid-task, drop it in `backlog/` (do not derail).
 
 ## 9. Bookend rule (claim / close)
@@ -166,7 +196,13 @@ Every multi-step feature bookended by the `task-tracker` agent:
 | `.claude/features/specs/*` | per-task implementation/design specs (linked from task `links:`) |
 | `.claude/reports/` | generated analysis/report artifacts |
 
-## 11. Ownership & related rules
+## 11. Domain methodology and session anti-drift
+
+`METHODOLOGY.md` holds the domain's review/test strategy; task method specializes it. At acceptance, not merely at claim, EACH accepted/promoted task needs its own REAL todo/progress file with filled `## Methodology` (goal/acceptance, domain reviews/checks or gaps, base units/owners/dependencies, parent id) and `## Anti-drift cron` with a COMPLETE unique task-specific prompt, every token resolved to actual id/root/paths/goal/base work/acceptance. Queued tasks: state prepared, no live scheduler id. Every active top-level task receives its own hourly session timer unless user-overridden/opted-out; children use their parent's timer. Main-session `task-board` alone owns CronCreate/List/Delete, announces confirmed scheduling and verifies stopping on completion/cancellation/parking; tracker owns evidence/graph reconciliation and redirects cron actions. Missing tools/permissions/capacity -> report unscheduled intent, never fabricate delivery. Full lifecycle/prompt/report contract: `ANTI-DRIFT.md`.
+
+Each delivered tick rereads task/shared methodology, anti-drift, current goal/scope/spec/user corrections; obtains owner evidence; reconciles statuses/dependencies/counts; rewrites derived `task-graph.md` keeping every unfinished node + latest 10 completed, archiving older evidence first; forces goal/acceptance drift checks/corrections, quantifies remaining work and advances the next unblocked authorized step. Report in at most five lines, circles 🟢🔵🔴⚪ only: local time/timezone, tick number, elapsed, achievements, remaining/next, present problems/blockers/questions. Planning records methodology/graph/prompt/timer execution steps; read-only plan mode defers writes and timers.
+
+## 12. Ownership & related rules
 
 - Tags are UNPREFIXED `vX.Y.Z` (cookbook + BP ecosystem convention) -- e.g. `v0.1.0`, `v1.0.0`.
 - !=hand-edit `.claude/features/**` ad-hoc for non-trivial board work (groom passes, bulk transitions). Delegate to `task-tracker` agent so board + frontmatter + folder stay in lockstep.
