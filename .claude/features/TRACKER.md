@@ -145,7 +145,7 @@ The `task-tracker` agent knows this loop -- invoke it to run a groom pass.
 2. (Optional) groom `backlog/` per §7.
 3. Pick a `todo` task (respect priority). Move to `progress/`, set owner, update board.
 4. Do the work. Keep `## Notes` in the task file current.
-5. On done: ship via the cookbook release flow (content-only PRs ship on merge; a `vX.Y.Z` unprefixed tag marks a curated milestone such as a complete recipe going live). Move file to `closed/`, record closing version + commit SHA in `## Notes`, update board counts + focus, and touch `STATUS.md`.
+5. On done: ship via the cookbook release flow (a merge to `main` only lands content; it reaches the live URL when an unprefixed `vX.Y.Z` tag is pushed). Move file to `closed/`, record closing version + commit SHA in `## Notes`, update board counts + focus, and touch `STATUS.md`.
 6. If new work surfaces mid-task, drop it in `backlog/` (do not derail).
 
 ## 9. Bookend rule (claim / close)
