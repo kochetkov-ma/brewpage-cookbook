@@ -1,6 +1,6 @@
 # RAG Guide
 
-> First recipe of the **BrewPage Cookbook**. Status: DRAFT of this prose file only (the bootstrap draft, started 2026-05-21); the recipe itself is live at https://brewpage.app/public/FsOfbLP4df and is built from `recipes/rag-guide/`.
+> First recipe of the **BrewPage Cookbook**. Status: DRAFT of this prose file only (the bootstrap draft, started 2026-05-21); the recipe itself is live at https://zxlmo54kzt.brewpage.app/ and is built from `recipes/rag-guide/`.
 > Plan: [`.claude/features/specs/T-RECIPE-RAG-GUIDE.md`](../.claude/features/specs/T-RECIPE-RAG-GUIDE.md).
 
 ## TL;DR

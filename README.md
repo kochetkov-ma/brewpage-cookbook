@@ -8,9 +8,9 @@ The machine-readable index is [`recipes/index.json`](./recipes/index.json).
 
 | Recipe | Status | Languages | Live URL | Source |
 |--------|--------|-----------|----------|--------|
-| **RAG Guide** | Live | EN (default), RU | https://brewpage.app/public/FsOfbLP4df | [`recipes/rag-guide/`](./recipes/rag-guide/) |
+| **RAG Guide** | Live | EN (default), RU | https://zxlmo54kzt.brewpage.app/ | [`recipes/rag-guide/`](./recipes/rag-guide/) |
 
-[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (EN default, RU via the language toggle). It doubles as the production dogfood for the publish pipeline. It is live at https://brewpage.app/public/FsOfbLP4df and is republished on every release tag.
+[RAG Guide](./recipes/rag-guide/) -- a long-form interactive walkthrough of retrieval-augmented generation: one route from 0% to 100% across 12 pages, with inline-SVG drill-down diagrams, mini-games, calculators and client-side search. Bilingual (EN default, RU via the language toggle). It doubles as the production dogfood for the publish pipeline. It is live at https://zxlmo54kzt.brewpage.app/ and is republished on every release tag.
 
 Every recipe page back-links to both ecosystem surfaces (mandatory cross-link rule):
 

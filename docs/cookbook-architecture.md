@@ -104,7 +104,7 @@ PLAN                          AUTHOR                       PUBLISH
 
 ## 5. Publishing pipeline (WORKING -- as built 2026-06-15)
 
-**Status:** LIVE. The RAG Guide is the first production publish -- **https://brewpage.app/public/FsOfbLP4df** -- shipped through the working workflow below. The publish path is now **`brewpage-action`**, no longer direct-REST for updates.
+**Status:** LIVE. The RAG Guide is live at **https://zxlmo54kzt.brewpage.app/** (recreated as a new site in v0.1.12 after old publications became read-only; first published 2026-06-15 at `/public/FsOfbLP4df`), shipped through the working workflow below. The publish path is now **`brewpage-action`**, no longer direct-REST for updates.
 
 **Trigger:** push of an unprefixed semver tag **`vX.Y.Z`** (+ manual `workflow_dispatch`). NOT every push to `main` -- a tag marks each publish. Workflow: [`.github/workflows/publish-recipe.yml`](../.github/workflows/publish-recipe.yml).
 
@@ -129,7 +129,7 @@ Run **once** to mint the stable id + link + owner token:
 Pushing a `vX.Y.Z` tag runs the workflow:
 
 1. **stamp-version** (`.claude/scripts/stamp-version.mjs`) from the tag.
-2. **read `.brewpage-site.json`** -> `namespace` / `id` / `link` via `$GITHUB_OUTPUT`.
+2. **read `.brewpage-site.json`** -> `namespace` / `id` / `link` via `$GITHUB_OUTPUT`. No `id` -> the run CREATEs a new site with the same owner token (stamp-url and retention checks skipped) and prints the record to commit.
 3. **stamp-url** (`.claude/scripts/stamp-url.mjs`) -- requires the descriptor's server `link` and replaces complete placeholder URL bases across pages + `sitemap.xml`; copies that link to both index URL fields. Root, child, asset and query URLs retain their suffixes for OLD apex links or NEW trailing-slash native roots. Already-published URLs are preserved; repeated stamping is byte-identical.
 4. **stage + zip** -- materialise the `.brewpageignore`-filtered set into a staging dir, assert the caps, **ZIP it**.
 5. **publish** -- `brewpage-action` publishes the **zip** via PUT, `mode: update`, `update-id: <id>`, `ttl-days: 30`. The link stays stable.

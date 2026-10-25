@@ -6,7 +6,7 @@ LLM-facing brief + index for **brewpage-cookbook**. Read this first; lazy-load d
 
 ## 1. Identity
 
-**BP Cookbook** -- standalone editorial brand under the BP ecosystem (precedent: `anthropic-cookbook`, Stripe Press). Open-source collection of **interactive recipes** (guides, demos, mini-apps, games) for AI artifact workflows. Each recipe = self-contained folder of plain static HTML + a little vanilla JS, published **live on `brewpage.app`** as a multi-file site -- no build step. Own release cadence, independent of the BP REST contract. Target **~40 recipes** over time; first = long-form **RAG Guide** (dogfood for the publish pipeline). Status: **LIVE** -- RAG Guide published at `https://brewpage.app/public/FsOfbLP4df`; releases are unprefixed `vX.Y.Z` tags, each with a GitHub Release (latest: `git describe --tags --abbrev=0`). Repo: `kochetkov-ma/brewpage-cookbook`. Bootstrapped 2026-05-21.
+**BP Cookbook** -- standalone editorial brand under the BP ecosystem (precedent: `anthropic-cookbook`, Stripe Press). Open-source collection of **interactive recipes** (guides, demos, mini-apps, games) for AI artifact workflows. Each recipe = self-contained folder of plain static HTML + a little vanilla JS, published **live on `brewpage.app`** as a multi-file site -- no build step. Own release cadence, independent of the BP REST contract. Target **~40 recipes** over time; first = long-form **RAG Guide** (dogfood for the publish pipeline). Status: **LIVE** -- RAG Guide published at `https://zxlmo54kzt.brewpage.app/`; releases are unprefixed `vX.Y.Z` tags, each with a GitHub Release (latest: `git describe --tags --abbrev=0`). Repo: `kochetkov-ma/brewpage-cookbook`. Bootstrapped 2026-05-21.
 
 ## 2. Doc Index (lazy-load)
 
