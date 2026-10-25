@@ -15,7 +15,7 @@ last_updated: "2026-10-13"
 
 - **Release line:** RAG Guide is **LIVE** -- first publish shipped at milestone tag **`v0.1.1`** (unprefixed, annotated) on `main`, publishing commit SHA `317a685`. Live URL: https://brewpage.app/public/FsOfbLP4df (stable id, PUT-updated; ttl 30, expires 2026-07-15). Publish run `27544416117` GREEN; GitHub Release `v0.1.1` with the live link + both ecosystem cross-links. Prior milestone `v0.1.0` (`68ddcab`) was the staged marker.
 - **Counts:** backlog `2` | todo `1` | progress `0` | closed `24` | specs `2`.
-- **Current focus:** keep the live link alive via **release-on-30d** -- BrewPage caps ttl at 30 days and auto-deletes at expiry; each release sets ttl=30, so cutting a release at least every 30 days (next deadline 2026-07-15) keeps https://brewpage.app/public/FsOfbLP4df live (no cron renewal this round). Beyond that: **future recipes** (next cookbook guides) toward `EPIC-COOKBOOK-V1`. The first-live-deploy round closed clean: `EPIC-RAG-REVIEW-DEPLOY` + its 4 children + the staged `T-RECIPE-RAG-SITE` all CLOSED as LIVE under `v0.1.1`.
+- **Current focus:** keep the live link alive via **release-on-30d** -- BrewPage caps ttl at 30 days and auto-deletes at expiry; each release sets ttl=30, so cutting a release at least every 30 days (next deadline 2026-07-15) keeps https://zxlmo54kzt.brewpage.app/ live (no cron renewal this round). Beyond that: **future recipes** (next cookbook guides) toward `EPIC-COOKBOOK-V1`. The first-live-deploy round closed clean: `EPIC-RAG-REVIEW-DEPLOY` + its 4 children + the staged `T-RECIPE-RAG-SITE` all CLOSED as LIVE under `v0.1.1`.
 
 ## Progress (WIP)
 
