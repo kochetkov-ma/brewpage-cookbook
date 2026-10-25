@@ -112,7 +112,7 @@ A recipe is a multi-file static bundle (HTML/CSS/JS/assets), published as a Brew
 
 ### Publish mechanism (resolved -- action, not REST)
 
-- **`brewpage-action`** -- the working mechanism, pinned **exact** to **[`kochetkov-ma/brewpage-action@v1.1.1`](https://github.com/kochetkov-ma/brewpage-action)** (annotated tag, never `@v1`/`@main`). This repo is the action's first production consumer (deliberate dogfood).
+- **`brewpage-action`** -- the working mechanism, pinned **exact** to **[`kochetkov-ma/brewpage-action@v1.2.0`](https://github.com/kochetkov-ma/brewpage-action)** (annotated tag, never `@v1`/`@main`). This repo is the action's first production consumer (deliberate dogfood).
 - **Direct REST** against `https://brewpage.app` -- now used **only** for the one-time bootstrap CREATE (below). All subsequent updates go through the action.
 - The `brewpage` CLI fallback is not needed -- the action works.
 
@@ -143,7 +143,7 @@ NEW sites require `subdomain` delivery, even in `public`; explicit `path` is rej
 
 Unlisted, protected or otherwise ineligible NEW native responses carry `noindex`; eligible public HTML, sites and files may permit indexing, without a native sitemap/SEO alias. A public gallery listing does not guarantee indexing. Protected NEW links stay clean and unlock through trusted top-level navigation at `unlock.brewpage.app`; passwords/owner tokens never belong in share URLs. Management stays on the apex API. See [platform delivery compatibility](./brewpage-platform.md#old-and-new-delivery-compatibility).
 
-The API accepts ZIP archives or repeated `files` and matching `paths` multipart fields. The cookbook keeps ZIP transport after applying its original publish exclusions; `brewpage-action@v1.1.1` sends one `archive` field for a `.zip` input.
+The API accepts ZIP archives or repeated `files` and matching `paths` multipart fields. The cookbook keeps ZIP transport after applying its original publish exclusions; `brewpage-action@v1.2.0` sends one `archive` field for a `.zip` input.
 
 ### Link permanence / TTL
 

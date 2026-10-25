@@ -8,7 +8,7 @@
 #         link) -> verify expiry + link unchanged -> build the release body
 #         from recipes/index.json -> create the Release.
 #
-# Bundling decision (REQUIRED note): brewpage-action@v1.1.1 walks the given
+# Bundling decision (REQUIRED note): brewpage-action@v1.2.0 walks the given
 # `path` directory recursively and uploads EVERY file it finds -- it does NOT
 # honor `.brewpageignore` and has no `files`/`paths`/`archive`/exclude input
 # (verified against the action's action.yml + src/api.ts walkFiles()). The repo
@@ -216,11 +216,11 @@ jobs:
 
       - name: Publish to brewpage.app (site update)
         id: brewpage
-        # Pinned EXACT to v1.1.1 (annotated tag -> commit 781b5e7). NOT @v1.
+        # Pinned EXACT to v1.2.0 (annotated tag -> commit 9899057). NOT @v1.
         # The action calls core.setSecret(owner-token) before any emission, so its
         # owner-token output is masked. We never read/echo that output. The input
         # owner-token is a GitHub secret and is auto-masked by the runner.
-        uses: kochetkov-ma/brewpage-action@v1.1.1
+        uses: kochetkov-ma/brewpage-action@v1.2.0
         with:
           path: ${{ steps.bundle.outputs.zip }}
           kind: site
