@@ -19,6 +19,8 @@
 # that dir and point the action at the .zip. Published set at v0.1.11: 85 files /
 # ~1.8 MB. The API supports ZIP archives and repeated files/paths fields.
 # This workflow keeps the ZIP transport and original publish exclusions.
+# Recreate: a record without "id" makes the next tag CREATE a site with the same owner token;
+# then commit the printed record (namespace/id/link) so later tags update it.
 
 name: Publish recipe
 
@@ -98,16 +100,21 @@ jobs:
             exit 1
           fi
           NAMESPACE="$(jq -er '.namespace' "${SITE_FILE}")"
-          ID="$(jq -er '.id' "${SITE_FILE}")"
-          LINK="$(jq -er '.link' "${SITE_FILE}")"
+          ID="$(jq -r '.id // empty' "${SITE_FILE}")"
+          LINK="$(jq -r '.link // empty' "${SITE_FILE}")"
+          if [ -n "${ID}" ] && [ -z "${LINK}" ]; then
+            echo "::error file=${SITE_FILE}::record has an id but no link."
+            exit 1
+          fi
           {
             echo "namespace=${NAMESPACE}"
             echo "id=${ID}"
             echo "link=${LINK}"
           } >> "${GITHUB_OUTPUT}"
-          echo "Publishing to namespace=${NAMESPACE} id=${ID}"
+          echo "Publishing to namespace=${NAMESPACE} id=${ID:-<new site>}"
 
       - name: Stamp live URLs into pages + sitemap
+        if: steps.site.outputs.id != ''
         # stamp-url.mjs (authored by release-engineer) reads .brewpage-site.json
         # and replaces REPLACE_AT_PUBLISH across pages, sitemap and recipes/index.json.
         run: |
@@ -179,6 +186,7 @@ jobs:
           echo "zip=${ZIP}" >> "${GITHUB_OUTPUT}"
 
       - name: Read existing site retention
+        if: steps.site.outputs.id != ''
         env:
           OWNER_TOKEN: ${{ secrets.BREWPAGE_OWNER_TOKEN_RAG_GUIDE }}
         run: |
@@ -227,12 +235,26 @@ jobs:
           namespace: public
           ttl-days: '30'
           # PUT retains the original expiry; ttl-days does not renew this site.
-          mode: update
+          mode: ${{ steps.site.outputs.id != '' && 'update' || 'create' }}
           update-id: ${{ steps.site.outputs.id }}
           entry: index.html
           owner-token: ${{ secrets.BREWPAGE_OWNER_TOKEN_RAG_GUIDE }}
 
+      - name: Print the new site record
+        if: steps.site.outputs.id == ''
+        env:
+          NEW_ID: ${{ steps.brewpage.outputs.id }}
+          NEW_NAMESPACE: ${{ steps.brewpage.outputs.namespace }}
+          NEW_LINK: ${{ steps.brewpage.outputs.url }}
+        run: |
+          set -euo pipefail
+          RECORD="$(jq -n --arg n "${NEW_NAMESPACE}" --arg i "${NEW_ID}" --arg l "${NEW_LINK}" '{namespace: $n, id: $i, link: $l}')"
+          echo "Commit as recipes/rag-guide/.brewpage-site.json:"
+          echo "${RECORD}"
+          { echo '### New site record'; echo '```json'; echo "${RECORD}"; echo '```'; } >> "${GITHUB_STEP_SUMMARY}"
+
       - name: Verify site update preserves retention and server link
+        if: steps.site.outputs.id != ''
         env:
           UPDATED_ID: ${{ steps.brewpage.outputs.id }}
           UPDATED_NAMESPACE: ${{ steps.brewpage.outputs.namespace }}
