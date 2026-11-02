@@ -8,7 +8,7 @@
 #         link) -> verify expiry + link unchanged -> build the release body
 #         from recipes/index.json -> create the Release.
 #
-# Bundling decision (REQUIRED note): brewpage-action@v1.2.0 walks the given
+# Bundling decision (REQUIRED note): brewpage-action@v1.2.4 walks the given
 # `path` directory recursively and uploads EVERY file it finds -- it does NOT
 # honor `.brewpageignore` and has no `files`/`paths`/`archive`/exclude input
 # (verified against the action's action.yml + src/api.ts walkFiles()). The repo
@@ -205,9 +205,14 @@ jobs:
           }
           const token = process.env.OWNER_TOKEN;
           if (!token) throw new Error('Retention preflight requires the existing owner credential');
+          const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
           const response = await fetch(`https://brewpage.app/api/sites/public/${site.id}`, {
             method: 'GET',
-            headers: { 'X-Owner-Token': token, Accept: 'application/json' },
+            headers: {
+              'X-Owner-Token': token,
+              Accept: 'application/json',
+              'User-Agent': `${pkg.name}/${pkg.version} (+https://brewpage.app)`,
+            },
             signal: AbortSignal.timeout(15000),
           }).catch(() => { throw new Error('Retention metadata request failed'); });
           if (response.status !== 200) throw new Error(`Retention metadata read failed (HTTP ${response.status})`);
@@ -224,11 +229,11 @@ jobs:
 
       - name: Publish to brewpage.app (site update)
         id: brewpage
-        # Pinned EXACT to v1.2.0 (annotated tag -> commit 9899057). NOT @v1.
+        # Pinned EXACT to v1.2.4 (annotated tag -> commit 9969228). NOT @v1.
         # The action calls core.setSecret(owner-token) before any emission, so its
         # owner-token output is masked. We never read/echo that output. The input
         # owner-token is a GitHub secret and is auto-masked by the runner.
-        uses: kochetkov-ma/brewpage-action@v1.2.0
+        uses: kochetkov-ma/brewpage-action@v1.2.4
         with:
           path: ${{ steps.bundle.outputs.zip }}
           kind: site

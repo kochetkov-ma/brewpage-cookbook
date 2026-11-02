@@ -80,6 +80,8 @@ Each recipe = a **self-contained folder of static files** published directly to 
 
 > **Reality (as of 2026-10-12):** `brewpage-action` is released and is the working publish path. The `brewpage` CLI is still planned -- not on npm (`registry.npmjs.org/brewpage` answers 404). Re-check `docs/ecosystem.md` for release status before relying on the CLI.
 
+**User-Agent:** every request to brewpage.app sends User-Agent `<client>/<version>` (workflow fetch: `brewpage-cookbook/<package.json version> (+https://brewpage.app)`; the action sends its own).
+
 **Owner tokens:** each recipe has its own BP owner token, stored as GitHub repo secret `BREWPAGE_OWNER_TOKEN_<RECIPE>`, injected at CI time, masked in logs. **Never commit owner tokens** (never in source, logs, or recipe content); not recoverable.
 
 **Release flow:** a merge to `main` only lands content -- nothing reaches the live URL without a tag; every publish runs from a tagged commit. Tags are **unprefixed `vX.Y.Z`** (`v0.1.0`, `v1.0.0`), matching the BP ecosystem. Do **not** hand-edit `package.json` `version` -- the publish workflow stamps it from the tag inside the CI checkout (`.claude/scripts/stamp-version.mjs`) and commits nothing back, so the committed value can lag the latest tag.
