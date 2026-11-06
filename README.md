@@ -1,5 +1,11 @@
 # BrewPage Cookbook
 
+<p>
+<a href="https://github.com/kochetkov-ma/brewpage-cookbook/actions/workflows/publish-recipe.yml"><img height="18" alt="Publish recipe" src="https://github.com/kochetkov-ma/brewpage-cookbook/actions/workflows/publish-recipe.yml/badge.svg?event=push"></a>
+<a href="https://github.com/kochetkov-ma/brewpage-cookbook/releases"><img height="18" alt="Release" src="https://img.shields.io/github/v/release/kochetkov-ma/brewpage-cookbook?sort=semver"></a>
+<a href="https://github.com/kochetkov-ma/brewpage-cookbook/blob/main/LICENSE"><img height="18" alt="License Apache-2.0" src="https://img.shields.io/badge/license-Apache%202.0-blue"></a>
+</p>
+
 Interactive recipes for AI artifact workflows -- guides, demos, mini-apps and games, each built as a self-contained interactive artifact and published live on [brewpage.app](https://brewpage.app). It is a standalone editorial brand under the BrewPage ecosystem (in the spirit of the [anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) and Stripe Press), not a docs folder or a marketing site. The target is roughly 40 recipes over time. Status: **LIVE** -- the first recipe is published, and each release is an unprefixed `vX.Y.Z` tag ([releases](https://github.com/kochetkov-ma/brewpage-cookbook/releases)). Bootstrapped 2026-05-21.
 
 ## Recipe index
@@ -107,13 +113,21 @@ brewpage-cookbook/
 
 Apache-2.0. See [LICENSE](./LICENSE).
 
-## Links
+## Related
 
-- BrewPage platform -- https://brewpage.app
-- Ecosystem coordination / contract repo -- https://github.com/kochetkov-ma/brewpage-openapi
-- Reference stub in the coordination repo -- https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook
-- This repo -- https://github.com/kochetkov-ma/brewpage-cookbook
-- Issues -- https://github.com/kochetkov-ma/brewpage-cookbook/issues
+- [brewpage.app](https://brewpage.app): the hosting service; [API guide](https://brewpage.app/api); [OpenAPI docs](https://kochetkov-ma.github.io/brewpage-openapi/)
+- [brewpage-openapi](https://github.com/kochetkov-ma/brewpage-openapi): OpenAPI contract and the `brewpage-mcp` MCP server ([npm](https://www.npmjs.com/package/brewpage-mcp))
+- [brewpage-action](https://github.com/kochetkov-ma/brewpage-action): GitHub Action that publishes CI artifacts ([Marketplace](https://github.com/marketplace/actions/publish-to-brewpage))
+- [brewpage-obsidian](https://github.com/kochetkov-ma/brewpage-obsidian): Obsidian plugin that publishes notes ([Obsidian community](https://community.obsidian.md/plugins/brewpage-publisher))
+- [brewpage-browser-extension](https://github.com/kochetkov-ma/brewpage-browser-extension): browser extension that publishes pages, selections and files
+- [brewpage-codex-plugin](https://github.com/kochetkov-ma/brewpage-codex-plugin): Codex plugin with the publishing skill and remote MCP
+- [brewpage-publish-plugins](https://github.com/kochetkov-ma/brewpage-publish-plugins): publishing plugins for AI coding tools and the n8n node ([npm](https://www.npmjs.com/package/n8n-nodes-brewpage))
+- [langchain-brewpage](https://github.com/kochetkov-ma/langchain-brewpage): LangChain tools ([PyPI](https://pypi.org/project/langchain-brewpage/))
+- [llama-index-tools-brewpage](https://github.com/kochetkov-ma/llama-index-tools-brewpage): LlamaIndex tool spec ([PyPI](https://pypi.org/project/llama-index-tools-brewpage/))
+- [Reference stub](https://github.com/kochetkov-ma/brewpage-openapi/tree/main/modules/cookbook) for this module in the contract repo
+- [Issues](https://github.com/kochetkov-ma/brewpage-cookbook/issues)
+
+Support: [info@brewpage.app](mailto:info@brewpage.app)
 
 ---
 
