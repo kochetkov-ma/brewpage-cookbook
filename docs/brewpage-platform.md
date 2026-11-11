@@ -5,7 +5,7 @@
 > Every non-obvious number and endpoint below is traceable to a source file -- see the **Sources** section at the end.
 > Facts not confirmable in source are marked `(verify in <file>)`. Do not treat unmarked claims as guesses.
 
-Delivery compatibility updated: 2026-10-05; other snapshot values require re-verification.
+Delivery compatibility updated: 2026-10-05; Page data added: 2026-11-11; other snapshot values require re-verification.
 
 > **Source of truth = the LIVE platform.** Re-verify against these before relying on any value:
 > - `https://brewpage.app/api/openapi.yaml` (REST contract)
@@ -20,6 +20,8 @@ Delivery compatibility updated: 2026-10-05; other snapshot values require re-ver
 
 BrewPage is a free instant hosting service for HTML pages, Markdown documents, AI artifacts, key-value data, JSON documents, multi-file sites, and files. Returns a short, shareable HTTPS link. No registration required.
 [S1 lines 5-7; S5 lines 3-7]
+
+A published HTML page or multi-file site can also save what its visitors enter -- game progress, form answers, guestbook messages, votes, top scores -- with no backend and no key in the page's code. The public name is **Page data** (see section 2). [S4 "Overview", "Page data"; S5 "Page data" paragraph]
 
 REST/owner API base: `https://brewpage.app`. Share URLs may use the apex or a publication-specific content host; always copy the returned `link`.
 [S2 servers; S1 §Project; S5 line 6]
@@ -42,8 +44,9 @@ BrewPage groups its API by content type (OpenAPI `tags`). [S2 tags block, lines 
 | **JSON** | Arbitrary JSON value, including objects, arrays, scalars and null. | `POST /api/json` | `GET /api/json/{ns}/{id}` | `PUT /api/json/{ns}/{id}` | `DELETE /api/json/{ns}/{id}` |
 | **File** | Single uploaded file (multipart `file`). Inline preview for images/PDF/media. | `POST /api/files` | `GET /api/files/{ns}/{id}` or `GET /{ns}/{id}` | -- (no PUT; delete + recreate) | `DELETE /api/files/{ns}/{id}` |
 | **Multi-file site** | Multi-file HTML bundle (ZIP archive **or** parallel `files` + `paths` arrays). Relative links between files work. | `POST /api/sites` | Server-returned `link`; OLD apex paths or NEW native content host | `PUT /api/sites/{ns}/{id}` (full-replace republish; keeps URL + id) | `DELETE /api/sites/{ns}/{id}` |
+| **Page data** | What the visitors of a published HTML page or site save (game progress, form answers, guestbook messages, votes, top scores). Not a separate resource: it belongs to its page. | `state` in the publish call of the page or site (`{}` is enough) | In the page: `bp.state()` from `https://brewpage.app/js/state.js`. Author: the Data tab of the management link, or `GET /api/{ns}/{id}/state` | `PATCH /api/{ns}/{id}/state` (settings); a publish that carries `state` | Deleted with the page; author: `DELETE /api/{ns}/{id}/state/{list}/docs/{docId}` (one entry) |
 
-Sources: HTML create/get/put/delete [S2 lines 852-983, 383-532]; Markdown via `format` query [S2 lines 904-911]; KV [S2 lines 644-745, 98-250, 1377-1455]; JSON [S2 lines 251-382, 746-851]; Files [S2 lines 984-1108, 1516-1603]; Sites (ZIP or `files`+`paths`, full-replace `PUT`) [S2 lines 1604-1831; S5 lines 18-25].
+Sources: HTML create/get/put/delete [S2 lines 852-983, 383-532]; Markdown via `format` query [S2 lines 904-911]; KV [S2 lines 644-745, 98-250, 1377-1455]; JSON [S2 lines 251-382, 746-851]; Files [S2 lines 984-1108, 1516-1603]; Sites (ZIP or `files`+`paths`, full-replace `PUT`) [S2 lines 1604-1831; S5 lines 18-25]; Page data [S4 "Page data"; S5 "Page data" paragraph].
 
 Notes relevant to recipes:
 
@@ -52,6 +55,19 @@ Notes relevant to recipes:
 - **HTML update:** tags, password, filename and showTopBar remain unchanged. Format may be supplied on PUT; the JSON body field takes precedence over the query parameter. [S2 HTML update contract]
 - **HTML also accepts raw bodies.** Besides `application/json` (`{"content":"..."}`), `POST /api/html` accepts raw `text/*` (HTML, Markdown, YAML, XML, CSV, code) and `application/octet-stream` (binary auto-routes to `/api/files`). [S2 lines 856-952; S5 line 13]
 - **Raw bytes for embeds.** OLD short URLs retain `?raw=1`/`?dl=1` behavior. NEW native roots preserve file MIME semantics; `raw`/`inline` do not bypass NEW sandbox/download protections. [S2 publication delivery and short-link paths]
+
+### Page data (what a recipe's visitors save)
+
+A published HTML page or multi-file site can save what its visitors enter on BrewPage, with no backend and no key in the page's code. Public name: **Page data**; `state` is the API word. It is not KV or JSON: those hold the author's own data and need the owner token, which never goes into page code. [S4 "Page data"]
+
+- **Turn it on at publish.** Send `state` in the JSON body of `POST /api/html` / `PUT /api/html/{ns}/{id}`, or as the multipart field `state` (a JSON string) on `POST /api/sites` / `PUT /api/sites/{ns}/{id}`. `{}` is enough: every list is then each visitor's own. A raw HTML body cannot carry it; `PATCH /api/{ns}/{id}/state` turns it on afterwards. Markdown pages never run scripts.
+- **In the page.** Load `https://brewpage.app/js/state.js` with a plain script tag before your code (absolute URL, no `async`, no `import`), then call `bp.state()` inside an async function. It resolves to `null` where saving is unavailable: guard it and keep the page working.
+- **Where it works.** On the page's own address `https://<label>.brewpage.app` (a page that declares `state` gets one; copy the returned `link`) and on its connected custom domain. Not on `brewpage.app/...` path addresses, inside a frame on another site, or off BrewPage (a local file, localhost, chat previews): test the published link.
+- **List rules.** Each visitor's own entries by default; `"mode": "shared"` for a list everyone reads (guestbook, leaderboard); add `"write": "author"` for a shared list only the author writes.
+- **Author side.** The management link (`manageUrl`) opens the page's Data tab: entries, CSV download, deletes. The same over the API with `X-Owner-Token` or `X-Manage-Key`: `GET /api/{ns}/{id}/state`, `GET /api/{ns}/{id}/state/{list}?format=csv`.
+- **Tell visitors.** The author can read every entry; show: "What you enter is saved on BrewPage and can be read by this page's author." Never collect passwords, card numbers or other credentials. Data is remembered per browser (no cross-device sync) and is deleted with the page.
+
+Limits: section 4. The cheat sheet, examples and mistakes to avoid live in `https://brewpage.app/llms-full.txt` (section "Page data"): read it live before writing a recipe that saves data.
 
 ### OLD and NEW delivery compatibility
 
@@ -92,11 +108,16 @@ Ground-truth limits (verbatim from platform CLAUDE.md `## Limits` table). [S1 §
 | HTML | 5 MB, TTL def 15d / max 30d |
 | KV value | 1 MB, 1000 keys/store, TTL def 15d / max 30d |
 | JSON doc | 1 MB, 10 000 docs/NS, TTL def 15d / max 30d |
+| Page data: entry | 16 KB by default (up to 64 KB); JSON text and numbers |
+| Page data: per visitor | 20 entries and 32 KB by default (up to 200 entries and 1 MB) |
+| Page data: per page | 1 MB and 5,000 entries; 10 MB and 20,000 entries for a page in a profile; lives as long as the page |
 | File | 5 MB (video 20 MB, audio 5 MB), 1000 files/NS, TTL def 15d / max 30d |
 | Site bundle | 20 MB total, 100 files/site, 5 MB per file, TTL def 15d / max 30d |
 | DB | 10 MB, 5s query timeout |
 | Rate: uploads | Operation- and namespace-specific; consult current API contract |
 | Rate: reads | 300/min/IP |
+
+Page data rows: [S4 "Page data", "Limits and environments"].
 
 **TTL (retention).** `ttl` (days) applies to html, markdown, json, kv, files, and sites. Default `15`, normal requested range `1..30`, subject to owner-specific effective limits. Site PUT retains the original expiry; separately eligible automatic extension may change it. Treat the returned `expiresAt` as authoritative. Expired resources become unavailable and are removed by cleanup. The `ttl` query also accepts a suffixed form such as `30d` or `30 days`. [S2 TTL contract]
 
