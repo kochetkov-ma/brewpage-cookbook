@@ -63,7 +63,7 @@ Deliberately the simplest stack: **plain static HTML + minimal vanilla JavaScrip
 | Client-side search (if any) | Tiny vanilla JS over a small JSON index |
 | Build | None -- files ship exactly as authored |
 
-Each recipe = a **self-contained folder of static files** published directly to BP as a multi-file site (limits 20 MB total / 100 files / 5 MB per file). No `dist/`, no compile.
+Each recipe = a **self-contained folder of static files** published directly to BP as a multi-file site (limits 20 MB total / 200 files / 5 MB per file). No `dist/`, no compile.
 
 **Shared-lib + theme-as-a-file model (proven by `recipes/rag-guide/`):** one shared library per recipe site (`shared/css|components|data|js`); a variant/theme is ONE CSS-variables file (`shared/css/themes/<name>.css`) and swapping it is a one-`<link>` reskin -- `base.css` is never forked. `base.css` holds structure + shared component/utility classes and references vars only for color/space/motion; themes supply the values. Lib JS = single-responsibility ES modules under `shared/js/lib/` each exporting `init(rootEl, config) => { destroy() }`; page glue under `shared/js/pages/` wires them onto documented hosts. Inline-SVG diagrams, transform/opacity-only motion gated by IntersectionObserver + `prefers-reduced-motion`, full no-JS degradation. Prose is md-as-source (`content/<lang>/*.md`), hand-ported to static HTML (strategy A). Authoritative spec: `.claude/rules/site-architecture.md`.
 
@@ -71,7 +71,7 @@ Each recipe = a **self-contained folder of static files** published directly to 
 
 ## 6. Publishing pipeline + release flow
 
-**Pipeline:** pushing an unprefixed `vX.Y.Z` tag runs `.github/workflows/publish-recipe.yml` -> publishes the recipe's **static folder directly** to BP **as a multi-file site update** (no build, no `dist/`; `.brewpageignore`-filtered, zipped) and creates a GitHub Release. Manual `workflow_dispatch` republishes an existing tag without a Release. A push to `main` triggers **nothing**. Site limits the folder must fit: 20 MB total / 100 files / 5 MB per file.
+**Pipeline:** pushing an unprefixed `vX.Y.Z` tag runs `.github/workflows/publish-recipe.yml` -> publishes the recipe's **static folder directly** to BP **as a multi-file site update** (no build, no `dist/`; `.brewpageignore`-filtered, zipped) and creates a GitHub Release. Manual `workflow_dispatch` republishes an existing tag without a Release. A push to `main` triggers **nothing**. Site limits the folder must fit: 20 MB total / 200 files / 5 MB per file.
 
 **Publish mechanism (preference order, fall back as needed):**
 1. `brewpage-action` -- in use (dogfood; this repo is its first production consumer); `kochetkov-ma/brewpage-action` pinned to an exact `vX.Y.Z` in the workflow, never `@v1`.

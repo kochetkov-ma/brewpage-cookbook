@@ -123,7 +123,7 @@ Rules: every contract documents its schema in-file; JSON files carry a `_schema`
 
 ## Dependencies + publish
 
-Vanilla only -- no framework, no bundler, no build. Prefer ZERO CDN deps. Any unavoidable third-party JS/CSS from a CDN pinned to an EXACT `X.Y.Z` (never `@latest`/caret/tilde/`@main`); resolve + pin per `.claude/rules/versions.md`. Each `recipes/<slug>/` publishes verbatim to BrewPage as a multi-file site -- must fit 20 MB total / 100 files / 5 MB per file.
+Vanilla only -- no framework, no bundler, no build. Prefer ZERO CDN deps. Any unavoidable third-party JS/CSS from a CDN pinned to an EXACT `X.Y.Z` (never `@latest`/caret/tilde/`@main`); resolve + pin per `.claude/rules/versions.md`. Each `recipes/<slug>/` publishes verbatim to BrewPage as a multi-file site -- must fit 20 MB total / 200 files / 5 MB per file.
 
 ## Folder layout (as built)
 

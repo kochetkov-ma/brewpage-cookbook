@@ -93,7 +93,7 @@ recipes/<slug>/
       pages/*.js                    # page glue (wires lib onto hosts)
 ```
 
-Each `recipes/<slug>/` folder publishes verbatim to BrewPage as a multi-file site -- must fit 20 MB / 100 files / 5 MB per file.
+Each `recipes/<slug>/` folder publishes verbatim to BrewPage as a multi-file site -- must fit 20 MB / 200 files / 5 MB per file.
 
 ## 11. HOW-TO playbook
 

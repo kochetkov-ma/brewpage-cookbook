@@ -71,7 +71,7 @@ There is no bundler, no compile step, and no `dist/`: a recipe is a self-contain
 
 ## Publishing
 
-Pushing an unprefixed `vX.Y.Z` tag runs the [publish workflow](./.github/workflows/publish-recipe.yml), which publishes the recipe's static folder directly to BrewPage as a multi-file site and creates a GitHub Release -- there is no build step (a recipe is a multi-file bundle, so it must fit 20 MB total / 100 files / 5 MB per file). A push to `main` publishes nothing. The publish mechanism is chosen in preference order, falling back only as needed:
+Pushing an unprefixed `vX.Y.Z` tag runs the [publish workflow](./.github/workflows/publish-recipe.yml), which publishes the recipe's static folder directly to BrewPage as a multi-file site and creates a GitHub Release -- there is no build step (a recipe is a multi-file bundle, so it must fit 20 MB total / 200 files / 5 MB per file). A push to `main` publishes nothing. The publish mechanism is chosen in preference order, falling back only as needed:
 
 1. **`brewpage-action`** -- in use; this repo is its first production consumer (dogfood). [`kochetkov-ma/brewpage-action`](https://github.com/kochetkov-ma/brewpage-action), pinned to an exact version in the workflow.
 2. **`brewpage` CLI** -- `npx brewpage publish-site ./recipes/<slug>`; planned, not yet released on npm.
