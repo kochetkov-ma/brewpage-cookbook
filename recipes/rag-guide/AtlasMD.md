@@ -388,7 +388,7 @@ No-JS degradation: every interactive host ships a static, meaningful inline-SVG/
 
 > Drift note (planned -> shipped): `drilldown.js` -> `drilldown-zoom.js`; `route.js` + landing half of `markers.js` -> `map-route.js`; search half of `markers.js` -> `vector-map.js`; `reveal.js` -> `comparison.js`; `compass.js`+`plate.js` are new (catalog had said "Lib: none"); `chapter-state.js` is new (the persistence refinement). Per-page DATA contracts shipped as `data/what-rag.js`/`why-rag.js`/`search-vectors.js` (default-export imports), NOT a generic `diagram-data.js`/`data-*-src`. STILL PRESENT but UNUSED by the 4 built pages (scaffold leftovers): `lib/drilldown.js`, `glossary.js`, `process-anim.js`, `search.js`, `timeline.js`; `pages/stage.js`; `data/diagram-data.js`, `glossary.json`, `worked-example.json`, `search-index.json`.
 
-Each `recipes/rag-guide/` publishes verbatim to BrewPage as a multi-file site (fit 20 MB / 100 files / 5 MB per file).
+Each `recipes/rag-guide/` publishes verbatim to BrewPage as a multi-file site (fit 20 MB / 200 files / 5 MB per file).
 
 ---
 

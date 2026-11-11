@@ -1,7 +1,8 @@
 # .brewpageignore -- publish-scope filter for the RAG Guide static bundle.
 #
-# Purpose: the repo folder carries manuscript + scaffold + dev tooling (134 files at v0.1.11),
-# which blows past the BrewPage site caps (< 100 files / < 20 MB total / < 5 MB per file).
+# Purpose: the repo folder carries manuscript + scaffold + dev tooling (134 files at v0.1.11)
+# that must not ship; the published set must fit the BrewPage site caps (200 files / 20 MB
+# total / 5 MB per file) and the workflow's own stricter gate (< 100 files).
 # This file lists DEV-ONLY paths to exclude so only the live static site is published.
 # It is repo-keeping vs publish-scope: excluded files STAY in git, they just do not ship.
 #

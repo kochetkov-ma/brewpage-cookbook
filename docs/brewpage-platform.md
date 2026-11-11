@@ -112,16 +112,16 @@ Ground-truth limits (verbatim from platform CLAUDE.md `## Limits` table). [S1 §
 | Page data: per visitor | 20 entries and 32 KB by default (up to 200 entries and 1 MB) |
 | Page data: per page | 1 MB and 5,000 entries; 10 MB and 20,000 entries for a page in a profile; lives as long as the page |
 | File | 5 MB (video 20 MB, audio 5 MB), 1000 files/NS, TTL def 15d / max 30d |
-| Site bundle | 20 MB total, 100 files/site, 5 MB per file, TTL def 15d / max 30d |
+| Site bundle | 20 MB total, 200 files/site, 5 MB per file, TTL def 15d / max 30d |
 | DB | 10 MB, 5s query timeout |
 | Rate: uploads | Operation- and namespace-specific; consult current API contract |
 | Rate: reads | 300/min/IP |
 
-Page data rows: [S4 "Page data", "Limits and environments"].
+Page data rows: [S4 "Page data", "Limits and environments"]. Site bundle file count: [S4 "Limits"; live `GET https://brewpage.app/api/limits` -> `sites.maxFiles`], re-read 2026-11-11.
 
 **TTL (retention).** `ttl` (days) applies to html, markdown, json, kv, files, and sites. Default `15`, normal requested range `1..30`, subject to owner-specific effective limits. Site PUT retains the original expiry; separately eligible automatic extension may change it. Treat the returned `expiresAt` as authoritative. Expired resources become unavailable and are removed by cleanup. The `ttl` query also accepts a suffixed form such as `30d` or `30 days`. [S2 TTL contract]
 
-**Recipe sizing implication:** a built multi-file recipe must fit **20 MB total / 100 files / 5 MB per file**. Keep heavy media (video/large images) as separate `/api/files` uploads referenced by URL rather than bundled, since the site bundle ceiling is the binding constraint.
+**Recipe sizing implication:** a built multi-file recipe must fit **20 MB total / 200 files / 5 MB per file**. Keep heavy media (video/large images) as separate `/api/files` uploads referenced by URL rather than bundled, since the site bundle ceiling is the binding constraint.
 
 ---
 

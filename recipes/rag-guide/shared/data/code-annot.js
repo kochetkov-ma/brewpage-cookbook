@@ -2,7 +2,7 @@
 // hand-edit; regenerate from content/{ru,en}/<page>.md + the in-script region table.
 // Data contract: shared/js/lib/code-blocks.js (default export = a map keyed by block key,
 // imported once; the loader looks up map[key]). Consolidated from 16 per-block files into
-// this single module to stay under the BrewPage 100-file publish cap (W6-FIX, blocker L2).
+// this single module to stay under the cookbook's 100-file publish gate (W6-FIX, blocker L2).
 //
 // Shape: { _schema, "<key>": { lang, code:{ru,en}, caption:{ru,en}, regions:[...] }, ... }.
 // Consumers MUST skip every _-prefixed key when iterating block keys.
